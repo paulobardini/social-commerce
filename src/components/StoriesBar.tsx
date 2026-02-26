@@ -11,48 +11,132 @@ import brandElian from "@/assets/brand-elian.jpg";
 import brandColoritta from "@/assets/brand-coloritta.jpg";
 
 import concept1 from "@/assets/concept-1.jpg";
+import concept2 from "@/assets/concept-2.jpg";
 import concept3 from "@/assets/concept-3.jpg";
 import concept4 from "@/assets/concept-4.jpg";
 import concept5 from "@/assets/concept-5.jpg";
 import concept6 from "@/assets/concept-6.jpg";
 import concept7 from "@/assets/concept-7.jpg";
 import concept8 from "@/assets/concept-8.jpg";
-import concept2 from "@/assets/concept-2.jpg";
 
-const stories = [
-  { id: "create", brand: "Criar Story", avatar: null, storyImage: null },
-  { id: "1", brand: "Brandili", avatar: brandBrandili, storyImage: concept1 },
-  { id: "2", brand: "Kyly", avatar: brandKyly, storyImage: concept6 },
-  { id: "3", brand: "Hering", avatar: brandHering, storyImage: concept5 },
-  { id: "4", brand: "Malwee", avatar: brandMalwee, storyImage: concept7 },
-  { id: "5", brand: "Lunender", avatar: brandLunender, storyImage: concept8 },
-  { id: "6", brand: "Marisol", avatar: brandMarisol, storyImage: concept3 },
-  { id: "7", brand: "Elian", avatar: brandElian, storyImage: concept4 },
-  { id: "8", brand: "Colorittá", avatar: brandColoritta, storyImage: concept2 },
+interface BrandStories {
+  id: string;
+  brand: string;
+  avatar: string;
+  stories: { image: string; caption: string }[];
+}
+
+const brands: (BrandStories | { id: "create"; brand: string; avatar: null; stories: never[] })[] = [
+  { id: "create", brand: "Criar Story", avatar: null, stories: [] },
+  {
+    id: "brandili", brand: "Brandili", avatar: brandBrandili,
+    stories: [
+      { image: concept1, caption: "Nova Coleção Verão 2026" },
+      { image: concept5, caption: "Linha Kids Sustentável" },
+      { image: concept3, caption: "Lançamento Primavera" },
+    ],
+  },
+  {
+    id: "kyly", brand: "Kyly", avatar: brandKyly,
+    stories: [
+      { image: concept6, caption: "Coleção Outono 2026" },
+      { image: concept2, caption: "Novos Tecidos" },
+    ],
+  },
+  {
+    id: "hering", brand: "Hering", avatar: brandHering,
+    stories: [{ image: concept5, caption: "Básicos Reinventados" }],
+  },
+  {
+    id: "malwee", brand: "Malwee", avatar: brandMalwee,
+    stories: [
+      { image: concept7, caption: "Eco Fashion" },
+      { image: concept4, caption: "Tendências 2026" },
+      { image: concept1, caption: "Linha Premium" },
+    ],
+  },
+  {
+    id: "lunender", brand: "Lunender", avatar: brandLunender,
+    stories: [
+      { image: concept8, caption: "Night Collection" },
+      { image: concept6, caption: "Urban Style" },
+    ],
+  },
+  {
+    id: "marisol", brand: "Marisol", avatar: brandMarisol,
+    stories: [{ image: concept3, caption: "Infantil Verão" }],
+  },
+  {
+    id: "elian", brand: "Elian", avatar: brandElian,
+    stories: [
+      { image: concept4, caption: "Baby Collection" },
+      { image: concept8, caption: "Linha Conforto" },
+    ],
+  },
+  {
+    id: "coloritta", brand: "Colorittá", avatar: brandColoritta,
+    stories: [{ image: concept2, caption: "Cores Vibrantes" }],
+  },
 ];
 
-const navigableStories = stories.filter((s) => s.id !== "create");
+const navigableBrands = brands.filter((b): b is BrandStories => b.id !== "create");
 
 export function StoriesBar() {
-  const [activeStory, setActiveStory] = useState<string | null>(null);
+  const [activeBrandId, setActiveBrandId] = useState<string | null>(null);
+  const [storyIndex, setStoryIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
 
-  const activeData = stories.find((s) => s.id === activeStory);
-  const activeIndex = navigableStories.findIndex((s) => s.id === activeStory);
+  const brandIndex = navigableBrands.findIndex((b) => b.id === activeBrandId);
+  const activeBrand = brandIndex >= 0 ? navigableBrands[brandIndex] : null;
+  const activeStoryData = activeBrand?.stories[storyIndex];
 
-  const goToStory = useCallback((index: number, dir: number) => {
-    if (index >= 0 && index < navigableStories.length) {
-      setDirection(dir);
-      setActiveStory(navigableStories[index].id);
-      setProgressKey((k) => k + 1);
-    } else {
-      setActiveStory(null);
-    }
+  const openBrand = useCallback((brandId: string) => {
+    setActiveBrandId(brandId);
+    setStoryIndex(0);
+    setDirection(0);
+    setProgressKey((k) => k + 1);
   }, []);
 
-  const goNext = useCallback(() => goToStory(activeIndex + 1, 1), [activeIndex, goToStory]);
-  const goPrev = useCallback(() => goToStory(activeIndex - 1, -1), [activeIndex, goToStory]);
+  const close = useCallback(() => {
+    setActiveBrandId(null);
+    setStoryIndex(0);
+  }, []);
+
+  // Advance to next story within brand, or next brand
+  const goNext = useCallback(() => {
+    if (!activeBrand) return;
+    if (storyIndex < activeBrand.stories.length - 1) {
+      // Next story in same brand
+      setDirection(1);
+      setStoryIndex((i) => i + 1);
+      setProgressKey((k) => k + 1);
+    } else if (brandIndex < navigableBrands.length - 1) {
+      // Next brand
+      setDirection(1);
+      const nextBrand = navigableBrands[brandIndex + 1];
+      setActiveBrandId(nextBrand.id);
+      setStoryIndex(0);
+      setProgressKey((k) => k + 1);
+    } else {
+      close();
+    }
+  }, [activeBrand, storyIndex, brandIndex, close]);
+
+  const goPrev = useCallback(() => {
+    if (!activeBrand) return;
+    if (storyIndex > 0) {
+      setDirection(-1);
+      setStoryIndex((i) => i - 1);
+      setProgressKey((k) => k + 1);
+    } else if (brandIndex > 0) {
+      setDirection(-1);
+      const prevBrand = navigableBrands[brandIndex - 1];
+      setActiveBrandId(prevBrand.id);
+      setStoryIndex(prevBrand.stories.length - 1);
+      setProgressKey((k) => k + 1);
+    }
+  }, [activeBrand, storyIndex, brandIndex]);
 
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
     const threshold = 50;
@@ -66,23 +150,25 @@ export function StoriesBar() {
     exit: (dir: number) => ({ x: dir > 0 ? "-100%" : "100%", opacity: 0 }),
   };
 
+  const contentKey = activeBrand ? `${activeBrand.id}-${storyIndex}` : "";
+
   return (
     <>
       <div className="border-b border-border bg-card/50 px-3 md:px-6 py-3 md:py-4">
         <div className="flex gap-3 md:gap-5 overflow-x-auto scrollbar-hide">
-          {stories.map((story) => (
+          {brands.map((brand) => (
             <button
-              key={story.id}
-              onClick={() => story.id !== "create" && setActiveStory(story.id)}
+              key={brand.id}
+              onClick={() => brand.id !== "create" && openBrand(brand.id)}
               className="flex flex-col items-center gap-2 flex-shrink-0"
             >
               <div className="relative flex items-center justify-center">
-                {story.id !== "create" ? (
+                {brand.id !== "create" ? (
                   <div className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-gradient-to-br from-accent to-tertiary p-[3px]">
                     <div className="flex h-full w-full items-center justify-center rounded-full bg-card p-[2px]">
                       <img
-                        src={story.avatar!}
-                        alt={story.brand}
+                        src={brand.avatar!}
+                        alt={brand.brand}
                         className="h-full w-full rounded-full object-cover"
                       />
                     </div>
@@ -94,7 +180,7 @@ export function StoriesBar() {
                 )}
               </div>
               <span className="max-w-[76px] truncate text-[11px] font-medium text-muted-foreground">
-                {story.brand}
+                {brand.brand}
               </span>
             </button>
           ))}
@@ -103,16 +189,16 @@ export function StoriesBar() {
 
       {/* Story Modal */}
       <AnimatePresence>
-        {activeStory && activeData && (
+        {activeBrand && activeStoryData && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/80 backdrop-blur-sm"
-            onClick={() => setActiveStory(null)}
+            onClick={close}
           >
             {/* Prev arrow */}
-            {activeIndex > 0 && (
+            {(storyIndex > 0 || brandIndex > 0) && (
               <button
                 onClick={(e) => { e.stopPropagation(); goPrev(); }}
                 className="absolute left-2 md:left-6 z-[110] rounded-full bg-card/80 p-2 text-foreground shadow-lg backdrop-blur-sm transition-colors hover:bg-card"
@@ -122,7 +208,7 @@ export function StoriesBar() {
             )}
 
             {/* Next arrow */}
-            {activeIndex < navigableStories.length - 1 && (
+            {(storyIndex < activeBrand.stories.length - 1 || brandIndex < navigableBrands.length - 1) && (
               <button
                 onClick={(e) => { e.stopPropagation(); goNext(); }}
                 className="absolute right-2 md:right-6 z-[110] rounded-full bg-card/80 p-2 text-foreground shadow-lg backdrop-blur-sm transition-colors hover:bg-card"
@@ -138,7 +224,7 @@ export function StoriesBar() {
             >
               <AnimatePresence initial={false} custom={direction} mode="popLayout">
                 <motion.div
-                  key={activeStory}
+                  key={contentKey}
                   custom={direction}
                   variants={slideVariants}
                   initial="enter"
@@ -151,14 +237,14 @@ export function StoriesBar() {
                   onDragEnd={handleDragEnd}
                   className="absolute inset-0"
                 >
-                  {/* Progress bar */}
+                  {/* Progress bar — per brand */}
                   <div className="absolute top-3 left-3 right-3 z-10 flex gap-1">
-                    {navigableStories.map((s, i) => (
-                      <div key={s.id} className="h-0.5 flex-1 rounded-full bg-primary-foreground/30 overflow-hidden">
-                        {i < activeIndex && (
+                    {activeBrand.stories.map((_, i) => (
+                      <div key={i} className="h-0.5 flex-1 rounded-full bg-primary-foreground/30 overflow-hidden">
+                        {i < storyIndex && (
                           <div className="h-full w-full bg-primary-foreground" />
                         )}
-                        {i === activeIndex && (
+                        {i === storyIndex && (
                           <motion.div
                             key={progressKey}
                             initial={{ width: "0%" }}
@@ -175,18 +261,18 @@ export function StoriesBar() {
                   {/* Brand header */}
                   <div className="absolute top-6 left-4 z-10 flex items-center gap-3">
                     <img
-                      src={activeData.avatar!}
-                      alt={activeData.brand}
+                      src={activeBrand.avatar}
+                      alt={activeBrand.brand}
                       className="h-9 w-9 rounded-full border-2 border-primary-foreground/50 object-cover"
                     />
                     <span className="text-sm font-semibold text-primary-foreground drop-shadow-md">
-                      {activeData.brand}
+                      {activeBrand.brand}
                     </span>
                   </div>
 
                   <img
-                    src={activeData.storyImage!}
-                    alt={activeData.brand}
+                    src={activeStoryData.image}
+                    alt={activeStoryData.caption}
                     className="h-full w-full object-cover pointer-events-none"
                   />
 
@@ -195,9 +281,9 @@ export function StoriesBar() {
                   {/* Bottom info */}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <h3 className="text-xl font-semibold text-primary-foreground">
-                      {activeData.brand}
+                      {activeBrand.brand}
                     </h3>
-                    <p className="mt-1 text-sm text-primary-foreground/80">Nova Coleção 2026</p>
+                    <p className="mt-1 text-sm text-primary-foreground/80">{activeStoryData.caption}</p>
                     <button className="mt-4 flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-transform hover:scale-105">
                       <Eye className="h-4 w-4" />
                       Ver Coleção
@@ -206,7 +292,7 @@ export function StoriesBar() {
 
                   {/* Close */}
                   <button
-                    onClick={() => setActiveStory(null)}
+                    onClick={close}
                     className="absolute right-4 top-6 z-10 rounded-full bg-primary-foreground/20 p-1.5 text-primary-foreground backdrop-blur-sm transition-colors hover:bg-primary-foreground/40"
                   >
                     <Plus className="h-4 w-4 rotate-45" />
