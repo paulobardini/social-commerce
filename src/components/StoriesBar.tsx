@@ -2,25 +2,25 @@ import { Plus, Eye } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import fabric1 from "@/assets/fabric-1.jpg";
-import fabric2 from "@/assets/fabric-2.jpg";
-import fabric3 from "@/assets/fabric-3.jpg";
-import fabric4 from "@/assets/fabric-4.jpg";
-import fabric5 from "@/assets/fabric-5.jpg";
-import fabric6 from "@/assets/fabric-6.jpg";
-import fabric7 from "@/assets/fabric-7.jpg";
-import fabric8 from "@/assets/fabric-8.jpg";
+import concept1 from "@/assets/concept-1.jpg";
+import concept2 from "@/assets/concept-2.jpg";
+import concept3 from "@/assets/concept-3.jpg";
+import concept4 from "@/assets/concept-4.jpg";
+import concept5 from "@/assets/concept-5.jpg";
+import concept6 from "@/assets/concept-6.jpg";
+import concept7 from "@/assets/concept-7.jpg";
+import concept8 from "@/assets/concept-8.jpg";
 
 const stories = [
   { id: "create", label: "Criar Story", image: null },
-  { id: "1", label: "Linho Premium", image: fabric2 },
-  { id: "2", label: "Veludo FW26", image: fabric3 },
-  { id: "3", label: "Twill Terracota", image: fabric4 },
-  { id: "4", label: "Herringbone", image: fabric5 },
-  { id: "5", label: "Renda Artesanal", image: fabric6 },
-  { id: "6", label: "Denim Selvedge", image: fabric7 },
-  { id: "7", label: "Malha Coral", image: fabric8 },
-  { id: "8", label: "Algodão Cru", image: fabric1 },
+  { id: "1", label: "Inverno Kids", image: concept1 },
+  { id: "2", label: "Acessórios FW26", image: concept2 },
+  { id: "3", label: "Street Kids", image: concept3 },
+  { id: "4", label: "Tricôs & Malhas", image: concept4 },
+  { id: "5", label: "Alfaiataria", image: concept5 },
+  { id: "6", label: "Candy Colors", image: concept6 },
+  { id: "7", label: "Earth Tones", image: concept7 },
+  { id: "8", label: "Verão Floral", image: concept8 },
 ];
 
 export function StoriesBar() {
@@ -105,13 +105,13 @@ export function StoriesBar() {
 
               {/* Bottom info */}
               <div className="absolute bottom-0 left-0 right-0 p-6 overlay-gradient">
-                <h3 className="font-heading text-xl font-semibold text-card">
+                <h3 className="text-xl font-semibold text-card">
                   {activeData.label}
                 </h3>
-                <p className="mt-1 text-sm text-card/80">Coleção Exclusiva 2026</p>
+                <p className="mt-1 text-sm text-card/80">Tendência 2026</p>
                 <button className="mt-4 flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-transform hover:scale-105">
                   <Eye className="h-4 w-4" />
-                  Ver Produto
+                  Explorar Tendência
                 </button>
               </div>
 
