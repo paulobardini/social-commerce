@@ -132,7 +132,8 @@ export function StoriesBar() {
             )}
 
             <div
-              className="relative h-[85vh] w-[420px] max-w-[90vw] overflow-hidden rounded-2xl bg-card shadow-2xl"
+              className="relative w-full max-w-[420px] overflow-hidden rounded-2xl bg-card shadow-2xl mx-4"
+              style={{ aspectRatio: "9/16", maxHeight: "85vh" }}
               onClick={(e) => e.stopPropagation()}
             >
               <AnimatePresence initial={false} custom={direction} mode="popLayout">
