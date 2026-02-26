@@ -147,16 +147,16 @@ const Marcas = () => {
                   className="bg-card rounded-xl md:rounded-2xl overflow-hidden shadow-sm card-hover cursor-pointer group"
                 >
                   {/* Preview grid */}
-                  <div className={`grid gap-0.5 h-32 md:h-40 ${
-                    brand.posts.length === 1 ? "grid-cols-1" :
-                    brand.posts.length === 2 ? "grid-cols-2" : "grid-cols-3"
+                  <div className={`grid gap-0.5 ${
+                    brand.posts.length === 1 ? "grid-cols-1 h-44 md:h-52" :
+                    brand.posts.length === 2 ? "grid-cols-2 h-32 md:h-40" : "grid-cols-3 h-32 md:h-40"
                   }`}>
                     {brand.posts.map((img, j) => (
                       <div key={j} className="overflow-hidden">
                         <img
                           src={img}
                           alt=""
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
                     ))}
