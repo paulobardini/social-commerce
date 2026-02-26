@@ -11,15 +11,24 @@ import concept6 from "@/assets/concept-6.jpg";
 import concept7 from "@/assets/concept-7.jpg";
 import concept8 from "@/assets/concept-8.jpg";
 
+import brandBrandili from "@/assets/brand-brandili.jpg";
+import brandKyly from "@/assets/brand-kyly.jpg";
+import brandHering from "@/assets/brand-hering.jpg";
+import brandMalwee from "@/assets/brand-malwee.jpg";
+import brandLunender from "@/assets/brand-lunender.jpg";
+import brandMarisol from "@/assets/brand-marisol.jpg";
+import brandElian from "@/assets/brand-elian.jpg";
+import brandColoritta from "@/assets/brand-coloritta.jpg";
+
 const pins = [
-  { id: 1, title: "Inverno Infantil 2026", category: "Infantil", image: concept1, likes: 342 },
-  { id: 2, title: "Acessórios Outono", category: "Feminino", image: concept2, likes: 189 },
-  { id: 3, title: "Streetwear Kids", category: "Infantil", image: concept3, likes: 527 },
-  { id: 4, title: "Texturas & Tricôs", category: "Tendência", image: concept4, likes: 415 },
-  { id: 5, title: "Alfaiataria Moderna", category: "Masculino", image: concept5, likes: 298 },
-  { id: 6, title: "Candy Colors", category: "Infantil", image: concept6, likes: 631 },
-  { id: 7, title: "Paleta Earth Tones", category: "Tendência", image: concept7, likes: 456 },
-  { id: 8, title: "Verão Floral", category: "Feminino", image: concept8, likes: 374 },
+  { id: 1, title: "Coleção Inverno Kids 2026", brand: "Brandili", brandLogo: brandBrandili, category: "Infantil", image: concept1, likes: 342 },
+  { id: 2, title: "Acessórios Outono/Inverno", brand: "Lunender", brandLogo: brandLunender, category: "Feminino", image: concept2, likes: 189 },
+  { id: 3, title: "Streetwear Infantil", brand: "Kyly", brandLogo: brandKyly, category: "Infantil", image: concept3, likes: 527 },
+  { id: 4, title: "Texturas & Tricôs", brand: "Malwee", brandLogo: brandMalwee, category: "Tendência", image: concept4, likes: 415 },
+  { id: 5, title: "Alfaiataria Moderna", brand: "Hering", brandLogo: brandHering, category: "Masculino", image: concept5, likes: 298 },
+  { id: 6, title: "Candy Colors Verão", brand: "Marisol", brandLogo: brandMarisol, category: "Infantil", image: concept6, likes: 631 },
+  { id: 7, title: "Paleta Earth Tones", brand: "Elian", brandLogo: brandElian, category: "Tendência", image: concept7, likes: 456 },
+  { id: 8, title: "Floral Collection", brand: "Colorittá", brandLogo: brandColoritta, category: "Feminino", image: concept8, likes: 374 },
 ];
 
 export function MasonryFeed() {
@@ -72,7 +81,7 @@ export function MasonryFeed() {
                 {/* Hover overlay */}
                 <div className="absolute inset-0 flex items-end opacity-0 transition-opacity duration-300 group-hover:opacity-100 overlay-gradient">
                   <div className="flex w-full items-center justify-between p-4">
-                    <span className="text-sm font-medium text-card">{pin.title}</span>
+                    <span className="text-sm font-medium text-primary-foreground">{pin.title}</span>
                     <div className="flex gap-2">
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleLike(pin.id); }}
@@ -99,13 +108,20 @@ export function MasonryFeed() {
                 </div>
               </div>
 
-              {/* Info */}
+              {/* Info with brand */}
               <div className="p-3.5">
                 <h3 className="text-sm font-semibold text-foreground leading-tight">
                   {pin.title}
                 </h3>
-                <div className="mt-1.5 flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{pin.category}</span>
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={pin.brandLogo}
+                      alt={pin.brand}
+                      className="h-6 w-6 rounded-full object-cover border border-border"
+                    />
+                    <span className="text-xs font-medium text-muted-foreground">{pin.brand}</span>
+                  </div>
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Heart className="h-3 w-3" />
                     {liked.has(pin.id) ? pin.likes + 1 : pin.likes}
