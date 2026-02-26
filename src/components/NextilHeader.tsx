@@ -13,7 +13,7 @@ export function NextilHeader() {
       <div className="flex items-center gap-3">
         <div className="flex h-8 w-8 items-center justify-center">
           <svg viewBox="0 0 32 32" className="h-7 w-7" fill="none">
-            <path d="M8 24V8h4l8 10V8h4v16h-4L12 14v10H8z" fill="hsl(var(--accent))" />
+            <path d="M16 4C9.4 4 4 9.4 4 16s5.4 12 12 12 12-5.4 12-12S22.6 4 16 4zm-2 16.5c0 .8-.7 1.5-1.5 1.5S11 21.3 11 20.5v-9c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5v3.8l5-5.3c.6-.6 1.5-.6 2.1 0s.6 1.5 0 2.1L16 15l4.1 4.1c.6.6.6 1.5 0 2.1-.3.3-.7.4-1.1.4s-.8-.1-1.1-.4l-4-4v3.3z" fill="hsl(var(--tertiary))" />
           </svg>
         </div>
         <span className="text-lg font-semibold tracking-tight text-header-foreground">

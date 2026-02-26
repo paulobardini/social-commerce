@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['Inter', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        heading: ['Poppins', 'sans-serif'],
+        body: ['Poppins', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -66,7 +66,6 @@ export default {
           foreground: "hsl(var(--header-foreground))",
         },
         tertiary: "hsl(var(--tertiary))",
-        success: "hsl(var(--success))",
       },
       borderRadius: {
         lg: "var(--radius)",
