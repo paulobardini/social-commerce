@@ -147,7 +147,10 @@ const Marcas = () => {
                   className="bg-card rounded-xl md:rounded-2xl overflow-hidden shadow-sm card-hover cursor-pointer group"
                 >
                   {/* Preview grid */}
-                  <div className="grid grid-cols-3 gap-0.5 h-32 md:h-40">
+                  <div className={`grid gap-0.5 h-32 md:h-40 ${
+                    brand.posts.length === 1 ? "grid-cols-1" :
+                    brand.posts.length === 2 ? "grid-cols-2" : "grid-cols-3"
+                  }`}>
                     {brand.posts.map((img, j) => (
                       <div key={j} className="overflow-hidden">
                         <img
