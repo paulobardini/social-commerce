@@ -40,7 +40,7 @@ const brands = [
     category: "Infantil",
     description: "Streetwear infantil moderno e colorido",
     followers: "9.8k",
-    posts: [concept3, concept1, concept4],
+    posts: [concept3, concept1],
   },
   {
     name: "Hering",
@@ -48,7 +48,7 @@ const brands = [
     category: "Masculino",
     description: "Básicos reinventados com alfaiataria moderna",
     followers: "45.2k",
-    posts: [concept5, concept7, concept2],
+    posts: [concept5],
   },
   {
     name: "Malwee",
@@ -64,7 +64,7 @@ const brands = [
     category: "Feminino",
     description: "Elegância contemporânea para mulheres sofisticadas",
     followers: "22.1k",
-    posts: [concept2, concept7, concept6],
+    posts: [concept2, concept7],
   },
   {
     name: "Marisol",
@@ -72,7 +72,7 @@ const brands = [
     category: "Infantil",
     description: "Candy colors e estampas vibrantes para crianças",
     followers: "15.7k",
-    posts: [concept6, concept3, concept1],
+    posts: [concept6],
   },
   {
     name: "Elian",
@@ -88,7 +88,7 @@ const brands = [
     category: "Infantil",
     description: "Coleções florais e estampas exclusivas",
     followers: "6.9k",
-    posts: [concept8, concept2, concept5],
+    posts: [concept8, concept2],
   },
 ];
 
