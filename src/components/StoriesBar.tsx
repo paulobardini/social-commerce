@@ -39,8 +39,8 @@ export function StoriesBar() {
 
   return (
     <>
-      <div className="border-b border-border bg-card/50 px-6 py-4">
-        <div className="flex gap-5 overflow-x-auto scrollbar-hide">
+      <div className="border-b border-border bg-card/50 px-3 md:px-6 py-3 md:py-4">
+        <div className="flex gap-3 md:gap-5 overflow-x-auto scrollbar-hide">
           {stories.map((story) => (
             <button
               key={story.id}

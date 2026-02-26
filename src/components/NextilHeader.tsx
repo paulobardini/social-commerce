@@ -1,4 +1,4 @@
-import { Search, Bell, MessageCircle, ShoppingBag, User } from "lucide-react";
+import { Search, Bell, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import nextilLogo from "@/assets/nextil-logo.png";
 import nextilWordmark from "@/assets/nextil-wordmark.png";
@@ -10,16 +10,30 @@ export function NextilHeader() {
   const [activeNav, setActiveNav] = useState("Início");
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-sidebar-border bg-header px-6">
+    <header className="sticky top-0 z-50 flex h-14 md:h-16 items-center justify-between border-b border-sidebar-border bg-header px-3 md:px-6 gap-3">
       {/* Logo */}
-      <div className="flex items-center gap-3">
-        <img src={nextilLogo} alt="Nextil" className="h-7 w-7" />
-        <img src={nextilWordmark} alt="Nextil" className="h-5" />
+      <div className="flex items-center gap-2 shrink-0">
+        <img src={nextilLogo} alt="Nextil" className="h-6 w-6 md:h-7 md:w-7" />
+        <img src={nextilWordmark} alt="Nextil" className="h-4 md:h-5 hidden sm:block" />
       </div>
 
-      {/* Center nav + search */}
-      <div className="flex items-center gap-6">
-        <nav className="hidden md:flex items-center gap-1">
+      {/* Center: Search */}
+      <div
+        className={`relative flex items-center flex-1 max-w-md mx-auto transition-all duration-300`}
+      >
+        <Search className="absolute left-3 h-4 w-4 text-sidebar-foreground" />
+        <input
+          type="text"
+          placeholder="Buscar tendências, marcas..."
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className="h-9 w-full rounded-full border border-sidebar-border bg-sidebar pl-9 pr-4 text-sm text-header-foreground placeholder:text-sidebar-foreground transition-all focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent/50"
+        />
+      </div>
+
+      {/* Right: Nav + Actions */}
+      <div className="flex items-center gap-1 shrink-0">
+        <nav className="hidden lg:flex items-center gap-1 mr-2">
           {navItems.map((item) => (
             <button
               key={item}
@@ -34,25 +48,6 @@ export function NextilHeader() {
             </button>
           ))}
         </nav>
-      </div>
-
-      {/* Right actions */}
-      <div className="flex items-center gap-1">
-        {/* Search */}
-        <div
-          className={`relative flex items-center transition-all duration-300 ${
-            focused ? "w-64" : "w-48"
-          }`}
-        >
-          <Search className="absolute left-3 h-4 w-4 text-sidebar-foreground" />
-          <input
-            type="text"
-            placeholder="Buscar..."
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            className="h-9 w-full rounded-lg border border-sidebar-border bg-sidebar pl-9 pr-3 text-sm text-header-foreground placeholder:text-sidebar-foreground transition-all focus:outline-none focus:ring-1 focus:ring-accent/50 focus:border-accent/50"
-          />
-        </div>
 
         {[
           { icon: Bell, label: "Notificações", badge: 7 },
@@ -71,17 +66,6 @@ export function NextilHeader() {
             )}
           </button>
         ))}
-
-        {/* User */}
-        <div className="ml-2 flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-sidebar-accent/20 cursor-pointer">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
-            ML
-          </div>
-          <div className="hidden lg:block text-left">
-            <p className="text-xs font-medium text-header-foreground leading-tight">Minha Loja</p>
-            <p className="text-[10px] text-sidebar-foreground leading-tight">Comprador</p>
-          </div>
-        </div>
       </div>
     </header>
   );

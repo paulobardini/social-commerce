@@ -54,7 +54,7 @@ export function MasonryFeed() {
   };
 
   return (
-    <div className="flex-1 px-6 py-6">
+    <div className="flex-1 px-3 md:px-6 py-4 md:py-6">
       <div className="masonry-col">
         {pins.map((pin, i) => (
           <motion.div
