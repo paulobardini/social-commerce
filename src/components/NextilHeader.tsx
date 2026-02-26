@@ -1,5 +1,6 @@
 import { Search, Bell, ShoppingBag, MessageCircle, Menu } from "lucide-react";
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import nextilLogo from "@/assets/nextil-logo.png";
 import nextilWordmark from "@/assets/nextil-wordmark.png";
 import {
@@ -11,21 +12,33 @@ import {
 import { Home, Compass, User, Star, Settings } from "lucide-react";
 
 const sidebarItems = [
-  { icon: Home, label: "Página Inicial" },
-  { icon: Compass, label: "Explorar" },
-  { icon: User, label: "Meu Perfil" },
-  { icon: Bell, label: "Atualizações" },
-  { icon: Star, label: "Minhas Marcas" },
-  { icon: Settings, label: "Configurações" },
+  { icon: Home, label: "Página Inicial", path: "/" },
+  { icon: Compass, label: "Explorar", path: "/explorar" },
+  { icon: User, label: "Meu Perfil", path: "/perfil" },
+  { icon: Bell, label: "Atualizações", path: "/" },
+  { icon: Star, label: "Minhas Marcas", path: "/marcas" },
+  { icon: Settings, label: "Configurações", path: "/" },
 ];
 
-const navItems = ["Início", "Lives", "Pedidos"];
+const navItems = [
+  { label: "Início", path: "/" },
+  { label: "Lives", path: "/" },
+  { label: "Marcas", path: "/marcas" },
+  { label: "Pedidos", path: "/" },
+];
 
 export function NextilHeader() {
   const [focused, setFocused] = useState(false);
-  const [activeNav, setActiveNav] = useState("Início");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeSidebar, setActiveSidebar] = useState("Página Inicial");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getActiveNav = () => {
+    if (location.pathname === "/marcas") return "Marcas";
+    if (location.pathname === "/explorar") return "Explorar";
+    if (location.pathname === "/perfil") return "Perfil";
+    return "Início";
+  };
 
   return (
     <>
@@ -39,8 +52,10 @@ export function NextilHeader() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <img src={nextilLogo} alt="Nextil" className="h-6 w-6 md:h-7 md:w-7" />
-          <img src={nextilWordmark} alt="Nextil" className="h-4 md:h-5 hidden sm:block" />
+          <button onClick={() => navigate("/")} className="flex items-center gap-2">
+            <img src={nextilLogo} alt="Nextil" className="h-6 w-6 md:h-7 md:w-7" />
+            <img src={nextilWordmark} alt="Nextil" className="h-4 md:h-5 hidden sm:block" />
+          </button>
         </div>
 
         {/* Center: Search */}
@@ -60,28 +75,28 @@ export function NextilHeader() {
           <nav className="hidden lg:flex items-center gap-1 mr-2">
             {navItems.map((item) => (
               <button
-                key={item}
-                onClick={() => setActiveNav(item)}
+                key={item.label}
+                onClick={() => navigate(item.path)}
                 className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                  activeNav === item
+                  getActiveNav() === item.label
                     ? "text-header-foreground"
                     : "text-sidebar-foreground hover:text-header-foreground"
                 }`}
               >
-                {item}
+                {item.label}
               </button>
             ))}
           </nav>
 
           {[
-            { icon: MessageCircle, label: "Chat", badge: 3 },
-            { icon: Bell, label: "Notificações", badge: 7 },
-            { icon: ShoppingBag, label: "Carrinho", badge: 0 },
-          ].map(({ icon: Icon, label, badge }) => (
+            { icon: MessageCircle, label: "Chat", badge: 3, hideOnMobile: true },
+            { icon: Bell, label: "Notificações", badge: 7, hideOnMobile: false },
+            { icon: ShoppingBag, label: "Carrinho", badge: 0, hideOnMobile: false },
+          ].map(({ icon: Icon, label, badge, hideOnMobile }) => (
             <button
               key={label}
               aria-label={label}
-              className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground"
+              className={`relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground ${hideOnMobile ? "hidden md:flex" : ""}`}
             >
               <Icon className="h-5 w-5" />
               {badge > 0 && (
@@ -106,12 +121,12 @@ export function NextilHeader() {
           <nav className="flex flex-col p-3 gap-1">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeSidebar === item.label;
+              const isActive = location.pathname === item.path;
               return (
                 <button
                   key={item.label}
                   onClick={() => {
-                    setActiveSidebar(item.label);
+                    navigate(item.path);
                     setMenuOpen(false);
                   }}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${

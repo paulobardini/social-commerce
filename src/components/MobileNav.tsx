@@ -1,24 +1,25 @@
 import { Home, Search, MessageCircle, User } from "lucide-react";
-import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const items = [
-  { icon: Home, label: "Início" },
-  { icon: Search, label: "Explorar" },
-  { icon: MessageCircle, label: "Chat", badge: 3 },
-  { icon: User, label: "Perfil" },
+  { icon: Home, label: "Início", path: "/" },
+  { icon: Search, label: "Explorar", path: "/explorar" },
+  { icon: MessageCircle, label: "Chat", path: "/", badge: 3 },
+  { icon: User, label: "Perfil", path: "/perfil" },
 ];
 
 export function MobileNav() {
-  const [active, setActive] = useState("Início");
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around border-t border-border bg-card px-2 py-1.5 safe-bottom">
-      {items.map(({ icon: Icon, label, badge }) => {
-        const isActive = active === label;
+      {items.map(({ icon: Icon, label, path, badge }) => {
+        const isActive = location.pathname === path && (label !== "Chat");
         return (
           <button
             key={label}
-            onClick={() => setActive(label)}
+            onClick={() => navigate(path)}
             className={`relative flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-lg transition-colors ${
               isActive ? "text-foreground" : "text-muted-foreground"
             }`}
