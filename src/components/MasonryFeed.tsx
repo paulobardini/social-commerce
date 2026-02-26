@@ -53,18 +53,58 @@ export function MasonryFeed() {
     });
   };
 
+  // Split pins into columns for true masonry
+  const colCount = { mobile: 2, tablet: 3, desktop: 4 };
+  const getColumns = (items: typeof pins, cols: number) => {
+    const columns: (typeof pins)[] = Array.from({ length: cols }, () => []);
+    items.forEach((item, i) => columns[i % cols].push(item));
+    return columns;
+  };
+
+  const mobileColumns = getColumns(pins, 2);
+
   return (
-    <div className="flex-1 px-3 md:px-6 py-4 md:py-6">
-      <div className="masonry-col">
+    <div className="flex-1 px-2 md:px-6 py-3 md:py-6">
+      {/* Mobile: 2-col flex masonry */}
+      <div className="flex gap-2 md:hidden">
+        {mobileColumns.map((col, colIdx) => (
+          <div key={colIdx} className="flex-1 flex flex-col gap-2">
+            {col.map((pin, i) => (
+              <motion.div
+                key={pin.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (colIdx + i * 2) * 0.08, duration: 0.4 }}
+              >
+                <div className="group relative overflow-hidden rounded-xl bg-card cursor-pointer">
+                  <div className="relative overflow-hidden">
+                    <img src={pin.image} alt={pin.title} className="w-full object-cover" />
+                  </div>
+                  <div className="p-2">
+                    <h3 className="text-xs font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <img src={pin.brandLogo} alt={pin.brand} className="h-5 w-5 rounded-full object-cover border border-border" />
+                      <span className="text-[10px] font-medium text-muted-foreground">{pin.brand}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: CSS columns masonry */}
+      <div className="hidden md:block columns-3 xl:columns-4 gap-4">
         {pins.map((pin, i) => (
           <motion.div
             key={pin.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08, duration: 0.4 }}
-            className="mb-5 break-inside-avoid"
+            className="mb-2 md:mb-4 break-inside-avoid"
           >
-            <div className="group relative overflow-hidden rounded-2xl bg-card shadow-sm card-hover cursor-pointer">
+            <div className="group relative overflow-hidden rounded-xl md:rounded-2xl bg-card shadow-sm card-hover cursor-pointer">
               {/* Image */}
               <div className="relative overflow-hidden">
                 <img
@@ -73,59 +113,48 @@ export function MasonryFeed() {
                   className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 
-                {/* Category badge */}
-                <span className="absolute left-3 top-3 rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-foreground backdrop-blur-sm">
-                  {pin.category}
-                </span>
-
-                {/* Hover overlay */}
+                {/* Hover overlay (desktop) */}
                 <div className="absolute inset-0 flex items-end opacity-0 transition-opacity duration-300 group-hover:opacity-100 overlay-gradient">
-                  <div className="flex w-full items-center justify-between p-4">
-                    <span className="text-sm font-medium text-primary-foreground">{pin.title}</span>
-                    <div className="flex gap-2">
+                  <div className="flex w-full items-center justify-between p-3 md:p-4">
+                    <span className="text-xs md:text-sm font-medium text-primary-foreground line-clamp-1">{pin.title}</span>
+                    <div className="flex gap-1.5">
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleLike(pin.id); }}
-                        className={`rounded-full p-2 shadow-md backdrop-blur-sm transition-all ${
+                        className={`rounded-full p-1.5 md:p-2 shadow-md backdrop-blur-sm transition-all ${
                           liked.has(pin.id)
                             ? "bg-destructive text-destructive-foreground"
                             : "bg-card/90 text-foreground hover:bg-card"
                         }`}
                       >
-                        <Heart className="h-4 w-4" fill={liked.has(pin.id) ? "currentColor" : "none"} />
+                        <Heart className="h-3.5 w-3.5 md:h-4 md:w-4" fill={liked.has(pin.id) ? "currentColor" : "none"} />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleSave(pin.id); }}
-                        className={`rounded-full p-2 shadow-md backdrop-blur-sm transition-all ${
+                        className={`rounded-full p-1.5 md:p-2 shadow-md backdrop-blur-sm transition-all ${
                           saved.has(pin.id)
                             ? "bg-accent text-accent-foreground"
                             : "bg-card/90 text-foreground hover:bg-card"
                         }`}
                       >
-                        <Bookmark className="h-4 w-4" fill={saved.has(pin.id) ? "currentColor" : "none"} />
+                        <Bookmark className="h-3.5 w-3.5 md:h-4 md:w-4" fill={saved.has(pin.id) ? "currentColor" : "none"} />
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Info with brand */}
-              <div className="p-3.5">
-                <h3 className="text-sm font-semibold text-foreground leading-tight">
+              {/* Info - compact on mobile */}
+              <div className="p-2 md:p-3.5">
+                <h3 className="text-xs md:text-sm font-semibold text-foreground leading-tight line-clamp-2">
                   {pin.title}
                 </h3>
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={pin.brandLogo}
-                      alt={pin.brand}
-                      className="h-6 w-6 rounded-full object-cover border border-border"
-                    />
-                    <span className="text-xs font-medium text-muted-foreground">{pin.brand}</span>
-                  </div>
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Heart className="h-3 w-3" />
-                    {liked.has(pin.id) ? pin.likes + 1 : pin.likes}
-                  </span>
+                <div className="mt-1.5 md:mt-2 flex items-center gap-1.5">
+                  <img
+                    src={pin.brandLogo}
+                    alt={pin.brand}
+                    className="h-5 w-5 md:h-6 md:w-6 rounded-full object-cover border border-border"
+                  />
+                  <span className="text-[10px] md:text-xs font-medium text-muted-foreground">{pin.brand}</span>
                 </div>
               </div>
             </div>
