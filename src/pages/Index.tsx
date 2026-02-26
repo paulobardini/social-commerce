@@ -7,10 +7,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <NextilHeader />
-      <StoriesBar />
       <div className="flex">
         <NextilSidebar />
-        <MasonryFeed />
+        <div className="flex-1 flex flex-col">
+          <StoriesBar />
+          <MasonryFeed />
+        </div>
       </div>
     </div>
   );
