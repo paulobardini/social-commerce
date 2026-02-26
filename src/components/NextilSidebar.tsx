@@ -7,11 +7,12 @@ import {
   Briefcase,
   BarChart3,
   Package,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 
 const menuItems = [
-  { icon: Compass, label: "Explorar", active: true },
+  { icon: Compass, label: "Explorar" },
   { icon: TrendingUp, label: "Tendências" },
   { icon: Users, label: "Fornecedores" },
   { icon: Sparkles, label: "Novidades" },
@@ -25,7 +26,6 @@ const menuItems = [
 type MenuItem = {
   icon?: React.ComponentType<{ className?: string }>;
   label?: string;
-  active?: boolean;
   divider?: boolean;
 };
 
@@ -33,12 +33,12 @@ export function NextilSidebar() {
   const [active, setActive] = useState("Explorar");
 
   return (
-    <aside className="sticky top-16 flex h-[calc(100vh-4rem)] w-56 flex-col border-r border-border bg-card/50 px-3 py-6">
-      <nav className="flex flex-col gap-1">
+    <aside className="sticky top-16 flex h-[calc(100vh-4rem)] w-[60px] flex-col items-center border-r border-sidebar-border bg-sidebar py-6 justify-between">
+      <nav className="flex flex-col items-center gap-1">
         {(menuItems as unknown as MenuItem[]).map((item, i) => {
           if (item.divider) {
             return (
-              <div key={`div-${i}`} className="my-3 h-px bg-border" />
+              <div key={`div-${i}`} className="my-3 h-px w-8 bg-sidebar-border" />
             );
           }
           const Icon = item.icon!;
@@ -47,18 +47,28 @@ export function NextilSidebar() {
             <button
               key={item.label}
               onClick={() => setActive(item.label!)}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+              title={item.label}
+              className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ${
                 isActive
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
               }`}
             >
-              <Icon className={`h-[18px] w-[18px] ${isActive ? "text-accent" : ""}`} />
-              {item.label}
+              <Icon className="h-5 w-5" />
+              {isActive && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-sidebar-accent" />
+              )}
             </button>
           );
         })}
       </nav>
+
+      <button
+        title="Configurações"
+        className="flex h-10 w-10 items-center justify-center rounded-xl text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
+      >
+        <Settings className="h-5 w-5" />
+      </button>
     </aside>
   );
 }
