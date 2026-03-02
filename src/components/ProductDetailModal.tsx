@@ -14,19 +14,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Product, Brand } from "@/data/mockProducts";
+import { useCart } from "@/contexts/CartContext";
 
 interface ProductDetailModalProps {
   product: Product | null;
   brand: Brand;
   onClose: () => void;
   onFindSimilar?: (product: Product) => void;
+  openInGrade?: boolean;
 }
 
-export function ProductDetailModal({ product, brand, onClose, onFindSimilar }: ProductDetailModalProps) {
+export function ProductDetailModal({ product, brand, onClose, onFindSimilar, openInGrade = false }: ProductDetailModalProps) {
+  const cart = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
   const [descOpen, setDescOpen] = useState(false);
   const [specsOpen, setSpecsOpen] = useState(false);
-  const [gradeOpen, setGradeOpen] = useState(false);
+  const [gradeOpen, setGradeOpen] = useState(openInGrade);
   const [viewMode, setViewMode] = useState<"center" | "side">("center");
   const [zoomed, setZoomed] = useState(false);
 
@@ -44,7 +47,7 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar }: P
     setSelectedImage(0);
     setDescOpen(false);
     setSpecsOpen(false);
-    setGradeOpen(false);
+    setGradeOpen(openInGrade);
     setZoomed(false);
     setViewMode("center");
   }
@@ -306,7 +309,18 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar }: P
               <Button variant="outline" size="sm" onClick={() => setGradeOpen(false)} className="text-xs">
                 ← Voltar
               </Button>
-              <Button size="sm" onClick={onClose} className="gap-1.5 text-xs flex-1">
+              <Button size="sm" onClick={() => {
+                if (!product) return;
+                cart.addItem({
+                  product,
+                  brandSlug: brand.slug,
+                  brandName: brand.name,
+                  quantities,
+                  selectedColors,
+                });
+                cart.setIsOpen(true);
+                onClose();
+              }} className="gap-1.5 text-xs flex-1">
                 <ShoppingBag className="h-3.5 w-3.5" />
                 Adicionar à sacola
               </Button>

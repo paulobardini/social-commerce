@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import nextilLogo from "@/assets/nextil-logo.png";
 import nextilWordmark from "@/assets/nextil-wordmark.png";
+import { useCart } from "@/contexts/CartContext";
 import {
   Sheet,
   SheetContent,
@@ -32,6 +33,7 @@ export function NextilHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const cart = useCart();
 
   const getActiveNav = () => {
     if (location.pathname === "/marcas") return "Marcas";
@@ -89,13 +91,14 @@ export function NextilHeader() {
           </nav>
 
           {[
-            { icon: MessageCircle, label: "Chat", badge: 3, hideOnMobile: true },
-            { icon: Bell, label: "Notificações", badge: 7, hideOnMobile: false },
-            { icon: ShoppingBag, label: "Carrinho", badge: 0, hideOnMobile: false },
-          ].map(({ icon: Icon, label, badge, hideOnMobile }) => (
+            { icon: MessageCircle, label: "Chat", badge: 3, hideOnMobile: true, onClick: undefined },
+            { icon: Bell, label: "Notificações", badge: 7, hideOnMobile: false, onClick: undefined },
+            { icon: ShoppingBag, label: "Carrinho", badge: cart.items.length, hideOnMobile: false, onClick: () => cart.setIsOpen(true) },
+          ].map(({ icon: Icon, label, badge, hideOnMobile, onClick }) => (
             <button
               key={label}
               aria-label={label}
+              onClick={onClick}
               className={`relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground ${hideOnMobile ? "hidden md:flex" : ""}`}
             >
               <Icon className="h-5 w-5" />
