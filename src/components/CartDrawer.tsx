@@ -302,7 +302,10 @@ export function CartDrawer() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[10px] md:text-xs text-muted-foreground">
-                      {selectedBrand.items.length} prod · {selectedBrand.totalPieces} peças · Preço médio: {fmt(selectedBrand.totalPieces > 0 ? selectedBrand.totalPrice / selectedBrand.totalPieces : 0)}
+                      {selectedBrand.items.length} prod · {selectedBrand.totalPieces} peças
+                    </p>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">
+                      Preço médio: {fmt(selectedBrand.totalPieces > 0 ? selectedBrand.totalPrice / selectedBrand.totalPieces : 0)}
                     </p>
                     <p className="text-base md:text-lg font-bold text-foreground">{fmt(selectedBrand.totalPrice)}</p>
                   </div>
