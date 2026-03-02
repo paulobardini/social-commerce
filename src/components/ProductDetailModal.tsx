@@ -83,14 +83,16 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar }: P
 
   return (
     <>
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 z-50 bg-foreground/50 backdrop-blur-sm"
-      />
+      {/* Backdrop — hidden in side mode so user can interact with grid */}
+      {!isSide && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 z-50 bg-foreground/50 backdrop-blur-sm"
+        />
+      )}
 
       {/* Modal */}
       <motion.div
@@ -297,10 +299,12 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar }: P
                 <LayoutGrid className="h-3.5 w-3.5" />
                 Comprar | Montar Grade
               </Button>
-              <Button variant="outline" size="sm" onClick={handleFindSimilar} className="gap-1.5 text-xs flex-1">
-                <Sparkles className="h-3.5 w-3.5" />
-                Peças Similares
-              </Button>
+              {!isSide && (
+                <Button variant="outline" size="sm" onClick={handleFindSimilar} className="gap-1.5 text-xs flex-1">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Peças Similares
+                </Button>
+              )}
             </>
           ) : (
             <>
