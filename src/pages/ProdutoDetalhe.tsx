@@ -4,7 +4,7 @@ import { NextilSidebar } from "@/components/NextilSidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { getBrandBySlug, type Product } from "@/data/mockProducts";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -15,6 +15,7 @@ import {
   LayoutGrid,
   PackagePlus,
   X,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +30,72 @@ const ProdutoDetalhe = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [sideMode, setSideMode] = useState(false);
   const [addAllModal, setAddAllModal] = useState(false);
+  const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
+
+  const filteredProducts = useMemo(
+    () => (brand && activeSubBrand ? brand.products.filter((p) => p.subBrandId === activeSubBrand) : brand?.products || []),
+    [brand, activeSubBrand]
+  );
+
+  const activeProducts = useMemo(
+    () => filteredProducts.filter((p) => !excludedIds.has(p.id)),
+    [filteredProducts, excludedIds]
+  );
+
+  const summaryByCategory = useMemo(() => {
+    const map = new Map<string, { count: number; totalPieces: number; totalPrice: number; prices: number[] }>();
+    activeProducts.forEach((p) => {
+      const pieces = p.sizes.length * p.variants.length;
+      const existing = map.get(p.category) || { count: 0, totalPieces: 0, totalPrice: 0, prices: [] };
+      existing.count++;
+      existing.totalPieces += pieces;
+      existing.totalPrice += pieces * p.price;
+      existing.prices.push(p.price);
+      map.set(p.category, existing);
+    });
+    return map;
+  }, [activeProducts]);
+
+  const summaryByGender = useMemo(() => {
+    const map = new Map<string, { count: number; totalPieces: number; totalPrice: number; prices: number[] }>();
+    activeProducts.forEach((p) => {
+      const pieces = p.sizes.length * p.variants.length;
+      const existing = map.get(p.gender) || { count: 0, totalPieces: 0, totalPrice: 0, prices: [] };
+      existing.count++;
+      existing.totalPieces += pieces;
+      existing.totalPrice += pieces * p.price;
+      existing.prices.push(p.price);
+      map.set(p.gender, existing);
+    });
+    return map;
+  }, [activeProducts]);
+
+  const summaryBySize = useMemo(() => {
+    const map = new Map<string, number>();
+    activeProducts.forEach((p) => {
+      p.sizes.forEach((s) => {
+        map.set(s, (map.get(s) || 0) + p.variants.length);
+      });
+    });
+    return map;
+  }, [activeProducts]);
+
+  const grandTotal = activeProducts.reduce((a, p) => a + p.sizes.length * p.variants.length, 0);
+  const grandPrice = activeProducts.reduce((a, p) => a + p.sizes.length * p.variants.length * p.price, 0);
+  const avgPrice = activeProducts.length > 0 ? activeProducts.reduce((a, p) => a + p.price, 0) / activeProducts.length : 0;
+
+  const toggleExclude = (id: string) => {
+    setExcludedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const openAddAllModal = () => {
+    setExcludedIds(new Set());
+    setAddAllModal(true);
+  };
 
   if (!brand) {
     return (
@@ -38,22 +105,7 @@ const ProdutoDetalhe = () => {
     );
   }
 
-  const filteredProducts = activeSubBrand
-    ? brand.products.filter((p) => p.subBrandId === activeSubBrand)
-    : brand.products;
-
-  const defaultGradeSummary = filteredProducts.map((p) => ({
-    name: p.name,
-    ref: p.ref,
-    sizes: p.sizes,
-    perSize: 1,
-    colors: p.variants.length,
-    total: p.sizes.length * p.variants.length,
-    price: p.sizes.length * p.variants.length * p.price,
-  }));
-
-  const grandTotal = defaultGradeSummary.reduce((a, b) => a + b.total, 0);
-  const grandPrice = defaultGradeSummary.reduce((a, b) => a + b.price, 0);
+  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,11 +123,7 @@ const ProdutoDetalhe = () => {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
-                <img
-                  src={brand.logo}
-                  alt={brand.name}
-                  className="h-7 w-7 rounded-md object-cover border border-border shrink-0"
-                />
+                <img src={brand.logo} alt={brand.name} className="h-7 w-7 rounded-md object-cover border border-border shrink-0" />
                 <div className="flex items-center gap-1.5 text-xs min-w-0">
                   <span className="font-semibold text-foreground shrink-0">{brand.name}</span>
                   <span className="text-muted-foreground hidden sm:inline">/</span>
@@ -92,11 +140,7 @@ const ProdutoDetalhe = () => {
                     className="h-8 w-36 md:w-52 rounded-lg border border-border bg-background pl-8 pr-3 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => setAddAllModal(true)}
-                  className="gap-1.5 text-xs h-8 px-3"
-                >
+                <Button size="sm" onClick={openAddAllModal} className="gap-1.5 text-xs h-8 px-3">
                   <PackagePlus className="h-3.5 w-3.5" />
                   <span className="hidden md:inline">Adicionar todos</span>
                   <span className="md:hidden">Todos</span>
@@ -116,39 +160,23 @@ const ProdutoDetalhe = () => {
                     onClick={() => setActiveSubBrand(sb.id)}
                     className="flex items-center gap-2 group shrink-0"
                   >
-                    <div
-                      className={`h-8 w-8 rounded-full overflow-hidden border-[2px] transition-all ${
-                        activeSubBrand === sb.id
-                          ? "border-accent"
-                          : "border-border/50 group-hover:border-muted-foreground"
-                      }`}
-                    >
+                    <div className={`h-8 w-8 rounded-full overflow-hidden border-[2px] transition-all ${activeSubBrand === sb.id ? "border-accent" : "border-border/50 group-hover:border-muted-foreground"}`}>
                       <img src={sb.logo} alt={sb.name} className="h-full w-full object-cover" />
                     </div>
-                    <span
-                      className={`text-[11px] font-semibold uppercase tracking-wide ${
-                        activeSubBrand === sb.id ? "text-foreground" : "text-muted-foreground"
-                      }`}
-                    >
+                    <span className={`text-[11px] font-semibold uppercase tracking-wide ${activeSubBrand === sb.id ? "text-foreground" : "text-muted-foreground"}`}>
                       {sb.name}
                     </span>
-                    {activeSubBrand === sb.id && (
-                      <motion.div layoutId="productSubBrand" className="hidden" />
-                    )}
+                    {activeSubBrand === sb.id && <motion.div layoutId="productSubBrand" className="hidden" />}
                   </button>
                 ))}
               </div>
-
               <div className="flex items-center gap-1.5 shrink-0">
                 <Button variant="outline" size="sm" className="gap-1 text-xs h-7 px-2.5 rounded-md">
-                  <Percent className="h-3 w-3" />
-                  Off
+                  <Percent className="h-3 w-3" /> Off
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1 text-xs h-7 px-2.5 rounded-md">
                   <SlidersHorizontal className="h-3 w-3" />
-                  <span className="bg-accent text-accent-foreground rounded-full h-4 min-w-4 flex items-center justify-center text-[9px] font-bold">
-                    1
-                  </span>
+                  <span className="bg-accent text-accent-foreground rounded-full h-4 min-w-4 flex items-center justify-center text-[9px] font-bold">1</span>
                 </Button>
               </div>
             </div>
@@ -175,19 +203,13 @@ const ProdutoDetalhe = () => {
                     className="bg-card rounded-xl overflow-hidden border border-border cursor-pointer group card-hover"
                   >
                     <div className="relative aspect-[3/4] overflow-hidden">
-                      <img
-                        src={p.variants[0]?.images[0]}
-                        alt={p.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      {/* Quick actions overlay */}
+                      <img src={p.variants[0]?.images[0]} alt={p.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       <div className="absolute bottom-0 left-0 right-0 p-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity translate-y-1 group-hover:translate-y-0 duration-200">
                         <button
                           onClick={(e) => { e.stopPropagation(); }}
                           className="flex-1 h-7 rounded-md bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors"
                         >
-                          <ShoppingBag className="h-3 w-3" />
-                          Comprar
+                          <ShoppingBag className="h-3 w-3" /> Comprar
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); }}
@@ -203,12 +225,8 @@ const ProdutoDetalhe = () => {
                         {brand.subBrands.find((sb) => sb.id === p.subBrandId)?.name}
                       </p>
                       <p className="text-[9px] text-muted-foreground">Ref: {p.ref}</p>
-                      <p className="text-xs text-foreground mt-1 line-clamp-2 leading-relaxed">
-                        {p.name}
-                      </p>
-                      <p className="text-sm font-bold text-foreground mt-1.5">
-                        R$ {p.price.toFixed(2).replace(".", ",")}
-                      </p>
+                      <p className="text-xs text-foreground mt-1 line-clamp-2 leading-relaxed">{p.name}</p>
+                      <p className="text-sm font-bold text-foreground mt-1.5">{fmt(p.price)}</p>
                       <p className="text-[9px] text-muted-foreground mt-1">
                         {p.sizes.length} tamanhos · {p.variants.length} {p.variants.length === 1 ? "cor" : "cores"}
                       </p>
@@ -224,7 +242,7 @@ const ProdutoDetalhe = () => {
 
       {/* Product Detail Modal */}
       <AnimatePresence>
-         {selectedProduct && (
+        {selectedProduct && (
           <ProductDetailModal
             product={selectedProduct}
             brand={brand}
@@ -249,14 +267,14 @@ const ProdutoDetalhe = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed z-50 inset-4 sm:inset-y-6 md:inset-y-8 md:left-[15%] md:right-[15%] lg:left-[20%] lg:right-[20%] bg-card rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+              className="fixed z-50 inset-4 sm:inset-y-6 md:inset-y-6 md:left-[10%] md:right-[10%] lg:left-[15%] lg:right-[15%] bg-card rounded-2xl shadow-2xl flex flex-col overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
                 <div>
                   <h2 className="text-base font-bold text-foreground">Adicionar todos os produtos</h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {filteredProducts.length} produtos · Grade padrão (1 peça por tamanho/cor)
+                    {activeProducts.length} de {filteredProducts.length} produtos · Grade padrão (1 peça por tamanho/cor)
                   </p>
                 </div>
                 <button
@@ -267,42 +285,140 @@ const ProdutoDetalhe = () => {
                 </button>
               </div>
 
-              {/* Products summary list */}
-              <div className="flex-1 overflow-y-auto px-5 py-3">
-                <div className="space-y-2">
-                  {defaultGradeSummary.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
-                      <img
-                        src={filteredProducts[idx].variants[0]?.images[0]}
-                        alt={item.name}
-                        className="h-12 w-12 rounded-lg object-cover border border-border shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">{item.name}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          Ref: {item.ref} · {item.sizes.join(", ")} · {item.colors} {item.colors === 1 ? "cor" : "cores"}
-                        </p>
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto">
+                {/* Summary tables */}
+                <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-border bg-muted/20">
+                  {/* By Category */}
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por tipo de produto</p>
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <div className="grid grid-cols-4 gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">
+                        <div className="px-2 py-1.5">Tipo</div>
+                        <div className="px-2 py-1.5 text-center">Qtd</div>
+                        <div className="px-2 py-1.5 text-center">Peças</div>
+                        <div className="px-2 py-1.5 text-right">Preço médio</div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-[10px] text-muted-foreground">{item.total} peças</p>
-                        <p className="text-xs font-bold text-foreground">
-                          R$ {item.price.toFixed(2).replace(".", ",")}
-                        </p>
-                      </div>
+                      {Array.from(summaryByCategory.entries()).map(([cat, data]) => (
+                        <div key={cat} className="grid grid-cols-4 gap-0 text-xs border-b border-border last:border-0">
+                          <div className="px-2 py-1.5 font-medium text-foreground">{cat}</div>
+                          <div className="px-2 py-1.5 text-center text-muted-foreground">{data.count}</div>
+                          <div className="px-2 py-1.5 text-center text-muted-foreground">{data.totalPieces}</div>
+                          <div className="px-2 py-1.5 text-right font-medium text-foreground">
+                            {fmt(data.prices.reduce((a, b) => a + b, 0) / data.prices.length)}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+
+                  {/* By Gender */}
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por sexo</p>
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <div className="grid grid-cols-4 gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">
+                        <div className="px-2 py-1.5">Sexo</div>
+                        <div className="px-2 py-1.5 text-center">Qtd</div>
+                        <div className="px-2 py-1.5 text-center">Peças</div>
+                        <div className="px-2 py-1.5 text-right">Preço médio</div>
+                      </div>
+                      {Array.from(summaryByGender.entries()).map(([g, data]) => (
+                        <div key={g} className="grid grid-cols-4 gap-0 text-xs border-b border-border last:border-0">
+                          <div className="px-2 py-1.5 font-medium text-foreground">{g}</div>
+                          <div className="px-2 py-1.5 text-center text-muted-foreground">{data.count}</div>
+                          <div className="px-2 py-1.5 text-center text-muted-foreground">{data.totalPieces}</div>
+                          <div className="px-2 py-1.5 text-right font-medium text-foreground">
+                            {fmt(data.prices.reduce((a, b) => a + b, 0) / data.prices.length)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* By Size */}
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por tamanho</p>
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <div className="grid grid-cols-2 gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">
+                        <div className="px-2 py-1.5">Tamanho</div>
+                        <div className="px-2 py-1.5 text-right">Peças</div>
+                      </div>
+                      {Array.from(summaryBySize.entries())
+                        .sort(([a], [b]) => {
+                          const na = parseInt(a), nb = parseInt(b);
+                          if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                          return a.localeCompare(b);
+                        })
+                        .map(([size, pieces]) => (
+                          <div key={size} className="grid grid-cols-2 gap-0 text-xs border-b border-border last:border-0">
+                            <div className="px-2 py-1.5 font-medium text-foreground">{size}</div>
+                            <div className="px-2 py-1.5 text-right text-muted-foreground">{pieces}</div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Products list with exclusion */}
+                <div className="px-5 py-3">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-3">Produtos ({activeProducts.length})</p>
+                  <div className="space-y-1">
+                    {filteredProducts.map((p) => {
+                      const isExcluded = excludedIds.has(p.id);
+                      const pieces = p.sizes.length * p.variants.length;
+                      return (
+                        <div
+                          key={p.id}
+                          className={`flex items-center gap-3 py-2 px-2 rounded-lg border transition-all ${
+                            isExcluded
+                              ? "border-border/50 bg-muted/30 opacity-50"
+                              : "border-border"
+                          }`}
+                        >
+                          <img
+                            src={p.variants[0]?.images[0]}
+                            alt={p.name}
+                            className="h-11 w-11 rounded-lg object-cover border border-border shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-semibold truncate ${isExcluded ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                              {p.name}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              Ref: {p.ref} · {p.category} · {p.gender} · {p.sizes.join(", ")}
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0 mr-2">
+                            <p className="text-[10px] text-muted-foreground">{pieces} peças</p>
+                            <p className="text-xs font-bold text-foreground">{fmt(pieces * p.price)}</p>
+                          </div>
+                          <button
+                            onClick={() => toggleExclude(p.id)}
+                            className={`h-7 w-7 rounded-md flex items-center justify-center shrink-0 transition-colors ${
+                              isExcluded
+                                ? "bg-accent text-accent-foreground hover:bg-accent/80"
+                                : "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                            }`}
+                            title={isExcluded ? "Incluir de volta" : "Remover"}
+                          >
+                            {isExcluded ? <PackagePlus className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="shrink-0 border-t border-border bg-muted/30 px-5 py-4 flex items-center justify-between">
+              <div className="shrink-0 border-t border-border bg-muted/30 px-5 py-3 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">{filteredProducts.length} produtos · {grandTotal} peças</p>
-                  <p className="text-lg font-bold text-foreground">
-                    R$ {grandPrice.toFixed(2).replace(".", ",")}
+                  <p className="text-xs text-muted-foreground">
+                    {activeProducts.length} produtos · {grandTotal} peças · Preço médio: {fmt(avgPrice)}
                   </p>
+                  <p className="text-lg font-bold text-foreground">{fmt(grandPrice)}</p>
                 </div>
-                <Button onClick={() => setAddAllModal(false)} className="gap-1.5">
+                <Button onClick={() => setAddAllModal(false)} className="gap-1.5" disabled={activeProducts.length === 0}>
                   <ShoppingBag className="h-4 w-4" />
                   Adicionar à sacola
                 </Button>
