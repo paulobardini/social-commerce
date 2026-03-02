@@ -315,6 +315,7 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
                   product,
                   brandSlug: brand.slug,
                   brandName: brand.name,
+                  brandLogo: brand.logo,
                   quantities,
                   selectedColors,
                 });

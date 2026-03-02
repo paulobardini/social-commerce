@@ -5,6 +5,7 @@ export interface CartItem {
   product: Product;
   brandSlug: string;
   brandName: string;
+  brandLogo?: string;
   quantities: Record<string, number>;
   selectedColors: string[];
 }
