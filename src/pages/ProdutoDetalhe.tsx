@@ -25,6 +25,7 @@ const ProdutoDetalhe = () => {
     brand?.subBrands[0]?.id || null
   );
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [sideMode, setSideMode] = useState(false);
 
   if (!brand) {
     return (
@@ -43,7 +44,7 @@ const ProdutoDetalhe = () => {
       <NextilHeader />
       <div className="flex">
         <NextilSidebar />
-        <div className="flex-1 min-w-0 pb-16 md:pb-0">
+        <div className={`flex-1 min-w-0 pb-16 md:pb-0 transition-all duration-300 ${sideMode && selectedProduct ? 'mr-[380px]' : ''}`}>
           {/* Compact sticky header */}
           <div className="sticky top-14 md:top-16 z-30 bg-card border-b border-border">
             <div className="px-3 md:px-6 py-2 flex items-center justify-between gap-3">
@@ -193,8 +194,8 @@ const ProdutoDetalhe = () => {
           <ProductDetailModal
             product={selectedProduct}
             brand={brand}
-            onClose={() => setSelectedProduct(null)}
-            onFindSimilar={() => {}}
+            onClose={() => { setSelectedProduct(null); setSideMode(false); }}
+            onFindSimilar={() => setSideMode(true)}
           />
         )}
       </AnimatePresence>
