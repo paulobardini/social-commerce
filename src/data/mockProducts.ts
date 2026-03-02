@@ -16,6 +16,8 @@ export interface SubBrand {
   id: string;
   name: string;
   logo: string;
+  /** Conceptual/editorial images for the vitrine */
+  vitrineImages: string[];
 }
 
 export interface ProductVariant {
@@ -59,10 +61,30 @@ export const brands: Brand[] = [
     connections: 20,
     totalProducts: 501,
     subBrands: [
-      { id: "sb1", name: "BGR", logo: brandBrandili },
-      { id: "sb2", name: "GLINNY", logo: brandKyly },
-      { id: "sb3", name: "PINK SODA", logo: brandHering },
-      { id: "sb4", name: "BOCA GRA...", logo: brandMalwee },
+      {
+        id: "sb1",
+        name: "BGR",
+        logo: brandBrandili,
+        vitrineImages: [concept1, concept2, concept3, concept5, concept6, concept4, concept7, concept8],
+      },
+      {
+        id: "sb2",
+        name: "GLINNY",
+        logo: brandKyly,
+        vitrineImages: [concept7, concept8, concept6, concept2, concept3],
+      },
+      {
+        id: "sb3",
+        name: "PINK SODA",
+        logo: brandHering,
+        vitrineImages: [concept4, concept3, concept5, concept1, concept8],
+      },
+      {
+        id: "sb4",
+        name: "BOCA GRANDE",
+        logo: brandMalwee,
+        vitrineImages: [concept2, concept6, concept1, concept7, concept4],
+      },
     ],
     products: [
       {
@@ -70,7 +92,7 @@ export const brands: Brand[] = [
         ref: "56934",
         subBrandId: "sb1",
         name: "Camiseta Meia Malha | Essencial para transição e conforto leve",
-        description: "Disponível nos tamanhos 12 ao 20, esta camiseta de manga longa é uma peça de alta rotatividade para a meia estação. É confeccionada em Meia Malha, oferecendo um toque macio, leveza e excelente respirabilidade, ideal para o uso diário. Possui modelagem clean e fit moderno, com um discreto detalhe de acabamento na gola que adiciona um toque de estilo sem comprometer a versatilidade.",
+        description: "Disponível nos tamanhos 12 ao 20, esta camiseta de manga longa é uma peça de alta rotatividade para a meia estação. É confeccionada em Meia Malha, oferecendo um toque macio, leveza e excelente respirabilidade, ideal para o uso diário.",
         price: 70.90,
         sizes: ["12", "14", "16", "18", "20"],
         variants: [
