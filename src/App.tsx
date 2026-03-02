@@ -11,6 +11,7 @@ import Perfil from "./pages/Perfil";
 import Marcas from "./pages/Marcas";
 import MarcaDetalhe from "./pages/MarcaDetalhe";
 import ProdutoDetalhe from "./pages/ProdutoDetalhe";
+import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,8 +22,8 @@ const App = () => (
       <CartProvider>
         <Toaster />
         <Sonner />
-        <CartDrawer />
         <BrowserRouter>
+          <CartDrawer />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/explorar" element={<Explorar />} />
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/marcas" element={<Marcas />} />
             <Route path="/marca/:slug" element={<MarcaDetalhe />} />
             <Route path="/marca/:slug/produtos" element={<ProdutoDetalhe />} />
+            <Route path="/checkout" element={<Checkout />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
