@@ -516,6 +516,7 @@ const ProdutoDetalhe = () => {
                       product: p,
                       brandSlug: brand.slug,
                       brandName: brand.name,
+                      brandLogo: brand.logo,
                       quantities,
                       selectedColors: p.variants.map((v) => v.color),
                     });
