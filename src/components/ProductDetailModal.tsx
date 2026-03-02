@@ -103,7 +103,7 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar }: P
         className={`fixed z-50 bg-card flex flex-col ${
           isSide
             ? "right-0 top-0 bottom-0 w-full sm:w-[380px] shadow-2xl"
-            : "inset-4 sm:inset-6 md:inset-y-4 md:left-[18%] md:right-[18%] lg:left-[22%] lg:right-[22%] rounded-2xl shadow-2xl"
+            : "inset-0 sm:inset-4 md:inset-y-4 md:left-[18%] md:right-[18%] lg:left-[22%] lg:right-[22%] sm:rounded-2xl shadow-2xl"
         }`}
       >
         {/* Top bar — minimal */}

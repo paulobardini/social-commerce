@@ -139,7 +139,7 @@ const Marcas = () => {
 
           {/* Brands Grid */}
           <div className="px-3 md:px-6 py-4 md:py-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 md:gap-5">
               {filtered.map((brand, i) => (
                 <motion.div
                   key={brand.name}
@@ -150,7 +150,7 @@ const Marcas = () => {
                   onClick={() => navigate(`/marca/${brand.name.toLowerCase().replace(/\s+/g, '-')}`)}
                 >
                   {/* Preview grid */}
-                  <div className={`grid gap-0.5 h-32 md:h-40 ${
+                  <div className={`grid gap-0.5 h-28 md:h-40 ${
                     brand.posts.length === 1 ? "grid-cols-1" :
                     brand.posts.length === 2 ? "grid-cols-2" : "grid-cols-3"
                   }`}>
@@ -159,6 +159,7 @@ const Marcas = () => {
                         <img
                           src={img}
                           alt=""
+                          loading="lazy"
                           className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${
                             brand.posts.length === 1 ? "object-contain bg-muted" : "object-cover"
                           }`}
@@ -168,24 +169,25 @@ const Marcas = () => {
                   </div>
 
                   {/* Brand info */}
-                  <div className="p-3 md:p-4">
-                    <div className="flex items-center gap-3">
+                  <div className="p-2.5 md:p-4">
+                    <div className="flex items-center gap-2 md:gap-3">
                       <img
                         src={brand.logo}
                         alt={brand.name}
-                        className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover border-2 border-border"
+                        className="h-8 w-8 md:h-12 md:w-12 rounded-full object-cover border-2 border-border"
+                        loading="lazy"
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm md:text-base font-semibold text-foreground truncate">{brand.name}</h3>
-                        <p className="text-xs text-muted-foreground">{brand.followers} seguidores</p>
+                        <h3 className="text-xs md:text-base font-semibold text-foreground truncate">{brand.name}</h3>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">{brand.followers}</p>
                       </div>
-                      <button className="px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-medium hover:bg-accent/90 transition-colors shrink-0">
+                      <button className="px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-accent text-accent-foreground text-[10px] md:text-xs font-medium hover:bg-accent/90 transition-colors shrink-0">
                         Seguir
                       </button>
                     </div>
-                    <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{brand.description}</p>
-                    <div className="mt-2">
-                      <span className="inline-block px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-[10px] font-medium">
+                    <p className="mt-1.5 md:mt-2 text-[10px] md:text-xs text-muted-foreground line-clamp-2 hidden sm:block">{brand.description}</p>
+                    <div className="mt-1.5 md:mt-2">
+                      <span className="inline-block px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-[9px] md:text-[10px] font-medium">
                         {brand.category}
                       </span>
                     </div>

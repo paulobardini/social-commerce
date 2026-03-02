@@ -183,7 +183,7 @@ export function FilterSheet({ open, onClose, products, filters, onApply }: Filte
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[380px] bg-card shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[380px] bg-card shadow-2xl flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">

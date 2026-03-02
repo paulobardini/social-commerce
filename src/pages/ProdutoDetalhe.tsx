@@ -228,19 +228,19 @@ const ProdutoDetalhe = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4"
+                className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5 md:gap-4"
               >
                 {filteredProducts.map((p, i) => (
                   <motion.div
                     key={p.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.04 }}
+                    transition={{ delay: Math.min(i, 12) * 0.03 }}
                     onClick={() => setSelectedProduct(p)}
                     className="bg-card rounded-xl overflow-hidden border border-border cursor-pointer group card-hover"
                   >
                     <div className="relative aspect-[3/4] overflow-hidden">
-                      <img src={p.variants[0]?.images[0]} alt={p.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <img src={p.variants[0]?.images[0]} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       <div className="absolute bottom-0 left-0 right-0 p-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity translate-y-1 group-hover:translate-y-0 duration-200">
                         <button
                           onClick={(e) => { e.stopPropagation(); }}
@@ -257,15 +257,15 @@ const ProdutoDetalhe = () => {
                         </button>
                       </div>
                     </div>
-                    <div className="p-3">
-                      <p className="text-[10px] font-bold text-accent uppercase">
+                    <div className="p-2 md:p-3">
+                      <p className="text-[9px] md:text-[10px] font-bold text-accent uppercase">
                         {brand.subBrands.find((sb) => sb.id === p.subBrandId)?.name}
                       </p>
-                      <p className="text-[9px] text-muted-foreground">Ref: {p.ref}</p>
-                      <p className="text-xs text-foreground mt-1 line-clamp-2 leading-relaxed">{p.name}</p>
-                      <p className="text-sm font-bold text-foreground mt-1.5">{fmt(p.price)}</p>
-                      <p className="text-[9px] text-muted-foreground mt-1">
-                        {p.sizes.length} tamanhos · {p.variants.length} {p.variants.length === 1 ? "cor" : "cores"}
+                      <p className="text-[8px] md:text-[9px] text-muted-foreground">Ref: {p.ref}</p>
+                      <p className="text-[10px] md:text-xs text-foreground mt-0.5 md:mt-1 line-clamp-2 leading-snug">{p.name}</p>
+                      <p className="text-xs md:text-sm font-bold text-foreground mt-1">{fmt(p.price)}</p>
+                      <p className="text-[8px] md:text-[9px] text-muted-foreground mt-0.5 md:mt-1">
+                        {p.sizes.length} tam · {p.variants.length} {p.variants.length === 1 ? "cor" : "cores"}
                       </p>
                     </div>
                   </motion.div>
@@ -304,7 +304,7 @@ const ProdutoDetalhe = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed z-50 inset-4 sm:inset-y-6 md:inset-y-6 md:left-[10%] md:right-[10%] lg:left-[15%] lg:right-[15%] bg-card rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+              className="fixed z-50 inset-2 sm:inset-4 md:inset-y-6 md:left-[10%] md:right-[10%] lg:left-[15%] lg:right-[15%] bg-card rounded-xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
@@ -325,7 +325,7 @@ const ProdutoDetalhe = () => {
               {/* Scrollable content */}
               <div className="flex-1 overflow-y-auto">
                 {/* Summary tables */}
-                <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-[5fr_5fr_3fr] gap-4 border-b border-border bg-muted/20">
+                <div className="px-3 md:px-5 py-3 md:py-4 grid grid-cols-1 gap-3 md:grid-cols-[5fr_5fr_3fr] md:gap-4 border-b border-border bg-muted/20">
                   {/* By Category */}
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por tipo de produto</p>
@@ -421,8 +421,8 @@ const ProdutoDetalhe = () => {
                 </div>
 
                 {/* Products list with exclusion */}
-                <div className="px-5 py-3">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-3">Produtos ({activeProducts.length})</p>
+                <div className="px-3 md:px-5 py-3">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2 md:mb-3">Produtos ({activeProducts.length})</p>
                   <div className="space-y-1">
                     {filteredProducts.map((p) => {
                       const isExcluded = excludedIds.has(p.id);
@@ -431,7 +431,7 @@ const ProdutoDetalhe = () => {
                       return (
                         <div
                           key={p.id}
-                          className={`flex items-center gap-3 py-2 px-2 rounded-lg border transition-all ${
+                          className={`flex items-center gap-2 md:gap-3 py-1.5 md:py-2 px-1.5 md:px-2 rounded-lg border transition-all ${
                             isExcluded
                               ? "border-border/50 bg-muted/30 opacity-50"
                               : "border-border"
@@ -440,49 +440,49 @@ const ProdutoDetalhe = () => {
                           <img
                             src={p.variants[0]?.images[0]}
                             alt={p.name}
-                            className="h-11 w-11 rounded-lg object-cover border border-border shrink-0"
+                            className="h-9 w-9 md:h-11 md:w-11 rounded-lg object-cover border border-border shrink-0"
+                            loading="lazy"
                           />
                           <div className="flex-1 min-w-0">
-                            <p className={`text-xs font-semibold truncate ${isExcluded ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                            <p className={`text-[10px] md:text-xs font-semibold truncate ${isExcluded ? "text-muted-foreground line-through" : "text-foreground"}`}>
                               {p.name}
                             </p>
-                            <p className="text-[10px] text-muted-foreground">
-                              Ref: {p.ref} · {p.category} · {p.gender} · {p.sizes.join(", ")}
+                            <p className="text-[9px] md:text-[10px] text-muted-foreground truncate">
+                              {p.ref} · {p.category} · {p.gender}
                             </p>
                           </div>
                           {/* Grade quantity controls */}
                           {!isExcluded && (
-                            <div className="flex items-center gap-1 shrink-0">
+                            <div className="flex items-center gap-0.5 md:gap-1 shrink-0">
                               <button
                                 onClick={() => setGradeQty((prev) => ({ ...prev, [p.id]: Math.max(1, (prev[p.id] ?? 1) - 1) }))}
-                                className="h-6 w-6 rounded bg-muted text-foreground text-xs font-bold flex items-center justify-center hover:bg-muted/80 transition-colors"
+                                className="h-5 w-5 md:h-6 md:w-6 rounded bg-muted text-foreground text-[10px] md:text-xs font-bold flex items-center justify-center hover:bg-muted/80 transition-colors"
                               >
                                 −
                               </button>
-                              <span className="w-6 text-center text-xs font-bold text-foreground">{q}</span>
+                              <span className="w-5 md:w-6 text-center text-[10px] md:text-xs font-bold text-foreground">{q}</span>
                               <button
                                 onClick={() => setGradeQty((prev) => ({ ...prev, [p.id]: (prev[p.id] ?? 1) + 1 }))}
-                                className="h-6 w-6 rounded bg-muted text-foreground text-xs font-bold flex items-center justify-center hover:bg-muted/80 transition-colors"
+                                className="h-5 w-5 md:h-6 md:w-6 rounded bg-muted text-foreground text-[10px] md:text-xs font-bold flex items-center justify-center hover:bg-muted/80 transition-colors"
                               >
                                 +
                               </button>
-                              <span className="text-[9px] text-muted-foreground ml-0.5">grades</span>
                             </div>
                           )}
-                          <div className="text-right shrink-0 w-20">
-                            <p className="text-[10px] text-muted-foreground">{pieces} pç</p>
-                            <p className="text-xs font-bold text-foreground">{fmt(pieces * p.price)}</p>
+                          <div className="text-right shrink-0 w-14 md:w-20">
+                            <p className="text-[9px] md:text-[10px] text-muted-foreground">{pieces} pç</p>
+                            <p className="text-[10px] md:text-xs font-bold text-foreground">{fmt(pieces * p.price)}</p>
                           </div>
                           <button
                             onClick={() => toggleExclude(p.id)}
-                            className={`h-7 w-7 rounded-md flex items-center justify-center shrink-0 transition-colors ${
+                            className={`h-6 w-6 md:h-7 md:w-7 rounded-md flex items-center justify-center shrink-0 transition-colors ${
                               isExcluded
                                 ? "bg-accent text-accent-foreground hover:bg-accent/80"
                                 : "bg-destructive/10 text-destructive hover:bg-destructive/20"
                             }`}
                             title={isExcluded ? "Incluir de volta" : "Remover"}
                           >
-                            {isExcluded ? <PackagePlus className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
+                            {isExcluded ? <PackagePlus className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
                           </button>
                         </div>
                       );
@@ -492,16 +492,17 @@ const ProdutoDetalhe = () => {
               </div>
 
               {/* Footer */}
-              <div className="shrink-0 border-t border-border bg-muted/30 px-5 py-3 flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    {activeProducts.length} produtos · {grandTotal} peças · Preço médio: {fmt(avgPrice)}
+              <div className="shrink-0 border-t border-border bg-muted/30 px-3 md:px-5 py-2.5 md:py-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] md:text-xs text-muted-foreground truncate">
+                    {activeProducts.length} prod · {grandTotal} pç · Média: {fmt(avgPrice)}
                   </p>
-                  <p className="text-lg font-bold text-foreground">{fmt(grandPrice)}</p>
+                  <p className="text-base md:text-lg font-bold text-foreground">{fmt(grandPrice)}</p>
                 </div>
-                <Button onClick={() => setAddAllModal(false)} className="gap-1.5" disabled={activeProducts.length === 0}>
-                  <ShoppingBag className="h-4 w-4" />
-                  Adicionar à sacola
+                <Button size="sm" onClick={() => setAddAllModal(false)} className="gap-1.5 shrink-0 text-xs md:text-sm" disabled={activeProducts.length === 0}>
+                  <ShoppingBag className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">Adicionar à sacola</span>
+                  <span className="sm:hidden">Adicionar</span>
                 </Button>
               </div>
             </motion.div>

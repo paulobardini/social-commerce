@@ -154,32 +154,33 @@ export function StoriesBar() {
 
   return (
     <>
-      <div className="border-b border-border bg-card/50 px-3 md:px-6 py-3 md:py-4">
-        <div className="flex gap-3 md:gap-5 overflow-x-auto scrollbar-hide">
+      <div className="border-b border-border bg-card/50 px-2 md:px-6 py-2.5 md:py-4">
+        <div className="flex gap-2.5 md:gap-5 overflow-x-auto scrollbar-hide">
           {brands.map((brand) => (
             <button
               key={brand.id}
               onClick={() => brand.id !== "create" && openBrand(brand.id)}
-              className="flex flex-col items-center gap-2 flex-shrink-0"
+              className="flex flex-col items-center gap-1.5 flex-shrink-0"
             >
               <div className="relative flex items-center justify-center">
                 {brand.id !== "create" ? (
-                  <div className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-gradient-to-br from-accent to-tertiary p-[3px]">
+                  <div className="flex h-14 w-14 md:h-[68px] md:w-[68px] items-center justify-center rounded-full bg-gradient-to-br from-accent to-tertiary p-[2px] md:p-[3px]">
                     <div className="flex h-full w-full items-center justify-center rounded-full bg-card p-[2px]">
                       <img
                         src={brand.avatar!}
                         alt={brand.brand}
                         className="h-full w-full rounded-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="flex h-[68px] w-[68px] items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/40">
-                    <Plus className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex h-14 w-14 md:h-[68px] md:w-[68px] items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/40">
+                    <Plus className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                   </div>
                 )}
               </div>
-              <span className="max-w-[76px] truncate text-[11px] font-medium text-muted-foreground">
+              <span className="max-w-[60px] md:max-w-[76px] truncate text-[10px] md:text-[11px] font-medium text-muted-foreground">
                 {brand.brand}
               </span>
             </button>
@@ -218,8 +219,8 @@ export function StoriesBar() {
             )}
 
             <div
-              className="relative w-full max-w-[420px] overflow-hidden rounded-2xl bg-card shadow-2xl mx-4"
-              style={{ aspectRatio: "9/16", maxHeight: "85vh" }}
+              className="relative w-full max-w-[420px] overflow-hidden rounded-2xl bg-card shadow-2xl mx-2 md:mx-4"
+              style={{ aspectRatio: "9/16", maxHeight: "90vh" }}
               onClick={(e) => e.stopPropagation()}
             >
               <AnimatePresence initial={false} custom={direction} mode="popLayout">

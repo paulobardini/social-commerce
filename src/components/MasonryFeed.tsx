@@ -78,7 +78,7 @@ export function MasonryFeed() {
               >
                 <div className="group relative overflow-hidden rounded-xl bg-card cursor-pointer">
                   <div className="relative overflow-hidden">
-                    <img src={pin.image} alt={pin.title} className="w-full object-cover" />
+                    <img src={pin.image} alt={pin.title} loading="lazy" className="w-full object-cover" />
                   </div>
                   <div className="p-2">
                     <h3 className="text-xs font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
@@ -110,6 +110,7 @@ export function MasonryFeed() {
                 <img
                   src={pin.image}
                   alt={pin.title}
+                  loading="lazy"
                   className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 
