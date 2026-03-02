@@ -267,8 +267,13 @@ const ProdutoDetalhe = () => {
                       <p className="text-[8px] md:text-[9px] text-muted-foreground">Ref: {p.ref}</p>
                       <p className="text-[10px] md:text-xs text-foreground mt-0.5 md:mt-1 line-clamp-2 leading-snug">{p.name}</p>
                       <p className="text-xs md:text-sm font-bold text-foreground mt-1">{fmt(p.price)}</p>
-                      <p className="text-[8px] md:text-[9px] text-muted-foreground mt-0.5 md:mt-1">
-                        {p.sizes.length} tam · {p.variants.length} {p.variants.length === 1 ? "cor" : "cores"}
+                      <div className="flex flex-wrap gap-0.5 mt-1">
+                        {p.sizes.map((s) => (
+                          <span key={s} className="px-1 py-0.5 rounded bg-muted text-[7px] md:text-[8px] font-medium text-muted-foreground">{s}</span>
+                        ))}
+                      </div>
+                      <p className="text-[8px] md:text-[9px] text-muted-foreground mt-0.5">
+                        {p.variants.length} {p.variants.length === 1 ? "cor" : "cores"}
                       </p>
                     </div>
                   </motion.div>
