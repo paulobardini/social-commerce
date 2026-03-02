@@ -4,6 +4,8 @@ import { NextilSidebar } from "@/components/NextilSidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { getBrandBySlug, type Product } from "@/data/mockProducts";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
+import { FilterSheet, defaultFilters, countActiveFilters, type FilterState } from "@/components/FilterSheet";
+import { DiscountModal } from "@/components/DiscountModal";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -32,10 +34,35 @@ const ProdutoDetalhe = () => {
   const [addAllModal, setAddAllModal] = useState(false);
   const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
   const [gradeQty, setGradeQty] = useState<Record<string, number>>({});
-  const filteredProducts = useMemo(
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const [discountOpen, setDiscountOpen] = useState(false);
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
+
+  const allBrandProducts = useMemo(
     () => (brand && activeSubBrand ? brand.products.filter((p) => p.subBrandId === activeSubBrand) : brand?.products || []),
     [brand, activeSubBrand]
   );
+
+  const filteredProducts = useMemo(() => {
+    let list = allBrandProducts;
+    if (filters.categories.length) list = list.filter((p) => filters.categories.includes(p.category));
+    if (filters.genders.length) list = list.filter((p) => filters.genders.includes(p.gender));
+    if (filters.sizes.length) list = list.filter((p) => p.sizes.some((s) => filters.sizes.includes(s)));
+    if (filters.priceRange) {
+      const [min, max] = filters.priceRange.split("-").map(Number);
+      list = list.filter((p) => {
+        if (filters.priceRange === "200+") return p.price >= 200;
+        return p.price >= min && p.price <= max;
+      });
+    } else {
+      const min = parseFloat(filters.priceMin);
+      const max = parseFloat(filters.priceMax);
+      if (!isNaN(min)) list = list.filter((p) => p.price >= min);
+      if (!isNaN(max)) list = list.filter((p) => p.price <= max);
+    }
+    return list;
+  }, [allBrandProducts, filters]);
 
   const activeProducts = useMemo(
     () => filteredProducts.filter((p) => !excludedIds.has(p.id)),
@@ -177,12 +204,16 @@ const ProdutoDetalhe = () => {
                 ))}
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <Button variant="outline" size="sm" className="gap-1 text-xs h-7 px-2.5 rounded-md">
+                <Button variant="outline" size="sm" onClick={() => setDiscountOpen(true)} className="gap-1 text-xs h-7 px-2.5 rounded-md">
                   <Percent className="h-3 w-3" /> Off
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1 text-xs h-7 px-2.5 rounded-md">
+                <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)} className="gap-1 text-xs h-7 px-2.5 rounded-md">
                   <SlidersHorizontal className="h-3 w-3" />
-                  <span className="bg-accent text-accent-foreground rounded-full h-4 min-w-4 flex items-center justify-center text-[9px] font-bold">1</span>
+                  {countActiveFilters(filters) > 0 && (
+                    <span className="bg-accent text-accent-foreground rounded-full h-4 min-w-4 flex items-center justify-center text-[9px] font-bold">
+                      {countActiveFilters(filters)}
+                    </span>
+                  )}
                 </Button>
               </div>
             </div>
@@ -477,6 +508,23 @@ const ProdutoDetalhe = () => {
           </>
         )}
       </AnimatePresence>
+
+      {/* Filter Sheet */}
+      <FilterSheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        products={allBrandProducts}
+        filters={filters}
+        onApply={setFilters}
+      />
+
+      {/* Discount Modal */}
+      <DiscountModal
+        open={discountOpen}
+        onClose={() => setDiscountOpen(false)}
+        subBrands={brand.subBrands}
+        onSave={(_, pct) => setDiscountPercent(pct)}
+      />
     </div>
   );
 };
