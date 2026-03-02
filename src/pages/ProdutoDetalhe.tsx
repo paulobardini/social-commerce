@@ -299,24 +299,30 @@ const ProdutoDetalhe = () => {
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por tipo de produto</p>
                     <div className="border border-border rounded-lg overflow-hidden">
-                      <div className="grid gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border" style={{ gridTemplateColumns: '1fr 40px 50px 40px minmax(90px, auto)' }}>
-                        <div className="px-2 py-1.5">Tipo</div>
-                        <div className="px-2 py-1.5 text-center">Qtd</div>
-                        <div className="px-2 py-1.5 text-center">Peças</div>
-                        <div className="px-2 py-1.5 text-center">%</div>
-                        <div className="px-2 py-1.5 text-right">Preço médio</div>
-                      </div>
-                      {Array.from(summaryByCategory.entries()).map(([cat, data]) => (
-                        <div key={cat} className="grid gap-0 text-xs border-b border-border last:border-0" style={{ gridTemplateColumns: '1fr 40px 50px 40px minmax(90px, auto)' }}>
-                          <div className="px-2 py-1.5 font-medium text-foreground">{cat}</div>
-                          <div className="px-2 py-1.5 text-center text-muted-foreground">{data.count}</div>
-                          <div className="px-2 py-1.5 text-center text-muted-foreground">{data.totalPieces}</div>
-                          <div className="px-2 py-1.5 text-center text-muted-foreground">{grandTotal > 0 ? ((data.totalPieces / grandTotal) * 100).toFixed(1) : 0}%</div>
-                          <div className="px-2 py-1.5 text-right font-medium text-foreground">
-                            {fmt(data.prices.reduce((a, b) => a + b, 0) / data.prices.length)}
-                          </div>
-                        </div>
-                      ))}
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-muted/50 text-[10px] font-semibold text-muted-foreground">
+                            <th className="px-3 py-2 text-left font-semibold">Tipo</th>
+                            <th className="px-2 py-2 text-center font-semibold w-10">Qtd</th>
+                            <th className="px-2 py-2 text-center font-semibold w-12">Peças</th>
+                            <th className="px-2 py-2 text-center font-semibold w-12">%</th>
+                            <th className="px-3 py-2 text-right font-semibold whitespace-nowrap">Preço médio</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Array.from(summaryByCategory.entries()).map(([cat, data]) => (
+                            <tr key={cat} className="border-t border-border">
+                              <td className="px-3 py-2 font-medium text-foreground">{cat}</td>
+                              <td className="px-2 py-2 text-center text-muted-foreground">{data.count}</td>
+                              <td className="px-2 py-2 text-center text-muted-foreground">{data.totalPieces}</td>
+                              <td className="px-2 py-2 text-center text-muted-foreground">{grandTotal > 0 ? ((data.totalPieces / grandTotal) * 100).toFixed(1) : 0}%</td>
+                              <td className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">
+                                {fmt(data.prices.reduce((a, b) => a + b, 0) / data.prices.length)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
 
@@ -324,24 +330,30 @@ const ProdutoDetalhe = () => {
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por sexo</p>
                     <div className="border border-border rounded-lg overflow-hidden">
-                      <div className="grid gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border" style={{ gridTemplateColumns: '1fr 40px 50px 40px minmax(90px, auto)' }}>
-                        <div className="px-2 py-1.5">Sexo</div>
-                        <div className="px-2 py-1.5 text-center">Qtd</div>
-                        <div className="px-2 py-1.5 text-center">Peças</div>
-                        <div className="px-2 py-1.5 text-center">%</div>
-                        <div className="px-2 py-1.5 text-right">Preço médio</div>
-                      </div>
-                      {Array.from(summaryByGender.entries()).map(([g, data]) => (
-                        <div key={g} className="grid gap-0 text-xs border-b border-border last:border-0" style={{ gridTemplateColumns: '1fr 40px 50px 40px minmax(90px, auto)' }}>
-                          <div className="px-2 py-1.5 font-medium text-foreground">{g}</div>
-                          <div className="px-2 py-1.5 text-center text-muted-foreground">{data.count}</div>
-                          <div className="px-2 py-1.5 text-center text-muted-foreground">{data.totalPieces}</div>
-                          <div className="px-2 py-1.5 text-center text-muted-foreground">{grandTotal > 0 ? ((data.totalPieces / grandTotal) * 100).toFixed(1) : 0}%</div>
-                          <div className="px-2 py-1.5 text-right font-medium text-foreground">
-                            {fmt(data.prices.reduce((a, b) => a + b, 0) / data.prices.length)}
-                          </div>
-                        </div>
-                      ))}
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-muted/50 text-[10px] font-semibold text-muted-foreground">
+                            <th className="px-3 py-2 text-left font-semibold">Sexo</th>
+                            <th className="px-2 py-2 text-center font-semibold w-10">Qtd</th>
+                            <th className="px-2 py-2 text-center font-semibold w-12">Peças</th>
+                            <th className="px-2 py-2 text-center font-semibold w-12">%</th>
+                            <th className="px-3 py-2 text-right font-semibold whitespace-nowrap">Preço médio</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Array.from(summaryByGender.entries()).map(([g, data]) => (
+                            <tr key={g} className="border-t border-border">
+                              <td className="px-3 py-2 font-medium text-foreground">{g}</td>
+                              <td className="px-2 py-2 text-center text-muted-foreground">{data.count}</td>
+                              <td className="px-2 py-2 text-center text-muted-foreground">{data.totalPieces}</td>
+                              <td className="px-2 py-2 text-center text-muted-foreground">{grandTotal > 0 ? ((data.totalPieces / grandTotal) * 100).toFixed(1) : 0}%</td>
+                              <td className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">
+                                {fmt(data.prices.reduce((a, b) => a + b, 0) / data.prices.length)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
 
@@ -349,24 +361,30 @@ const ProdutoDetalhe = () => {
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por tamanho</p>
                     <div className="border border-border rounded-lg overflow-hidden">
-                      <div className="grid grid-cols-3 gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">
-                        <div className="px-2 py-1.5">Tamanho</div>
-                        <div className="px-2 py-1.5 text-center">Peças</div>
-                        <div className="px-2 py-1.5 text-right">%</div>
-                      </div>
-                      {Array.from(summaryBySize.entries())
-                        .sort(([a], [b]) => {
-                          const na = parseInt(a), nb = parseInt(b);
-                          if (!isNaN(na) && !isNaN(nb)) return na - nb;
-                          return a.localeCompare(b);
-                        })
-                        .map(([size, pieces]) => (
-                          <div key={size} className="grid grid-cols-3 gap-0 text-xs border-b border-border last:border-0">
-                            <div className="px-2 py-1.5 font-medium text-foreground">{size}</div>
-                            <div className="px-2 py-1.5 text-center text-muted-foreground">{pieces}</div>
-                            <div className="px-2 py-1.5 text-right text-muted-foreground">{grandTotal > 0 ? ((pieces / grandTotal) * 100).toFixed(1) : 0}%</div>
-                          </div>
-                        ))}
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-muted/50 text-[10px] font-semibold text-muted-foreground">
+                            <th className="px-3 py-2 text-left font-semibold">Tamanho</th>
+                            <th className="px-2 py-2 text-center font-semibold w-14">Peças</th>
+                            <th className="px-3 py-2 text-right font-semibold w-12">%</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Array.from(summaryBySize.entries())
+                            .sort(([a], [b]) => {
+                              const na = parseInt(a), nb = parseInt(b);
+                              if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                              return a.localeCompare(b);
+                            })
+                            .map(([size, pieces]) => (
+                              <tr key={size} className="border-t border-border">
+                                <td className="px-3 py-2 font-medium text-foreground">{size}</td>
+                                <td className="px-2 py-2 text-center text-muted-foreground">{pieces}</td>
+                                <td className="px-3 py-2 text-right text-muted-foreground">{grandTotal > 0 ? ((pieces / grandTotal) * 100).toFixed(1) : 0}%</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
