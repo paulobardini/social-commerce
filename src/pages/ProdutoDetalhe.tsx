@@ -44,92 +44,80 @@ const ProdutoDetalhe = () => {
       <div className="flex">
         <NextilSidebar />
         <div className="flex-1 min-w-0 pb-16 md:pb-0">
-          {/* Sticky header block */}
-          <div className="sticky top-14 md:top-16 z-30 bg-card shadow-sm">
-            {/* Row 1: Back + Brand + Search + Vitrine */}
-            <div className="px-4 md:px-8 py-3 flex items-center justify-between gap-4 border-b border-border">
-              <div className="flex items-center gap-3">
+          {/* Compact sticky header */}
+          <div className="sticky top-14 md:top-16 z-30 bg-card border-b border-border">
+            <div className="px-3 md:px-6 py-2 flex items-center justify-between gap-3">
+              {/* Left: back + brand + breadcrumb */}
+              <div className="flex items-center gap-2 min-w-0">
                 <button
                   onClick={() => navigate(`/marca/${slug}`)}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
                 >
-                  <ChevronLeft className="h-5 w-5" />
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
                 <img
                   src={brand.logo}
                   alt={brand.name}
-                  className="h-8 w-8 rounded-lg object-cover border border-border"
+                  className="h-7 w-7 rounded-md object-cover border border-border shrink-0"
                 />
-                <span className="text-sm font-semibold text-foreground">{brand.name}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative hidden md:flex items-center">
-                  <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Pesquisar"
-                    className="h-9 w-52 rounded-lg border border-border bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
+                <div className="flex items-center gap-1.5 text-xs min-w-0">
+                  <span className="font-semibold text-foreground shrink-0">{brand.name}</span>
+                  <span className="text-muted-foreground hidden sm:inline">/</span>
+                  <span className="text-muted-foreground hidden sm:inline truncate">Produtos</span>
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">Vitrine</span>
+              </div>
+
+              {/* Right: search in brand */}
+              <div className="relative flex items-center shrink-0">
+                <Search className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder={`Buscar em ${brand.name}...`}
+                  className="h-8 w-36 md:w-52 rounded-lg border border-border bg-background pl-8 pr-3 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                />
               </div>
             </div>
 
-            {/* Row 2: Breadcrumb */}
-            <div className="px-4 md:px-8 py-1.5 text-xs text-muted-foreground border-b border-border/50">
-              <span className="cursor-pointer hover:text-foreground" onClick={() => navigate("/")}>
-                início
-              </span>
-              {" / "}
-              <span className="cursor-pointer hover:text-foreground" onClick={() => navigate(`/marca/${slug}`)}>
-                vitrine
-              </span>
-              {" / "}
-              <span className="text-foreground font-medium">Produtos</span>
-            </div>
-
-            {/* Row 3: Sub-brand tabs centered + filters right */}
-            <div className="relative px-4 md:px-8 py-4 bg-background">
-              {/* Centered sub-brands */}
-              <div className="flex justify-center gap-6 md:gap-10">
+            {/* Sub-brand tabs + filters — single compact row */}
+            <div className="px-3 md:px-6 py-2 flex items-center justify-between gap-2 bg-background/80">
+              <div className="flex gap-3 md:gap-5 overflow-x-auto scrollbar-hide">
                 {brand.subBrands.map((sb) => (
                   <button
                     key={sb.id}
                     onClick={() => setActiveSubBrand(sb.id)}
-                    className="flex flex-col items-center gap-2 group"
+                    className="flex items-center gap-2 group shrink-0"
                   >
                     <div
-                      className={`h-14 w-14 md:h-16 md:w-16 rounded-full overflow-hidden border-[2.5px] transition-all duration-200 ${
+                      className={`h-8 w-8 rounded-full overflow-hidden border-[2px] transition-all ${
                         activeSubBrand === sb.id
-                          ? "border-accent shadow-md"
-                          : "border-border/60 group-hover:border-muted-foreground"
+                          ? "border-accent"
+                          : "border-border/50 group-hover:border-muted-foreground"
                       }`}
                     >
                       <img src={sb.logo} alt={sb.name} className="h-full w-full object-cover" />
                     </div>
                     <span
-                      className={`text-[10px] md:text-xs font-bold uppercase tracking-wider ${
+                      className={`text-[11px] font-semibold uppercase tracking-wide ${
                         activeSubBrand === sb.id ? "text-foreground" : "text-muted-foreground"
                       }`}
                     >
                       {sb.name}
                     </span>
                     {activeSubBrand === sb.id && (
-                      <motion.div layoutId="productSubBrand" className="h-[2px] w-10 bg-accent rounded-full -mt-1" />
+                      <motion.div layoutId="productSubBrand" className="hidden" />
                     )}
                   </button>
                 ))}
               </div>
 
-              {/* Filter buttons — absolute right */}
-              <div className="absolute right-4 md:right-8 bottom-4 flex items-center gap-2">
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8 rounded-lg">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Button variant="outline" size="sm" className="gap-1 text-xs h-7 px-2.5 rounded-md">
                   <Percent className="h-3 w-3" />
                   Off
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8 rounded-lg">
-                  <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="bg-accent text-accent-foreground rounded-full h-4 min-w-4 flex items-center justify-center text-[10px] font-bold">
+                <Button variant="outline" size="sm" className="gap-1 text-xs h-7 px-2.5 rounded-md">
+                  <SlidersHorizontal className="h-3 w-3" />
+                  <span className="bg-accent text-accent-foreground rounded-full h-4 min-w-4 flex items-center justify-center text-[9px] font-bold">
                     1
                   </span>
                 </Button>
