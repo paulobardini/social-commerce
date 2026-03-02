@@ -6,6 +6,7 @@ import { getBrandBySlug, type Product } from "@/data/mockProducts";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { FilterSheet, defaultFilters, countActiveFilters, type FilterState } from "@/components/FilterSheet";
 import { DiscountModal } from "@/components/DiscountModal";
+import { useCart } from "@/contexts/CartContext";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -25,11 +26,13 @@ const ProdutoDetalhe = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const brand = getBrandBySlug(slug || "");
+  const cart = useCart();
 
   const [activeSubBrand, setActiveSubBrand] = useState<string | null>(
     brand?.subBrands[0]?.id || null
   );
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [openInGrade, setOpenInGrade] = useState(false);
   const [sideMode, setSideMode] = useState(false);
   const [addAllModal, setAddAllModal] = useState(false);
   const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
@@ -243,7 +246,7 @@ const ProdutoDetalhe = () => {
                       <img src={p.variants[0]?.images[0]} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       <div className="absolute bottom-0 left-0 right-0 p-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity translate-y-1 group-hover:translate-y-0 duration-200">
                         <button
-                          onClick={(e) => { e.stopPropagation(); }}
+                          onClick={(e) => { e.stopPropagation(); setOpenInGrade(true); setSelectedProduct(p); }}
                           className="flex-1 h-7 rounded-md bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors"
                         >
                           <ShoppingBag className="h-3 w-3" /> Comprar
@@ -283,8 +286,9 @@ const ProdutoDetalhe = () => {
           <ProductDetailModal
             product={selectedProduct}
             brand={brand}
-            onClose={() => { setSelectedProduct(null); setSideMode(false); }}
+            onClose={() => { setSelectedProduct(null); setSideMode(false); setOpenInGrade(false); }}
             onFindSimilar={() => setSideMode(true)}
+            openInGrade={openInGrade}
           />
         )}
       </AnimatePresence>
@@ -499,7 +503,21 @@ const ProdutoDetalhe = () => {
                   </p>
                   <p className="text-base md:text-lg font-bold text-foreground">{fmt(grandPrice)}</p>
                 </div>
-                <Button size="sm" onClick={() => setAddAllModal(false)} className="gap-1.5 shrink-0 text-xs md:text-sm" disabled={activeProducts.length === 0}>
+                <Button size="sm" onClick={() => {
+                  activeProducts.forEach((p) => {
+                    const q = getQty(p.id);
+                    const quantities = Object.fromEntries(p.sizes.map((s) => [s, q]));
+                    cart.addItem({
+                      product: p,
+                      brandSlug: brand.slug,
+                      brandName: brand.name,
+                      quantities,
+                      selectedColors: p.variants.map((v) => v.color),
+                    });
+                  });
+                  setAddAllModal(false);
+                  cart.setIsOpen(true);
+                }} className="gap-1.5 shrink-0 text-xs md:text-sm" disabled={activeProducts.length === 0}>
                   <ShoppingBag className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   <span className="hidden sm:inline">Adicionar à sacola</span>
                   <span className="sm:hidden">Adicionar</span>
