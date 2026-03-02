@@ -31,7 +31,7 @@ const ProdutoDetalhe = () => {
   const [sideMode, setSideMode] = useState(false);
   const [addAllModal, setAddAllModal] = useState(false);
   const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
-
+  const [gradeQty, setGradeQty] = useState<Record<string, number>>({});
   const filteredProducts = useMemo(
     () => (brand && activeSubBrand ? brand.products.filter((p) => p.subBrandId === activeSubBrand) : brand?.products || []),
     [brand, activeSubBrand]
@@ -42,10 +42,13 @@ const ProdutoDetalhe = () => {
     [filteredProducts, excludedIds]
   );
 
+  const getQty = (id: string) => gradeQty[id] ?? 1;
+
   const summaryByCategory = useMemo(() => {
     const map = new Map<string, { count: number; totalPieces: number; totalPrice: number; prices: number[] }>();
     activeProducts.forEach((p) => {
-      const pieces = p.sizes.length * p.variants.length;
+      const q = getQty(p.id);
+      const pieces = p.sizes.length * p.variants.length * q;
       const existing = map.get(p.category) || { count: 0, totalPieces: 0, totalPrice: 0, prices: [] };
       existing.count++;
       existing.totalPieces += pieces;
@@ -54,12 +57,13 @@ const ProdutoDetalhe = () => {
       map.set(p.category, existing);
     });
     return map;
-  }, [activeProducts]);
+  }, [activeProducts, gradeQty]);
 
   const summaryByGender = useMemo(() => {
     const map = new Map<string, { count: number; totalPieces: number; totalPrice: number; prices: number[] }>();
     activeProducts.forEach((p) => {
-      const pieces = p.sizes.length * p.variants.length;
+      const q = getQty(p.id);
+      const pieces = p.sizes.length * p.variants.length * q;
       const existing = map.get(p.gender) || { count: 0, totalPieces: 0, totalPrice: 0, prices: [] };
       existing.count++;
       existing.totalPieces += pieces;
@@ -68,21 +72,22 @@ const ProdutoDetalhe = () => {
       map.set(p.gender, existing);
     });
     return map;
-  }, [activeProducts]);
+  }, [activeProducts, gradeQty]);
 
   const summaryBySize = useMemo(() => {
     const map = new Map<string, number>();
     activeProducts.forEach((p) => {
+      const q = getQty(p.id);
       p.sizes.forEach((s) => {
-        map.set(s, (map.get(s) || 0) + p.variants.length);
+        map.set(s, (map.get(s) || 0) + p.variants.length * q);
       });
     });
     return map;
-  }, [activeProducts]);
+  }, [activeProducts, gradeQty]);
 
-  const grandTotal = activeProducts.reduce((a, p) => a + p.sizes.length * p.variants.length, 0);
-  const grandPrice = activeProducts.reduce((a, p) => a + p.sizes.length * p.variants.length * p.price, 0);
-  const avgPrice = activeProducts.length > 0 ? activeProducts.reduce((a, p) => a + p.price, 0) / activeProducts.length : 0;
+  const grandTotal = activeProducts.reduce((a, p) => a + p.sizes.length * p.variants.length * getQty(p.id), 0);
+  const grandPrice = activeProducts.reduce((a, p) => a + p.sizes.length * p.variants.length * getQty(p.id) * p.price, 0);
+  const avgPrice = activeProducts.length > 0 ? grandPrice / grandTotal : 0;
 
   const toggleExclude = (id: string) => {
     setExcludedIds((prev) => {
@@ -94,6 +99,7 @@ const ProdutoDetalhe = () => {
 
   const openAddAllModal = () => {
     setExcludedIds(new Set());
+    setGradeQty({});
     setAddAllModal(true);
   };
 
@@ -365,7 +371,8 @@ const ProdutoDetalhe = () => {
                   <div className="space-y-1">
                     {filteredProducts.map((p) => {
                       const isExcluded = excludedIds.has(p.id);
-                      const pieces = p.sizes.length * p.variants.length;
+                      const q = getQty(p.id);
+                      const pieces = p.sizes.length * p.variants.length * q;
                       return (
                         <div
                           key={p.id}
@@ -388,8 +395,27 @@ const ProdutoDetalhe = () => {
                               Ref: {p.ref} · {p.category} · {p.gender} · {p.sizes.join(", ")}
                             </p>
                           </div>
-                          <div className="text-right shrink-0 mr-2">
-                            <p className="text-[10px] text-muted-foreground">{pieces} peças</p>
+                          {/* Grade quantity controls */}
+                          {!isExcluded && (
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => setGradeQty((prev) => ({ ...prev, [p.id]: Math.max(1, (prev[p.id] ?? 1) - 1) }))}
+                                className="h-6 w-6 rounded bg-muted text-foreground text-xs font-bold flex items-center justify-center hover:bg-muted/80 transition-colors"
+                              >
+                                −
+                              </button>
+                              <span className="w-6 text-center text-xs font-bold text-foreground">{q}</span>
+                              <button
+                                onClick={() => setGradeQty((prev) => ({ ...prev, [p.id]: (prev[p.id] ?? 1) + 1 }))}
+                                className="h-6 w-6 rounded bg-muted text-foreground text-xs font-bold flex items-center justify-center hover:bg-muted/80 transition-colors"
+                              >
+                                +
+                              </button>
+                              <span className="text-[9px] text-muted-foreground ml-0.5">grades</span>
+                            </div>
+                          )}
+                          <div className="text-right shrink-0 w-20">
+                            <p className="text-[10px] text-muted-foreground">{pieces} pç</p>
                             <p className="text-xs font-bold text-foreground">{fmt(pieces * p.price)}</p>
                           </div>
                           <button
