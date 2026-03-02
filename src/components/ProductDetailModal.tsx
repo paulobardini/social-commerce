@@ -121,198 +121,198 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar }: P
           </button>
         </div>
 
-        {/* Scrollable content — only scrolls when desc/specs/grade open */}
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Image — compact, ~45vh max */}
-          <div
-            className={`relative overflow-hidden bg-muted cursor-zoom-in ${
-              isSide ? "h-52" : "h-[40vh] md:h-[45vh]"
-            }`}
-            onClick={() => setZoomed(!zoomed)}
-          >
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={`${selectedImage}-${zoomed}`}
-                src={currentImages[selectedImage]}
-                alt={product.name}
-                className={`h-full w-full transition-transform duration-300 ${
-                  zoomed ? "object-contain scale-[2] cursor-zoom-out" : "object-cover"
-                }`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+          <AnimatePresence mode="wait">
+            {!gradeOpen ? (
+              <motion.div
+                key="produto"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.12 }}
-              />
-            </AnimatePresence>
-            <div className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground pointer-events-none">
-              <ZoomIn className="h-3 w-3" />
-            </div>
-          </div>
-
-          {/* Thumbnails */}
-          <div className="flex gap-1.5 px-4 py-2 overflow-x-auto scrollbar-hide border-b border-border">
-            {currentImages.map((img, idx) => (
-              <button
-                key={idx}
-                onClick={() => { setSelectedImage(idx); setZoomed(false); }}
-                className={`h-12 w-12 rounded-md overflow-hidden shrink-0 border-2 transition-colors ${
-                  selectedImage === idx ? "border-accent" : "border-border"
-                }`}
               >
-                <img src={img} alt="" className="h-full w-full object-cover" />
-              </button>
-            ))}
-          </div>
-
-          {/* Product info */}
-          <div className="px-4 py-3">
-            <h2 className="text-sm font-bold text-foreground leading-snug">
-              {product.name}
-            </h2>
-            <p className="text-lg font-bold text-foreground mt-1">
-              R$ {product.price.toFixed(2).replace(".", ",")}
-            </p>
-
-            {/* Description — expandable */}
-            <button
-              onClick={() => setDescOpen(!descOpen)}
-              className="flex items-center justify-between w-full py-2 mt-2 border-t border-border"
-            >
-              <span className="text-xs font-semibold text-foreground">Descrição</span>
-              {descOpen ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
-            </button>
-            {descOpen && (
-              <p className="text-xs text-muted-foreground leading-relaxed pb-2">{product.description}</p>
-            )}
-
-            {/* Specs — expandable */}
-            <button
-              onClick={() => setSpecsOpen(!specsOpen)}
-              className="flex items-center justify-between w-full py-2 border-t border-border"
-            >
-              <span className="text-xs font-semibold text-foreground">Especificações</span>
-              {specsOpen ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
-            </button>
-            {specsOpen && (
-              <div className="text-xs text-muted-foreground space-y-1 pb-2">
-                <p>Composição: 100% Algodão</p>
-                <p>Tamanhos: {product.sizes.join(", ")}</p>
-                <p>Cores: {product.variants.map((v) => v.color).join(", ")}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Grade section — inline, expandable */}
-          {gradeOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              className="px-4 pb-4 space-y-3 border-t border-border pt-3"
-            >
-              <div>
-                <h3 className="text-xs font-bold text-foreground">Montar grade aberta</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Ajuste tamanhos, quantidades e variantes
-                </p>
-              </div>
-
-              {/* Distribute */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">Distribuir</span>
-                <Input
-                  type="number"
-                  min={0}
-                  value={distributeValue}
-                  onChange={(e) => setDistributeValue(e.target.value)}
-                  placeholder="0"
-                  className="h-7 text-center text-xs"
-                />
-                <Button variant="outline" size="sm" onClick={handleDistribute} className="gap-1 h-7 text-[10px] shrink-0 px-2">
-                  <Shuffle className="h-3 w-3" />
-                  Distribuir
-                </Button>
-              </div>
-
-              {/* Size table */}
-              <div className="border border-border rounded-lg overflow-hidden">
-                <div className="grid gap-0" style={{ gridTemplateColumns: `auto repeat(${product.sizes.length}, 1fr) auto` }}>
-                  <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">Tam.</div>
-                  {product.sizes.map((s) => (
-                    <div key={s} className="px-1 py-1 text-center text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">{s}</div>
-                  ))}
-                  <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border text-right">Total</div>
-
-                  <div className="px-2 py-1 text-[10px] font-medium text-foreground flex items-center">Qtd</div>
-                  {product.sizes.map((s) => (
-                    <div key={s} className="px-0.5 py-1 flex justify-center">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={quantities[s] || 0}
-                        onChange={(e) => setQuantities((prev) => ({ ...prev, [s]: Math.max(0, parseInt(e.target.value) || 0) }))}
-                        className="h-6 w-10 text-center text-[10px]"
-                      />
-                    </div>
-                  ))}
-                  <div className="px-2 py-1 text-[10px] font-bold text-foreground flex items-center justify-end">{totalPieces}</div>
+                {/* Image */}
+                <div
+                  className={`relative overflow-hidden bg-muted cursor-zoom-in ${
+                    isSide ? "h-52" : "h-[40vh] md:h-[45vh]"
+                  }`}
+                  onClick={() => setZoomed(!zoomed)}
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={`${selectedImage}-${zoomed}`}
+                      src={currentImages[selectedImage]}
+                      alt={product.name}
+                      className={`h-full w-full transition-transform duration-300 ${
+                        zoomed ? "object-contain scale-[2] cursor-zoom-out" : "object-cover"
+                      }`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.12 }}
+                    />
+                  </AnimatePresence>
+                  <div className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground pointer-events-none">
+                    <ZoomIn className="h-3 w-3" />
+                  </div>
                 </div>
-              </div>
 
-              {/* Total */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-foreground">Total final</span>
-                <span className="text-xs font-bold text-foreground">R$ {totalPrice.toFixed(2).replace(".", ",")}</span>
-              </div>
+                {/* Thumbnails */}
+                <div className="flex gap-1.5 px-4 py-2 overflow-x-auto scrollbar-hide border-b border-border">
+                  {currentImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => { setSelectedImage(idx); setZoomed(false); }}
+                      className={`h-12 w-12 rounded-md overflow-hidden shrink-0 border-2 transition-colors ${
+                        selectedImage === idx ? "border-accent" : "border-border"
+                      }`}
+                    >
+                      <img src={img} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
 
-              {/* Colors */}
-              <div className="flex gap-2 flex-wrap">
-                {product.variants.map((v) => (
-                  <button
-                    key={v.color}
-                    onClick={() => toggleColor(v.color)}
-                    className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-[10px] transition-colors ${
-                      selectedColors.includes(v.color) ? "border-accent bg-accent/5" : "border-border"
-                    }`}
-                  >
-                    <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: v.colorHex }} />
-                    <span className="text-foreground">{v.color}</span>
-                    {selectedColors.includes(v.color) && (
-                      <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-accent flex items-center justify-center">
-                        <Check className="h-2 w-2 text-accent-foreground" />
-                      </div>
-                    )}
+                {/* Product info */}
+                <div className="px-4 py-3">
+                  <h2 className="text-sm font-bold text-foreground leading-snug">{product.name}</h2>
+                  <p className="text-lg font-bold text-foreground mt-1">
+                    R$ {product.price.toFixed(2).replace(".", ",")}
+                  </p>
+
+                  <button onClick={() => setDescOpen(!descOpen)} className="flex items-center justify-between w-full py-2 mt-2 border-t border-border">
+                    <span className="text-xs font-semibold text-foreground">Descrição</span>
+                    {descOpen ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
                   </button>
-                ))}
-              </div>
+                  {descOpen && <p className="text-xs text-muted-foreground leading-relaxed pb-2">{product.description}</p>}
 
-              {/* Add to bag */}
-              <Button size="sm" className="w-full gap-1.5 text-xs">
+                  <button onClick={() => setSpecsOpen(!specsOpen)} className="flex items-center justify-between w-full py-2 border-t border-border">
+                    <span className="text-xs font-semibold text-foreground">Especificações</span>
+                    {specsOpen ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+                  </button>
+                  {specsOpen && (
+                    <div className="text-xs text-muted-foreground space-y-1 pb-2">
+                      <p>Composição: 100% Algodão</p>
+                      <p>Tamanhos: {product.sizes.join(", ")}</p>
+                      <p>Cores: {product.variants.map((v) => v.color).join(", ")}</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              /* GRADE VIEW — full page inside modal */
+              <motion.div
+                key="grade"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.12 }}
+                className="px-4 py-4 space-y-4"
+              >
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Montar grade aberta</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Ajuste os tamanhos, quantidades e variantes
+                  </p>
+                </div>
+
+                {/* Distribute */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Distribuir</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={distributeValue}
+                    onChange={(e) => setDistributeValue(e.target.value)}
+                    placeholder="0"
+                    className="h-8 text-center text-xs"
+                  />
+                  <Button variant="outline" size="sm" onClick={handleDistribute} className="gap-1.5 h-8 text-xs shrink-0">
+                    <Shuffle className="h-3 w-3" />
+                    Distribuir
+                  </Button>
+                </div>
+
+                {/* Size table */}
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="grid gap-0" style={{ gridTemplateColumns: `auto repeat(${product.sizes.length}, 1fr) auto` }}>
+                    <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">Tamanho</div>
+                    {product.sizes.map((s) => (
+                      <div key={s} className="px-1 py-1.5 text-center text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">{s}</div>
+                    ))}
+                    <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border text-right">Total peças</div>
+
+                    <div className="px-2 py-1.5 text-xs font-medium text-foreground flex items-center">Quantidade</div>
+                    {product.sizes.map((s) => (
+                      <div key={s} className="px-0.5 py-1.5 flex justify-center">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={quantities[s] || 0}
+                          onChange={(e) => setQuantities((prev) => ({ ...prev, [s]: Math.max(0, parseInt(e.target.value) || 0) }))}
+                          className="h-7 w-12 text-center text-xs"
+                        />
+                      </div>
+                    ))}
+                    <div className="px-2 py-1.5 text-xs font-bold text-foreground flex items-center justify-end">{totalPieces}</div>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="flex items-center justify-between py-2 border-t border-border">
+                  <span className="text-sm font-bold text-foreground">Total final</span>
+                  <span className="text-sm font-bold text-foreground">R$ {totalPrice.toFixed(2).replace(".", ",")}</span>
+                </div>
+
+                {/* Colors */}
+                <div className="flex gap-2 flex-wrap">
+                  {product.variants.map((v) => (
+                    <button
+                      key={v.color}
+                      onClick={() => toggleColor(v.color)}
+                      className={`relative flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                        selectedColors.includes(v.color) ? "border-accent bg-accent/5" : "border-border"
+                      }`}
+                    >
+                      <div className="w-6 h-6 rounded border border-border" style={{ backgroundColor: v.colorHex }} />
+                      <span className="text-xs text-foreground">{v.color}</span>
+                      {selectedColors.includes(v.color) && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-accent flex items-center justify-center">
+                          <Check className="h-2.5 w-2.5 text-accent-foreground" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Sticky bottom */}
+        <div className="shrink-0 border-t border-border bg-card px-4 py-2.5 flex items-center gap-2">
+          {!gradeOpen ? (
+            <>
+              <Button size="sm" onClick={() => setGradeOpen(true)} className="gap-1.5 text-xs flex-1">
+                <LayoutGrid className="h-3.5 w-3.5" />
+                Comprar | Montar Grade
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleFindSimilar} className="gap-1.5 text-xs flex-1">
+                <Sparkles className="h-3.5 w-3.5" />
+                Peças Similares
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" onClick={() => setGradeOpen(false)} className="text-xs">
+                ← Voltar
+              </Button>
+              <Button size="sm" onClick={onClose} className="gap-1.5 text-xs flex-1">
                 <ShoppingBag className="h-3.5 w-3.5" />
                 Adicionar à sacola
               </Button>
-            </motion.div>
+            </>
           )}
-        </div>
-
-        {/* Sticky bottom — 2 buttons */}
-        <div className="shrink-0 border-t border-border bg-card px-4 py-2.5 flex items-center gap-2">
-          <Button
-            size="sm"
-            onClick={() => setGradeOpen(!gradeOpen)}
-            className="gap-1.5 text-xs flex-1"
-          >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            {gradeOpen ? "Fechar Grade" : "Comprar | Montar Grade"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleFindSimilar}
-            className="gap-1.5 text-xs flex-1"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            Peças Similares
-          </Button>
         </div>
       </motion.div>
     </>
