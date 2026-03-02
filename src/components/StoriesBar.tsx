@@ -1,5 +1,6 @@
 import { Plus, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import brandBrandili from "@/assets/brand-brandili.jpg";
 import brandKyly from "@/assets/brand-kyly.jpg";
@@ -82,6 +83,7 @@ const brands: (BrandStories | { id: "create"; brand: string; avatar: null; stori
 const navigableBrands = brands.filter((b): b is BrandStories => b.id !== "create");
 
 export function StoriesBar() {
+  const navigate = useNavigate();
   const [activeBrandId, setActiveBrandId] = useState<string | null>(null);
   const [storyIndex, setStoryIndex] = useState(0);
   const [direction, setDirection] = useState(0);
@@ -285,7 +287,10 @@ export function StoriesBar() {
                       {activeBrand.brand}
                     </h3>
                     <p className="mt-1 text-sm text-primary-foreground/80">{activeStoryData.caption}</p>
-                    <button className="mt-4 flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-transform hover:scale-105">
+                    <button
+                      onClick={() => { close(); navigate(`/marca/${activeBrand.id}`); }}
+                      className="mt-4 flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-transform hover:scale-105"
+                    >
                       <Eye className="h-4 w-4" />
                       Ver Coleção
                     </button>
