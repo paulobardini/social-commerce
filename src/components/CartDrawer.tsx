@@ -180,7 +180,18 @@ export function CartDrawer() {
                           </p>
                         </div>
                       </div>
-                      <p className="text-sm font-bold text-foreground">{fmt(selectedBrand.totalPrice)}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-foreground">{fmt(selectedBrand.totalPrice)}</p>
+                        <button
+                          onClick={() => {
+                            selectedBrand.items.forEach((item) => removeItem(item.product.id));
+                          }}
+                          className="ml-1 rounded-md p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          title="Esvaziar sacola da marca"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
