@@ -2,6 +2,7 @@ import { NextilHeader } from "@/components/NextilHeader";
 import { NextilSidebar } from "@/components/NextilSidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Play, Eye, Heart } from "lucide-react";
 
@@ -94,6 +95,7 @@ const brands = [
 
 const Marcas = () => {
   const [activeCategory, setActiveCategory] = useState("Todas");
+  const navigate = useNavigate();
 
   const filtered = activeCategory === "Todas"
     ? brands
@@ -145,6 +147,7 @@ const Marcas = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06 }}
                   className="bg-card rounded-xl md:rounded-2xl overflow-hidden shadow-sm card-hover cursor-pointer group"
+                  onClick={() => navigate(`/marca/${brand.name.toLowerCase().replace(/\s+/g, '-')}`)}
                 >
                   {/* Preview grid */}
                   <div className={`grid gap-0.5 h-32 md:h-40 ${
