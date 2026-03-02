@@ -44,9 +44,10 @@ const ProdutoDetalhe = () => {
       <div className="flex">
         <NextilSidebar />
         <div className="flex-1 min-w-0 pb-16 md:pb-0">
-          {/* Sticky top bar: brand info + search */}
-          <div className="sticky top-14 md:top-16 z-30 bg-card border-b border-border">
-            <div className="px-3 md:px-6 py-2.5 flex items-center justify-between gap-3">
+          {/* Sticky header block */}
+          <div className="sticky top-14 md:top-16 z-30 bg-card shadow-sm">
+            {/* Row 1: Back + Brand + Search + Vitrine */}
+            <div className="px-4 md:px-8 py-3 flex items-center justify-between gap-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => navigate(`/marca/${slug}`)}
@@ -57,25 +58,25 @@ const ProdutoDetalhe = () => {
                 <img
                   src={brand.logo}
                   alt={brand.name}
-                  className="h-8 w-8 rounded-full object-cover border border-border"
+                  className="h-8 w-8 rounded-lg object-cover border border-border"
                 />
                 <span className="text-sm font-semibold text-foreground">{brand.name}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <div className="relative hidden md:flex items-center">
                   <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground" />
                   <input
                     type="text"
                     placeholder="Pesquisar"
-                    className="h-8 w-48 rounded-lg border border-border bg-background pl-8 pr-3 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="h-9 w-52 rounded-lg border border-border bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
-                <span className="text-sm font-medium text-muted-foreground hidden md:block">Vitrine</span>
+                <span className="text-sm font-medium text-muted-foreground">Vitrine</span>
               </div>
             </div>
 
-            {/* Breadcrumb */}
-            <div className="px-3 md:px-6 pb-2 text-xs text-muted-foreground">
+            {/* Row 2: Breadcrumb */}
+            <div className="px-4 md:px-8 py-1.5 text-xs text-muted-foreground border-b border-border/50">
               <span className="cursor-pointer hover:text-foreground" onClick={() => navigate("/")}>
                 início
               </span>
@@ -86,51 +87,49 @@ const ProdutoDetalhe = () => {
               {" / "}
               <span className="text-foreground font-medium">Produtos</span>
             </div>
-          </div>
 
-          {/* Sticky filters: sub-brand tabs + filter buttons */}
-          <div className="sticky top-[7.25rem] md:top-[8rem] z-20 bg-background border-b border-border">
-            <div className="flex flex-col items-center px-3 md:px-6 py-3 gap-3">
-              {/* Sub-brand tabs — centered */}
-              <div className="flex gap-5 md:gap-8 overflow-x-auto scrollbar-hide justify-center">
+            {/* Row 3: Sub-brand tabs centered + filters right */}
+            <div className="relative px-4 md:px-8 py-4 bg-background">
+              {/* Centered sub-brands */}
+              <div className="flex justify-center gap-6 md:gap-10">
                 {brand.subBrands.map((sb) => (
                   <button
                     key={sb.id}
                     onClick={() => setActiveSubBrand(sb.id)}
-                    className="flex flex-col items-center gap-1.5 group shrink-0"
+                    className="flex flex-col items-center gap-2 group"
                   >
                     <div
-                      className={`h-12 w-12 md:h-14 md:w-14 rounded-full overflow-hidden border-2 transition-all ${
+                      className={`h-14 w-14 md:h-16 md:w-16 rounded-full overflow-hidden border-[2.5px] transition-all duration-200 ${
                         activeSubBrand === sb.id
-                          ? "border-accent scale-105"
-                          : "border-border group-hover:border-muted-foreground"
+                          ? "border-accent shadow-md"
+                          : "border-border/60 group-hover:border-muted-foreground"
                       }`}
                     >
                       <img src={sb.logo} alt={sb.name} className="h-full w-full object-cover" />
                     </div>
                     <span
-                      className={`text-[10px] md:text-xs font-semibold uppercase tracking-wide ${
+                      className={`text-[10px] md:text-xs font-bold uppercase tracking-wider ${
                         activeSubBrand === sb.id ? "text-foreground" : "text-muted-foreground"
                       }`}
                     >
                       {sb.name}
                     </span>
                     {activeSubBrand === sb.id && (
-                      <motion.div layoutId="productSubBrand" className="h-[2px] w-8 bg-accent rounded-full -mt-0.5" />
+                      <motion.div layoutId="productSubBrand" className="h-[2px] w-10 bg-accent rounded-full -mt-1" />
                     )}
                   </button>
                 ))}
               </div>
 
-              {/* Filter buttons — right-aligned */}
-              <div className="flex items-center gap-2 self-end">
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+              {/* Filter buttons — absolute right */}
+              <div className="absolute right-4 md:right-8 bottom-4 flex items-center gap-2">
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8 rounded-lg">
                   <Percent className="h-3 w-3" />
                   Off
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8 rounded-lg">
                   <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="bg-accent text-accent-foreground rounded-full h-4 w-4 flex items-center justify-center text-[10px] font-bold">
+                  <span className="bg-accent text-accent-foreground rounded-full h-4 min-w-4 flex items-center justify-center text-[10px] font-bold">
                     1
                   </span>
                 </Button>
