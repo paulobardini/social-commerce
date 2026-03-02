@@ -90,9 +90,9 @@ const ProdutoDetalhe = () => {
 
           {/* Sticky filters: sub-brand tabs + filter buttons */}
           <div className="sticky top-[7.25rem] md:top-[8rem] z-20 bg-background border-b border-border">
-            {/* Sub-brand tabs */}
-            <div className="flex items-center justify-between px-3 md:px-6 py-3">
-              <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide">
+            <div className="flex flex-col items-center px-3 md:px-6 py-3 gap-3">
+              {/* Sub-brand tabs — centered */}
+              <div className="flex gap-5 md:gap-8 overflow-x-auto scrollbar-hide justify-center">
                 {brand.subBrands.map((sb) => (
                   <button
                     key={sb.id}
@@ -122,8 +122,8 @@ const ProdutoDetalhe = () => {
                 ))}
               </div>
 
-              {/* Filter buttons */}
-              <div className="flex items-center gap-2 shrink-0 ml-4">
+              {/* Filter buttons — right-aligned */}
+              <div className="flex items-center gap-2 self-end">
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
                   <Percent className="h-3 w-3" />
                   Off
