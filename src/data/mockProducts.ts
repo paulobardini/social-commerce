@@ -37,6 +37,8 @@ export interface Product {
   variants: ProductVariant[];
   likes: number;
   comments: number;
+  category: string; // e.g. "Camiseta", "Vestido", "Conjunto", "Calça", "Blusão", "Jaqueta"
+  gender: string; // e.g. "Masculino", "Feminino", "Unissex"
 }
 
 export interface Brand {
@@ -102,6 +104,8 @@ export const brands: Brand[] = [
         ],
         likes: 0,
         comments: 0,
+        category: "Camiseta",
+        gender: "Masculino",
       },
       {
         id: "p2",
@@ -117,6 +121,8 @@ export const brands: Brand[] = [
         ],
         likes: 0,
         comments: 0,
+        category: "Calça",
+        gender: "Masculino",
       },
       {
         id: "p3",
@@ -132,6 +138,8 @@ export const brands: Brand[] = [
         ],
         likes: 0,
         comments: 0,
+        category: "Blusão",
+        gender: "Masculino",
       },
       {
         id: "p4",
@@ -146,6 +154,8 @@ export const brands: Brand[] = [
         ],
         likes: 0,
         comments: 0,
+        category: "Jaqueta",
+        gender: "Masculino",
       },
       {
         id: "p5",
@@ -160,6 +170,8 @@ export const brands: Brand[] = [
         ],
         likes: 0,
         comments: 0,
+        category: "Conjunto",
+        gender: "Masculino",
       },
       {
         id: "p6",
@@ -175,6 +187,8 @@ export const brands: Brand[] = [
         ],
         likes: 0,
         comments: 0,
+        category: "Camiseta",
+        gender: "Masculino",
       },
       {
         id: "p7",
@@ -189,6 +203,8 @@ export const brands: Brand[] = [
         ],
         likes: 0,
         comments: 0,
+        category: "Vestido",
+        gender: "Feminino",
       },
       {
         id: "p8",
@@ -204,6 +220,8 @@ export const brands: Brand[] = [
         ],
         likes: 0,
         comments: 0,
+        category: "Conjunto",
+        gender: "Feminino",
       },
     ],
   },
