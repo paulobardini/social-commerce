@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ interface BrandGroup {
 
 export function CartDrawer() {
   const { items, removeItem, totalPieces, totalPrice, isOpen, setIsOpen } = useCart();
+  const navigate = useNavigate();
   const [activeBrand, setActiveBrand] = useState<string | null>(null);
 
   // Group items by brand
@@ -304,7 +306,7 @@ export function CartDrawer() {
                     </p>
                     <p className="text-base md:text-lg font-bold text-foreground">{fmt(selectedBrand.totalPrice)}</p>
                   </div>
-                  <Button size="sm" className="gap-1.5 shrink-0">
+                  <Button size="sm" className="gap-1.5 shrink-0" onClick={() => { setIsOpen(false); navigate("/checkout"); }}>
                     <ShoppingBag className="h-3.5 w-3.5" />
                     Finalizar pedido
                   </Button>
