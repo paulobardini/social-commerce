@@ -93,6 +93,13 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Poppins', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button, a {
+    touch-action: manipulation;
   }
 
   h1, h2, h3, h4, h5, h6 {

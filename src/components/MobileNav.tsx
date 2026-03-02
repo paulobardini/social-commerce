@@ -13,7 +13,7 @@ export function MobileNav() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around border-t border-border bg-card px-2 py-1.5 safe-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around border-t border-border bg-card/95 backdrop-blur-md px-2 py-1 safe-bottom">
       {items.map(({ icon: Icon, label, path, badge }) => {
         const isActive = location.pathname === path && (label !== "Chat");
         return (
