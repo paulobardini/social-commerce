@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Heart,
   ChevronDown,
   ChevronUp,
   X,
@@ -116,11 +115,7 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar }: P
             <X className="h-4 w-4" />
           </button>
           <p className="text-xs text-muted-foreground">Ref: {product.ref}</p>
-          <button
-            className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
-          >
-            <Heart className="h-4 w-4" />
-          </button>
+          <div className="w-8" />
         </div>
 
         {/* Scrollable content */}
