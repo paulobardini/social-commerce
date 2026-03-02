@@ -299,7 +299,7 @@ const ProdutoDetalhe = () => {
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por tipo de produto</p>
                     <div className="border border-border rounded-lg overflow-hidden">
-                      <div className="grid grid-cols-5 gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">
+                      <div className="grid gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border" style={{ gridTemplateColumns: '1fr 40px 50px 40px minmax(90px, auto)' }}>
                         <div className="px-2 py-1.5">Tipo</div>
                         <div className="px-2 py-1.5 text-center">Qtd</div>
                         <div className="px-2 py-1.5 text-center">Peças</div>
@@ -307,7 +307,7 @@ const ProdutoDetalhe = () => {
                         <div className="px-2 py-1.5 text-right">Preço médio</div>
                       </div>
                       {Array.from(summaryByCategory.entries()).map(([cat, data]) => (
-                        <div key={cat} className="grid grid-cols-5 gap-0 text-xs border-b border-border last:border-0">
+                        <div key={cat} className="grid gap-0 text-xs border-b border-border last:border-0" style={{ gridTemplateColumns: '1fr 40px 50px 40px minmax(90px, auto)' }}>
                           <div className="px-2 py-1.5 font-medium text-foreground">{cat}</div>
                           <div className="px-2 py-1.5 text-center text-muted-foreground">{data.count}</div>
                           <div className="px-2 py-1.5 text-center text-muted-foreground">{data.totalPieces}</div>
@@ -324,7 +324,7 @@ const ProdutoDetalhe = () => {
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por sexo</p>
                     <div className="border border-border rounded-lg overflow-hidden">
-                      <div className="grid grid-cols-5 gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border">
+                      <div className="grid gap-0 text-[10px] font-semibold text-muted-foreground bg-muted/50 border-b border-border" style={{ gridTemplateColumns: '1fr 40px 50px 40px minmax(90px, auto)' }}>
                         <div className="px-2 py-1.5">Sexo</div>
                         <div className="px-2 py-1.5 text-center">Qtd</div>
                         <div className="px-2 py-1.5 text-center">Peças</div>
@@ -332,7 +332,7 @@ const ProdutoDetalhe = () => {
                         <div className="px-2 py-1.5 text-right">Preço médio</div>
                       </div>
                       {Array.from(summaryByGender.entries()).map(([g, data]) => (
-                        <div key={g} className="grid grid-cols-5 gap-0 text-xs border-b border-border last:border-0">
+                        <div key={g} className="grid gap-0 text-xs border-b border-border last:border-0" style={{ gridTemplateColumns: '1fr 40px 50px 40px minmax(90px, auto)' }}>
                           <div className="px-2 py-1.5 font-medium text-foreground">{g}</div>
                           <div className="px-2 py-1.5 text-center text-muted-foreground">{data.count}</div>
                           <div className="px-2 py-1.5 text-center text-muted-foreground">{data.totalPieces}</div>
