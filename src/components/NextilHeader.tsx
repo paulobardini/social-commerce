@@ -90,25 +90,32 @@ export function NextilHeader() {
             ))}
           </nav>
 
-          {[
-            { icon: MessageCircle, label: "Chat", badge: 3, hideOnMobile: true, onClick: undefined },
-            { icon: Bell, label: "Notificações", badge: 7, hideOnMobile: false, onClick: undefined },
-            { icon: ShoppingBag, label: "Carrinho", badge: cart.items.length, hideOnMobile: false, onClick: () => cart.setIsOpen(true) },
-          ].map(({ icon: Icon, label, badge, hideOnMobile, onClick }) => (
-            <button
-              key={label}
-              aria-label={label}
-              onClick={onClick}
-              className={`relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground ${hideOnMobile ? "hidden md:flex" : ""}`}
-            >
-              <Icon className="h-5 w-5" />
-              {badge > 0 && (
-                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
-                  {badge}
-                </span>
-              )}
-            </button>
-          ))}
+          <button
+            aria-label="Chat"
+            className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground hidden md:flex"
+          >
+            <MessageCircle className="h-5 w-5" />
+            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">3</span>
+          </button>
+          <button
+            aria-label="Notificações"
+            className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground"
+          >
+            <Bell className="h-5 w-5" />
+            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">7</span>
+          </button>
+          <button
+            aria-label="Carrinho"
+            onClick={() => cart.setIsOpen(true)}
+            className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground"
+          >
+            <ShoppingBag className="h-5 w-5" />
+            {cart.items.length > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
+                {cart.items.length}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 

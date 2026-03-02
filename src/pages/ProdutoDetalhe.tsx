@@ -244,7 +244,7 @@ const ProdutoDetalhe = () => {
                   >
                     <div className="relative aspect-[3/4] overflow-hidden">
                       <img src={p.variants[0]?.images[0]} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                      <div className="absolute bottom-0 left-0 right-0 p-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity translate-y-1 group-hover:translate-y-0 duration-200">
+                      <div className="absolute bottom-0 left-0 right-0 p-2 flex gap-1.5 md:opacity-0 md:group-hover:opacity-100 md:translate-y-1 md:group-hover:translate-y-0 transition-all duration-200">
                         <button
                           onClick={(e) => { e.stopPropagation(); setOpenInGrade(true); setSelectedProduct(p); }}
                           className="flex-1 h-7 rounded-md bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors"
@@ -252,7 +252,7 @@ const ProdutoDetalhe = () => {
                           <ShoppingBag className="h-3 w-3" /> Comprar
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); }}
+                          onClick={(e) => { e.stopPropagation(); setOpenInGrade(false); setSelectedProduct(p); }}
                           className="h-7 w-7 rounded-md bg-card/90 backdrop-blur-sm border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                           title="Montar Grade"
                         >
