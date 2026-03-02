@@ -189,11 +189,12 @@ const ProdutoDetalhe = () => {
 
       {/* Product Detail Modal (slide-over) */}
       <AnimatePresence>
-        {selectedProduct && (
+         {selectedProduct && (
           <ProductDetailModal
             product={selectedProduct}
             brand={brand}
             onClose={() => setSelectedProduct(null)}
+            onFindSimilar={() => {}}
           />
         )}
       </AnimatePresence>
