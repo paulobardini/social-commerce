@@ -294,7 +294,7 @@ const ProdutoDetalhe = () => {
               {/* Scrollable content */}
               <div className="flex-1 overflow-y-auto">
                 {/* Summary tables */}
-                <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-border bg-muted/20">
+                <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-[5fr_5fr_3fr] gap-4 border-b border-border bg-muted/20">
                   {/* By Category */}
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-2">Por tipo de produto</p>
