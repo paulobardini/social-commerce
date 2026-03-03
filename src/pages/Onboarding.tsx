@@ -2,29 +2,57 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Store, ShoppingBag, Truck, Globe, Camera, Sparkles, ChevronRight } from "lucide-react";
+import { Check, Store, ShoppingBag, Truck, Globe, Camera, Sparkles, ArrowRight } from "lucide-react";
 import nextilLogo from "@/assets/nextil-logo.png";
+import nextilWordmark from "@/assets/nextil-wordmark.png";
 
 const segmentos = [
-  { id: "sacoleira", label: "Sacoleira", icon: ShoppingBag, desc: "Vendo de porta em porta ou por encomenda" },
-  { id: "lojista", label: "Lojista", icon: Store, desc: "Tenho uma ou mais lojas físicas" },
-  { id: "rede", label: "Rede de Lojas", icon: Sparkles, desc: "Possuo uma rede com múltiplas unidades" },
-  { id: "ecommerce", label: "E-commerce", icon: Globe, desc: "Vendo exclusivamente online" },
-  { id: "atacadista", label: "Atacadista", icon: Truck, desc: "Compro em grandes volumes para revenda" },
-  { id: "influencer", label: "Produtor de Conteúdo", icon: Camera, desc: "Crio conteúdo de moda e tendências" },
+  { id: "sacoleira", label: "Sacoleira", icon: ShoppingBag, emoji: "👜" },
+  { id: "lojista", label: "Lojista", icon: Store, emoji: "🏪" },
+  { id: "rede", label: "Rede de Lojas", icon: Sparkles, emoji: "✨" },
+  { id: "ecommerce", label: "E-commerce", icon: Globe, emoji: "🌐" },
+  { id: "atacadista", label: "Atacadista", icon: Truck, emoji: "📦" },
+  { id: "influencer", label: "Criador de Conteúdo", icon: Camera, emoji: "📸" },
 ];
 
 const portes = [
-  { id: "micro", label: "Micro", desc: "Faturamento até R$ 81 mil/ano" },
-  { id: "pequeno", label: "Pequeno", desc: "Faturamento até R$ 360 mil/ano" },
-  { id: "medio", label: "Médio", desc: "Faturamento até R$ 4,8 milhões/ano" },
-  { id: "grande", label: "Grande", desc: "Faturamento acima de R$ 4,8 milhões/ano" },
+  { id: "micro", label: "Estou começando", desc: "Faturamento até R$ 81 mil/ano", emoji: "🌱" },
+  { id: "pequeno", label: "Já tenho meu espaço", desc: "Faturamento até R$ 360 mil/ano", emoji: "🚀" },
+  { id: "medio", label: "Estou crescendo", desc: "Faturamento até R$ 4,8 mi/ano", emoji: "📈" },
+  { id: "grande", label: "Operação consolidada", desc: "Acima de R$ 4,8 mi/ano", emoji: "🏆" },
 ];
 
 const interessesList = [
-  "Feminino", "Masculino", "Infantil", "Plus Size",
-  "Moda Praia", "Fitness", "Íntima", "Sustentável",
-  "Fast Fashion", "Premium", "Inverno", "Verão",
+  { label: "Feminino", emoji: "👗" },
+  { label: "Masculino", emoji: "👔" },
+  { label: "Infantil", emoji: "🧸" },
+  { label: "Plus Size", emoji: "💜" },
+  { label: "Moda Praia", emoji: "🏖️" },
+  { label: "Fitness", emoji: "💪" },
+  { label: "Íntima", emoji: "🩱" },
+  { label: "Sustentável", emoji: "🌿" },
+  { label: "Fast Fashion", emoji: "⚡" },
+  { label: "Premium", emoji: "💎" },
+  { label: "Inverno", emoji: "🧥" },
+  { label: "Verão", emoji: "☀️" },
+];
+
+const stepContent = [
+  {
+    greeting: "Conta pra gente",
+    title: "O que melhor descreve você?",
+    subtitle: "Para personalizar sua experiência, precisamos saber como você atua no mercado da moda.",
+  },
+  {
+    greeting: "Quase lá",
+    title: "Em que momento está seu negócio?",
+    subtitle: "Isso nos ajuda a conectar você com marcas e condições ideais pro seu perfil.",
+  },
+  {
+    greeting: "Última etapa!",
+    title: "O que você quer encontrar?",
+    subtitle: "Selecione pelo menos 3 categorias e vamos montar um feed sob medida pra você.",
+  },
 ];
 
 const Onboarding = () => {
@@ -55,88 +83,92 @@ const Onboarding = () => {
     }
   };
 
-  const steps = ["Segmento", "Porte", "Interesses"];
+  const progress = ((step + 1) / 3) * 100;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-5 md:px-8 py-4">
+        <div className="flex items-center gap-2.5">
           <img src={nextilLogo} alt="Nextil" className="h-7 w-7" />
-          <span className="text-sm font-medium text-muted-foreground">
-            Olá, <span className="text-foreground font-semibold">{user?.name || "Usuário"}</span> 👋
-          </span>
+          <img src={nextilWordmark} alt="Nextil" className="h-4 hidden sm:block" />
         </div>
         <button
           onClick={() => { completeOnboarding({ segmento: "skip", porte: "skip", interesses: [] }); navigate("/"); }}
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          Pular
+          Pular por agora
         </button>
       </div>
 
-      {/* Progress */}
-      <div className="px-6 pt-6">
-        <div className="flex items-center gap-2 max-w-lg mx-auto">
-          {steps.map((s, i) => (
-            <div key={s} className="flex-1 flex items-center gap-2">
-              <div className={`flex items-center justify-center h-7 w-7 rounded-full text-xs font-bold shrink-0 transition-colors ${
-                i < step ? "bg-accent text-accent-foreground" :
-                i === step ? "bg-primary text-primary-foreground" :
-                "bg-secondary text-muted-foreground"
-              }`}>
-                {i < step ? <Check className="h-4 w-4" /> : i + 1}
-              </div>
-              {i < steps.length - 1 && (
-                <div className={`flex-1 h-0.5 rounded ${i < step ? "bg-accent" : "bg-border"}`} />
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-between max-w-lg mx-auto mt-2">
-          {steps.map((s) => (
-            <span key={s} className="text-[10px] text-muted-foreground">{s}</span>
-          ))}
+      {/* Progress bar */}
+      <div className="px-5 md:px-8">
+        <div className="h-1 w-full bg-secondary rounded-full overflow-hidden max-w-2xl mx-auto">
+          <motion.div
+            className="h-full bg-accent rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          />
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+      <div className="flex-1 flex flex-col items-center px-5 md:px-8 pt-8 md:pt-14 pb-6">
         <AnimatePresence mode="wait">
-          {step === 0 && (
-            <motion.div key="seg" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="w-full max-w-lg">
-              <h2 className="text-xl font-semibold text-foreground mb-1 text-center">Como você atua no mercado?</h2>
-              <p className="text-sm text-muted-foreground text-center mb-6">Selecione o que melhor descreve seu negócio</p>
-              <div className="grid grid-cols-2 gap-3">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.35 }}
+            className="w-full max-w-2xl"
+          >
+            {/* Header text */}
+            <div className="mb-8 md:mb-10">
+              <p className="text-accent font-semibold text-sm mb-1.5">{stepContent[step].greeting}</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-tight mb-2">
+                {stepContent[step].title}
+              </h1>
+              <p className="text-muted-foreground text-sm md:text-base max-w-md">
+                {stepContent[step].subtitle}
+              </p>
+            </div>
+
+            {/* Step 0: Segmento */}
+            {step === 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {segmentos.map((s) => {
-                  const Icon = s.icon;
                   const selected = segmento === s.id;
                   return (
                     <button
                       key={s.id}
                       onClick={() => setSegmento(s.id)}
-                      className={`flex flex-col items-start gap-2 p-4 rounded-xl border-2 transition-all text-left ${
+                      className={`group relative flex flex-col items-center gap-2.5 p-5 md:p-6 rounded-2xl border-2 transition-all duration-200 ${
                         selected
-                          ? "border-accent bg-accent/5 shadow-sm"
-                          : "border-border hover:border-accent/30 bg-card"
+                          ? "border-accent bg-accent/5 shadow-md shadow-accent/10"
+                          : "border-border bg-card hover:border-accent/30 hover:shadow-sm"
                       }`}
                     >
-                      <div className={`p-2 rounded-lg ${selected ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
+                      {selected && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute top-2.5 right-2.5 h-5 w-5 rounded-full bg-accent flex items-center justify-center"
+                        >
+                          <Check className="h-3 w-3 text-accent-foreground" />
+                        </motion.div>
+                      )}
+                      <span className="text-2xl md:text-3xl">{s.emoji}</span>
                       <span className="text-sm font-semibold text-foreground">{s.label}</span>
-                      <span className="text-xs text-muted-foreground leading-tight">{s.desc}</span>
                     </button>
                   );
                 })}
               </div>
-            </motion.div>
-          )}
+            )}
 
-          {step === 1 && (
-            <motion.div key="porte" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="w-full max-w-lg">
-              <h2 className="text-xl font-semibold text-foreground mb-1 text-center">Qual o porte do seu negócio?</h2>
-              <p className="text-sm text-muted-foreground text-center mb-6">Isso nos ajuda a recomendar as melhores marcas</p>
+            {/* Step 1: Porte */}
+            {step === 1 && (
               <div className="flex flex-col gap-3">
                 {portes.map((p) => {
                   const selected = porte === p.id;
@@ -144,17 +176,18 @@ const Onboarding = () => {
                     <button
                       key={p.id}
                       onClick={() => setPorte(p.id)}
-                      className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                      className={`flex items-center gap-4 p-4 md:p-5 rounded-2xl border-2 transition-all duration-200 text-left ${
                         selected
-                          ? "border-accent bg-accent/5 shadow-sm"
-                          : "border-border hover:border-accent/30 bg-card"
+                          ? "border-accent bg-accent/5 shadow-md shadow-accent/10"
+                          : "border-border bg-card hover:border-accent/30 hover:shadow-sm"
                       }`}
                     >
-                      <div>
-                        <span className="text-sm font-semibold text-foreground">{p.label}</span>
-                        <p className="text-xs text-muted-foreground mt-0.5">{p.desc}</p>
+                      <span className="text-2xl md:text-3xl shrink-0">{p.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-semibold text-foreground block">{p.label}</span>
+                        <span className="text-xs text-muted-foreground">{p.desc}</span>
                       </div>
-                      <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                      <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                         selected ? "border-accent bg-accent" : "border-border"
                       }`}>
                         {selected && <Check className="h-3 w-3 text-accent-foreground" />}
@@ -163,56 +196,65 @@ const Onboarding = () => {
                   );
                 })}
               </div>
-            </motion.div>
-          )}
+            )}
 
-          {step === 2 && (
-            <motion.div key="int" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="w-full max-w-lg">
-              <h2 className="text-xl font-semibold text-foreground mb-1 text-center">O que te interessa?</h2>
-              <p className="text-sm text-muted-foreground text-center mb-6">Selecione pelo menos 3 categorias</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {interessesList.map((i) => {
-                  const selected = interesses.includes(i);
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => toggleInteresse(i)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                        selected
-                          ? "bg-accent text-accent-foreground shadow-sm"
-                          : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                      }`}
-                    >
-                      {selected && <Check className="h-3.5 w-3.5 inline mr-1.5" />}
-                      {i}
-                    </button>
-                  );
-                })}
+            {/* Step 2: Interesses */}
+            {step === 2 && (
+              <div>
+                <div className="flex flex-wrap gap-2.5">
+                  {interessesList.map((i) => {
+                    const selected = interesses.includes(i.label);
+                    return (
+                      <button
+                        key={i.label}
+                        onClick={() => toggleInteresse(i.label)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                          selected
+                            ? "bg-accent text-accent-foreground shadow-md shadow-accent/15 scale-[1.03]"
+                            : "bg-card border border-border text-foreground hover:border-accent/30 hover:shadow-sm"
+                        }`}
+                      >
+                        <span className="text-base">{i.emoji}</span>
+                        {i.label}
+                        {selected && <Check className="h-3.5 w-3.5 ml-0.5" />}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-5 flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-accent rounded-full"
+                      animate={{ width: `${Math.min((interesses.length / 3) * 100, 100)}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                  <span className={`text-xs font-medium ${interesses.length >= 3 ? "text-accent" : "text-muted-foreground"}`}>
+                    {interesses.length}/3
+                  </span>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                {interesses.length}/3 selecionados
-              </p>
-            </motion.div>
-          )}
+            )}
+          </motion.div>
         </AnimatePresence>
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 border-t border-border">
-        <div className="flex items-center justify-between max-w-lg mx-auto">
+      <div className="px-5 md:px-8 py-5 border-t border-border bg-card/50">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
           <button
             onClick={() => step > 0 && setStep(step - 1)}
-            className={`text-sm font-medium transition-colors ${step > 0 ? "text-foreground hover:text-accent" : "text-transparent pointer-events-none"}`}
+            className={`text-sm font-medium transition-colors ${step > 0 ? "text-muted-foreground hover:text-foreground" : "invisible"}`}
           >
-            Voltar
+            ← Voltar
           </button>
           <button
             onClick={handleNext}
             disabled={!canNext()}
-            className="flex items-center gap-2 px-8 h-11 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+            className="flex items-center gap-2 px-8 h-11 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all disabled:opacity-30 disabled:pointer-events-none shadow-lg shadow-primary/20"
           >
-            {step === 2 ? "Começar" : "Próximo"}
-            <ChevronRight className="h-4 w-4" />
+            {step === 2 ? "Explorar agora" : "Continuar"}
+            <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </div>
