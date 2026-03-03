@@ -7,6 +7,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link2, Shirt, Heart, MessageCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { CadastroPJModal } from "@/components/CadastroPJModal";
 
 const MarcaDetalhe = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -14,6 +16,8 @@ const MarcaDetalhe = () => {
   const brand = getBrandBySlug(slug || "");
   const [activeSubBrand, setActiveSubBrand] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const { isAuthenticated, user } = useAuth();
+  const [showPJModal, setShowPJModal] = useState(false);
 
   if (!brand) {
     return (
@@ -120,7 +124,15 @@ const MarcaDetalhe = () => {
                   </>
                 ) : (
                   <Button
-                    onClick={() => setIsConnected(true)}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        navigate("/login");
+                      } else if (!user?.pjCompleted) {
+                        setShowPJModal(true);
+                      } else {
+                        setIsConnected(true);
+                      }
+                    }}
                     className="w-full md:w-auto"
                   >
                     Conectar
@@ -293,7 +305,15 @@ const MarcaDetalhe = () => {
                   <p className="text-sm text-muted-foreground text-center max-w-sm">
                     Conecte-se com <strong className="text-foreground">{brand.name}</strong> para acessar o catálogo completo com preços e fazer pedidos
                   </p>
-                  <Button onClick={() => setIsConnected(true)}>
+                  <Button onClick={() => {
+                    if (!isAuthenticated) {
+                      navigate("/login");
+                    } else if (!user?.pjCompleted) {
+                      setShowPJModal(true);
+                    } else {
+                      setIsConnected(true);
+                    }
+                  }}>
                     Conectar com {brand.name}
                   </Button>
                 </motion.div>
@@ -303,6 +323,11 @@ const MarcaDetalhe = () => {
         </div>
       </div>
       <MobileNav />
+      <CadastroPJModal
+        open={showPJModal}
+        onOpenChange={setShowPJModal}
+        onComplete={() => setIsConnected(true)}
+      />
     </div>
   );
 };
