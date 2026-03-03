@@ -1,9 +1,10 @@
-import { Search, Bell, ShoppingBag, MessageCircle, Menu } from "lucide-react";
+import { Search, Bell, ShoppingBag, MessageCircle, Menu, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import nextilLogo from "@/assets/nextil-logo.png";
 import nextilWordmark from "@/assets/nextil-wordmark.png";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sheet,
   SheetContent,
@@ -33,6 +34,7 @@ export function NextilHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
   const cart = useCart();
 
   const getActiveNav = () => {
@@ -74,48 +76,74 @@ export function NextilHeader() {
 
         {/* Right: Nav + Icons */}
         <div className="flex items-center gap-1 shrink-0">
-          <nav className="hidden lg:flex items-center gap-1 mr-2">
-            {navItems.map((item) => (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                  getActiveNav() === item.label
-                    ? "text-header-foreground"
-                    : "text-sidebar-foreground hover:text-header-foreground"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
+          {isAuthenticated ? (
+            <>
+              <nav className="hidden lg:flex items-center gap-1 mr-2">
+                {navItems.map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => navigate(item.path)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      getActiveNav() === item.label
+                        ? "text-header-foreground"
+                        : "text-sidebar-foreground hover:text-header-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </nav>
 
-          <button
-            aria-label="Chat"
-            className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground hidden md:flex"
-          >
-            <MessageCircle className="h-5 w-5" />
-            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">3</span>
-          </button>
-          <button
-            aria-label="Notificações"
-            className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">7</span>
-          </button>
-          <button
-            aria-label="Carrinho"
-            onClick={() => cart.setIsOpen(true)}
-            className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground"
-          >
-            <ShoppingBag className="h-5 w-5" />
-            {cart.items.length > 0 && (
-              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
-                {cart.items.length}
-              </span>
-            )}
-          </button>
+              <button
+                aria-label="Chat"
+                className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground hidden md:flex"
+              >
+                <MessageCircle className="h-5 w-5" />
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">3</span>
+              </button>
+              <button
+                aria-label="Notificações"
+                className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground"
+              >
+                <Bell className="h-5 w-5" />
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">7</span>
+              </button>
+              <button
+                aria-label="Carrinho"
+                onClick={() => cart.setIsOpen(true)}
+                className="relative rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground"
+              >
+                <ShoppingBag className="h-5 w-5" />
+                {cart.items.length > 0 && (
+                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
+                    {cart.items.length}
+                  </span>
+                )}
+              </button>
+              <button
+                aria-label="Sair"
+                onClick={() => { logout(); navigate("/"); }}
+                className="rounded-lg p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-header-foreground hidden md:flex"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate("/login")}
+                className="px-4 py-1.5 text-sm font-medium rounded-lg text-sidebar-foreground hover:text-header-foreground transition-colors"
+              >
+                Entrar
+              </button>
+              <button
+                onClick={() => navigate("/cadastro")}
+                className="px-4 py-1.5 text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
+              >
+                Cadastre-se
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
