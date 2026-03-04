@@ -1,0 +1,217 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Play, Eye, Heart } from "lucide-react";
+
+import { NextilHeader } from "@/components/NextilHeader";
+import { NextilSidebar } from "@/components/NextilSidebar";
+import { MobileNav } from "@/components/MobileNav";
+import {
+  brandBrandili,
+  brandKyly,
+  brandHering,
+  brandMalwee,
+  brandLunender,
+  brandMarisol,
+  brandElian,
+  brandColoritta,
+  concept1,
+  concept2,
+  concept3,
+  concept4,
+  concept5,
+  concept6,
+  concept7,
+  concept8,
+} from "@/assets/placeholders";
+
+const categories = ["Todas", "Infantil", "Feminino", "Masculino", "Plus Size", "Sustentável"];
+
+const brands = [
+  {
+    name: "Brandili",
+    logo: brandBrandili,
+    category: "Infantil",
+    description: "Moda infantil com estampas lúdicas e conforto premium",
+    followers: "12.5k",
+    posts: [concept1, concept3, concept6],
+  },
+  {
+    name: "Kyly",
+    logo: brandKyly,
+    category: "Infantil",
+    description: "Streetwear infantil moderno e colorido",
+    followers: "9.8k",
+    posts: [concept3, concept1],
+  },
+  {
+    name: "Hering",
+    logo: brandHering,
+    category: "Masculino",
+    description: "Básicos reinventados com alfaiataria moderna",
+    followers: "45.2k",
+    posts: [concept5],
+  },
+  {
+    name: "Malwee",
+    logo: brandMalwee,
+    category: "Sustentável",
+    description: "Moda sustentável com texturas e tricôs artesanais",
+    followers: "18.3k",
+    posts: [concept4, concept8, concept5],
+  },
+  {
+    name: "Lunender",
+    logo: brandLunender,
+    category: "Feminino",
+    description: "Elegância contemporânea para mulheres sofisticadas",
+    followers: "22.1k",
+    posts: [concept2, concept7],
+  },
+  {
+    name: "Marisol",
+    logo: brandMarisol,
+    category: "Infantil",
+    description: "Candy colors e estampas vibrantes para crianças",
+    followers: "15.7k",
+    posts: [concept6],
+  },
+  {
+    name: "Elian",
+    logo: brandElian,
+    category: "Feminino",
+    description: "Paletas earth tones com design atemporal",
+    followers: "8.4k",
+    posts: [concept7, concept4, concept8],
+  },
+  {
+    name: "Colorittá",
+    logo: brandColoritta,
+    category: "Infantil",
+    description: "Coleções florais e estampas exclusivas",
+    followers: "6.9k",
+    posts: [concept8, concept2],
+  },
+];
+
+export default function MarcasPage() {
+  const [activeCategory, setActiveCategory] = useState("Todas");
+  const router = useRouter();
+
+  const filtered = activeCategory === "Todas" ? brands : brands.filter((b) => b.category === activeCategory);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <NextilHeader />
+      <div className="flex">
+        <NextilSidebar />
+        <div className="flex-1 min-w-0 flex flex-col pb-16 md:pb-0 overflow-hidden">
+          {/* Hero Banner */}
+          <div className="relative h-40 md:h-56 overflow-hidden bg-gradient-to-r from-primary to-accent">
+            <div className="absolute inset-0 bg-primary/40" />
+            <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4">
+              <h1 className="text-2xl md:text-4xl font-bold text-primary-foreground">Mundo das Marcas</h1>
+              <p className="mt-2 text-sm md:text-base text-primary-foreground/80 max-w-md">
+                Descubra coleções exclusivas das maiores marcas do Brasil
+              </p>
+            </div>
+          </div>
+
+          {/* Category filters */}
+          <div className="border-b border-border bg-card/50 px-3 md:px-6 py-3">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                    activeCategory === cat
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Brands Grid */}
+          <div className="px-3 md:px-6 py-4 md:py-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 md:gap-5">
+              {filtered.map((brand, i) => (
+                <motion.div
+                  key={brand.name}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                  className="bg-card rounded-xl md:rounded-2xl overflow-hidden shadow-sm card-hover cursor-pointer group"
+                  onClick={() =>
+                    router.push(`/marca/${brand.name.toLowerCase().replace(/\s+/g, "-")}`)
+                  }
+                >
+                  {/* Preview grid */}
+                  <div
+                    className={`grid gap-0.5 h-28 md:h-40 ${
+                      brand.posts.length === 1
+                        ? "grid-cols-1"
+                        : brand.posts.length === 2
+                        ? "grid-cols-2"
+                        : "grid-cols-3"
+                    }`}
+                  >
+                    {brand.posts.map((img, j) => (
+                      <div key={j} className="overflow-hidden">
+                        <img
+                          src={typeof img === "string" ? img : img.src}
+                          alt=""
+                          loading="lazy"
+                          className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${
+                            brand.posts.length === 1 ? "object-contain bg-muted" : "object-cover"
+                          }`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Brand info */}
+                  <div className="p-2.5 md:p-4">
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <img
+                        src={typeof brand.logo === "string" ? brand.logo : brand.logo.src}
+                        alt={brand.name}
+                        className="h-8 w-8 md:h-12 md:w-12 rounded-full object-cover border-2 border-border"
+                        loading="lazy"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xs md:text-base font-semibold text-foreground truncate">
+                          {brand.name}
+                        </h3>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">{brand.followers}</p>
+                      </div>
+                      <button className="px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-accent text-accent-foreground text-[10px] md:text-xs font-medium hover:bg-accent/90 transition-colors shrink-0">
+                        Seguir
+                      </button>
+                    </div>
+                    <p className="mt-1.5 md:mt-2 text-[10px] md:text-xs text-muted-foreground line-clamp-2 hidden sm:block">
+                      {brand.description}
+                    </p>
+                    <div className="mt-1.5 md:mt-2">
+                      <span className="inline-block px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-[9px] md:text-[10px] font-medium">
+                        {brand.category}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <MobileNav />
+    </div>
+  );
+}
+
