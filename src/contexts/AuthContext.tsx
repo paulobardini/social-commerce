@@ -1,9 +1,12 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
+export type UserRole = "lojista" | "fabrica" | "criador";
+
 export interface UserProfile {
   name: string;
   phone: string;
   email: string;
+  role?: UserRole;
   // Onboarding data
   segmento?: string;
   porte?: string;
@@ -72,7 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const completeOnboarding = (data: { segmento: string; porte: string; interesses: string[] }) => {
     if (user) {
-      const updated = { ...user, ...data };
+      // Derive role from segmento
+      let role: UserRole = "lojista";
+      if (data.segmento === "influencer") role = "criador";
+      const updated = { ...user, ...data, role };
       persist(updated);
     }
     setOnboardingCompleted(true);
