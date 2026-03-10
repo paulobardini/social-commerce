@@ -1,6 +1,9 @@
-import { Bookmark, Heart } from "lucide-react";
+import { Bookmark, Heart, Plus, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { useContent } from "@/contexts/ContentContext";
+import { CreatePostModal } from "@/components/CreatePostModal";
 
 import concept1 from "@/assets/concept-1.jpg";
 import concept2 from "@/assets/concept-2.jpg";
@@ -20,7 +23,18 @@ import brandMarisol from "@/assets/brand-marisol.jpg";
 import brandElian from "@/assets/brand-elian.jpg";
 import brandColoritta from "@/assets/brand-coloritta.jpg";
 
-const pins = [
+interface Pin {
+  id: number | string;
+  title: string;
+  brand: string;
+  brandLogo: string;
+  category: string;
+  image: string;
+  likes: number;
+  linkedProductCount?: number;
+}
+
+const staticPins: Pin[] = [
   { id: 1, title: "Coleção Inverno Kids 2026", brand: "Brandili", brandLogo: brandBrandili, category: "Infantil", image: concept1, likes: 342 },
   { id: 2, title: "Acessórios Outono/Inverno", brand: "Lunender", brandLogo: brandLunender, category: "Feminino", image: concept2, likes: 189 },
   { id: 3, title: "Streetwear Infantil", brand: "Kyly", brandLogo: brandKyly, category: "Infantil", image: concept3, likes: 527 },
@@ -32,10 +46,29 @@ const pins = [
 ];
 
 export function MasonryFeed() {
-  const [saved, setSaved] = useState<Set<number>>(new Set());
-  const [liked, setLiked] = useState<Set<number>>(new Set());
+  const { isAuthenticated, user } = useAuth();
+  const { userPosts } = useContent();
+  const [saved, setSaved] = useState<Set<number | string>>(new Set());
+  const [liked, setLiked] = useState<Set<number | string>>(new Set());
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
-  const toggleSave = (id: number) => {
+  const canCreate = isAuthenticated && (user?.role === "fabrica" || user?.role === "criador");
+
+  // Merge user posts at top
+  const userPins: Pin[] = userPosts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    brand: p.brandName,
+    brandLogo: p.brandLogo,
+    category: p.category,
+    image: p.images[0],
+    likes: 0,
+    linkedProductCount: p.linkedProducts.length,
+  }));
+
+  const pins = [...userPins, ...staticPins];
+
+  const toggleSave = (id: number | string) => {
     setSaved((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -44,7 +77,7 @@ export function MasonryFeed() {
     });
   };
 
-  const toggleLike = (id: number) => {
+  const toggleLike = (id: number | string) => {
     setLiked((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -53,115 +86,111 @@ export function MasonryFeed() {
     });
   };
 
-  // Split pins into columns for true masonry
-  const colCount = { mobile: 2, tablet: 3, desktop: 4 };
-  const getColumns = (items: typeof pins, cols: number) => {
-    const columns: (typeof pins)[] = Array.from({ length: cols }, () => []);
+  const getColumns = (items: Pin[], cols: number) => {
+    const columns: Pin[][] = Array.from({ length: cols }, () => []);
     items.forEach((item, i) => columns[i % cols].push(item));
     return columns;
   };
 
   const mobileColumns = getColumns(pins, 2);
 
+  const renderPin = (pin: Pin, i: number, colIdx: number, isMobile: boolean) => (
+    <motion.div
+      key={pin.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: isMobile ? (colIdx + i * 2) * 0.08 : i * 0.08, duration: 0.4 }}
+      className={isMobile ? "" : "mb-2 md:mb-4 break-inside-avoid"}
+    >
+      <div className="group relative overflow-hidden rounded-xl md:rounded-2xl bg-card shadow-sm card-hover cursor-pointer">
+        <div className="relative overflow-hidden">
+          <img
+            src={pin.image}
+            alt={pin.title}
+            loading="lazy"
+            className={`w-full object-cover ${!isMobile ? "transition-transform duration-500 group-hover:scale-105" : ""}`}
+          />
+
+          {/* Product badge */}
+          {(pin.linkedProductCount ?? 0) > 0 && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-card/90 px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur-sm">
+              <ShoppingBag className="h-3 w-3" />
+              {pin.linkedProductCount}
+            </div>
+          )}
+
+          {/* Hover overlay (desktop) */}
+          {!isMobile && (
+            <div className="absolute inset-0 flex items-end opacity-0 transition-opacity duration-300 group-hover:opacity-100 overlay-gradient">
+              <div className="flex w-full items-center justify-between p-3 md:p-4">
+                <span className="text-xs md:text-sm font-medium text-primary-foreground line-clamp-1">{pin.title}</span>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleLike(pin.id); }}
+                    className={`rounded-full p-1.5 md:p-2 shadow-md backdrop-blur-sm transition-all ${
+                      liked.has(pin.id) ? "bg-destructive text-destructive-foreground" : "bg-card/90 text-foreground hover:bg-card"
+                    }`}
+                  >
+                    <Heart className="h-3.5 w-3.5 md:h-4 md:w-4" fill={liked.has(pin.id) ? "currentColor" : "none"} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleSave(pin.id); }}
+                    className={`rounded-full p-1.5 md:p-2 shadow-md backdrop-blur-sm transition-all ${
+                      saved.has(pin.id) ? "bg-accent text-accent-foreground" : "bg-card/90 text-foreground hover:bg-card"
+                    }`}
+                  >
+                    <Bookmark className="h-3.5 w-3.5 md:h-4 md:w-4" fill={saved.has(pin.id) ? "currentColor" : "none"} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="p-2 md:p-3.5">
+          <h3 className="text-xs md:text-sm font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
+          <div className="mt-1.5 md:mt-2 flex items-center gap-1.5">
+            {pin.brandLogo ? (
+              <img src={pin.brandLogo} alt={pin.brand} className="h-5 w-5 md:h-6 md:w-6 rounded-full object-cover border border-border" />
+            ) : (
+              <div className="h-5 w-5 md:h-6 md:w-6 rounded-full bg-accent/20 flex items-center justify-center text-[8px] font-bold text-accent border border-border">
+                {pin.brand.charAt(0)}
+              </div>
+            )}
+            <span className="text-[10px] md:text-xs font-medium text-muted-foreground">{pin.brand}</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+
   return (
-    <div className="flex-1 px-2 md:px-6 py-3 md:py-6">
-      {/* Mobile: 2-col flex masonry */}
+    <div className="relative flex-1 px-2 md:px-6 py-3 md:py-6">
+      {/* Mobile: 2-col */}
       <div className="flex gap-2 md:hidden">
         {mobileColumns.map((col, colIdx) => (
           <div key={colIdx} className="flex-1 flex flex-col gap-2">
-            {col.map((pin, i) => (
-              <motion.div
-                key={pin.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: (colIdx + i * 2) * 0.08, duration: 0.4 }}
-              >
-                <div className="group relative overflow-hidden rounded-xl bg-card cursor-pointer">
-                  <div className="relative overflow-hidden">
-                    <img src={pin.image} alt={pin.title} loading="lazy" className="w-full object-cover" />
-                  </div>
-                  <div className="p-2">
-                    <h3 className="text-xs font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <img src={pin.brandLogo} alt={pin.brand} className="h-5 w-5 rounded-full object-cover border border-border" />
-                      <span className="text-[10px] font-medium text-muted-foreground">{pin.brand}</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+            {col.map((pin, i) => renderPin(pin, i, colIdx, true))}
           </div>
         ))}
       </div>
 
-      {/* Desktop: CSS columns masonry */}
+      {/* Desktop: CSS columns */}
       <div className="hidden md:block columns-3 xl:columns-4 gap-4">
-        {pins.map((pin, i) => (
-          <motion.div
-            key={pin.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08, duration: 0.4 }}
-            className="mb-2 md:mb-4 break-inside-avoid"
-          >
-            <div className="group relative overflow-hidden rounded-xl md:rounded-2xl bg-card shadow-sm card-hover cursor-pointer">
-              {/* Image */}
-              <div className="relative overflow-hidden">
-                <img
-                  src={pin.image}
-                  alt={pin.title}
-                  loading="lazy"
-                  className="w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-
-                {/* Hover overlay (desktop) */}
-                <div className="absolute inset-0 flex items-end opacity-0 transition-opacity duration-300 group-hover:opacity-100 overlay-gradient">
-                  <div className="flex w-full items-center justify-between p-3 md:p-4">
-                    <span className="text-xs md:text-sm font-medium text-primary-foreground line-clamp-1">{pin.title}</span>
-                    <div className="flex gap-1.5">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleLike(pin.id); }}
-                        className={`rounded-full p-1.5 md:p-2 shadow-md backdrop-blur-sm transition-all ${
-                          liked.has(pin.id)
-                            ? "bg-destructive text-destructive-foreground"
-                            : "bg-card/90 text-foreground hover:bg-card"
-                        }`}
-                      >
-                        <Heart className="h-3.5 w-3.5 md:h-4 md:w-4" fill={liked.has(pin.id) ? "currentColor" : "none"} />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleSave(pin.id); }}
-                        className={`rounded-full p-1.5 md:p-2 shadow-md backdrop-blur-sm transition-all ${
-                          saved.has(pin.id)
-                            ? "bg-accent text-accent-foreground"
-                            : "bg-card/90 text-foreground hover:bg-card"
-                        }`}
-                      >
-                        <Bookmark className="h-3.5 w-3.5 md:h-4 md:w-4" fill={saved.has(pin.id) ? "currentColor" : "none"} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Info - compact on mobile */}
-              <div className="p-2 md:p-3.5">
-                <h3 className="text-xs md:text-sm font-semibold text-foreground leading-tight line-clamp-2">
-                  {pin.title}
-                </h3>
-                <div className="mt-1.5 md:mt-2 flex items-center gap-1.5">
-                  <img
-                    src={pin.brandLogo}
-                    alt={pin.brand}
-                    className="h-5 w-5 md:h-6 md:w-6 rounded-full object-cover border border-border"
-                  />
-                  <span className="text-[10px] md:text-xs font-medium text-muted-foreground">{pin.brand}</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+        {pins.map((pin, i) => renderPin(pin, i, 0, false))}
       </div>
+
+      {/* FAB for creators */}
+      {canCreate && (
+        <button
+          onClick={() => setShowCreatePost(true)}
+          className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-lg transition-transform hover:scale-110"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      )}
+
+      <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} />
     </div>
   );
 }
