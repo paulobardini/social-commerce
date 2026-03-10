@@ -1,9 +1,12 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
+export type UserRole = "lojista" | "fabrica" | "criador";
+
 export interface UserProfile {
   name: string;
   phone: string;
   email: string;
+  role?: UserRole;
   // Onboarding data
   segmento?: string;
   porte?: string;
