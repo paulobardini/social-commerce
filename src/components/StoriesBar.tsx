@@ -147,6 +147,7 @@ export function StoriesBar() {
     setActiveBrandId(null);
     setStoryIndex(0);
     setShowProductSheet(false);
+    setShowComments(false);
   }, []);
 
   const goNext = useCallback(() => {
