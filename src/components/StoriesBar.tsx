@@ -337,7 +337,7 @@ export function StoriesBar() {
                         className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-transform hover:scale-105"
                       >
                         <Eye className="h-4 w-4" />
-                        Ver Coleção
+                        {activeStoryData.cta || "Ver Coleção"}
                       </button>
                       {activeLinkedProducts.length > 0 && (
                         <button
