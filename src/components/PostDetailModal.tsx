@@ -1,5 +1,6 @@
 import { X, ShoppingBag, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import type { Product } from "@/data/mockProducts";
 
 interface PostDetailModalProps {
