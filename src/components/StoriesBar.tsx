@@ -172,6 +172,7 @@ export function StoriesBar() {
   const goPrev = useCallback(() => {
     if (!activeBrand) return;
     setShowProductSheet(false);
+    setShowComments(false);
     if (storyIndex > 0) {
       setDirection(-1);
       setStoryIndex((i) => i - 1);
