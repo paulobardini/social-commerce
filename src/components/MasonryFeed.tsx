@@ -52,6 +52,7 @@ const staticPins: Pin[] = [
 export function MasonryFeed() {
   const { isAuthenticated, user } = useAuth();
   const { userPosts } = useContent();
+  const { getCommentCount } = useComments();
   const [saved, setSaved] = useState<Set<number | string>>(new Set());
   const [liked, setLiked] = useState<Set<number | string>>(new Set());
   const [showCreatePost, setShowCreatePost] = useState(false);
