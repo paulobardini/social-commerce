@@ -38,14 +38,14 @@ interface Pin {
 }
 
 const staticPins: Pin[] = [
-  { id: 1, title: "Coleção Inverno Kids 2026", brand: "Brandili", brandLogo: brandBrandili, category: "Infantil", image: concept1, likes: 342, linkedProducts: [] },
-  { id: 2, title: "Acessórios Outono/Inverno", brand: "Lunender", brandLogo: brandLunender, category: "Feminino", image: concept2, likes: 189, linkedProducts: [] },
-  { id: 3, title: "Streetwear Infantil", brand: "Kyly", brandLogo: brandKyly, category: "Infantil", image: concept3, likes: 527, linkedProducts: [] },
-  { id: 4, title: "Texturas & Tricôs", brand: "Malwee", brandLogo: brandMalwee, category: "Tendência", image: concept4, likes: 415, linkedProducts: [] },
-  { id: 5, title: "Alfaiataria Moderna", brand: "Hering", brandLogo: brandHering, category: "Masculino", image: concept5, likes: 298, linkedProducts: [] },
-  { id: 6, title: "Candy Colors Verão", brand: "Marisol", brandLogo: brandMarisol, category: "Infantil", image: concept6, likes: 631, linkedProducts: [] },
-  { id: 7, title: "Paleta Earth Tones", brand: "Elian", brandLogo: brandElian, category: "Tendência", image: concept7, likes: 456, linkedProducts: [] },
-  { id: 8, title: "Floral Collection", brand: "Colorittá", brandLogo: brandColoritta, category: "Feminino", image: concept8, likes: 374, linkedProducts: [] },
+  { id: 1, title: "Coleção Inverno Kids 2026", brand: "Brandili", brandSlug: "brandili", brandLogo: brandBrandili, category: "Infantil", image: concept1, likes: 342, linkedProducts: [] },
+  { id: 2, title: "Acessórios Outono/Inverno", brand: "Lunender", brandSlug: "lunender", brandLogo: brandLunender, category: "Feminino", image: concept2, likes: 189, linkedProducts: [] },
+  { id: 3, title: "Streetwear Infantil", brand: "Kyly", brandSlug: "kyly", brandLogo: brandKyly, category: "Infantil", image: concept3, likes: 527, linkedProducts: [] },
+  { id: 4, title: "Texturas & Tricôs", brand: "Malwee", brandSlug: "malwee", brandLogo: brandMalwee, category: "Tendência", image: concept4, likes: 415, linkedProducts: [] },
+  { id: 5, title: "Alfaiataria Moderna", brand: "Hering", brandSlug: "hering", brandLogo: brandHering, category: "Masculino", image: concept5, likes: 298, linkedProducts: [] },
+  { id: 6, title: "Candy Colors Verão", brand: "Marisol", brandSlug: "marisol", brandLogo: brandMarisol, category: "Infantil", image: concept6, likes: 631, linkedProducts: [] },
+  { id: 7, title: "Paleta Earth Tones", brand: "Elian", brandSlug: "elian", brandLogo: brandElian, category: "Tendência", image: concept7, likes: 456, linkedProducts: [] },
+  { id: 8, title: "Floral Collection", brand: "Colorittá", brandSlug: "coloritta", brandLogo: brandColoritta, category: "Feminino", image: concept8, likes: 374, linkedProducts: [] },
 ];
 
 export function MasonryFeed() {
