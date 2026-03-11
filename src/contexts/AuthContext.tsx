@@ -2,11 +2,18 @@ import { createContext, useContext, useState, ReactNode } from "react";
 
 export type UserRole = "lojista" | "fabrica" | "criador";
 
+export interface ConnectedBrand {
+  slug: string;
+  name: string;
+  logo: string;
+}
+
 export interface UserProfile {
   name: string;
   phone: string;
   email: string;
   role?: UserRole;
+  connectedBrands?: ConnectedBrand[];
   // Onboarding data
   segmento?: string;
   porte?: string;
