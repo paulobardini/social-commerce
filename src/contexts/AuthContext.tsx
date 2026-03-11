@@ -47,10 +47,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
+const DEFAULT_CONNECTED_BRANDS: ConnectedBrand[] = [
+  { slug: "brandili", name: "Brandili", logo: "" },
+  { slug: "kyly", name: "Kyly", logo: "" },
+  { slug: "hering", name: "Hering", logo: "" },
+  { slug: "malwee", name: "Malwee", logo: "" },
+];
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem("nextil_user");
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    const parsed = JSON.parse(saved) as UserProfile;
+    // Ensure criadores always have connectedBrands
+    if (parsed.role === "criador" && (!parsed.connectedBrands || parsed.connectedBrands.length === 0)) {
+      parsed.connectedBrands = DEFAULT_CONNECTED_BRANDS;
+    }
+    return parsed;
   });
   const [onboardingCompleted, setOnboardingCompleted] = useState(() => {
     return localStorage.getItem("nextil_onboarding") === "true";
