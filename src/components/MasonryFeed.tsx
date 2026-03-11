@@ -62,6 +62,7 @@ export function MasonryFeed() {
     id: p.id,
     title: p.title,
     brand: p.brandName,
+    brandSlug: p.brandName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-"),
     brandLogo: p.brandLogo,
     category: p.category,
     image: p.images[0],
