@@ -153,6 +153,7 @@ export function StoriesBar() {
   const goNext = useCallback(() => {
     if (!activeBrand) return;
     setShowProductSheet(false);
+    setShowComments(false);
     if (storyIndex < activeBrand.stories.length - 1) {
       setDirection(1);
       setStoryIndex((i) => i + 1);
