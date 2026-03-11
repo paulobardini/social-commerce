@@ -6,7 +6,7 @@ import { useContent } from "@/contexts/ContentContext";
 import { useComments } from "@/contexts/CommentsContext";
 import { CreatePostModal } from "@/components/CreatePostModal";
 import { PostDetailModal } from "@/components/PostDetailModal";
-import type { Product } from "@/data/mockProducts";
+import { brands, type Product } from "@/data/mockProducts";
 
 import concept1 from "@/assets/concept-1.jpg";
 import concept2 from "@/assets/concept-2.jpg";
@@ -38,23 +38,30 @@ interface Pin {
   linkedProducts: Product[];
 }
 
+// Helper to get sample products from a brand
+function getBrandProducts(slug: string, count: number): Product[] {
+  const brand = brands.find(b => b.slug === slug);
+  if (!brand) return [];
+  return brand.products.slice(0, count);
+}
+
 const staticPins: Pin[] = [
-  { id: 1, title: "Coleção Inverno Kids 2026", brand: "Brandili", brandSlug: "brandili", brandLogo: brandBrandili, category: "Infantil", image: concept1, likes: 342, linkedProducts: [] },
+  { id: 1, title: "Coleção Inverno Kids 2026", brand: "Brandili", brandSlug: "brandili", brandLogo: brandBrandili, category: "Infantil", image: concept1, likes: 342, linkedProducts: getBrandProducts("brandili", 4) },
   { id: 2, title: "Acessórios Outono/Inverno", brand: "Lunender", brandSlug: "lunender", brandLogo: brandLunender, category: "Feminino", image: concept2, likes: 189, linkedProducts: [] },
-  { id: 3, title: "Streetwear Infantil", brand: "Kyly", brandSlug: "kyly", brandLogo: brandKyly, category: "Infantil", image: concept3, likes: 527, linkedProducts: [] },
-  { id: 4, title: "Texturas & Tricôs", brand: "Malwee", brandSlug: "malwee", brandLogo: brandMalwee, category: "Tendência", image: concept4, likes: 415, linkedProducts: [] },
-  { id: 5, title: "Alfaiataria Moderna", brand: "Hering", brandSlug: "hering", brandLogo: brandHering, category: "Masculino", image: concept5, likes: 298, linkedProducts: [] },
-  { id: 6, title: "Candy Colors Verão", brand: "Marisol", brandSlug: "marisol", brandLogo: brandMarisol, category: "Infantil", image: concept6, likes: 631, linkedProducts: [] },
+  { id: 3, title: "Streetwear Infantil", brand: "Kyly", brandSlug: "kyly", brandLogo: brandKyly, category: "Infantil", image: concept3, likes: 527, linkedProducts: getBrandProducts("kyly", 5) },
+  { id: 4, title: "Texturas & Tricôs", brand: "Malwee", brandSlug: "malwee", brandLogo: brandMalwee, category: "Tendência", image: concept4, likes: 415, linkedProducts: getBrandProducts("malwee", 2) },
+  { id: 5, title: "Alfaiataria Moderna", brand: "Hering", brandSlug: "hering", brandLogo: brandHering, category: "Masculino", image: concept5, likes: 298, linkedProducts: getBrandProducts("hering", 6) },
+  { id: 6, title: "Candy Colors Verão", brand: "Marisol", brandSlug: "marisol", brandLogo: brandMarisol, category: "Infantil", image: concept6, likes: 631, linkedProducts: getBrandProducts("marisol", 3) },
   { id: 7, title: "Paleta Earth Tones", brand: "Elian", brandSlug: "elian", brandLogo: brandElian, category: "Tendência", image: concept7, likes: 456, linkedProducts: [] },
-  { id: 8, title: "Floral Collection", brand: "Colorittá", brandSlug: "coloritta", brandLogo: brandColoritta, category: "Feminino", image: concept8, likes: 374, linkedProducts: [] },
+  { id: 8, title: "Floral Collection", brand: "Colorittá", brandSlug: "coloritta", brandLogo: brandColoritta, category: "Feminino", image: concept8, likes: 374, linkedProducts: getBrandProducts("coloritta", 3) },
 ];
 
 export function MasonryFeed() {
   const { isAuthenticated, user } = useAuth();
   const { userPosts } = useContent();
   const { getCommentCount } = useComments();
-  const [saved, setSaved] = useState<Set<number | string>>(new Set());
-  const [liked, setLiked] = useState<Set<number | string>>(new Set());
+  const [saved, setSaved] = useState<Set<number | string>>(new Set([1, 3, 6]));
+  const [liked, setLiked] = useState<Set<number | string>>(new Set([1, 4, 5, 8]));
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
 

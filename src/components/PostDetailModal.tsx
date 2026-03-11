@@ -34,11 +34,12 @@ export function PostDetailModal({
   const { isAuthenticated, user } = useAuth();
   const { getCommentCount } = useComments();
   const [showPJModal, setShowPJModal] = useState(false);
-  const [showProducts, setShowProducts] = useState(false);
+  const [showProducts, setShowProducts] = useState(true);
 
   const needsGating = !isAuthenticated || !user?.pjCompleted;
   const contentId = brandSlug + "-" + title;
   const commentCount = getCommentCount(contentId, "post");
+  const hasProducts = linkedProducts.length > 0;
 
   if (!open) return null;
 
@@ -63,7 +64,7 @@ export function PostDetailModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/80 backdrop-blur-sm p-3 md:p-6"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/80 backdrop-blur-sm p-2 md:p-6"
           onClick={onClose}
         >
           <motion.div
@@ -71,90 +72,99 @@ export function PostDetailModal({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-5xl max-h-[90vh] rounded-2xl bg-card shadow-2xl overflow-hidden flex flex-col md:flex-row"
+            className="relative w-full max-w-4xl max-h-[92vh] rounded-2xl bg-card shadow-2xl overflow-hidden flex flex-col md:flex-row"
           >
             {/* Close */}
             <button
               onClick={onClose}
-              className="absolute top-3 right-3 z-10 rounded-full bg-foreground/60 p-1.5 text-background hover:bg-foreground/80 backdrop-blur-sm"
+              className="absolute top-3 right-3 z-20 rounded-full bg-foreground/60 p-1.5 text-background hover:bg-foreground/80 backdrop-blur-sm md:hidden"
             >
               <X className="h-4 w-4" />
             </button>
 
-            {/* Left: Image — takes most space */}
-            <div className="md:w-[55%] lg:w-[60%] flex-shrink-0 bg-foreground/5">
+            {/* Left: Image */}
+            <div className="md:w-[55%] flex-shrink-0 bg-foreground/5 relative">
               <img
                 src={image}
                 alt={title}
-                className="w-full h-full object-cover md:max-h-[90vh]"
+                className="w-full h-full object-cover"
                 style={{ maxHeight: "45vh" }}
               />
+              {/* Desktop close on image */}
+              <button
+                onClick={onClose}
+                className="absolute top-3 left-3 z-10 rounded-full bg-foreground/50 p-1.5 text-background hover:bg-foreground/70 backdrop-blur-sm hidden md:flex"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
             {/* Right: Content */}
-            <div className="flex-1 flex flex-col min-w-0 md:max-h-[90vh]">
-              {/* Header */}
-              <div className="p-4 pb-3 border-b border-border">
-                <div className="flex items-center gap-2.5">
-                  {brandLogo ? (
-                    <img src={brandLogo} alt={brand} className="h-8 w-8 rounded-full object-cover border border-border" />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-accent/15 flex items-center justify-center text-[10px] font-bold text-accent border border-border">
-                      {brand.charAt(0)}
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-sm font-semibold text-foreground">{brand}</span>
-                    <p className="text-xs text-muted-foreground leading-tight">{title}</p>
+            <div className="flex-1 flex flex-col min-w-0 md:max-h-[92vh]">
+              {/* Brand header */}
+              <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+                {brandLogo ? (
+                  <img src={brandLogo} alt={brand} className="h-9 w-9 rounded-full object-cover border border-border" />
+                ) : (
+                  <div className="h-9 w-9 rounded-full bg-accent/15 flex items-center justify-center text-xs font-bold text-accent border border-border">
+                    {brand.charAt(0)}
                   </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{brand}</p>
+                  <p className="text-xs text-muted-foreground truncate">{title}</p>
                 </div>
               </div>
 
-              {/* Scrollable area */}
-              <div className="flex-1 overflow-y-auto">
-                {/* Engagement bar */}
-                <div className="flex items-center gap-1 px-4 py-2.5 border-b border-border">
-                  <button
-                    onClick={onToggleLike}
-                    className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                      initialLiked ? "text-destructive" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <Heart className="h-4 w-4" fill={initialLiked ? "currentColor" : "none"} />
-                    {likeCount}
-                  </button>
-                  <div className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
-                    <MessageCircle className="h-4 w-4" />
-                    {commentCount}
-                  </div>
-                  <button
-                    onClick={onToggleSave}
-                    className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                      initialSaved ? "text-accent" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <Bookmark className="h-4 w-4" fill={initialSaved ? "currentColor" : "none"} />
-                    Salvar
-                  </button>
+              {/* Engagement bar */}
+              <div className="flex items-center px-4 py-2 border-b border-border gap-1">
+                <button
+                  onClick={onToggleLike}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    initialLiked ? "text-destructive bg-destructive/10" : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Heart className="h-4 w-4" fill={initialLiked ? "currentColor" : "none"} />
+                  {likeCount}
+                </button>
+                <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                  <MessageCircle className="h-4 w-4" />
+                  {commentCount}
                 </div>
+                <button
+                  onClick={onToggleSave}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    initialSaved ? "text-accent bg-accent/10" : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Bookmark className="h-4 w-4" fill={initialSaved ? "currentColor" : "none"} />
+                </button>
+              </div>
 
-                {/* Products accordion */}
-                {linkedProducts.length > 0 && (
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto">
+                {/* Products */}
+                {hasProducts && (
                   <div className="border-b border-border">
                     <button
                       onClick={() => setShowProducts(!showProducts)}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <ShoppingBag className="h-4 w-4 text-accent" />
-                        <span className="text-sm font-medium text-foreground">
-                          {linkedProducts.length} produto{linkedProducts.length > 1 ? "s" : ""} vinculado{linkedProducts.length > 1 ? "s" : ""}
+                        <ShoppingBag className="h-3.5 w-3.5 text-accent" />
+                        <span className="text-xs font-semibold text-foreground">
+                          {linkedProducts.length} produto{linkedProducts.length > 1 ? "s" : ""}
                         </span>
+                        {needsGating && (
+                          <span className="flex items-center gap-1 text-[10px] text-accent bg-accent/10 rounded-full px-2 py-0.5">
+                            <Lock className="h-2.5 w-2.5" /> Conecte-se
+                          </span>
+                        )}
                       </div>
-                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showProducts ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${showProducts ? "rotate-180" : ""}`} />
                     </button>
 
-                    <AnimatePresence>
+                    <AnimatePresence initial={false}>
                       {showProducts && (
                         <motion.div
                           initial={{ height: 0 }}
@@ -163,44 +173,33 @@ export function PostDetailModal({
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <div className="px-4 pb-3 space-y-2">
-                            {needsGating && (
-                              <button
-                                onClick={handleProductClick}
-                                className="w-full flex items-center gap-2 rounded-lg border border-dashed border-accent/40 bg-accent/5 px-3 py-2 transition-colors hover:bg-accent/10 cursor-pointer"
-                              >
-                                <Lock className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-                                <p className="text-[11px] font-medium text-accent">
-                                  {!isAuthenticated ? "Faça login para ver valores" : "Complete seu cadastro PJ para ver valores"}
-                                </p>
-                              </button>
-                            )}
+                          {/* Max height = ~3 products, scroll if more */}
+                          <div className="px-3 pb-2.5 space-y-1.5 max-h-[210px] overflow-y-auto">
                             {linkedProducts.map((product) => (
                               <div
                                 key={product.id}
                                 onClick={handleProductClick}
-                                className="flex items-center gap-2.5 rounded-lg border border-border p-2 hover:bg-muted/50 transition-colors cursor-pointer"
+                                className="flex items-center gap-2.5 rounded-lg border border-border/70 p-2 hover:bg-muted/40 transition-colors cursor-pointer"
                               >
                                 <img
                                   src={product.variants[0]?.images[0]}
                                   alt={product.name}
-                                  className="h-11 w-11 rounded-md object-cover flex-shrink-0"
+                                  className="h-10 w-10 rounded-md object-cover flex-shrink-0"
                                 />
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium text-foreground truncate">{product.name}</p>
-                                  <p className="text-[10px] text-muted-foreground">Ref: {product.ref}</p>
+                                  <p className="text-[11px] font-medium text-foreground truncate">{product.name}</p>
                                   {needsGating ? (
                                     <p className="text-[10px] text-muted-foreground/60 italic">Conecte-se para ver o preço</p>
                                   ) : (
-                                    <p className="text-xs font-semibold text-accent">
+                                    <p className="text-[11px] font-semibold text-accent">
                                       R$ {product.price.toFixed(2).replace(".", ",")}
                                     </p>
                                   )}
                                 </div>
                                 {needsGating ? (
-                                  <Lock className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
+                                  <Lock className="h-3 w-3 text-muted-foreground/40 flex-shrink-0" />
                                 ) : (
-                                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                  <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                                 )}
                               </div>
                             ))}
