@@ -61,39 +61,30 @@ export function StoryProductSheet({ open, onClose, onCloseStory, products, brand
               </button>
             </div>
             <div className="max-h-48 overflow-y-auto p-3 space-y-2">
-              {needsGating ? (
-                <button
-                  onClick={handleProductClick}
-                  className="w-full flex items-center gap-3 rounded-lg bg-accent/5 border border-dashed border-accent/50 p-3 hover:bg-accent/10 transition-colors cursor-pointer"
-                >
-                  <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <Lock className="h-3.5 w-3.5 text-accent" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-semibold text-foreground">Conecte-se para ver valores</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {!isAuthenticated ? "Faça login para acessar" : "Complete seu cadastro PJ"}
-                    </p>
-                  </div>
-                </button>
-              ) : (
-                products.map((p) => (
-                  <div key={p.id} onClick={handleProductClick} className="flex items-center gap-3 rounded-lg bg-muted/50 p-2 cursor-pointer hover:bg-muted transition-colors">
-                    <img
-                      src={p.variants[0]?.images[0]}
-                      alt={p.name}
-                      className="h-12 w-12 rounded-md object-cover"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">{p.name}</p>
+              {products.map((p) => (
+                <div key={p.id} onClick={handleProductClick} className="flex items-center gap-3 rounded-lg bg-muted/50 p-2 cursor-pointer hover:bg-muted transition-colors">
+                  <img
+                    src={p.variants[0]?.images[0]}
+                    alt={p.name}
+                    className="h-12 w-12 rounded-md object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-foreground truncate">{p.name}</p>
+                    {needsGating ? (
+                      <p className="text-[10px] text-muted-foreground/50 italic">Conecte-se para ver o preço</p>
+                    ) : (
                       <p className="text-[10px] text-muted-foreground">
                         Ref: {p.ref} · R$ {p.price.toFixed(2)}
                       </p>
-                    </div>
-                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                    )}
                   </div>
-                ))
-              )}
+                  {needsGating ? (
+                    <Lock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                  ) : (
+                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                  )}
+                </div>
+              ))}
             </div>
           </motion.div>
         )}

@@ -92,46 +92,49 @@ export function PostDetailModal({ open, onClose, image, title, brand, brandLogo,
                     <span>{linkedProducts.length} produto(s) vinculado(s)</span>
                   </div>
 
-                  {needsGating ? (
+                  {needsGating && (
                     <button
                       onClick={handleProductClick}
-                      className="w-full flex items-center gap-3 rounded-xl border border-dashed border-accent/50 bg-accent/5 p-4 transition-colors hover:bg-accent/10 cursor-pointer"
+                      className="w-full flex items-center gap-3 rounded-xl border border-dashed border-accent/50 bg-accent/5 p-3 transition-colors hover:bg-accent/10 cursor-pointer"
                     >
-                      <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                        <Lock className="h-4 w-4 text-accent" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-foreground">Conecte-se para ver valores</p>
-                        <p className="text-xs text-muted-foreground">
-                          {!isAuthenticated ? "Faça login e complete seu cadastro" : "Complete seu cadastro PJ para acessar preços e catálogo"}
-                        </p>
-                      </div>
+                      <Lock className="h-4 w-4 text-accent flex-shrink-0" />
+                      <p className="text-xs font-medium text-accent">
+                        {!isAuthenticated ? "Faça login para ver valores" : "Complete seu cadastro PJ para ver valores"}
+                      </p>
                     </button>
-                  ) : (
-                    <div className="space-y-2">
-                      {linkedProducts.map((product) => (
-                        <div
-                          key={product.id}
-                          onClick={handleProductClick}
-                          className="flex items-center gap-3 rounded-xl border border-border p-2.5 hover:bg-muted/50 transition-colors cursor-pointer"
-                        >
-                          <img
-                            src={product.variants[0]?.images[0]}
-                            alt={product.name}
-                            className="h-14 w-14 rounded-lg object-cover flex-shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">Ref: {product.ref}</p>
+                  )}
+
+                  <div className="space-y-2">
+                    {linkedProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        onClick={handleProductClick}
+                        className="flex items-center gap-3 rounded-xl border border-border p-2.5 hover:bg-muted/50 transition-colors cursor-pointer"
+                      >
+                        <img
+                          src={product.variants[0]?.images[0]}
+                          alt={product.name}
+                          className="h-14 w-14 rounded-lg object-cover flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">Ref: {product.ref}</p>
+                          {needsGating ? (
+                            <p className="text-xs text-muted-foreground/50 italic">Conecte-se para ver o preço</p>
+                          ) : (
                             <p className="text-sm font-semibold text-accent">
                               R$ {product.price.toFixed(2).replace(".", ",")}
                             </p>
-                          </div>
-                          <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        {needsGating ? (
+                          <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        ) : (
+                          <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
