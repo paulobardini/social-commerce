@@ -1,14 +1,24 @@
 import { X, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import type { Product } from "@/data/mockProducts";
 
 interface StoryProductSheetProps {
   open: boolean;
   onClose: () => void;
+  onCloseStory: () => void;
   products: Product[];
+  brandSlug: string;
 }
 
-export function StoryProductSheet({ open, onClose, products }: StoryProductSheetProps) {
+export function StoryProductSheet({ open, onClose, onCloseStory, products, brandSlug }: StoryProductSheetProps) {
+  const navigate = useNavigate();
+
+  const handleProductClick = () => {
+    onClose();
+    onCloseStory();
+    navigate(`/marca/${brandSlug}/produtos`);
+  };
   return (
     <AnimatePresence>
       {open && (
@@ -33,7 +43,7 @@ export function StoryProductSheet({ open, onClose, products }: StoryProductSheet
           </div>
           <div className="max-h-48 overflow-y-auto p-3 space-y-2">
             {products.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded-lg bg-muted/50 p-2">
+              <div key={p.id} onClick={handleProductClick} className="flex items-center gap-3 rounded-lg bg-muted/50 p-2 cursor-pointer hover:bg-muted transition-colors">
                 <img
                   src={p.variants[0]?.images[0]}
                   alt={p.name}

@@ -1,5 +1,6 @@
 import { X, ShoppingBag, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import type { Product } from "@/data/mockProducts";
 
 interface PostDetailModalProps {
@@ -13,7 +14,10 @@ interface PostDetailModalProps {
 }
 
 export function PostDetailModal({ open, onClose, image, title, brand, brandLogo, linkedProducts }: PostDetailModalProps) {
+  const navigate = useNavigate();
   if (!open) return null;
+
+  const brandSlug = brand.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
 
   return (
     <AnimatePresence>
@@ -69,7 +73,8 @@ export function PostDetailModal({ open, onClose, image, title, brand, brandLogo,
                   {linkedProducts.map((product) => (
                     <div
                       key={product.id}
-                      className="flex items-center gap-3 rounded-xl border border-border p-2.5 hover:bg-muted/50 transition-colors"
+                      onClick={() => { onClose(); navigate(`/marca/${brandSlug}/produtos`); }}
+                      className="flex items-center gap-3 rounded-xl border border-border p-2.5 hover:bg-muted/50 transition-colors cursor-pointer"
                     >
                       <img
                         src={product.variants[0]?.images[0]}
