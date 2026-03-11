@@ -203,35 +203,16 @@ export function MasonryFeed() {
         <div className="p-2.5 md:p-3.5">
           <h3 className="text-xs md:text-sm font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
           
-          {/* Mobile: Marca destacada em linha própria */}
+          {/* Mobile: Contadores delicados abaixo da foto */}
           <div className="mt-2 flex items-center gap-2 md:hidden">
-            {pin.brandLogo ? (
-              <img src={pin.brandLogo} alt={pin.brand} className="h-6 w-6 rounded-full object-cover border border-border flex-shrink-0" />
-            ) : (
-              <div className="h-6 w-6 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold text-accent border border-border flex-shrink-0">
-                {pin.brand.charAt(0)}
-              </div>
-            )}
-            <span className="text-xs font-semibold text-foreground truncate">{pin.brand}</span>
-          </div>
-          
-          {/* Mobile: Contadores em linha separada abaixo */}
-          <div className="mt-1.5 flex items-center gap-2 md:hidden">
-            <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold transition-colors ${
-              liked.has(pin.id) ? "bg-destructive/15 text-destructive" : "text-muted-foreground"
-            }`}>
-              <Heart className="h-3.5 w-3.5" fill={liked.has(pin.id) ? "currentColor" : "none"} />
-              <span>{pin.likes + (liked.has(pin.id) ? 1 : 0)}</span>
-            </div>
-            <div className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-muted-foreground">
-              <MessageCircle className="h-3.5 w-3.5" />
-              <span>{getCommentCount(pin.brandSlug + "-" + pin.title, "post")}</span>
-            </div>
-            <div className={`flex items-center justify-center rounded-full px-2 py-1 transition-colors ${
-              saved.has(pin.id) ? "text-accent" : "text-muted-foreground"
-            }`}>
-              <Bookmark className="h-3.5 w-3.5" fill={saved.has(pin.id) ? "currentColor" : "none"} />
-            </div>
+            <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
+              <Heart className="h-3 w-3" fill={liked.has(pin.id) ? "currentColor" : "none"} />
+              {pin.likes + (liked.has(pin.id) ? 1 : 0)}
+            </span>
+            <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
+              <MessageCircle className="h-3 w-3" />
+              {getCommentCount(pin.brandSlug + "-" + pin.title, "post")}
+            </span>
           </div>
           
           {/* Desktop: Layout compacto lado a lado */}
