@@ -58,7 +58,8 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0 gap-0">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0 gap-0 z-[200]">
+        <VisuallyHidden><DialogTitle>Cadastro PJ</DialogTitle></VisuallyHidden>
         {/* Header with context */}
         <div className="bg-primary/5 border-b border-border px-6 pt-6 pb-5 rounded-t-lg">
           <h2 className="text-lg font-bold text-foreground text-center">
