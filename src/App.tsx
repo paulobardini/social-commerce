@@ -28,6 +28,7 @@ const App = () => (
       <AuthProvider>
         <ContentProvider>
           <CartProvider>
+          <CommentsProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
