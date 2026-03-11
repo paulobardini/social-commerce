@@ -29,6 +29,7 @@ interface Pin {
   id: number | string;
   title: string;
   brand: string;
+  brandSlug: string;
   brandLogo: string;
   category: string;
   image: string;
