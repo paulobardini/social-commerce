@@ -135,14 +135,14 @@ export function MasonryFeed() {
           )}
 
           {/* Mobile: Contadores delicados no overlay da imagem */}
-          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between md:hidden">
-            <span className="text-[11px] font-medium text-white/90 drop-shadow-sm truncate pr-2">{pin.brand}</span>
-            <div className="flex items-center gap-1.5">
-              <span className="flex items-center gap-0.5 text-[11px] font-medium text-white/90">
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-2.5 py-2 md:hidden" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)' }}>
+            <span className="text-[11px] font-semibold text-white truncate pr-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{pin.brand}</span>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-0.5 text-[11px] font-semibold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                 <Heart className="h-3 w-3" fill="currentColor" />
                 {pin.likes + (liked.has(pin.id) ? 1 : 0)}
               </span>
-              <span className="flex items-center gap-0.5 text-[11px] font-medium text-white/90">
+              <span className="flex items-center gap-0.5 text-[11px] font-semibold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                 <MessageCircle className="h-3 w-3" />
                 {getCommentCount(pin.brandSlug + "-" + pin.title, "post")}
               </span>
@@ -215,71 +215,6 @@ export function MasonryFeed() {
           </div>
         </div>
 
-        <div className="p-2.5 md:p-3.5">
-          <h3 className="text-xs md:text-sm font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
-          
-          {/* Mobile: Marca destacada em linha própria */}
-          <div className="mt-2 flex items-center gap-2 md:hidden">
-            {pin.brandLogo ? (
-              <img src={pin.brandLogo} alt={pin.brand} className="h-6 w-6 rounded-full object-cover border border-border flex-shrink-0" />
-            ) : (
-              <div className="h-6 w-6 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold text-accent border border-border flex-shrink-0">
-                {pin.brand.charAt(0)}
-              </div>
-            )}
-            <span className="text-xs font-semibold text-foreground truncate">{pin.brand}</span>
-          </div>
-          
-          {/* Mobile: Contadores em linha separada abaixo */}
-          <div className="mt-1.5 flex items-center gap-2 md:hidden">
-            <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold transition-colors ${
-              liked.has(pin.id) ? "bg-destructive/15 text-destructive" : "text-muted-foreground"
-            }`}>
-              <Heart className="h-3.5 w-3.5" fill={liked.has(pin.id) ? "currentColor" : "none"} />
-              <span>{pin.likes + (liked.has(pin.id) ? 1 : 0)}</span>
-            </div>
-            <div className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-muted-foreground">
-              <MessageCircle className="h-3.5 w-3.5" />
-              <span>{getCommentCount(pin.brandSlug + "-" + pin.title, "post")}</span>
-            </div>
-            <div className={`flex items-center justify-center rounded-full px-2 py-1 transition-colors ${
-              saved.has(pin.id) ? "text-accent" : "text-muted-foreground"
-            }`}>
-              <Bookmark className="h-3.5 w-3.5" fill={saved.has(pin.id) ? "currentColor" : "none"} />
-            </div>
-          </div>
-          
-          {/* Desktop: Layout compacto lado a lado */}
-          <div className="mt-1.5 hidden md:flex items-center justify-between">
-            <div className="flex items-center gap-1.5 min-w-0">
-              {pin.brandLogo ? (
-                <img src={pin.brandLogo} alt={pin.brand} className="h-6 w-6 rounded-full object-cover border border-border flex-shrink-0" />
-              ) : (
-                <div className="h-6 w-6 rounded-full bg-accent/20 flex items-center justify-center text-[8px] font-bold text-accent border border-border flex-shrink-0">
-                  {pin.brand.charAt(0)}
-                </div>
-              )}
-              <span className="text-xs font-medium text-muted-foreground truncate">{pin.brand}</span>
-            </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <div className={`flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium transition-colors ${
-                liked.has(pin.id) ? "bg-destructive/10 text-destructive" : "bg-muted/60 text-muted-foreground"
-              }`}>
-                <Heart className="h-3 w-3" fill={liked.has(pin.id) ? "currentColor" : "none"} />
-                <span>{pin.likes + (liked.has(pin.id) ? 1 : 0)}</span>
-              </div>
-              <div className="flex items-center gap-0.5 rounded-full bg-muted/60 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                <MessageCircle className="h-3 w-3" />
-                <span>{getCommentCount(pin.brandSlug + "-" + pin.title, "post")}</span>
-              </div>
-              <div className={`flex items-center rounded-full px-1 py-0.5 transition-colors ${
-                saved.has(pin.id) ? "bg-accent/10 text-accent" : "bg-muted/60 text-muted-foreground"
-              }`}>
-                <Bookmark className="h-3 w-3" fill={saved.has(pin.id) ? "currentColor" : "none"} />
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </motion.div>
   );
