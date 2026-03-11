@@ -116,6 +116,7 @@ export function StoriesBar() {
       grouped.get(key)!.stories.push({
         image: s.image,
         caption: s.caption,
+        cta: s.cta,
         linkedProducts: s.linkedProducts,
       });
     }
