@@ -226,6 +226,12 @@ export function MasonryFeed() {
           brandSlug={selectedPin.brandSlug}
           brandLogo={selectedPin.brandLogo}
           linkedProducts={selectedPin.linkedProducts}
+          pinId={selectedPin.id}
+          initialLiked={liked.has(selectedPin.id)}
+          initialSaved={saved.has(selectedPin.id)}
+          onToggleLike={() => toggleLike(selectedPin.id)}
+          onToggleSave={() => toggleSave(selectedPin.id)}
+          likeCount={selectedPin.likes + (liked.has(selectedPin.id) ? 1 : 0)}
         />
       )}
     </div>
