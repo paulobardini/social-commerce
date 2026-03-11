@@ -31,7 +31,7 @@ interface BrandStories {
   id: string;
   brand: string;
   avatar: string;
-  stories: { image: string; caption: string; linkedProducts?: Product[] }[];
+  stories: { image: string; caption: string; cta?: string; linkedProducts?: Product[] }[];
 }
 
 const staticBrands: BrandStories[] = [
