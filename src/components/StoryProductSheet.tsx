@@ -1,11 +1,14 @@
 import { X, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import type { Product } from "@/data/mockProducts";
 
 interface StoryProductSheetProps {
   open: boolean;
   onClose: () => void;
+  onCloseStory: () => void;
   products: Product[];
+  brandSlug: string;
 }
 
 export function StoryProductSheet({ open, onClose, products }: StoryProductSheetProps) {
