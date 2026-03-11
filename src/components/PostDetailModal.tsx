@@ -138,6 +138,9 @@ export function PostDetailModal({ open, onClose, image, title, brand, brandLogo,
                   </div>
                 </div>
               )}
+
+              {/* Comments */}
+              <CommentsSection contentId={String(brandSlug + "-" + title)} contentType="post" />
             </div>
           </motion.div>
         </motion.div>
