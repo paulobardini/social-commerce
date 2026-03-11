@@ -3,8 +3,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Check, ArrowRight, Store, MapPin } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const tiposCliente = ["Sacoleira", "Lojista", "E-commerce", "Importadora", "Atacadista", "Distribuidora"];
 
