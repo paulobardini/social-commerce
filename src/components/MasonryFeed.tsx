@@ -136,23 +136,47 @@ export function MasonryFeed() {
 
           {/* Overlay com marca e contadores na base da imagem */}
           <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-2.5 py-2 md:px-3 md:py-2.5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)' }}>
-            <span className="text-[11px] md:text-xs font-semibold text-white truncate pr-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{pin.brand}</span>
+            <span className="text-[11px] md:text-[13px] font-semibold text-white truncate pr-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{pin.brand}</span>
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-0.5 text-[11px] md:text-xs font-semibold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
-                <Heart className="h-3 w-3" fill="currentColor" />
+              <span className="flex items-center gap-0.5 text-[11px] md:text-[13px] font-semibold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                <Heart className="h-3 w-3 md:h-3.5 md:w-3.5" fill="currentColor" />
                 {pin.likes + (liked.has(pin.id) ? 1 : 0)}
               </span>
-              <span className="flex items-center gap-0.5 text-[11px] md:text-xs font-semibold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
-                <MessageCircle className="h-3 w-3" />
+              <span className="flex items-center gap-0.5 text-[11px] md:text-[13px] font-semibold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                <MessageCircle className="h-3 w-3 md:h-3.5 md:w-3.5" />
                 {getCommentCount(pin.brandSlug + "-" + pin.title, "post")}
               </span>
+            </div>
+          </div>
+
+          {/* Desktop: hover overlay com curtir e salvar */}
+          <div className="absolute inset-0 items-end opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden md:flex" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)' }}>
+            <div className="flex w-full items-end justify-end p-3 pb-12">
+              <div className="flex gap-1.5">
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleLike(pin.id); }}
+                  className={`rounded-full p-2 shadow-md backdrop-blur-sm transition-all ${
+                    liked.has(pin.id) ? "bg-destructive text-destructive-foreground" : "bg-card/90 text-foreground hover:bg-card"
+                  }`}
+                >
+                  <Heart className="h-4 w-4" fill={liked.has(pin.id) ? "currentColor" : "none"} />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleSave(pin.id); }}
+                  className={`rounded-full p-2 shadow-md backdrop-blur-sm transition-all ${
+                    saved.has(pin.id) ? "bg-accent text-accent-foreground" : "bg-card/90 text-foreground hover:bg-card"
+                  }`}
+                >
+                  <Bookmark className="h-4 w-4" fill={saved.has(pin.id) ? "currentColor" : "none"} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Título abaixo da foto */}
         <div className="p-2.5 md:p-3.5">
-          <h3 className="text-xs md:text-sm font-medium md:font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
+          <h3 className="text-xs md:text-[15px] font-medium md:font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
         </div>
 
       </div>
