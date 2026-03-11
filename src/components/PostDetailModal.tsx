@@ -73,7 +73,8 @@ export function PostDetailModal({ open, onClose, image, title, brand, brandLogo,
                   {linkedProducts.map((product) => (
                     <div
                       key={product.id}
-                      className="flex items-center gap-3 rounded-xl border border-border p-2.5 hover:bg-muted/50 transition-colors"
+                      onClick={() => { onClose(); navigate(`/marca/${brandSlug}/produtos`); }}
+                      className="flex items-center gap-3 rounded-xl border border-border p-2.5 hover:bg-muted/50 transition-colors cursor-pointer"
                     >
                       <img
                         src={product.variants[0]?.images[0]}

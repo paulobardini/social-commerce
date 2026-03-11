@@ -363,7 +363,9 @@ export function StoriesBar() {
                   <StoryProductSheet
                     open={showProductSheet}
                     onClose={() => setShowProductSheet(false)}
+                    onCloseStory={close}
                     products={activeLinkedProducts}
+                    brandSlug={activeBrand.id}
                   />
                 </motion.div>
               </AnimatePresence>

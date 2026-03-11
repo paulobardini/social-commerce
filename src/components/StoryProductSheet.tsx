@@ -43,7 +43,7 @@ export function StoryProductSheet({ open, onClose, onCloseStory, products, brand
           </div>
           <div className="max-h-48 overflow-y-auto p-3 space-y-2">
             {products.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded-lg bg-muted/50 p-2">
+              <div key={p.id} onClick={handleProductClick} className="flex items-center gap-3 rounded-lg bg-muted/50 p-2 cursor-pointer hover:bg-muted transition-colors">
                 <img
                   src={p.variants[0]?.images[0]}
                   alt={p.name}
