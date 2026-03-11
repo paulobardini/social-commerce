@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContent } from "@/contexts/ContentContext";
+import { useComments } from "@/contexts/CommentsContext";
 import { CreatePostModal } from "@/components/CreatePostModal";
 import { PostDetailModal } from "@/components/PostDetailModal";
 import type { Product } from "@/data/mockProducts";
