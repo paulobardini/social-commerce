@@ -60,8 +60,8 @@ export function MasonryFeed() {
   const { isAuthenticated, user } = useAuth();
   const { userPosts } = useContent();
   const { getCommentCount } = useComments();
-  const [saved, setSaved] = useState<Set<number | string>>(new Set());
-  const [liked, setLiked] = useState<Set<number | string>>(new Set());
+  const [saved, setSaved] = useState<Set<number | string>>(new Set([1, 3, 6]));
+  const [liked, setLiked] = useState<Set<number | string>>(new Set([1, 4, 5, 8]));
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
 
