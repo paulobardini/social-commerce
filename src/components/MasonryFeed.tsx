@@ -174,22 +174,22 @@ export function MasonryFeed() {
               )}
               <span className="text-[10px] md:text-xs font-medium text-muted-foreground truncate">{pin.brand}</span>
             </div>
-            {/* Engagement counters */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <div className={`flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium transition-colors ${
-                liked.has(pin.id) ? "bg-destructive/10 text-destructive" : "bg-muted/60 text-muted-foreground"
+            {/* Engagement counters — mobile-first, maior e mais tappable */}
+            <div className="flex items-center gap-1.5 md:gap-1 flex-shrink-0">
+              <div className={`flex items-center gap-1 rounded-full px-2 md:px-1.5 py-1 md:py-0.5 text-xs md:text-[11px] font-semibold transition-colors ${
+                liked.has(pin.id) ? "bg-destructive/15 text-destructive" : "bg-muted/70 text-muted-foreground"
               }`}>
-                <Heart className="h-3 w-3" fill={liked.has(pin.id) ? "currentColor" : "none"} />
+                <Heart className="h-3.5 w-3.5 md:h-3 md:w-3" fill={liked.has(pin.id) ? "currentColor" : "none"} />
                 <span>{pin.likes + (liked.has(pin.id) ? 1 : 0)}</span>
               </div>
-              <div className="flex items-center gap-0.5 rounded-full bg-muted/60 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                <MessageCircle className="h-3 w-3" />
+              <div className="flex items-center gap-1 rounded-full bg-muted/70 px-2 md:px-1.5 py-1 md:py-0.5 text-xs md:text-[11px] font-semibold text-muted-foreground">
+                <MessageCircle className="h-3.5 w-3.5 md:h-3 md:w-3" />
                 <span>{getCommentCount(pin.brandSlug + "-" + pin.title, "post")}</span>
               </div>
-              <div className={`flex items-center rounded-full px-1 py-0.5 transition-colors ${
-                saved.has(pin.id) ? "bg-accent/10 text-accent" : "bg-muted/60 text-muted-foreground"
+              <div className={`flex items-center justify-center rounded-full px-2 md:px-1 py-1 md:py-0.5 transition-colors ${
+                saved.has(pin.id) ? "bg-accent/15 text-accent" : "bg-muted/70 text-muted-foreground"
               }`}>
-                <Bookmark className="h-3 w-3" fill={saved.has(pin.id) ? "currentColor" : "none"} />
+                <Bookmark className="h-3.5 w-3.5 md:h-3 md:w-3" fill={saved.has(pin.id) ? "currentColor" : "none"} />
               </div>
             </div>
           </div>
