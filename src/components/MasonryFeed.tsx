@@ -162,36 +162,40 @@ export function MasonryFeed() {
         </div>
 
         <div className="p-2 md:p-3.5">
-          <h3 className="text-xs md:text-sm font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
-          <div className="mt-1.5 md:mt-2 flex items-center gap-1.5">
-            {pin.brandLogo ? (
-              <img src={pin.brandLogo} alt={pin.brand} className="h-5 w-5 md:h-6 md:w-6 rounded-full object-cover border border-border" />
-            ) : (
-              <div className="h-5 w-5 md:h-6 md:w-6 rounded-full bg-accent/20 flex items-center justify-center text-[8px] font-bold text-accent border border-border">
-                {pin.brand.charAt(0)}
+          <div className="flex items-start justify-between gap-1">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xs md:text-sm font-semibold text-foreground leading-tight line-clamp-2">{pin.title}</h3>
+              <div className="mt-1.5 md:mt-2 flex items-center gap-1.5">
+                {pin.brandLogo ? (
+                  <img src={pin.brandLogo} alt={pin.brand} className="h-5 w-5 md:h-6 md:w-6 rounded-full object-cover border border-border" />
+                ) : (
+                  <div className="h-5 w-5 md:h-6 md:w-6 rounded-full bg-accent/20 flex items-center justify-center text-[8px] font-bold text-accent border border-border">
+                    {pin.brand.charAt(0)}
+                  </div>
+                )}
+                <span className="text-[10px] md:text-xs font-medium text-muted-foreground">{pin.brand}</span>
               </div>
-            )}
-            <span className="text-[10px] md:text-xs font-medium text-muted-foreground">{pin.brand}</span>
-          </div>
-          {/* Engagement counters */}
-          <div className="mt-1.5 flex items-center gap-3 text-[10px] text-muted-foreground">
-            <span className="flex items-center gap-0.5">
-              <Heart className={`h-3 w-3 ${liked.has(pin.id) ? "text-destructive" : ""}`} fill={liked.has(pin.id) ? "currentColor" : "none"} />
-              {pin.likes + (liked.has(pin.id) ? 1 : 0)}
-            </span>
-            {(() => {
-              const count = getCommentCount(pin.brandSlug + "-" + pin.title, "post");
-              return (
-                <span className="flex items-center gap-0.5">
-                  <MessageCircle className="h-3 w-3" /> {count}
-                </span>
-              );
-            })()}
-            {saved.has(pin.id) && (
-              <span className="flex items-center gap-0.5 text-accent">
-                <Bookmark className="h-3 w-3" fill="currentColor" />
+            </div>
+            {/* Engagement counters - right side */}
+            <div className="flex flex-col items-center gap-1.5 pt-0.5 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-0.5">
+                <Heart className={`h-3 w-3 ${liked.has(pin.id) ? "text-destructive" : ""}`} fill={liked.has(pin.id) ? "currentColor" : "none"} />
+                {pin.likes + (liked.has(pin.id) ? 1 : 0)}
               </span>
-            )}
+              {(() => {
+                const count = getCommentCount(pin.brandSlug + "-" + pin.title, "post");
+                return count > 0 ? (
+                  <span className="flex items-center gap-0.5">
+                    <MessageCircle className="h-3 w-3" /> {count}
+                  </span>
+                ) : null;
+              })()}
+              {saved.has(pin.id) && (
+                <span className="flex items-center gap-0.5 text-accent">
+                  <Bookmark className="h-3 w-3" fill="currentColor" />
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
