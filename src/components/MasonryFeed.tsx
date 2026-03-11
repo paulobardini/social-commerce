@@ -165,14 +165,27 @@ export function MasonryFeed() {
               </div>
             )}
             <span className="text-[10px] md:text-xs font-medium text-muted-foreground">{pin.brand}</span>
+          </div>
+          {/* Engagement counters */}
+          <div className="mt-1.5 flex items-center gap-3 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-0.5">
+              <Heart className="h-3 w-3" fill={liked.has(pin.id) ? "currentColor" : "none"} 
+                className={`h-3 w-3 ${liked.has(pin.id) ? "text-destructive" : ""}`} />
+              {pin.likes + (liked.has(pin.id) ? 1 : 0)}
+            </span>
             {(() => {
               const count = getCommentCount(pin.brandSlug + "-" + pin.title, "post");
-              return count > 0 ? (
-                <span className="ml-auto flex items-center gap-0.5 text-[10px] text-muted-foreground">
+              return (
+                <span className="flex items-center gap-0.5">
                   <MessageCircle className="h-3 w-3" /> {count}
                 </span>
-              ) : null;
+              );
             })()}
+            {saved.has(pin.id) && (
+              <span className="flex items-center gap-0.5 text-accent">
+                <Bookmark className="h-3 w-3" fill="currentColor" />
+              </span>
+            )}
           </div>
         </div>
       </div>
