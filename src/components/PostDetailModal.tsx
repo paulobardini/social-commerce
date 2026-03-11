@@ -14,7 +14,10 @@ interface PostDetailModalProps {
 }
 
 export function PostDetailModal({ open, onClose, image, title, brand, brandLogo, linkedProducts }: PostDetailModalProps) {
+  const navigate = useNavigate();
   if (!open) return null;
+
+  const brandSlug = brand.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
 
   return (
     <AnimatePresence>
