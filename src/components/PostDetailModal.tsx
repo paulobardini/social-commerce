@@ -22,6 +22,8 @@ export function PostDetailModal({ open, onClose, image, title, brand, brandLogo,
   const { isAuthenticated, user } = useAuth();
   const [showPJModal, setShowPJModal] = useState(false);
 
+  const needsGating = !isAuthenticated || !user?.pjCompleted;
+
   if (!open) return null;
 
   const handleProductClick = () => {
