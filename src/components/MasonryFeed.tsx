@@ -165,6 +165,14 @@ export function MasonryFeed() {
               </div>
             )}
             <span className="text-[10px] md:text-xs font-medium text-muted-foreground">{pin.brand}</span>
+            {(() => {
+              const count = getCommentCount(pin.brandSlug + "-" + pin.title, "post");
+              return count > 0 ? (
+                <span className="ml-auto flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                  <MessageCircle className="h-3 w-3" /> {count}
+                </span>
+              ) : null;
+            })()}
           </div>
         </div>
       </div>
