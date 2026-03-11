@@ -135,14 +135,14 @@ export function MasonryFeed() {
           )}
 
           {/* Mobile: Contadores delicados no overlay da imagem */}
-          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between md:hidden">
-            <span className="text-[11px] font-medium text-white/90 drop-shadow-sm truncate pr-2">{pin.brand}</span>
-            <div className="flex items-center gap-1.5">
-              <span className="flex items-center gap-0.5 text-[11px] font-medium text-white/90">
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-2.5 py-2 md:hidden" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)' }}>
+            <span className="text-[11px] font-semibold text-white truncate pr-2" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{pin.brand}</span>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-0.5 text-[11px] font-semibold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                 <Heart className="h-3 w-3" fill="currentColor" />
                 {pin.likes + (liked.has(pin.id) ? 1 : 0)}
               </span>
-              <span className="flex items-center gap-0.5 text-[11px] font-medium text-white/90">
+              <span className="flex items-center gap-0.5 text-[11px] font-semibold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                 <MessageCircle className="h-3 w-3" />
                 {getCommentCount(pin.brandSlug + "-" + pin.title, "post")}
               </span>
