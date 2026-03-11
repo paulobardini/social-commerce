@@ -1,11 +1,13 @@
-import { Plus, Eye, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { Plus, Eye, ChevronLeft, ChevronRight, ShoppingBag, MessageCircle } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContent } from "@/contexts/ContentContext";
+import { useComments } from "@/contexts/CommentsContext";
 import { CreateStoryModal } from "@/components/CreateStoryModal";
 import { StoryProductSheet } from "@/components/StoryProductSheet";
+import { CommentsSection } from "@/components/CommentsSection";
 
 import brandBrandili from "@/assets/brand-brandili.jpg";
 import brandKyly from "@/assets/brand-kyly.jpg";
