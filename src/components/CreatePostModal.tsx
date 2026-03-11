@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { X, Upload, ArrowRight, ArrowLeft, Image, Tag, FileText, Send } from "lucide-react";
+import { X, Upload, ArrowRight, ArrowLeft, Image, Tag, FileText, Send, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { ProductLinker } from "@/components/ProductLinker";
 import { useContent } from "@/contexts/ContentContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Product } from "@/data/mockProducts";
+import { brands } from "@/data/mockProducts";
 import { toast } from "sonner";
 
 interface CreatePostModalProps {
@@ -16,22 +17,41 @@ interface CreatePostModalProps {
 
 const categories = ["Infantil", "Feminino", "Masculino", "Tendência"];
 
-const steps = [
-  { icon: Image, label: "Imagens" },
-  { icon: Tag, label: "Produtos" },
-  { icon: FileText, label: "Detalhes" },
-];
-
 export function CreatePostModal({ open, onClose }: CreatePostModalProps) {
   const { addPost } = useContent();
   const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const isCriador = user?.role === "criador";
+  const connectedBrands = user?.connectedBrands || [];
 
   const [step, setStep] = useState(0);
   const [images, setImages] = useState<string[]>([]);
   const [linkedProducts, setLinkedProducts] = useState<Product[]>([]);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(categories[0]);
+  const [selectedBrandSlug, setSelectedBrandSlug] = useState<string>(connectedBrands[0]?.slug || "");
+
+  const steps = isCriador
+    ? [
+        { icon: Building2, label: "Fábrica" },
+        { icon: Image, label: "Imagens" },
+        { icon: Tag, label: "Produtos" },
+        { icon: FileText, label: "Detalhes" },
+      ]
+    : [
+        { icon: Image, label: "Imagens" },
+        { icon: Tag, label: "Produtos" },
+        { icon: FileText, label: "Detalhes" },
+      ];
+
+  const totalSteps = steps.length;
+  const brandStep = isCriador ? 0 : -1;
+  const imageStep = isCriador ? 1 : 0;
+  const productsStep = isCriador ? 2 : 1;
+  const detailsStep = isCriador ? 3 : 2;
+
+  const selectedBrand = brands.find((b) => b.slug === selectedBrandSlug);
 
   const reset = () => {
     setStep(0);
@@ -39,6 +59,7 @@ export function CreatePostModal({ open, onClose }: CreatePostModalProps) {
     setLinkedProducts([]);
     setTitle("");
     setCategory(categories[0]);
+    setSelectedBrandSlug(connectedBrands[0]?.slug || "");
   };
 
   const handleFiles = (files: FileList) => {
@@ -53,11 +74,13 @@ export function CreatePostModal({ open, onClose }: CreatePostModalProps) {
 
   const handlePublish = () => {
     if (!images.length || !title || !user) return;
+    const brandName = isCriador && selectedBrand ? selectedBrand.name : user.name;
+    const brandLogo = isCriador && selectedBrand ? selectedBrand.logo : "";
     addPost({
       title,
       category,
-      brandName: user.name,
-      brandLogo: "",
+      brandName,
+      brandLogo,
       images,
       linkedProducts,
     });
@@ -67,9 +90,10 @@ export function CreatePostModal({ open, onClose }: CreatePostModalProps) {
   };
 
   const canNext = () => {
-    if (step === 0) return images.length > 0;
-    if (step === 1) return true;
-    if (step === 2) return !!title;
+    if (step === brandStep) return !!selectedBrandSlug;
+    if (step === imageStep) return images.length > 0;
+    if (step === productsStep) return true;
+    if (step === detailsStep) return !!title;
     return false;
   };
 
@@ -117,8 +141,45 @@ export function CreatePostModal({ open, onClose }: CreatePostModalProps) {
           </div>
 
           <div className="p-5">
-            {/* Step 0: Upload images */}
-            {step === 0 && (
+            {/* Brand selection (criador only) */}
+            {step === brandStep && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">Selecione a fábrica para vincular ao seu post.</p>
+                <div className="space-y-2">
+                  {connectedBrands.map((cb) => {
+                    const fullBrand = brands.find((b) => b.slug === cb.slug);
+                    return (
+                      <button
+                        key={cb.slug}
+                        onClick={() => setSelectedBrandSlug(cb.slug)}
+                        className={`flex w-full items-center gap-3 rounded-xl border p-3 transition-colors ${
+                          selectedBrandSlug === cb.slug
+                            ? "border-accent bg-accent/10"
+                            : "border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        {fullBrand?.logo ? (
+                          <img src={fullBrand.logo} alt={cb.name} className="h-10 w-10 rounded-full object-cover border border-border" />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center text-sm font-bold text-accent border border-border">
+                            {cb.name.charAt(0)}
+                          </div>
+                        )}
+                        <div className="text-left">
+                          <p className="text-sm font-medium text-foreground">{cb.name}</p>
+                          {fullBrand && (
+                            <p className="text-xs text-muted-foreground">{fullBrand.totalProducts} produtos</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Step: Upload images */}
+            {step === imageStep && (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">Envie até 4 imagens para o feed.</p>
                 <input
@@ -158,16 +219,16 @@ export function CreatePostModal({ open, onClose }: CreatePostModalProps) {
               </div>
             )}
 
-            {/* Step 1: Link products */}
-            {step === 1 && (
+            {/* Step: Link products */}
+            {step === productsStep && (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">Vincule produtos ao post para que os lojistas possam comprar.</p>
                 <ProductLinker selected={linkedProducts} onChange={setLinkedProducts} />
               </div>
             )}
 
-            {/* Step 2: Details */}
-            {step === 2 && (
+            {/* Step: Details */}
+            {step === detailsStep && (
               <div className="space-y-4">
                 <div>
                   <label className="text-xs font-medium text-foreground mb-1.5 block">Título</label>
@@ -195,7 +256,6 @@ export function CreatePostModal({ open, onClose }: CreatePostModalProps) {
                     ))}
                   </div>
                 </div>
-                {/* Preview */}
                 {images.length > 0 && (
                   <div className="rounded-xl overflow-hidden border border-border">
                     <img src={images[0]} alt="Preview" className="w-full aspect-square object-cover" />
@@ -210,6 +270,9 @@ export function CreatePostModal({ open, onClose }: CreatePostModalProps) {
                 {linkedProducts.length > 0 && (
                   <p className="text-xs text-muted-foreground">{linkedProducts.length} produto(s) vinculado(s)</p>
                 )}
+                {isCriador && selectedBrand && (
+                  <p className="text-xs text-muted-foreground">Fábrica: {selectedBrand.name}</p>
+                )}
               </div>
             )}
           </div>
@@ -220,7 +283,7 @@ export function CreatePostModal({ open, onClose }: CreatePostModalProps) {
               <ArrowLeft className="h-4 w-4 mr-1" />
               {step > 0 ? "Voltar" : "Cancelar"}
             </Button>
-            {step < 2 ? (
+            {step < totalSteps - 1 ? (
               <Button size="sm" onClick={() => setStep(step + 1)} disabled={!canNext()}>
                 Próximo
                 <ArrowRight className="h-4 w-4 ml-1" />
