@@ -72,7 +72,7 @@ export function PostDetailModal({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl max-h-[92vh] rounded-2xl bg-card shadow-2xl overflow-hidden flex flex-col md:flex-row"
+            className="relative w-full max-w-4xl h-[85vh] md:h-[80vh] rounded-2xl bg-card shadow-2xl overflow-hidden flex flex-col md:flex-row"
           >
             {/* Close */}
             <button
