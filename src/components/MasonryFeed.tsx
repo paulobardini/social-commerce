@@ -1,8 +1,9 @@
-import { Bookmark, Heart, Plus, ShoppingBag } from "lucide-react";
+import { Bookmark, Heart, Plus, ShoppingBag, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContent } from "@/contexts/ContentContext";
+import { useComments } from "@/contexts/CommentsContext";
 import { CreatePostModal } from "@/components/CreatePostModal";
 import { PostDetailModal } from "@/components/PostDetailModal";
 import type { Product } from "@/data/mockProducts";
@@ -51,6 +52,7 @@ const staticPins: Pin[] = [
 export function MasonryFeed() {
   const { isAuthenticated, user } = useAuth();
   const { userPosts } = useContent();
+  const { getCommentCount } = useComments();
   const [saved, setSaved] = useState<Set<number | string>>(new Set());
   const [liked, setLiked] = useState<Set<number | string>>(new Set());
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -163,6 +165,14 @@ export function MasonryFeed() {
               </div>
             )}
             <span className="text-[10px] md:text-xs font-medium text-muted-foreground">{pin.brand}</span>
+            {(() => {
+              const count = getCommentCount(pin.brandSlug + "-" + pin.title, "post");
+              return count > 0 ? (
+                <span className="ml-auto flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                  <MessageCircle className="h-3 w-3" /> {count}
+                </span>
+              ) : null;
+            })()}
           </div>
         </div>
       </div>

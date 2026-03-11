@@ -1,11 +1,13 @@
-import { Plus, Eye, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { Plus, Eye, ChevronLeft, ChevronRight, ShoppingBag, MessageCircle } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContent } from "@/contexts/ContentContext";
+import { useComments } from "@/contexts/CommentsContext";
 import { CreateStoryModal } from "@/components/CreateStoryModal";
 import { StoryProductSheet } from "@/components/StoryProductSheet";
+import { CommentsSection } from "@/components/CommentsSection";
 
 import brandBrandili from "@/assets/brand-brandili.jpg";
 import brandKyly from "@/assets/brand-kyly.jpg";
@@ -97,6 +99,8 @@ export function StoriesBar() {
   const [progressKey, setProgressKey] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showProductSheet, setShowProductSheet] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const { getCommentCount } = useComments();
 
   // Merge user stories into brands list
   const navigableBrands = useMemo<BrandStories[]>(() => {
@@ -143,11 +147,13 @@ export function StoriesBar() {
     setActiveBrandId(null);
     setStoryIndex(0);
     setShowProductSheet(false);
+    setShowComments(false);
   }, []);
 
   const goNext = useCallback(() => {
     if (!activeBrand) return;
     setShowProductSheet(false);
+    setShowComments(false);
     if (storyIndex < activeBrand.stories.length - 1) {
       setDirection(1);
       setStoryIndex((i) => i + 1);
@@ -166,6 +172,7 @@ export function StoriesBar() {
   const goPrev = useCallback(() => {
     if (!activeBrand) return;
     setShowProductSheet(false);
+    setShowComments(false);
     if (storyIndex > 0) {
       setDirection(-1);
       setStoryIndex((i) => i - 1);
@@ -341,13 +348,24 @@ export function StoriesBar() {
                       </button>
                       {activeLinkedProducts.length > 0 && (
                         <button
-                          onClick={() => setShowProductSheet(!showProductSheet)}
+                          onClick={() => { setShowProductSheet(!showProductSheet); setShowComments(false); }}
                           className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-transform hover:scale-105"
                         >
                           <ShoppingBag className="h-4 w-4" />
                           {activeLinkedProducts.length}
                         </button>
                       )}
+                      <button
+                        onClick={() => { setShowComments(!showComments); setShowProductSheet(false); }}
+                        className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-transform hover:scale-105"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        {(() => {
+                          const storyId = `${activeBrand.id}-story-${storyIndex}`;
+                          const count = getCommentCount(storyId, "story");
+                          return count > 0 ? count : null;
+                        })()}
+                      </button>
                     </div>
                   </div>
 
@@ -367,6 +385,28 @@ export function StoriesBar() {
                     products={activeLinkedProducts}
                     brandSlug={activeBrand.id}
                   />
+
+                  {/* Comments panel */}
+                  <AnimatePresence>
+                    {showComments && (
+                      <motion.div
+                        initial={{ y: "100%" }}
+                        animate={{ y: 0 }}
+                        exit={{ y: "100%" }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="absolute bottom-0 left-0 right-0 z-20 rounded-t-2xl bg-card shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="p-4">
+                          <CommentsSection
+                            contentId={`${activeBrand.id}-story-${storyIndex}`}
+                            contentType="story"
+                            compact
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               </AnimatePresence>
             </div>

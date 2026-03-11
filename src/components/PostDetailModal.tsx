@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { CadastroPJModal } from "@/components/CadastroPJModal";
+import { CommentsSection } from "@/components/CommentsSection";
 import type { Product } from "@/data/mockProducts";
 
 interface PostDetailModalProps {
@@ -137,6 +138,9 @@ export function PostDetailModal({ open, onClose, image, title, brand, brandLogo,
                   </div>
                 </div>
               )}
+
+              {/* Comments */}
+              <CommentsSection contentId={String(brandSlug + "-" + title)} contentType="post" />
             </div>
           </motion.div>
         </motion.div>
