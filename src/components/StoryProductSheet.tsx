@@ -11,7 +11,14 @@ interface StoryProductSheetProps {
   brandSlug: string;
 }
 
-export function StoryProductSheet({ open, onClose, products }: StoryProductSheetProps) {
+export function StoryProductSheet({ open, onClose, onCloseStory, products, brandSlug }: StoryProductSheetProps) {
+  const navigate = useNavigate();
+
+  const handleProductClick = () => {
+    onClose();
+    onCloseStory();
+    navigate(`/marca/${brandSlug}/produtos`);
+  };
   return (
     <AnimatePresence>
       {open && (
