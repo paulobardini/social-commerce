@@ -345,13 +345,24 @@ export function StoriesBar() {
                       </button>
                       {activeLinkedProducts.length > 0 && (
                         <button
-                          onClick={() => setShowProductSheet(!showProductSheet)}
+                          onClick={() => { setShowProductSheet(!showProductSheet); setShowComments(false); }}
                           className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-transform hover:scale-105"
                         >
                           <ShoppingBag className="h-4 w-4" />
                           {activeLinkedProducts.length}
                         </button>
                       )}
+                      <button
+                        onClick={() => { setShowComments(!showComments); setShowProductSheet(false); }}
+                        className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-transform hover:scale-105"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        {(() => {
+                          const storyId = `${activeBrand.id}-story-${storyIndex}`;
+                          const count = getCommentCount(storyId, "story");
+                          return count > 0 ? count : null;
+                        })()}
+                      </button>
                     </div>
                   </div>
 
@@ -371,6 +382,28 @@ export function StoriesBar() {
                     products={activeLinkedProducts}
                     brandSlug={activeBrand.id}
                   />
+
+                  {/* Comments panel */}
+                  <AnimatePresence>
+                    {showComments && (
+                      <motion.div
+                        initial={{ y: "100%" }}
+                        animate={{ y: 0 }}
+                        exit={{ y: "100%" }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="absolute bottom-0 left-0 right-0 z-20 rounded-t-2xl bg-card shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="p-4">
+                          <CommentsSection
+                            contentId={`${activeBrand.id}-story-${storyIndex}`}
+                            contentType="story"
+                            compact
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               </AnimatePresence>
             </div>
