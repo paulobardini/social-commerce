@@ -201,6 +201,7 @@ export function MasonryFeed() {
           image={selectedPin.image}
           title={selectedPin.title}
           brand={selectedPin.brand}
+          brandSlug={selectedPin.brandSlug}
           brandLogo={selectedPin.brandLogo}
           linkedProducts={selectedPin.linkedProducts}
         />
