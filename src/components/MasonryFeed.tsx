@@ -6,7 +6,7 @@ import { useContent } from "@/contexts/ContentContext";
 import { useComments } from "@/contexts/CommentsContext";
 import { CreatePostModal } from "@/components/CreatePostModal";
 import { PostDetailModal } from "@/components/PostDetailModal";
-import type { Product } from "@/data/mockProducts";
+import { brands, type Product } from "@/data/mockProducts";
 
 import concept1 from "@/assets/concept-1.jpg";
 import concept2 from "@/assets/concept-2.jpg";
