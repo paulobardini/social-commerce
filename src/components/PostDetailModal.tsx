@@ -83,12 +83,11 @@ export function PostDetailModal({
             </button>
 
             {/* Left: Image */}
-            <div className="md:w-[55%] flex-shrink-0 bg-foreground/5 relative">
+            <div className="md:w-[55%] flex-shrink-0 bg-foreground/5 relative h-[35vh] md:h-full">
               <img
                 src={image}
                 alt={title}
                 className="w-full h-full object-cover"
-                style={{ maxHeight: "45vh" }}
               />
               {/* Desktop close on image */}
               <button
