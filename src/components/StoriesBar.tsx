@@ -99,6 +99,8 @@ export function StoriesBar() {
   const [progressKey, setProgressKey] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showProductSheet, setShowProductSheet] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const { getCommentCount } = useComments();
 
   // Merge user stories into brands list
   const navigableBrands = useMemo<BrandStories[]>(() => {
