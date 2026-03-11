@@ -134,21 +134,6 @@ export function MasonryFeed() {
             </div>
           )}
 
-          {/* Mobile: Contadores delicados no overlay da imagem */}
-          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between md:hidden">
-            <span className="text-[11px] font-medium text-white/90 drop-shadow-sm truncate pr-2">{pin.brand}</span>
-            <div className="flex items-center gap-1.5">
-              <span className="flex items-center gap-0.5 text-[11px] font-medium text-white/90">
-                <Heart className="h-3 w-3" fill="currentColor" />
-                {pin.likes + (liked.has(pin.id) ? 1 : 0)}
-              </span>
-              <span className="flex items-center gap-0.5 text-[11px] font-medium text-white/90">
-                <MessageCircle className="h-3 w-3" />
-                {getCommentCount(pin.brandSlug + "-" + pin.title, "post")}
-              </span>
-            </div>
-          </div>
-
           {!isMobile && (
             <div className="absolute inset-0 flex items-end opacity-0 transition-opacity duration-300 group-hover:opacity-100 overlay-gradient">
               <div className="flex w-full items-center justify-between p-3 md:p-4">
