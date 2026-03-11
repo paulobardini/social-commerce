@@ -1,4 +1,4 @@
-import { Bookmark, Heart, Plus, ShoppingBag } from "lucide-react";
+import { Bookmark, Heart, Plus, ShoppingBag, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
