@@ -100,12 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.segmento === "influencer") role = "criador";
 
       // Mock connected brands for criadores
-      const connectedBrands: ConnectedBrand[] = role === "criador" ? [
-        { slug: "brandili", name: "Brandili", logo: "" },
-        { slug: "kyly", name: "Kyly", logo: "" },
-        { slug: "hering", name: "Hering", logo: "" },
-        { slug: "malwee", name: "Malwee", logo: "" },
-      ] : [];
+      const connectedBrands: ConnectedBrand[] = role === "criador" ? DEFAULT_CONNECTED_BRANDS : [];
 
       const updated = { ...user, ...data, role, connectedBrands };
       persist(updated);
