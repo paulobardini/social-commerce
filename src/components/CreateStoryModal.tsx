@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { X, Upload, ArrowRight, ArrowLeft, Image, Tag, Send } from "lucide-react";
+import { X, Upload, ArrowRight, ArrowLeft, Image, Tag, Send, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { ProductLinker } from "@/components/ProductLinker";
 import { useContent } from "@/contexts/ContentContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Product } from "@/data/mockProducts";
+import { brands } from "@/data/mockProducts";
 import { toast } from "sonner";
 
 interface CreateStoryModalProps {
@@ -16,22 +17,35 @@ interface CreateStoryModalProps {
 
 const ctaOptions = ["Ver Coleção", "Comprar Agora", "Saiba Mais", "Confira"];
 
-const steps = [
-  { icon: Image, label: "Imagem" },
-  { icon: Tag, label: "Produtos" },
-  { icon: Send, label: "Publicar" },
-];
-
 export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
   const { addStory } = useContent();
   const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const isCriador = user?.role === "criador";
+  const connectedBrands = user?.connectedBrands || [];
 
   const [step, setStep] = useState(0);
   const [imageData, setImageData] = useState<string | null>(null);
   const [linkedProducts, setLinkedProducts] = useState<Product[]>([]);
   const [caption, setCaption] = useState("");
   const [cta, setCta] = useState(ctaOptions[0]);
+  const [selectedBrandSlug, setSelectedBrandSlug] = useState<string>(connectedBrands[0]?.slug || "");
+
+  const steps = isCriador
+    ? [
+        { icon: Building2, label: "Fábrica" },
+        { icon: Image, label: "Imagem" },
+        { icon: Tag, label: "Produtos" },
+        { icon: Send, label: "Publicar" },
+      ]
+    : [
+        { icon: Image, label: "Imagem" },
+        { icon: Tag, label: "Produtos" },
+        { icon: Send, label: "Publicar" },
+      ];
+
+  const totalSteps = steps.length;
 
   const reset = () => {
     setStep(0);
@@ -39,6 +53,7 @@ export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
     setLinkedProducts([]);
     setCaption("");
     setCta(ctaOptions[0]);
+    setSelectedBrandSlug(connectedBrands[0]?.slug || "");
   };
 
   const handleFile = (file: File) => {
@@ -53,11 +68,22 @@ export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
     if (file?.type.startsWith("image/")) handleFile(file);
   };
 
+  // Resolve actual step content based on criador offset
+  const contentStep = isCriador ? step : step;
+  const brandStep = isCriador ? 0 : -1;
+  const imageStep = isCriador ? 1 : 0;
+  const productsStep = isCriador ? 2 : 1;
+  const publishStep = isCriador ? 3 : 2;
+
+  const selectedBrand = brands.find((b) => b.slug === selectedBrandSlug);
+
   const handlePublish = () => {
     if (!imageData || !user) return;
+    const brandName = isCriador && selectedBrand ? selectedBrand.name : user.name;
+    const brandLogo = isCriador && selectedBrand ? selectedBrand.logo : "";
     addStory({
-      brandName: user.name,
-      brandAvatar: "",
+      brandName,
+      brandAvatar: brandLogo,
       image: imageData,
       caption,
       cta,
@@ -69,9 +95,10 @@ export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
   };
 
   const canNext = () => {
-    if (step === 0) return !!imageData;
-    if (step === 1) return true; // products optional
-    if (step === 2) return !!caption;
+    if (contentStep === brandStep) return !!selectedBrandSlug;
+    if (contentStep === imageStep) return !!imageData;
+    if (contentStep === productsStep) return true;
+    if (contentStep === publishStep) return !!caption;
     return false;
   };
 
@@ -119,8 +146,45 @@ export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
           </div>
 
           <div className="p-5">
-            {/* Step 0: Upload */}
-            {step === 0 && (
+            {/* Brand selection (criador only) */}
+            {contentStep === brandStep && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">Selecione a fábrica para vincular ao seu story.</p>
+                <div className="space-y-2">
+                  {connectedBrands.map((cb) => {
+                    const fullBrand = brands.find((b) => b.slug === cb.slug);
+                    return (
+                      <button
+                        key={cb.slug}
+                        onClick={() => setSelectedBrandSlug(cb.slug)}
+                        className={`flex w-full items-center gap-3 rounded-xl border p-3 transition-colors ${
+                          selectedBrandSlug === cb.slug
+                            ? "border-accent bg-accent/10"
+                            : "border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        {fullBrand?.logo ? (
+                          <img src={fullBrand.logo} alt={cb.name} className="h-10 w-10 rounded-full object-cover border border-border" />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center text-sm font-bold text-accent border border-border">
+                            {cb.name.charAt(0)}
+                          </div>
+                        )}
+                        <div className="text-left">
+                          <p className="text-sm font-medium text-foreground">{cb.name}</p>
+                          {fullBrand && (
+                            <p className="text-xs text-muted-foreground">{fullBrand.totalProducts} produtos</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Upload */}
+            {contentStep === imageStep && (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">Envie uma imagem no formato vertical (9:16) para seu story.</p>
                 <input
@@ -139,9 +203,7 @@ export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
                     style={{ aspectRatio: "9/16", maxHeight: "320px" }}
                   >
                     <Upload className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground text-center">
-                      Clique ou arraste uma imagem
-                    </span>
+                    <span className="text-sm text-muted-foreground text-center">Clique ou arraste uma imagem</span>
                   </div>
                 ) : (
                   <div className="relative mx-auto overflow-hidden rounded-xl" style={{ aspectRatio: "9/16", maxHeight: "320px" }}>
@@ -157,16 +219,16 @@ export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
               </div>
             )}
 
-            {/* Step 1: Link products */}
-            {step === 1 && (
+            {/* Link products */}
+            {contentStep === productsStep && (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">Vincule produtos ao seu story para que os lojistas possam comprar diretamente.</p>
                 <ProductLinker selected={linkedProducts} onChange={setLinkedProducts} />
               </div>
             )}
 
-            {/* Step 2: Caption + CTA + Publish */}
-            {step === 2 && (
+            {/* Caption + CTA + Publish */}
+            {contentStep === publishStep && (
               <div className="space-y-4">
                 <div>
                   <label className="text-xs font-medium text-foreground mb-1.5 block">Legenda</label>
@@ -194,7 +256,6 @@ export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
                     ))}
                   </div>
                 </div>
-                {/* Preview */}
                 {imageData && (
                   <div className="relative mx-auto overflow-hidden rounded-xl" style={{ aspectRatio: "9/16", maxHeight: "200px" }}>
                     <img src={imageData} alt="Preview" className="h-full w-full object-cover" />
@@ -207,9 +268,10 @@ export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
                   </div>
                 )}
                 {linkedProducts.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {linkedProducts.length} produto(s) vinculado(s)
-                  </p>
+                  <p className="text-xs text-muted-foreground">{linkedProducts.length} produto(s) vinculado(s)</p>
+                )}
+                {isCriador && selectedBrand && (
+                  <p className="text-xs text-muted-foreground">Fábrica: {selectedBrand.name}</p>
                 )}
               </div>
             )}
@@ -225,7 +287,7 @@ export function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
               <ArrowLeft className="h-4 w-4 mr-1" />
               {step > 0 ? "Voltar" : "Cancelar"}
             </Button>
-            {step < 2 ? (
+            {step < totalSteps - 1 ? (
               <Button size="sm" onClick={() => setStep(step + 1)} disabled={!canNext()}>
                 Próximo
                 <ArrowRight className="h-4 w-4 ml-1" />

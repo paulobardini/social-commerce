@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContent } from "@/contexts/ContentContext";
 import { CreatePostModal } from "@/components/CreatePostModal";
+import { PostDetailModal } from "@/components/PostDetailModal";
+import type { Product } from "@/data/mockProducts";
 
 import concept1 from "@/assets/concept-1.jpg";
 import concept2 from "@/assets/concept-2.jpg";
@@ -31,18 +33,18 @@ interface Pin {
   category: string;
   image: string;
   likes: number;
-  linkedProductCount?: number;
+  linkedProducts: Product[];
 }
 
 const staticPins: Pin[] = [
-  { id: 1, title: "Coleção Inverno Kids 2026", brand: "Brandili", brandLogo: brandBrandili, category: "Infantil", image: concept1, likes: 342 },
-  { id: 2, title: "Acessórios Outono/Inverno", brand: "Lunender", brandLogo: brandLunender, category: "Feminino", image: concept2, likes: 189 },
-  { id: 3, title: "Streetwear Infantil", brand: "Kyly", brandLogo: brandKyly, category: "Infantil", image: concept3, likes: 527 },
-  { id: 4, title: "Texturas & Tricôs", brand: "Malwee", brandLogo: brandMalwee, category: "Tendência", image: concept4, likes: 415 },
-  { id: 5, title: "Alfaiataria Moderna", brand: "Hering", brandLogo: brandHering, category: "Masculino", image: concept5, likes: 298 },
-  { id: 6, title: "Candy Colors Verão", brand: "Marisol", brandLogo: brandMarisol, category: "Infantil", image: concept6, likes: 631 },
-  { id: 7, title: "Paleta Earth Tones", brand: "Elian", brandLogo: brandElian, category: "Tendência", image: concept7, likes: 456 },
-  { id: 8, title: "Floral Collection", brand: "Colorittá", brandLogo: brandColoritta, category: "Feminino", image: concept8, likes: 374 },
+  { id: 1, title: "Coleção Inverno Kids 2026", brand: "Brandili", brandLogo: brandBrandili, category: "Infantil", image: concept1, likes: 342, linkedProducts: [] },
+  { id: 2, title: "Acessórios Outono/Inverno", brand: "Lunender", brandLogo: brandLunender, category: "Feminino", image: concept2, likes: 189, linkedProducts: [] },
+  { id: 3, title: "Streetwear Infantil", brand: "Kyly", brandLogo: brandKyly, category: "Infantil", image: concept3, likes: 527, linkedProducts: [] },
+  { id: 4, title: "Texturas & Tricôs", brand: "Malwee", brandLogo: brandMalwee, category: "Tendência", image: concept4, likes: 415, linkedProducts: [] },
+  { id: 5, title: "Alfaiataria Moderna", brand: "Hering", brandLogo: brandHering, category: "Masculino", image: concept5, likes: 298, linkedProducts: [] },
+  { id: 6, title: "Candy Colors Verão", brand: "Marisol", brandLogo: brandMarisol, category: "Infantil", image: concept6, likes: 631, linkedProducts: [] },
+  { id: 7, title: "Paleta Earth Tones", brand: "Elian", brandLogo: brandElian, category: "Tendência", image: concept7, likes: 456, linkedProducts: [] },
+  { id: 8, title: "Floral Collection", brand: "Colorittá", brandLogo: brandColoritta, category: "Feminino", image: concept8, likes: 374, linkedProducts: [] },
 ];
 
 export function MasonryFeed() {
@@ -51,10 +53,10 @@ export function MasonryFeed() {
   const [saved, setSaved] = useState<Set<number | string>>(new Set());
   const [liked, setLiked] = useState<Set<number | string>>(new Set());
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
 
   const canCreate = isAuthenticated && (user?.role === "fabrica" || user?.role === "criador");
 
-  // Merge user posts at top
   const userPins: Pin[] = userPosts.map((p) => ({
     id: p.id,
     title: p.title,
@@ -63,7 +65,7 @@ export function MasonryFeed() {
     category: p.category,
     image: p.images[0],
     likes: 0,
-    linkedProductCount: p.linkedProducts.length,
+    linkedProducts: p.linkedProducts,
   }));
 
   const pins = [...userPins, ...staticPins];
@@ -102,7 +104,10 @@ export function MasonryFeed() {
       transition={{ delay: isMobile ? (colIdx + i * 2) * 0.08 : i * 0.08, duration: 0.4 }}
       className={isMobile ? "" : "mb-2 md:mb-4 break-inside-avoid"}
     >
-      <div className="group relative overflow-hidden rounded-xl md:rounded-2xl bg-card shadow-sm card-hover cursor-pointer">
+      <div
+        onClick={() => setSelectedPin(pin)}
+        className="group relative overflow-hidden rounded-xl md:rounded-2xl bg-card shadow-sm card-hover cursor-pointer"
+      >
         <div className="relative overflow-hidden">
           <img
             src={pin.image}
@@ -111,15 +116,13 @@ export function MasonryFeed() {
             className={`w-full object-cover ${!isMobile ? "transition-transform duration-500 group-hover:scale-105" : ""}`}
           />
 
-          {/* Product badge */}
-          {(pin.linkedProductCount ?? 0) > 0 && (
+          {pin.linkedProducts.length > 0 && (
             <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-card/90 px-2 py-1 text-[10px] font-medium text-foreground backdrop-blur-sm">
               <ShoppingBag className="h-3 w-3" />
-              {pin.linkedProductCount}
+              {pin.linkedProducts.length}
             </div>
           )}
 
-          {/* Hover overlay (desktop) */}
           {!isMobile && (
             <div className="absolute inset-0 flex items-end opacity-0 transition-opacity duration-300 group-hover:opacity-100 overlay-gradient">
               <div className="flex w-full items-center justify-between p-3 md:p-4">
@@ -166,7 +169,6 @@ export function MasonryFeed() {
 
   return (
     <div className="relative flex-1 px-2 md:px-6 py-3 md:py-6">
-      {/* Mobile: 2-col */}
       <div className="flex gap-2 md:hidden">
         {mobileColumns.map((col, colIdx) => (
           <div key={colIdx} className="flex-1 flex flex-col gap-2">
@@ -175,12 +177,10 @@ export function MasonryFeed() {
         ))}
       </div>
 
-      {/* Desktop: CSS columns */}
       <div className="hidden md:block columns-3 xl:columns-4 gap-4">
         {pins.map((pin, i) => renderPin(pin, i, 0, false))}
       </div>
 
-      {/* FAB for creators */}
       {canCreate && (
         <button
           onClick={() => setShowCreatePost(true)}
@@ -191,6 +191,18 @@ export function MasonryFeed() {
       )}
 
       <CreatePostModal open={showCreatePost} onClose={() => setShowCreatePost(false)} />
+
+      {selectedPin && (
+        <PostDetailModal
+          open={!!selectedPin}
+          onClose={() => setSelectedPin(null)}
+          image={selectedPin.image}
+          title={selectedPin.title}
+          brand={selectedPin.brand}
+          brandLogo={selectedPin.brandLogo}
+          linkedProducts={selectedPin.linkedProducts}
+        />
+      )}
     </div>
   );
 }

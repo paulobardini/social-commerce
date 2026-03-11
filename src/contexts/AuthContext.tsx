@@ -2,11 +2,18 @@ import { createContext, useContext, useState, ReactNode } from "react";
 
 export type UserRole = "lojista" | "fabrica" | "criador";
 
+export interface ConnectedBrand {
+  slug: string;
+  name: string;
+  logo: string;
+}
+
 export interface UserProfile {
   name: string;
   phone: string;
   email: string;
   role?: UserRole;
+  connectedBrands?: ConnectedBrand[];
   // Onboarding data
   segmento?: string;
   porte?: string;
@@ -78,7 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Derive role from segmento
       let role: UserRole = "lojista";
       if (data.segmento === "influencer") role = "criador";
-      const updated = { ...user, ...data, role };
+
+      // Mock connected brands for criadores
+      const connectedBrands: ConnectedBrand[] = role === "criador" ? [
+        { slug: "brandili", name: "Brandili", logo: "" },
+        { slug: "kyly", name: "Kyly", logo: "" },
+        { slug: "hering", name: "Hering", logo: "" },
+        { slug: "malwee", name: "Malwee", logo: "" },
+      ] : [];
+
+      const updated = { ...user, ...data, role, connectedBrands };
       persist(updated);
     }
     setOnboardingCompleted(true);

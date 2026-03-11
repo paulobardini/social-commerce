@@ -31,7 +31,7 @@ interface BrandStories {
   id: string;
   brand: string;
   avatar: string;
-  stories: { image: string; caption: string; linkedProducts?: Product[] }[];
+  stories: { image: string; caption: string; cta?: string; linkedProducts?: Product[] }[];
 }
 
 const staticBrands: BrandStories[] = [
@@ -116,6 +116,7 @@ export function StoriesBar() {
       grouped.get(key)!.stories.push({
         image: s.image,
         caption: s.caption,
+        cta: s.cta,
         linkedProducts: s.linkedProducts,
       });
     }
@@ -336,7 +337,7 @@ export function StoriesBar() {
                         className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-transform hover:scale-105"
                       >
                         <Eye className="h-4 w-4" />
-                        Ver Coleção
+                        {activeStoryData.cta || "Ver Coleção"}
                       </button>
                       {activeLinkedProducts.length > 0 && (
                         <button
