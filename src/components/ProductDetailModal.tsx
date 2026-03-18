@@ -294,13 +294,32 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
           </AnimatePresence>
         </div>
 
+        {/* Cart status banner */}
+        {cartItem && !gradeOpen && (
+          <div className="shrink-0 border-t border-border bg-accent/10 px-4 py-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <ShoppingBag className="h-4 w-4 text-accent shrink-0" />
+              <p className="text-xs font-semibold text-foreground truncate">
+                Na sacola: {cartPieces} {cartPieces === 1 ? "peça" : "peças"} · {cartItem.selectedColors.length} {cartItem.selectedColors.length === 1 ? "cor" : "cores"}
+              </p>
+            </div>
+            <button
+              onClick={() => cart.removeItem(product.id)}
+              className="h-7 w-7 rounded-md flex items-center justify-center shrink-0 bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+              title="Remover da sacola"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Sticky bottom */}
         <div className="shrink-0 border-t border-border bg-card px-4 py-2.5 flex items-center gap-2">
           {!gradeOpen ? (
             <>
               <Button size="sm" onClick={() => setGradeOpen(true)} className="gap-1.5 text-xs flex-1">
                 <LayoutGrid className="h-3.5 w-3.5" />
-                Comprar | Montar Grade
+                {cartItem ? "Editar Grade" : "Comprar | Montar Grade"}
               </Button>
               {!isSide && (
                 <Button variant="outline" size="sm" onClick={handleFindSimilar} className="gap-1.5 text-xs flex-1">
@@ -328,7 +347,7 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
                 onClose();
               }} className="gap-1.5 text-xs flex-1">
                 <ShoppingBag className="h-3.5 w-3.5" />
-                Adicionar à sacola
+                {cartItem ? "Atualizar sacola" : "Adicionar à sacola"}
               </Button>
             </>
           )}
