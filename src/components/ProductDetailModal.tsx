@@ -46,8 +46,15 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
   const [lastProductId, setLastProductId] = useState<string | null>(null);
   if (product && product.id !== lastProductId) {
     setLastProductId(product.id);
-    setQuantities(Object.fromEntries(product.sizes.map((s) => [s, 0])));
-    setSelectedColors(product.variants.map((v) => v.color));
+    // Pre-fill with cart data if product is already in cart
+    const existing = cart.items.find((i) => i.product.id === product.id);
+    if (existing) {
+      setQuantities({ ...existing.quantities });
+      setSelectedColors([...existing.selectedColors]);
+    } else {
+      setQuantities(Object.fromEntries(product.sizes.map((s) => [s, 0])));
+      setSelectedColors(product.variants.map((v) => v.color));
+    }
     setDistributeValue("");
     setSelectedImage(0);
     setDescOpen(false);
