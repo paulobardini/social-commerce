@@ -26,6 +26,10 @@ interface ProductDetailModalProps {
 
 export function ProductDetailModal({ product, brand, onClose, onFindSimilar, openInGrade = false }: ProductDetailModalProps) {
   const cart = useCart();
+  const cartItem = product ? cart.items.find((i) => i.product.id === product.id) : null;
+  const cartPieces = cartItem
+    ? Object.values(cartItem.quantities).reduce((a, b) => a + b, 0) * cartItem.selectedColors.length
+    : 0;
   const [selectedImage, setSelectedImage] = useState(0);
   const [descOpen, setDescOpen] = useState(false);
   const [specsOpen, setSpecsOpen] = useState(false);
