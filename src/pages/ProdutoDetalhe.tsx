@@ -233,17 +233,69 @@ const ProdutoDetalhe = () => {
                 transition={{ duration: 0.2 }}
                 className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5 md:gap-4"
               >
-                {filteredProducts.map((p, i) => (
+                {filteredProducts.map((p, i) => {
+                  const cartItem = cart.items.find((ci) => ci.product.id === p.id);
+                  const cartPieces = cartItem
+                    ? Object.values(cartItem.quantities).reduce((a, b) => a + b, 0) * cartItem.selectedColors.length
+                    : 0;
+
+                  return (
                   <motion.div
                     key={p.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(i, 12) * 0.03 }}
                     onClick={() => setSelectedProduct(p)}
-                    className="bg-card rounded-xl overflow-hidden border border-border cursor-pointer group card-hover"
+                    className="bg-card rounded-xl overflow-hidden border border-border cursor-pointer group card-hover relative"
                   >
                     <div className="relative aspect-[3/4] overflow-hidden">
                       <img src={p.variants[0]?.images[0]} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      
+                      {/* Cart indicator badge */}
+                      {cartItem && (
+                        <div className="absolute top-2 left-2 z-10 flex items-center gap-0.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (cartPieces <= (Object.values(cartItem.quantities).reduce((a, b) => a + b, 0) > 0 ? Object.values(cartItem.quantities).reduce((a, b) => a + b, 0) * cartItem.selectedColors.length : 1)) {
+                                cart.removeItem(p.id);
+                              } else {
+                                // Decrease: reduce each size qty by 1 (min 0)
+                                const newQ: Record<string, number> = {};
+                                Object.entries(cartItem.quantities).forEach(([s, q]) => {
+                                  newQ[s] = Math.max(0, (q as number) - 1);
+                                });
+                                cart.updateItem(p.id, { quantities: newQ });
+                              }
+                            }}
+                            className="h-6 w-6 rounded-full bg-card/95 backdrop-blur-sm border border-border flex items-center justify-center text-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors shadow-sm"
+                          >
+                            {cartPieces <= Object.values(cartItem.quantities).reduce((a, b) => a + b, 0) ? (
+                              <Trash2 className="h-3 w-3" />
+                            ) : (
+                              <span className="text-xs font-bold leading-none">−</span>
+                            )}
+                          </button>
+                          <span className="h-6 min-w-6 px-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
+                            {cartPieces}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Increase: add 1 to each size qty
+                              const newQ: Record<string, number> = {};
+                              Object.entries(cartItem.quantities).forEach(([s, q]) => {
+                                newQ[s] = (q as number) + 1;
+                              });
+                              cart.updateItem(p.id, { quantities: newQ });
+                            }}
+                            className="h-6 w-6 rounded-full bg-card/95 backdrop-blur-sm border border-border flex items-center justify-center text-foreground hover:bg-accent/10 hover:text-accent hover:border-accent/30 transition-colors shadow-sm"
+                          >
+                            <span className="text-xs font-bold leading-none">+</span>
+                          </button>
+                        </div>
+                      )}
+
                       <div className="absolute bottom-0 left-0 right-0 p-2 flex gap-1.5 md:opacity-0 md:group-hover:opacity-100 md:translate-y-1 md:group-hover:translate-y-0 transition-all duration-200">
                         <button
                           onClick={(e) => { e.stopPropagation(); setOpenInGrade(true); setSelectedProduct(p); }}
@@ -277,7 +329,8 @@ const ProdutoDetalhe = () => {
                       </p>
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
               </motion.div>
             </AnimatePresence>
           </div>
