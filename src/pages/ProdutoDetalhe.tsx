@@ -322,7 +322,7 @@ const ProdutoDetalhe = () => {
                             <LayoutGrid className="h-3 w-3" />
                           </button>
                         </div>
-                      )
+                      )}
                     </div>
                     <div className="p-2 md:p-3">
                       <p className="text-[9px] md:text-[10px] font-bold text-accent uppercase">
