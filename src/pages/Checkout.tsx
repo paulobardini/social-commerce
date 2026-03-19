@@ -48,10 +48,10 @@ interface CommercialPolicy {
 
 const defaultPolicy: CommercialPolicy = {
   tiers: [
-    { minPieces: 50, discountPercent: 3 },
-    { minPieces: 100, discountPercent: 5 },
-    { minPieces: 200, discountPercent: 8 },
-    { minPieces: 500, discountPercent: 12 },
+    { minValue: 5000, discountPercent: 3 },
+    { minValue: 10000, discountPercent: 5 },
+    { minValue: 25000, discountPercent: 8 },
+    { minValue: 50000, discountPercent: 12 },
   ],
   prazoDiscounts: [
     { prazo: "pix", label: "PIX à vista", extraPercent: 3 },
@@ -129,10 +129,10 @@ const Checkout = () => {
   };
 
   /* ───── discount calculations ───── */
-  const getVolumeDiscount = (pieces: number): number => {
-    const sorted = [...defaultPolicy.tiers].sort((a, b) => b.minPieces - a.minPieces);
+  const getVolumeDiscount = (value: number): number => {
+    const sorted = [...defaultPolicy.tiers].sort((a, b) => b.minValue - a.minValue);
     for (const tier of sorted) {
-      if (pieces >= tier.minPieces) return tier.discountPercent;
+      if (value >= tier.minValue) return tier.discountPercent;
     }
     return 0;
   };
@@ -146,7 +146,7 @@ const Checkout = () => {
 
   const groupTotals = useMemo(() => {
     return selectedGroups.map((group) => {
-      const volumeDiscount = getVolumeDiscount(group.totalPieces);
+      const volumeDiscount = getVolumeDiscount(group.totalPrice);
       const prazoInfo = getPrazoDiscount(prazos[group.brandSlug] || "");
       const totalDiscount = volumeDiscount + prazoInfo.percent;
       const discountAmount = group.totalPrice * (totalDiscount / 100);
@@ -240,7 +240,7 @@ const Checkout = () => {
                       </div>
 
                       {/* Commercial policy bar — always visible */}
-                      <CommercialPolicyBar tiers={defaultPolicy.tiers} currentPieces={group.totalPieces} />
+                      <CommercialPolicyBar tiers={defaultPolicy.tiers} currentValue={group.totalPrice} />
 
                       <AnimatePresence>
                         {isExpanded && (
