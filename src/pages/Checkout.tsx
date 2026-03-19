@@ -240,7 +240,7 @@ const Checkout = () => {
                       </div>
 
                       {/* Commercial policy bar — always visible */}
-                      <CommercialPolicyBar tiers={defaultPolicy.tiers} currentPieces={group.totalPieces} />
+                      <CommercialPolicyBar tiers={defaultPolicy.tiers} currentValue={group.totalPrice} />
 
                       <AnimatePresence>
                         {isExpanded && (
