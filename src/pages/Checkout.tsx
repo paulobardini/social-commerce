@@ -129,10 +129,10 @@ const Checkout = () => {
   };
 
   /* ───── discount calculations ───── */
-  const getVolumeDiscount = (pieces: number): number => {
-    const sorted = [...defaultPolicy.tiers].sort((a, b) => b.minPieces - a.minPieces);
+  const getVolumeDiscount = (value: number): number => {
+    const sorted = [...defaultPolicy.tiers].sort((a, b) => b.minValue - a.minValue);
     for (const tier of sorted) {
-      if (pieces >= tier.minPieces) return tier.discountPercent;
+      if (value >= tier.minValue) return tier.discountPercent;
     }
     return 0;
   };
