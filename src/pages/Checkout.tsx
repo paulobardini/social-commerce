@@ -1,10 +1,15 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { NextilHeader } from "@/components/NextilHeader";
 import { NextilSidebar } from "@/components/NextilSidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { useCart, type CartItem } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import CommercialPolicyBar, { type DiscountTier } from "@/components/CommercialPolicyBar";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -14,6 +19,8 @@ import {
   ShoppingBag,
   Pencil,
   CreditCard,
+  CalendarIcon,
+  Tag,
 } from "lucide-react";
 import {
   Select,
@@ -22,9 +29,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
+/* ───── helpers ───── */
 const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
+/* ───── commercial policy mock data ───── */
+interface PrazoDiscount {
+  prazo: string;
+  label: string;
+  extraPercent: number;
+}
+
+interface CommercialPolicy {
+  tiers: DiscountTier[];
+  prazoDiscounts: PrazoDiscount[];
+}
+
+const defaultPolicy: CommercialPolicy = {
+  tiers: [
+    { minPieces: 50, discountPercent: 3 },
+    { minPieces: 100, discountPercent: 5 },
+    { minPieces: 200, discountPercent: 8 },
+    { minPieces: 500, discountPercent: 12 },
+  ],
+  prazoDiscounts: [
+    { prazo: "pix", label: "PIX à vista", extraPercent: 3 },
+    { prazo: "30", label: "30 dias", extraPercent: 1 },
+    { prazo: "30, 40", label: "30, 40 dias", extraPercent: 0.5 },
+    { prazo: "30, 40, 60", label: "30, 40, 60 dias", extraPercent: 0 },
+    { prazo: "30, 45", label: "30, 45 dias", extraPercent: 0.5 },
+    { prazo: "30, 45, 60", label: "30, 45, 60 dias", extraPercent: 0 },
+    { prazo: "30, 45, 60, 75", label: "30, 45, 60, 75 dias", extraPercent: 0 },
+  ],
+};
+
+/* ───── types ───── */
 interface BrandGroup {
   brandSlug: string;
   brandName: string;
@@ -34,15 +74,7 @@ interface BrandGroup {
   totalPrice: number;
 }
 
-const prazoOptions = [
-  "30",
-  "30, 40",
-  "30, 40, 60",
-  "30, 45",
-  "30, 45, 60",
-  "30, 45, 60, 75",
-];
-
+/* ───── component ───── */
 const Checkout = () => {
   const navigate = useNavigate();
   const cart = useCart();
@@ -50,6 +82,7 @@ const Checkout = () => {
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const [paymentMethods, setPaymentMethods] = useState<Record<string, string>>({});
   const [prazos, setPrazos] = useState<Record<string, string>>({});
+  const [billingDates, setBillingDates] = useState<Record<string, Date | undefined>>({});
 
   const brandGroups = useMemo(() => {
     const map = new Map<string, BrandGroup>();
@@ -95,9 +128,49 @@ const Checkout = () => {
     });
   };
 
+  /* ───── discount calculations ───── */
+  const getVolumeDiscount = (pieces: number): number => {
+    const sorted = [...defaultPolicy.tiers].sort((a, b) => b.minPieces - a.minPieces);
+    for (const tier of sorted) {
+      if (pieces >= tier.minPieces) return tier.discountPercent;
+    }
+    return 0;
+  };
+
+  const getPrazoDiscount = (prazo: string): { percent: number; label: string } => {
+    const found = defaultPolicy.prazoDiscounts.find((p) => p.prazo === prazo);
+    return found ? { percent: found.extraPercent, label: found.label } : { percent: 0, label: "" };
+  };
+
   const selectedGroups = brandGroups.filter((g) => selectedBrands.has(g.brandSlug));
-  const orderTotal = selectedGroups.reduce((a, g) => a + g.totalPrice, 0);
-  const orderPieces = selectedGroups.reduce((a, g) => a + g.totalPieces, 0);
+
+  const groupTotals = useMemo(() => {
+    return selectedGroups.map((group) => {
+      const volumeDiscount = getVolumeDiscount(group.totalPieces);
+      const prazoInfo = getPrazoDiscount(prazos[group.brandSlug] || "");
+      const totalDiscount = volumeDiscount + prazoInfo.percent;
+      const discountAmount = group.totalPrice * (totalDiscount / 100);
+      const netTotal = group.totalPrice - discountAmount;
+      return {
+        brandSlug: group.brandSlug,
+        brandName: group.brandName,
+        subtotal: group.totalPrice,
+        volumePercent: volumeDiscount,
+        volumeAmount: group.totalPrice * (volumeDiscount / 100),
+        prazoPercent: prazoInfo.percent,
+        prazoAmount: group.totalPrice * (prazoInfo.percent / 100),
+        totalDiscount,
+        discountAmount,
+        netTotal,
+        pieces: group.totalPieces,
+      };
+    });
+  }, [selectedGroups, prazos]);
+
+  const orderTotal = groupTotals.reduce((a, g) => a + g.netTotal, 0);
+  const orderSubtotal = groupTotals.reduce((a, g) => a + g.subtotal, 0);
+  const orderDiscount = groupTotals.reduce((a, g) => a + g.discountAmount, 0);
+  const orderPieces = groupTotals.reduce((a, g) => a + g.pieces, 0);
 
   if (cart.items.length === 0) {
     return (
@@ -133,7 +206,7 @@ const Checkout = () => {
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">Minha sacola</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">Finalizar pedido</h1>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-6">
@@ -142,6 +215,7 @@ const Checkout = () => {
                 {brandGroups.map((group) => {
                   const isExpanded = expandedBrands.has(group.brandSlug);
                   const isSelected = selectedBrands.has(group.brandSlug);
+                  const gt = groupTotals.find((g) => g.brandSlug === group.brandSlug);
 
                   return (
                     <div key={group.brandSlug} className="border border-border rounded-xl bg-card overflow-hidden">
@@ -159,11 +233,14 @@ const Checkout = () => {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-foreground">{group.brandName}</p>
                         </div>
-                        <p className="text-xs text-muted-foreground">Peças: {group.totalPieces}</p>
+                        <p className="text-xs text-muted-foreground">{group.totalPieces} peças</p>
                         <button onClick={() => toggleExpand(group.brandSlug)} className="p-1 text-muted-foreground hover:text-foreground">
                           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </button>
                       </div>
+
+                      {/* Commercial policy bar — always visible */}
+                      <CommercialPolicyBar tiers={defaultPolicy.tiers} currentPieces={group.totalPieces} />
 
                       <AnimatePresence>
                         {isExpanded && (
@@ -193,15 +270,9 @@ const Checkout = () => {
                                     <div className="flex-1 min-w-0">
                                       <p className="text-xs md:text-sm font-semibold text-foreground line-clamp-1">{item.product.name}</p>
                                       <p className="text-[10px] text-muted-foreground mt-0.5">REF: {item.product.ref}</p>
-                                      <p className="text-[10px] text-muted-foreground">
-                                        Variante: {item.selectedColors.join(", ")}
-                                      </p>
-                                      <p className="text-[10px] text-muted-foreground">
-                                        Tamanho: {sizes.join(", ")}
-                                      </p>
-                                      <p className="text-[10px] text-muted-foreground">
-                                        Quantidade de peças: {pieces}
-                                      </p>
+                                      <p className="text-[10px] text-muted-foreground">Cor: {item.selectedColors.join(", ")}</p>
+                                      <p className="text-[10px] text-muted-foreground">Tam: {sizes.join(", ")}</p>
+                                      <p className="text-[10px] text-muted-foreground">{pieces} peças</p>
                                     </div>
                                     <div className="text-right shrink-0">
                                       <p className="text-sm font-bold text-foreground">{fmt(price)}</p>
@@ -222,12 +293,37 @@ const Checkout = () => {
                               })}
                             </div>
 
-                            {/* Brand subtotal */}
-                            <div className="px-4 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between gap-4 text-xs">
-                              <span className="text-muted-foreground">Peças: {group.totalPieces}</span>
-                              <span className="text-muted-foreground">Preço médio/peça: {fmt(group.totalPrice / group.totalPieces)}</span>
-                              <span className="font-bold text-foreground">Total da marca: {fmt(group.totalPrice)}</span>
-                            </div>
+                            {/* Brand subtotal breakdown */}
+                            {gt && (
+                              <div className="px-4 py-3 bg-muted/30 border-t border-border space-y-1 text-xs">
+                                <div className="flex justify-between text-muted-foreground">
+                                  <span>Subtotal bruto ({group.totalPieces} peças)</span>
+                                  <span>{fmt(gt.subtotal)}</span>
+                                </div>
+                                {gt.volumePercent > 0 && (
+                                  <div className="flex justify-between text-primary">
+                                    <span className="flex items-center gap-1">
+                                      <Tag className="h-3 w-3" />
+                                      Desc. volume ({gt.volumePercent}%)
+                                    </span>
+                                    <span>-{fmt(gt.volumeAmount)}</span>
+                                  </div>
+                                )}
+                                {gt.prazoPercent > 0 && (
+                                  <div className="flex justify-between text-primary">
+                                    <span className="flex items-center gap-1">
+                                      <Tag className="h-3 w-3" />
+                                      Desc. prazo (+{gt.prazoPercent}%)
+                                    </span>
+                                    <span>-{fmt(gt.prazoAmount)}</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between font-bold text-foreground pt-1 border-t border-border">
+                                  <span>Total da marca</span>
+                                  <span>{fmt(gt.netTotal)}</span>
+                                </div>
+                              </div>
+                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -237,76 +333,138 @@ const Checkout = () => {
               </div>
 
               {/* Right: Summary sidebar */}
-              <div className="lg:w-[340px] shrink-0">
+              <div className="lg:w-[360px] shrink-0">
                 <div className="sticky top-20 space-y-4">
-                  {/* Order summary */}
-                  <div className="border border-border rounded-xl bg-card p-4 space-y-3">
-                    {selectedGroups.map((group) => (
-                      <div key={group.brandSlug} className="flex items-center justify-between text-sm">
-                        <div>
-                          <p className="font-medium text-foreground">Marca</p>
-                          <p className="text-xs text-muted-foreground">Total da marca</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-foreground">{group.brandName.toUpperCase()}</p>
-                          <p className="text-xs text-foreground">{fmt(group.totalPrice)}</p>
-                        </div>
-                      </div>
-                    ))}
+                  {/* Payment & billing per brand */}
+                  <div className="border border-border rounded-xl bg-card p-4 space-y-4">
+                    <p className="text-sm font-bold text-foreground">Pagamento & Faturamento</p>
 
-                    <div className="border-t border-border pt-3 flex items-center justify-between">
-                      <p className="text-sm font-medium text-foreground">Total do pedido</p>
-                      <p className="text-lg font-bold text-foreground">{fmt(orderTotal)}</p>
-                    </div>
+                    {selectedGroups.map((group, i) => {
+                      const prazoInfo = getPrazoDiscount(prazos[group.brandSlug] || "");
+                      return (
+                        <div key={group.brandSlug} className="space-y-2.5">
+                          <p className="text-xs font-bold text-foreground">{group.brandName}</p>
+
+                          {/* Payment method */}
+                          <div>
+                            <label className="text-[10px] text-muted-foreground">Forma de pagamento</label>
+                            <Select
+                              value={paymentMethods[group.brandSlug] || ""}
+                              onValueChange={(v) => setPaymentMethods((prev) => ({ ...prev, [group.brandSlug]: v }))}
+                            >
+                              <SelectTrigger className="h-9 text-xs">
+                                <SelectValue placeholder="Selecionar" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="boleto">Boleto</SelectItem>
+                                <SelectItem value="pix">PIX</SelectItem>
+                                <SelectItem value="cartao">Cartão de Crédito</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Prazo */}
+                          <div>
+                            <label className="text-[10px] text-muted-foreground">Prazo de pagamento</label>
+                            <Select
+                              value={prazos[group.brandSlug] || ""}
+                              onValueChange={(v) => setPrazos((prev) => ({ ...prev, [group.brandSlug]: v }))}
+                            >
+                              <SelectTrigger className="h-9 text-xs">
+                                <SelectValue placeholder="Selecionar prazo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {defaultPolicy.prazoDiscounts.map((p) => (
+                                  <SelectItem key={p.prazo} value={p.prazo}>
+                                    {p.label}
+                                    {p.extraPercent > 0 && (
+                                      <span className="ml-1 text-primary font-medium">(+{p.extraPercent}% desc.)</span>
+                                    )}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {prazoInfo.percent > 0 && (
+                              <p className="text-[10px] text-primary mt-1 font-medium">
+                                +{prazoInfo.percent}% de desconto por prazo curto
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Billing date */}
+                          <div>
+                            <label className="text-[10px] text-muted-foreground">Prazo de faturamento</label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full h-9 justify-start text-left text-xs font-normal",
+                                    !billingDates[group.brandSlug] && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                                  {billingDates[group.brandSlug]
+                                    ? format(billingDates[group.brandSlug]!, "dd/MM/yyyy")
+                                    : "Selecionar data"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={billingDates[group.brandSlug]}
+                                  onSelect={(date) =>
+                                    setBillingDates((prev) => ({ ...prev, [group.brandSlug]: date }))
+                                  }
+                                  disabled={(date) => date < new Date()}
+                                  initialFocus
+                                  className={cn("p-3 pointer-events-auto")}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+
+                          {i < selectedGroups.length - 1 && <div className="border-b border-border" />}
+                        </div>
+                      );
+                    })}
                   </div>
 
-                  {/* Payment per brand */}
-                  <div className="border border-border rounded-xl bg-card p-4 space-y-4">
-                    <p className="text-sm font-bold text-foreground">Forma de pagamento (por empresa)</p>
+                  {/* Order summary */}
+                  <div className="border border-border rounded-xl bg-card p-4 space-y-2">
+                    <p className="text-sm font-bold text-foreground mb-3">Resumo do pedido</p>
 
-                    {selectedGroups.map((group) => (
-                      <div key={group.brandSlug} className="space-y-2">
-                        <p className="text-xs font-medium text-foreground">{group.brandName}</p>
-
-                        <div>
-                          <label className="text-[10px] text-muted-foreground">Forma de pagamento</label>
-                          <Select
-                            value={paymentMethods[group.brandSlug] || ""}
-                            onValueChange={(v) => setPaymentMethods((prev) => ({ ...prev, [group.brandSlug]: v }))}
-                          >
-                            <SelectTrigger className="h-9 text-xs">
-                              <SelectValue placeholder="Selecionar" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="boleto">Boleto</SelectItem>
-                              <SelectItem value="pix">PIX</SelectItem>
-                              <SelectItem value="cartao">Cartão de Crédito</SelectItem>
-                            </SelectContent>
-                          </Select>
+                    {groupTotals.map((gt) => (
+                      <div key={gt.brandSlug} className="space-y-0.5 text-xs">
+                        <div className="flex justify-between font-medium text-foreground">
+                          <span>{gt.brandName}</span>
+                          <span>{fmt(gt.subtotal)}</span>
                         </div>
-
-                        <div>
-                          <label className="text-[10px] text-muted-foreground">Prazo</label>
-                          <Select
-                            value={prazos[group.brandSlug] || ""}
-                            onValueChange={(v) => setPrazos((prev) => ({ ...prev, [group.brandSlug]: v }))}
-                          >
-                            <SelectTrigger className="h-9 text-xs">
-                              <SelectValue placeholder="Selecionar prazo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {prazoOptions.map((p) => (
-                                <SelectItem key={p} value={p}>{p}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {group !== selectedGroups[selectedGroups.length - 1] && (
-                          <div className="border-b border-border" />
+                        {gt.totalDiscount > 0 && (
+                          <div className="flex justify-between text-primary">
+                            <span>Descontos ({gt.totalDiscount}%)</span>
+                            <span>-{fmt(gt.discountAmount)}</span>
+                          </div>
                         )}
                       </div>
                     ))}
+
+                    <div className="border-t border-border pt-2 mt-2 space-y-1">
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Subtotal ({orderPieces} peças)</span>
+                        <span>{fmt(orderSubtotal)}</span>
+                      </div>
+                      {orderDiscount > 0 && (
+                        <div className="flex justify-between text-xs text-primary font-medium">
+                          <span>Total descontos</span>
+                          <span>-{fmt(orderDiscount)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-base font-bold text-foreground pt-1">
+                        <span>Total do pedido</span>
+                        <span>{fmt(orderTotal)}</span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Confirm button */}
