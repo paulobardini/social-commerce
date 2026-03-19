@@ -146,7 +146,7 @@ const Checkout = () => {
 
   const groupTotals = useMemo(() => {
     return selectedGroups.map((group) => {
-      const volumeDiscount = getVolumeDiscount(group.totalPieces);
+      const volumeDiscount = getVolumeDiscount(group.totalPrice);
       const prazoInfo = getPrazoDiscount(prazos[group.brandSlug] || "");
       const totalDiscount = volumeDiscount + prazoInfo.percent;
       const discountAmount = group.totalPrice * (totalDiscount / 100);
