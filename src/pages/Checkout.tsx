@@ -48,10 +48,10 @@ interface CommercialPolicy {
 
 const defaultPolicy: CommercialPolicy = {
   tiers: [
-    { minPieces: 50, discountPercent: 3 },
-    { minPieces: 100, discountPercent: 5 },
-    { minPieces: 200, discountPercent: 8 },
-    { minPieces: 500, discountPercent: 12 },
+    { minValue: 5000, discountPercent: 3 },
+    { minValue: 10000, discountPercent: 5 },
+    { minValue: 25000, discountPercent: 8 },
+    { minValue: 50000, discountPercent: 12 },
   ],
   prazoDiscounts: [
     { prazo: "pix", label: "PIX à vista", extraPercent: 3 },
