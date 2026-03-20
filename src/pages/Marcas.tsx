@@ -149,13 +149,23 @@ const Marcas = () => {
                   className="bg-card rounded-xl md:rounded-2xl overflow-hidden shadow-sm card-hover cursor-pointer group"
                   onClick={() => navigate(`/marca/${brand.name.toLowerCase().replace(/\s+/g, '-')}`)}
                 >
-                  {/* Preview grid */}
-                  <div className={`grid gap-0.5 h-28 md:h-40 ${
-                    brand.posts.length === 1 ? "grid-cols-1" :
-                    brand.posts.length === 2 ? "grid-cols-2" : "grid-cols-3"
+                  {/* Preview — mobile: 1 foto / desktop: grid */}
+                  <div className={`h-32 md:h-40 overflow-hidden md:grid md:gap-0.5 ${
+                    brand.posts.length === 1 ? "md:grid-cols-1" :
+                    brand.posts.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
                   }`}>
+                    {/* Mobile: only first image */}
+                    <div className="md:hidden h-full overflow-hidden">
+                      <img
+                        src={brand.posts[0]}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                    {/* Desktop: all images */}
                     {brand.posts.map((img, j) => (
-                      <div key={j} className="overflow-hidden">
+                      <div key={j} className="hidden md:block overflow-hidden h-full">
                         <img
                           src={img}
                           alt=""
@@ -178,7 +188,7 @@ const Marcas = () => {
                         loading="lazy"
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xs md:text-base font-semibold text-foreground truncate">{brand.name}</h3>
+                        <h3 className="text-sm md:text-base font-semibold text-foreground">{brand.name}</h3>
                         <p className="text-[10px] md:text-xs text-muted-foreground">{brand.followers}</p>
                       </div>
                       <button className="px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-accent text-accent-foreground text-[10px] md:text-xs font-medium hover:bg-accent/90 transition-colors shrink-0">
