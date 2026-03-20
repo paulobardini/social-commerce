@@ -189,18 +189,13 @@ const Marcas = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm md:text-base font-semibold text-foreground">{brand.name}</h3>
-                        <p className="text-[10px] md:text-xs text-muted-foreground">{brand.followers}</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">{brand.followers} seguidores</p>
                       </div>
-                      <button className="px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-accent text-accent-foreground text-[10px] md:text-xs font-medium hover:bg-accent/90 transition-colors shrink-0">
-                        Seguir
-                      </button>
                     </div>
                     <p className="mt-1.5 md:mt-2 text-[10px] md:text-xs text-muted-foreground line-clamp-2 hidden sm:block">{brand.description}</p>
-                    <div className="mt-1.5 md:mt-2">
-                      <span className="inline-block px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-[9px] md:text-[10px] font-medium">
-                        {brand.category}
-                      </span>
-                    </div>
+                    <button className="mt-2.5 md:mt-3 w-full py-1.5 md:py-2 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 active:scale-[0.97] transition-all">
+                      Ver produtos
+                    </button>
                   </div>
                 </motion.div>
               ))}
