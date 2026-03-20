@@ -188,7 +188,7 @@ const Marcas = () => {
                         loading="lazy"
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xs md:text-base font-semibold text-foreground truncate">{brand.name}</h3>
+                        <h3 className="text-sm md:text-base font-semibold text-foreground">{brand.name}</h3>
                         <p className="text-[10px] md:text-xs text-muted-foreground">{brand.followers}</p>
                       </div>
                       <button className="px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-accent text-accent-foreground text-[10px] md:text-xs font-medium hover:bg-accent/90 transition-colors shrink-0">
