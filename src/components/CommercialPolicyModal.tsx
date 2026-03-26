@@ -309,7 +309,7 @@ export const CommercialPolicyModal = ({ open, onClose }: CommercialPolicyModalPr
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase">Política válida?</span>
             {policy.valid ? (
-              <span className="flex items-center gap-1 text-[11px] font-bold text-green-600">
+              <span className="flex items-center gap-1 text-[11px] font-bold text-accent">
                 <CheckCircle className="h-3.5 w-3.5" /> Válida
               </span>
             ) : (
