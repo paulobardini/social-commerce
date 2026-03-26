@@ -43,6 +43,7 @@ const ProdutoDetalhe = () => {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [policyModalOpen, setPolicyModalOpen] = useState(false);
 
   const allBrandProducts = useMemo(
     () => (brand && activeSubBrand ? brand.products.filter((p) => p.subBrandId === activeSubBrand) : brand?.products || []),
