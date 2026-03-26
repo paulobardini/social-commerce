@@ -358,16 +358,17 @@ export const CommercialPolicyModal = ({ open, onClose }: CommercialPolicyModalPr
             <SectionHeader title="Porcentagem de Comissionamento / Desconto x Prazo" />
             {data.discountTiers.length > 0 ? (
               <>
-                <div className="grid grid-cols-[1fr_100px_100px_110px] text-[10px] font-bold text-muted-foreground uppercase bg-muted/50 border-b border-border">
-                  <div className="px-4 py-2">Comissionamento padrão</div>
-                  <div className="px-3 py-2 text-center">Desconto</div>
+                <div className="px-4 py-2 bg-muted/30 border-b border-border">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Comissionamento padrão</span>
+                </div>
+                <div className="grid grid-cols-3 text-[10px] font-bold text-muted-foreground uppercase bg-muted/50 border-b border-border">
+                  <div className="px-4 py-2 text-center">Desconto</div>
                   <div className="px-3 py-2 text-center">Comissão</div>
                   <div className="px-3 py-2 text-center">Pedido mín.</div>
                 </div>
                 {data.discountTiers.map((tier, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_100px_100px_110px] text-[11px] border-b border-border last:border-b-0">
-                    <div className="px-4 py-2 text-foreground whitespace-pre-line">{tier.description || "—"}</div>
-                    <div className="px-3 py-2 text-center text-foreground">{tier.discount || "—"}</div>
+                  <div key={i} className="grid grid-cols-3 text-[11px] border-b border-border last:border-b-0">
+                    <div className="px-4 py-2 text-center text-foreground">{tier.discount || "—"}</div>
                     <div className="px-3 py-2 text-center font-semibold text-primary">{tier.commission}</div>
                     <div className="px-3 py-2 text-center text-foreground">{tier.minOrder || "—"}</div>
                   </div>
