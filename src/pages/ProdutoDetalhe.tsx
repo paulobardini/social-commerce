@@ -621,6 +621,12 @@ const ProdutoDetalhe = () => {
         subBrands={brand.subBrands}
         onSave={(_, pct) => setDiscountPercent(pct)}
       />
+
+      {/* Commercial Policy Modal */}
+      <CommercialPolicyModal
+        open={policyModalOpen}
+        onClose={() => setPolicyModalOpen(false)}
+      />
     </div>
   );
 };
