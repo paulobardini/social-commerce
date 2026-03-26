@@ -358,7 +358,7 @@ export const CommercialPolicyModal = ({ open, onClose }: CommercialPolicyModalPr
             <SectionHeader title="Porcentagem de Comissionamento / Desconto x Prazo" />
             {data.discountTiers.length > 0 ? (
               <>
-                <div className="px-4 py-2 bg-muted/30 border-b border-border">
+                <div className="px-4 py-2 bg-muted/30 border-b border-border text-center">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase">Comissionamento padrão</span>
                 </div>
                 <div className="grid grid-cols-3 text-[10px] font-bold text-muted-foreground uppercase bg-muted/50 border-b border-border">
