@@ -210,6 +210,9 @@ const ProdutoDetalhe = () => {
                 ))}
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
+                <Button variant="outline" size="sm" onClick={() => setPolicyModalOpen(true)} className="gap-1 text-xs h-7 px-2.5 rounded-md">
+                  <FileText className="h-3 w-3" /> Política
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => setDiscountOpen(true)} className="gap-1 text-xs h-7 px-2.5 rounded-md">
                   <Percent className="h-3 w-3" /> Off
                 </Button>
