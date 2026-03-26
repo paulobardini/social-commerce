@@ -343,11 +343,6 @@ export const CommercialPolicyModal = ({ open, onClose }: CommercialPolicyModalPr
             </button>
           </div>
 
-          {/* Commission highlight at the top */}
-          <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 text-center space-y-1">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block">Comissão para o vendedor</span>
-            <span className="text-[13px] font-bold text-primary uppercase block">{data.commission}</span>
-          </div>
         </div>
 
         {/* Scrollable content */}
