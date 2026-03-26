@@ -19,7 +19,9 @@ import {
   PackagePlus,
   X,
   Trash2,
+  FileText,
 } from "lucide-react";
+import { CommercialPolicyModal } from "@/components/CommercialPolicyModal";
 import { Button } from "@/components/ui/button";
 
 const ProdutoDetalhe = () => {
