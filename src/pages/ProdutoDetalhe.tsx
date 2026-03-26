@@ -19,7 +19,9 @@ import {
   PackagePlus,
   X,
   Trash2,
+  FileText,
 } from "lucide-react";
+import { CommercialPolicyModal } from "@/components/CommercialPolicyModal";
 import { Button } from "@/components/ui/button";
 
 const ProdutoDetalhe = () => {
@@ -41,6 +43,7 @@ const ProdutoDetalhe = () => {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [policyModalOpen, setPolicyModalOpen] = useState(false);
 
   const allBrandProducts = useMemo(
     () => (brand && activeSubBrand ? brand.products.filter((p) => p.subBrandId === activeSubBrand) : brand?.products || []),
@@ -207,6 +210,9 @@ const ProdutoDetalhe = () => {
                 ))}
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
+                <Button variant="outline" size="sm" onClick={() => setPolicyModalOpen(true)} className="gap-1 text-xs h-7 px-2.5 rounded-md">
+                  <FileText className="h-3 w-3" /> Política
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => setDiscountOpen(true)} className="gap-1 text-xs h-7 px-2.5 rounded-md">
                   <Percent className="h-3 w-3" /> Off
                 </Button>
@@ -614,6 +620,12 @@ const ProdutoDetalhe = () => {
         onClose={() => setDiscountOpen(false)}
         subBrands={brand.subBrands}
         onSave={(_, pct) => setDiscountPercent(pct)}
+      />
+
+      {/* Commercial Policy Modal */}
+      <CommercialPolicyModal
+        open={policyModalOpen}
+        onClose={() => setPolicyModalOpen(false)}
       />
     </div>
   );
