@@ -1,94 +1,46 @@
 
 
-## Plano: Checkout com Política Comercial, Steps de Desconto e Prazo de Faturamento
+## Botão de Política Comercial na página /produtos
 
-### Visão Geral
+### O que será feito
+Adicionar um botão na barra de ações do header sticky da página de produtos (`ProdutoDetalhe.tsx`) que abre um modal com:
+1. **Select de tipo de venda**: "Venda Apolo" ou "Venda Direta"
+2. **Lista suspensa (dropdown)** para selecionar a política comercial disponível (ex: "CDKA - INV 26 - SUL/SUD/CO")
+3. Exibição dos dados da política selecionada (comissionamento, descontos, prazos, grade, pedido mínimo, etc.)
 
-Transformar a página de checkout em um fluxo inteligente com **política comercial por marca**, incluindo:
-1. **Barra de progresso com steps** — mostra faixas de desconto por volume (ex: 50 peças = 3%, 100 peças = 5%, 200 peças = 8%)
-2. **Desconto por prazo** — prazos menores geram desconto adicional (ex: PIX à vista = +3%, 30 dias = +1%)
-3. **Prazo de faturamento** — seleção de data de faturamento com impacto no desconto final
+### Arquivos
 
-### Estrutura Visual
+**1. Novo: `src/components/CommercialPolicyModal.tsx`**
+- Modal (Dialog) com:
+  - Select para tipo de venda: "Venda Apolo" / "Venda Direta"
+  - Select/Combobox para escolher a política comercial
+  - Exibição dos detalhes da política selecionada em formato tabular (comissionamento padrão, desconto x prazo, prazo de pagamento, grade produto, pedido mínimo, período de faturamento, observações)
+- Dados mock inline com 2-3 políticas de exemplo baseadas na imagem de referência
 
+**2. Editar: `src/pages/ProdutoDetalhe.tsx`**
+- Adicionar estado `policyModalOpen`
+- Inserir botão na barra de ações (ao lado do filtro/desconto) com ícone `FileText` ou `ClipboardList`
+- Importar e renderizar o `CommercialPolicyModal`
+
+### Layout do modal
 ```text
-┌──────────────────────────────────────────────────────────┐
-│  MARCA X                                                 │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │ 🎯 Política Comercial          Faltam 12 peças!    │ │
-│  │ ●────●────○────○                                    │ │
-│  │ 50pç  100pç  200pç  500pç                          │ │
-│  │ 3%    5%     8%     12%                             │ │
-│  │ [Você está aqui: 88 peças → 3% ativo]               │ │
-│  └─────────────────────────────────────────────────────┘ │
-│                                                          │
-│  Produtos expandíveis (como já existe)                   │
-│                                                          │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │ Subtotal bruto:        R$ 5.000,00                  │ │
-│  │ Desc. volume (5%):    -R$   250,00                  │ │
-│  │ Desc. prazo (+1%):    -R$    50,00                  │ │
-│  │ Total marca:           R$ 4.700,00                  │ │
-│  └─────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────┘
-
-Sidebar direita:
-┌──────────────────────┐
-│ Pagamento & Prazo    │
-│                      │
-│ Forma: [Boleto ▼]    │
-│ Prazo:  [30,45,60 ▼] │
-│ Desc. prazo: +1%     │
-│                      │
-│ Faturamento:         │
-│ [📅 25/04/2026    ]  │
-│                      │
-│ ──────────────────── │
-│ Subtotal   R$5.000   │
-│ Desc.vol   -R$250    │
-│ Desc.prazo -R$50     │
-│ TOTAL      R$4.700   │
-│                      │
-│ [Confirmar pedido]   │
-└──────────────────────┘
+┌─────────────────────────────────────────┐
+│  Política Comercial              [X]    │
+│                                         │
+│  Tipo de Venda:  [Venda Apolo ▼]        │
+│  Política:       [CDKA - INV 26 ▼]     │
+│                                         │
+│  ┌───────────────────────────────────┐  │
+│  │ Comissionamento: 20% sob comissão│  │
+│  │ Desconto padrão: 19% prazo ...   │  │
+│  │ Prazo pagamento: Boleto 75D      │  │
+│  │ Grade: Fechada                   │  │
+│  │ Pedido mín. frete: R$ 2.500     │  │
+│  │ Período faturamento: 01/03-30/06│  │
+│  │ Observações: ...                 │  │
+│  └───────────────────────────────────┘  │
+│                                         │
+│              [Aplicar política]         │
+└─────────────────────────────────────────┘
 ```
-
-### Detalhes Técnicos
-
-**1. Dados de política comercial (mock)**
-
-Criar um objeto `commercialPolicies` em `src/data/mockProducts.ts` (ou inline no Checkout) com faixas por marca:
-```ts
-{ brandSlug: "hering", tiers: [
-  { minPieces: 50, discountPercent: 3 },
-  { minPieces: 100, discountPercent: 5 },
-  { minPieces: 200, discountPercent: 8 },
-  { minPieces: 500, discountPercent: 12 },
-], prazoDiscounts: [
-  { prazo: "pix", extraPercent: 3 },
-  { prazo: "30", extraPercent: 1 },
-  { prazo: "30, 40", extraPercent: 0.5 },
-  // prazos mais longos = 0%
-]}
-```
-
-**2. Componente `CommercialPolicyBar`**
-
-Novo componente com:
-- Progress bar segmentada mostrando as faixas de desconto
-- Indicador visual do tier atual (preenchido) vs próximo (vazio)
-- Mensagem motivacional: "Adicione mais X peças para desbloquear Y% de desconto!"
-- Animação suave ao mudar de tier
-
-**3. Alterações no `Checkout.tsx`**
-
-- Inserir `CommercialPolicyBar` dentro de cada brand group card, logo abaixo do header
-- Adicionar seletor de **data de faturamento** (date picker) na sidebar por marca
-- Calcular descontos dinamicamente: `descVolume` (pelo tier atingido) + `descPrazo` (pelo prazo selecionado)
-- Exibir breakdown detalhado no resumo: subtotal bruto, desconto volume, desconto prazo, total líquido
-- Atualizar o total geral somando os totais líquidos de todas as marcas
-
-**4. Arquivos modificados**
-- `src/pages/Checkout.tsx` — lógica de descontos, date picker, layout atualizado
-- `src/components/CommercialPolicyBar.tsx` — novo componente da barra de progresso com tiers
 
