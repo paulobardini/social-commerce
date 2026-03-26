@@ -344,8 +344,9 @@ export const CommercialPolicyModal = ({ open, onClose }: CommercialPolicyModalPr
           </div>
 
           {/* Commission highlight at the top */}
-          <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 text-center">
-            <span className="text-[13px] font-bold text-primary uppercase">{data.commission}</span>
+          <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 text-center space-y-1">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block">Comissão para o vendedor</span>
+            <span className="text-[13px] font-bold text-primary uppercase block">{data.commission}</span>
           </div>
         </div>
 
