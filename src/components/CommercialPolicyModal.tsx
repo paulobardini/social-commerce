@@ -5,66 +5,44 @@ import { CheckCircle, XCircle } from "lucide-react";
 
 interface DiscountTier {
   description: string;
+  discount: string;
   commission: string;
   minOrder: string;
+}
+
+interface PolicyTabData {
+  commission: string;
+  discountTiers: DiscountTier[];
+  observation: string;
+  discountNotes: string;
+  paymentPrazo: string;
+  paymentBoleto: string;
+  paymentCartao: string;
+  paymentAVista: string;
+  gridType: string;
+  gridAllowSize: string;
+  gridAllowColor: string;
+  minFreight: string;
+  minDuplicata: string;
+  creditAnalysis: string;
+  additionalDiscounts: string;
+  minCnpjTime: string;
+  campaigns: string;
+  billingStart: string;
+  billingEnd: string;
+  salesStart: string;
+  salesEnd: string;
+  scheduledOrders: string;
+  avgBillingTime: string;
+  notes: string;
 }
 
 interface PolicyData {
   id: string;
   name: string;
   valid: boolean;
-  apolo: {
-    commission: string;
-    discountTiers: DiscountTier[];
-    observation: string;
-    discountNotes: string;
-    paymentPrazo: string;
-    paymentBoleto: string;
-    paymentCartao: string;
-    paymentAVista: string;
-    gridType: string;
-    gridAllowSize: string;
-    gridAllowColor: string;
-    minFreight: string;
-    minDuplicata: string;
-    creditAnalysis: string;
-    additionalDiscounts: string;
-    minCnpjTime: string;
-    campaigns: string;
-    billingStart: string;
-    billingEnd: string;
-    salesStart: string;
-    salesEnd: string;
-    scheduledOrders: string;
-    avgBillingTime: string;
-    notes: string;
-  };
-  direta: {
-    commission: string;
-    discountTiers: DiscountTier[];
-    observation: string;
-    discountNotes: string;
-    paymentPrazo: string;
-    paymentBoleto: string;
-    paymentCartao: string;
-    paymentAVista: string;
-    gridType: string;
-    gridAllowSize: string;
-    gridAllowColor: string;
-    minFreight: string;
-    minDuplicata: string;
-    creditAnalysis: string;
-    additionalDiscounts: string;
-    minCnpjTime: string;
-    campaigns: string;
-    billingStart: string;
-    billingEnd: string;
-    salesStart: string;
-    salesEnd: string;
-    scheduledOrders: string;
-    avgBillingTime: string;
-    notes: string;
-  };
+  apolo: PolicyTabData;
+  direta: PolicyTabData;
 }
 
 const mockPolicies: PolicyData[] = [
@@ -101,10 +79,10 @@ const mockPolicies: PolicyData[] = [
     direta: {
       commission: "10% SOB A COMISSÃO",
       discountTiers: [
-        { description: "19% PRAZO 24% VISTA\n28% ANTEC.", commission: "10,0%", minOrder: "" },
-        { description: "24% PRAZO 29% VISTA\n31% ANTEC.", commission: "7,0%", minOrder: "" },
-        { description: "27% PRAZO 32% VISTA\n34% ANTEC.", commission: "5,0%", minOrder: "" },
-        { description: "29% PRAZO 34% VISTA\n36% ANTEC.", commission: "4,0%", minOrder: "" },
+        { description: "19% PRAZO 24% VISTA\n28% ANTEC.", discount: "19%", commission: "10,0%", minOrder: "" },
+        { description: "24% PRAZO 29% VISTA\n31% ANTEC.", discount: "24%", commission: "7,0%", minOrder: "" },
+        { description: "27% PRAZO 32% VISTA\n34% ANTEC.", discount: "27%", commission: "5,0%", minOrder: "" },
+        { description: "29% PRAZO 34% VISTA\n36% ANTEC.", discount: "29%", commission: "4,0%", minOrder: "" },
       ],
       observation: "",
       discountNotes: "",
@@ -163,8 +141,8 @@ const mockPolicies: PolicyData[] = [
     direta: {
       commission: "12% SOB A COMISSÃO",
       discountTiers: [
-        { description: "17% PRAZO 22% VISTA\n26% ANTEC.", commission: "12,0%", minOrder: "" },
-        { description: "22% PRAZO 27% VISTA\n30% ANTEC.", commission: "8,0%", minOrder: "" },
+        { description: "17% PRAZO 22% VISTA\n26% ANTEC.", discount: "17%", commission: "12,0%", minOrder: "" },
+        { description: "22% PRAZO 27% VISTA\n30% ANTEC.", discount: "22%", commission: "8,0%", minOrder: "" },
       ],
       observation: "",
       discountNotes: "",
@@ -190,6 +168,83 @@ const mockPolicies: PolicyData[] = [
       notes: "",
     },
   },
+  {
+    id: "pokotinha-inv26",
+    name: "POKOTINHA - INV 26",
+    valid: true,
+    apolo: {
+      commission: "20% SOB A COMISSÃO",
+      discountTiers: [
+        { description: "", discount: "1,00%", commission: "10,0%", minOrder: "LIVRE" },
+        { description: "", discount: "3,75%", commission: "9,0%", minOrder: "LIVRE" },
+        { description: "", discount: "6,50%", commission: "8,0%", minOrder: "LIVRE" },
+        { description: "", discount: "9,25%", commission: "7,0%", minOrder: "LIVRE" },
+        { description: "", discount: "12,00%", commission: "6,0%", minOrder: "R$ 15.000,00" },
+        { description: "", discount: "14,75%", commission: "5,0%", minOrder: "R$ 15.000,00" },
+        { description: "", discount: "17,50%", commission: "4,0%", minOrder: "R$ 15.000,00" },
+        { description: "", discount: "20,30%", commission: "3,0%", minOrder: "R$ 15.000,00" },
+        { description: "", discount: "23,00%", commission: "2,0%", minOrder: "R$ 15.000,00" },
+      ],
+      observation: "",
+      discountNotes: "",
+      paymentPrazo: "",
+      paymentBoleto: "75D MÉDIO",
+      paymentCartao: "6X SEM JUROS",
+      paymentAVista: "5% DESCONTO - NA DATA DE FATURAMENTO",
+      gridType: "PALITO",
+      gridAllowSize: "NÃO",
+      gridAllowColor: "NÃO",
+      minFreight: "R$ 2.800,00",
+      minDuplicata: "R$ 300,00",
+      creditAnalysis: "48H EM MÉDIA",
+      additionalDiscounts: "0,5% A CADA 15DD A MENOS DE PRAZO MÉDIO",
+      minCnpjTime: "MÍNIMO DE 1 ANO PARA APROVAÇÃO NO BOLETO",
+      campaigns: "",
+      billingStart: "",
+      billingEnd: "",
+      salesStart: "",
+      salesEnd: "",
+      scheduledOrders: "CONSULTAR TIME DE PRODUTO",
+      avgBillingTime: "",
+      notes: "Alteração de cores em produtos para pedidos cadastrados a partir de 18/02/2026:\nRef. 8530 - Cor amarelo. Cor marrom e rosa indisponíveis.\nRef. 8436 - Ribana na cor preta, não mais na cor da peça.",
+    },
+    direta: {
+      commission: "10% SOB A COMISSÃO",
+      discountTiers: [
+        { description: "", discount: "", commission: "15,0%", minOrder: "" },
+        { description: "", discount: "5,00%", commission: "14,0%", minOrder: "" },
+        { description: "", discount: "10,00%", commission: "13,0%", minOrder: "" },
+        { description: "", discount: "15,00%", commission: "12,0%", minOrder: "" },
+        { description: "", discount: "18,00%", commission: "10,9%", minOrder: "" },
+        { description: "", discount: "20,00%", commission: "10,0%", minOrder: "" },
+        { description: "", discount: "25,00%", commission: "9,2%", minOrder: "" },
+        { description: "", discount: "28,00%", commission: "9,0%", minOrder: "" },
+        { description: "", discount: "30,00%", commission: "8,0%", minOrder: "" },
+      ],
+      observation: "Consultar observações finais para descontos adicionais.",
+      discountNotes: "",
+      paymentPrazo: "",
+      paymentBoleto: "Prazo médio 90D",
+      paymentCartao: "6x",
+      paymentAVista: "",
+      gridType: "SEMIABERTA",
+      gridAllowSize: "NÃO",
+      gridAllowColor: "SIM",
+      minFreight: "R$ 2.800,00\nAbaixo deste valor: Frete Fob\nDespachos poderão ser fracionados",
+      minDuplicata: "",
+      creditAnalysis: "",
+      additionalDiscounts: "",
+      minCnpjTime: "1 ano",
+      campaigns: "R$ 50,00 por cliente novo aberto\nVálido a partir da 2ª coleção trabalhada\nGrupo considera 1 cliente\nValor será pago no final da coleção",
+      billingStart: "",
+      billingEnd: "",
+      salesStart: "",
+      salesEnd: "",
+      scheduledOrders: "CONSULTAR TIME DE PRODUTO",
+      avgBillingTime: "Alteração de cores em produtos para pedidos cadastrados a partir de 18/02/2026:\nRef. 8530 - Cor amarelo. Cor marrom e rosa indisponíveis.\nRef. 8436 - Ribana na cor preta, não mais na cor da peça.",
+      notes: "Tabela completa desconto x prazo x comissão:\nhttps://drive.google.com/file/d/1JWE0y6WP9cFvcE4EbWlLMm_kbNmXjMPc/view?usp=drive_link",
+    },
+  },
 ];
 
 interface CommercialPolicyModalProps {
@@ -197,14 +252,26 @@ interface CommercialPolicyModalProps {
   onClose: () => void;
 }
 
-const Row = ({ label, value, sub }: { label: string; value?: string; sub?: boolean }) => (
-  <div className={`flex gap-2 ${sub ? "pl-4" : ""} border-b border-border last:border-b-0`}>
-    <div className={`${sub ? "w-1/2" : "w-2/5"} py-2 px-3 bg-muted/40 text-[11px] font-semibold text-foreground uppercase leading-tight flex items-center`}>
+const SectionHeader = ({ title }: { title: string }) => (
+  <div className="bg-primary/10 border-b border-primary/20 px-4 py-2.5">
+    <span className="text-[12px] font-bold text-primary uppercase tracking-wide">{title}</span>
+  </div>
+);
+
+const Row = ({ label, value }: { label: string; value?: string }) => (
+  <div className="flex border-b border-border last:border-b-0">
+    <div className="w-2/5 py-2.5 px-4 bg-muted/30 text-[11px] font-semibold text-muted-foreground uppercase leading-tight flex items-center">
       {label}
     </div>
-    <div className="flex-1 py-2 px-3 text-[11px] text-foreground flex items-center">
+    <div className="flex-1 py-2.5 px-4 text-[11px] text-foreground flex items-center whitespace-pre-line">
       {value || "—"}
     </div>
+  </div>
+);
+
+const CenteredValue = ({ value }: { value?: string }) => (
+  <div className="border-b border-border last:border-b-0 px-4 py-2.5 text-[11px] text-foreground text-center whitespace-pre-line">
+    {value || "—"}
   </div>
 );
 
@@ -242,7 +309,7 @@ export const CommercialPolicyModal = ({ open, onClose }: CommercialPolicyModalPr
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase">Política válida?</span>
             {policy.valid ? (
-              <span className="flex items-center gap-1 text-[11px] font-bold text-accent">
+              <span className="flex items-center gap-1 text-[11px] font-bold text-green-600">
                 <CheckCircle className="h-3.5 w-3.5" /> Válida
               </span>
             ) : (
@@ -276,169 +343,130 @@ export const CommercialPolicyModal = ({ open, onClose }: CommercialPolicyModalPr
             </button>
           </div>
 
-          {/* Commission highlight */}
-          <div className="rounded-lg bg-accent/10 border border-accent/30 px-3 py-2 text-center">
-            <span className="text-xs font-bold text-accent">{data.commission}</span>
+          {/* Commission highlight at the top */}
+          <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 text-center">
+            <span className="text-[13px] font-bold text-primary uppercase">{data.commission}</span>
           </div>
         </div>
 
-        {/* Scrollable table content */}
-        <div className="flex-1 overflow-y-auto px-5 pb-5 pt-2">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-5 pb-5 pt-3 space-y-4">
+          
+          {/* Comissionamento / Desconto x Prazo */}
           <div className="rounded-lg border border-border overflow-hidden">
-            {/* 1 - Comissionamento / Desconto x Prazo */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">1</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">
-                  Porcentagem de comissionamento / Desconto x Prazo
+            <SectionHeader title="Porcentagem de Comissionamento / Desconto x Prazo" />
+            {data.discountTiers.length > 0 ? (
+              <>
+                <div className="grid grid-cols-[1fr_100px_100px_110px] text-[10px] font-bold text-muted-foreground uppercase bg-muted/50 border-b border-border">
+                  <div className="px-4 py-2">Comissionamento padrão</div>
+                  <div className="px-3 py-2 text-center">Desconto</div>
+                  <div className="px-3 py-2 text-center">Comissão</div>
+                  <div className="px-3 py-2 text-center">Pedido mín.</div>
                 </div>
-              </div>
-              {data.discountTiers.length > 0 ? (
-                <div className="border-b border-border">
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] text-[10px] font-semibold text-muted-foreground uppercase bg-muted/30 border-b border-border">
-                    <div className="px-3 py-1.5">Comissionamento padrão</div>
-                    <div className="px-3 py-1.5 w-24 text-center">Desconto</div>
-                    <div className="px-3 py-1.5 w-20 text-center">Comissão</div>
-                    <div className="px-3 py-1.5 w-24 text-center">Pedido mín.</div>
+                {data.discountTiers.map((tier, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_100px_100px_110px] text-[11px] border-b border-border last:border-b-0">
+                    <div className="px-4 py-2 text-foreground whitespace-pre-line">{tier.description || "—"}</div>
+                    <div className="px-3 py-2 text-center text-foreground">{tier.discount || "—"}</div>
+                    <div className="px-3 py-2 text-center font-semibold text-primary">{tier.commission}</div>
+                    <div className="px-3 py-2 text-center text-foreground">{tier.minOrder || "—"}</div>
                   </div>
-                  {data.discountTiers.map((tier, i) => (
-                    <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] text-[11px] border-b border-border last:border-b-0">
-                      <div className="px-3 py-2 text-foreground whitespace-pre-line">{tier.description}</div>
-                      <div className="px-3 py-2 w-24 text-center text-foreground">{tier.description.split("\n")[0]?.split(" ")[0] || ""}</div>
-                      <div className="px-3 py-2 w-20 text-center font-medium text-foreground">{tier.commission}</div>
-                      <div className="px-3 py-2 w-24 text-center text-foreground">{tier.minOrder || "—"}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="px-3 py-2 text-[11px] text-muted-foreground">Sem dados de desconto</div>
-              )}
-              <Row label="Observação" value={data.observation} sub />
-              <Row label="Desconto" value={data.discountNotes} sub />
-            </div>
-
-            {/* 2 - Prazo de Pagamento */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">2</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Prazo de Pagamento</div>
+                ))}
+              </>
+            ) : (
+              <div className="px-4 py-3 text-[11px] text-muted-foreground text-center">Sem dados de desconto</div>
+            )}
+            {(data.observation || data.discountNotes) && (
+              <div className="border-t border-border">
+                {data.observation && <Row label="Observação" value={data.observation} />}
+                {data.discountNotes && <Row label="Desconto" value={data.discountNotes} />}
               </div>
-              <Row label="Prazo" value={data.paymentPrazo} sub />
-              <Row label="Boleto" value={data.paymentBoleto} sub />
-              <Row label="Cartão" value={data.paymentCartao} sub />
-              <Row label="À vista" value={data.paymentAVista} sub />
-            </div>
+            )}
+          </div>
 
-            {/* 3 - Grade Produto */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">3</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Grade Produto</div>
-              </div>
-              <Row label="Tipo de grade" value={data.gridType} sub />
-              <Row label="Permite escolha de tamanho" value={data.gridAllowSize} sub />
-              <Row label="Permite escolha de cor" value={data.gridAllowColor} sub />
-            </div>
+          {/* Prazo de Pagamento */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Prazo de Pagamento" />
+            <Row label="Prazo" value={data.paymentPrazo} />
+            <Row label="Boleto" value={data.paymentBoleto} />
+            <Row label="Cartão" value={data.paymentCartao} />
+            <Row label="À vista" value={data.paymentAVista} />
+          </div>
 
-            {/* 4 - Pedido mínimo frete */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">4</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Pedido mínimo para frete CIF</div>
-              </div>
-              <Row label="Valor" value={data.minFreight} sub />
-            </div>
+          {/* Grade Produto */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Grade Produto" />
+            <Row label="Tipo de grade" value={data.gridType} />
+            <Row label="Permite escolha de tamanho" value={data.gridAllowSize} />
+            <Row label="Permite escolha de cor" value={data.gridAllowColor} />
+          </div>
 
-            {/* 5 - Pedido mínimo duplicata */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">5</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Pedido mínimo para duplicata</div>
-              </div>
-              <Row label="Valor" value={data.minDuplicata} sub />
-            </div>
+          {/* Pedido mínimo frete */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Pedido mínimo para frete CIF" />
+            <Row label="Valor" value={data.minFreight} />
+          </div>
 
-            {/* 6 - Tempo análise crédito */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">6</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Tempo de análise de crédito</div>
-              </div>
-              <div className="px-3 py-2 text-[11px] text-foreground pl-6">{data.creditAnalysis || "—"}</div>
-            </div>
+          {/* Pedido mínimo duplicata */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Pedido mínimo para duplicata" />
+            <Row label="Valor" value={data.minDuplicata} />
+          </div>
 
-            {/* 7 - Descontos adicionais */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">7</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Descontos adicionais por prazo aplicado</div>
-              </div>
-              <div className="px-3 py-2 text-[11px] text-foreground pl-6">{data.additionalDiscounts || "—"}</div>
-            </div>
+          {/* Tempo análise crédito */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Tempo de análise de crédito" />
+            <CenteredValue value={data.creditAnalysis} />
+          </div>
 
-            {/* 8 - Tempo mínimo CNPJ */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">8</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Tempo mínimo de abertura do CNPJ para atendimento</div>
-              </div>
-              <div className="px-3 py-2 text-[11px] text-foreground pl-6">{data.minCnpjTime || "—"}</div>
-            </div>
+          {/* Descontos adicionais */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Descontos adicionais por prazo aplicado" />
+            <CenteredValue value={data.additionalDiscounts} />
+          </div>
 
-            {/* 9 - Campanhas */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">9</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase leading-tight">Campanhas ou bônus por descontos aplicados ou abertura de clientes novos</div>
-              </div>
-              <div className="px-3 py-2 text-[11px] text-foreground pl-6">{data.campaigns || "—"}</div>
-            </div>
+          {/* Tempo mínimo CNPJ */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Tempo mínimo de abertura do CNPJ para atendimento" />
+            <CenteredValue value={data.minCnpjTime} />
+          </div>
 
-            {/* 10 - Período faturamento coleção */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">10</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Período de faturamento da coleção</div>
-              </div>
-              <Row label="Início" value={data.billingStart} sub />
-              <Row label="Fim" value={data.billingEnd} sub />
-            </div>
+          {/* Campanhas */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Campanhas ou bônus por descontos aplicados ou abertura de clientes novos" />
+            <CenteredValue value={data.campaigns} />
+          </div>
 
-            {/* 11 - Período vendas coleção */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">11</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Período de vendas da coleção</div>
-              </div>
-              <Row label="Início" value={data.salesStart} sub />
-              <Row label="Fim" value={data.salesEnd} sub />
-            </div>
+          {/* Período faturamento */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Período de faturamento da coleção" />
+            <Row label="Início" value={data.billingStart} />
+            <Row label="Fim" value={data.billingEnd} />
+          </div>
 
-            {/* 12 - Faturamento pedidos programados */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">12</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Faturamento de pedidos programados</div>
-              </div>
-              <Row label="Tempo" value={data.scheduledOrders} sub />
-            </div>
+          {/* Período vendas */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Período de vendas da coleção" />
+            <Row label="Início" value={data.salesStart} />
+            <Row label="Fim" value={data.salesEnd} />
+          </div>
 
-            {/* 13 - Tempo médio faturamento */}
-            <div className="border-b border-border">
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">13</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Tempo médio de faturamento</div>
-              </div>
-              <div className="px-3 py-2 text-[11px] text-foreground pl-6">{data.avgBillingTime || "—"}</div>
-            </div>
+          {/* Faturamento pedidos programados */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Faturamento de pedidos programados" />
+            <Row label="Tempo" value={data.scheduledOrders} />
+          </div>
 
-            {/* 14 - Observações */}
-            <div>
-              <div className="flex gap-2 bg-muted/60 border-b border-border">
-                <div className="w-8 py-2 px-2 text-[10px] font-bold text-muted-foreground flex items-center justify-center">14</div>
-                <div className="flex-1 py-2 px-2 text-[11px] font-bold text-foreground uppercase">Observações</div>
-              </div>
-              <div className="px-3 py-3 text-[11px] text-foreground pl-6 min-h-[40px]">{data.notes || "—"}</div>
+          {/* Tempo médio faturamento */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Tempo médio de faturamento" />
+            <CenteredValue value={data.avgBillingTime} />
+          </div>
+
+          {/* Observações */}
+          <div className="rounded-lg border border-border overflow-hidden">
+            <SectionHeader title="Observações" />
+            <div className="px-4 py-3 text-[11px] text-foreground whitespace-pre-line min-h-[40px]">
+              {data.notes || "—"}
             </div>
           </div>
         </div>
