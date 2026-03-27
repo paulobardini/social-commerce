@@ -214,9 +214,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
       case 4: return answers.categoria.length > 0;
       case 5: return answers.estilo.length > 0;
       case 6: return answers.estacao.length > 0;
-      case 7: return answers.tamanho.length > 0;
-      case 8: return true;
-      case 9: return answers.quantidade > 0;
+      case 7: return true;
+      case 8: return answers.quantidade > 0;
       default: return false;
     }
   }, [step, answers]);
