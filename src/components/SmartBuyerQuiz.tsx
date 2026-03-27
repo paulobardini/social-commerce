@@ -1026,7 +1026,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
         })()}
 
         {/* Budget Detail View */}
-        {budgetDetail && (
+        {budgetDetail && !showProducts && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
