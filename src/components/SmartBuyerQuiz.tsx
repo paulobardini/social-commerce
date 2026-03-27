@@ -985,7 +985,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                   : "bg-muted text-muted-foreground"
               }`}
             >
-              {step === 9 ? "Ver resultados" : "Próximo"} <ArrowRight className="h-4 w-4" />
+              {step === 8 ? "Ver resultados" : "Próximo"} <ArrowRight className="h-4 w-4" />
             </motion.button>
           </div>
         </div>
