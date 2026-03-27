@@ -264,10 +264,6 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
           }
           // Price
           if (p.price > sliderValue) return false;
-          // Size
-          if (answers.tamanho.length > 0) {
-            if (!p.sizes.some((s) => answers.tamanho.includes(s))) return false;
-          }
           return true;
         });
 
