@@ -195,6 +195,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
   const [sliderValue, setSliderValue] = useState(30);
   const [shakeNext, setShakeNext] = useState(false);
 
+  const [budgetDetail, setBudgetDetail] = useState<MockResult | null>(null);
+
   const reset = () => {
     setStep(0);
     setAnswers({ ...initialAnswers });
@@ -203,6 +205,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
     setAnalyzeText("");
     setSliderValue(30);
     setShakeNext(false);
+    setBudgetDetail(null);
   };
 
   const canProceed = useCallback(() => {
