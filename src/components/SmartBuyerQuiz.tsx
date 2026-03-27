@@ -34,7 +34,7 @@ const initialAnswers: QuizAnswers = {
 };
 
 /* ─── step config ─── */
-const TOTAL_STEPS = 10; // 0=welcome, 1-9=questions
+const TOTAL_STEPS = 9; // 0=welcome, 1-8=questions
 
 const aiMessages = [
   "Olá! Sou sua assistente de compras inteligente 🤖",
@@ -44,7 +44,6 @@ const aiMessages = [
   "Que tipo de peça você procura?",
   "Qual linha você procura?",
   "Para qual estação?",
-  "Quais tamanhos você precisa?",
   "Quanto você quer investir por peça?",
   "Quantas peças você precisa?",
 ];
