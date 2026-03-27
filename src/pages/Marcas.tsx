@@ -218,6 +218,7 @@ const Marcas = () => {
         </div>
       </div>
       <MobileNav />
+      <SmartBuyerQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />
     </div>
   );
 };
