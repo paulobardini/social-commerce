@@ -117,6 +117,18 @@ const Marcas = () => {
               <p className="mt-2 text-sm md:text-base text-primary-foreground/80 max-w-md">
                 Descubra coleções exclusivas das maiores marcas do Brasil
               </p>
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setQuizOpen(true)}
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-background text-foreground text-sm font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                <Sparkles className="h-4 w-4 text-primary" />
+                Comprador Inteligente
+              </motion.button>
             </div>
           </div>
 
