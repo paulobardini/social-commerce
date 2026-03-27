@@ -1137,7 +1137,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
               </div>
             </div>
 
-            <div className="flex justify-center gap-3 pb-4">
+            <div className="flex flex-wrap justify-center gap-3 pb-4">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -1149,10 +1149,14 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => { reset(); onClose(); }}
+                onClick={() => {
+                  reset();
+                  onClose();
+                  navigate(`/marcas/${budgetDetail.brandSlug}`);
+                }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
               >
-                <ShoppingBag className="h-4 w-4" /> Ver todas as marcas
+                <ShoppingBag className="h-4 w-4" /> Ver todos os produtos
               </motion.button>
             </div>
           </motion.div>
