@@ -226,7 +226,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
       setTimeout(() => setShakeNext(false), 600);
       return;
     }
-    if (step === 9) {
+    if (step === 8) {
       runAnalysis();
       return;
     }
