@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Baby, User, Users, Shirt, Scissors, Sun, Snowflake, CloudSun,
@@ -186,6 +187,7 @@ interface SmartBuyerQuizProps {
 }
 
 export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({ ...initialAnswers });
   const [typing, setTyping] = useState(true);
@@ -974,34 +976,20 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: (idx + 3) * 0.1 }}
-                    className="bg-card border border-border rounded-2xl p-4 flex items-start gap-4 opacity-90"
+                    className="bg-card border border-border rounded-2xl p-4 flex items-start gap-4"
                   >
                     <img src={result.brandLogo} alt={result.brandName} className="h-14 w-14 rounded-xl object-cover border border-border flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="font-bold text-foreground">{result.brandName}</h3>
-                        <span className="text-xs text-muted-foreground">{result.matchedCount} peças</span>
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{result.brandDescription}</p>
-                      <div className="grid grid-cols-3 gap-2 text-center mb-2">
-                        <div className="bg-muted/50 rounded-lg py-1.5 px-2">
-                          <p className="text-[10px] text-muted-foreground">Preço mín.</p>
-                          <p className="text-xs font-bold text-foreground">R$ {result.minPrice.toFixed(2)}</p>
-                        </div>
-                        <div className="bg-muted/50 rounded-lg py-1.5 px-2">
-                          <p className="text-[10px] text-muted-foreground">Preço médio</p>
-                          <p className="text-xs font-bold text-primary">R$ {result.avgPrice.toFixed(2)}</p>
-                        </div>
-                        <div className="bg-muted/50 rounded-lg py-1.5 px-2">
-                          <p className="text-[10px] text-muted-foreground">Total estimado</p>
-                          <p className="text-xs font-bold text-foreground">
-                            R$ {result.estimatedTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                      </div>
+                      <p className="text-xs text-foreground mb-2">
+                        Esta marca atende ao seu perfil de compra. Solicite conexão para visualizar preços e montar seu orçamento.
+                      </p>
                       <motion.button
                         whileHover={{ scale: 1.02 }}
-                        className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors animate-pulse"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors animate-pulse"
                       >
                         Solicitar conexão
                       </motion.button>
@@ -1149,7 +1137,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
               </div>
             </div>
 
-            <div className="flex justify-center gap-3 pb-4">
+            <div className="flex flex-wrap justify-center gap-3 pb-4">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -1161,10 +1149,14 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => { reset(); onClose(); }}
+                onClick={() => {
+                  reset();
+                  onClose();
+                  navigate(`/marcas/${budgetDetail.brandSlug}`);
+                }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
               >
-                <ShoppingBag className="h-4 w-4" /> Ver todas as marcas
+                <ShoppingBag className="h-4 w-4" /> Ver todos os produtos
               </motion.button>
             </div>
           </motion.div>
