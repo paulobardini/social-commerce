@@ -4,7 +4,8 @@ import { MobileNav } from "@/components/MobileNav";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Play, Eye, Heart } from "lucide-react";
+import { Play, Eye, Heart, Sparkles } from "lucide-react";
+import { SmartBuyerQuiz } from "@/components/SmartBuyerQuiz";
 
 import brandBrandili from "@/assets/brand-brandili.jpg";
 import brandKyly from "@/assets/brand-kyly.jpg";
