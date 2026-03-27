@@ -187,6 +187,7 @@ interface SmartBuyerQuizProps {
 }
 
 export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({ ...initialAnswers });
   const [typing, setTyping] = useState(true);
