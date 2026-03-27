@@ -707,49 +707,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                 </motion.div>
               )}
 
-              {/* Step 7 — Tamanho (grouped) */}
+              {/* Step 7 — Valor (Custom Slider) */}
               {step === 7 && !typing && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="w-full max-w-lg flex flex-col gap-4"
-                >
-                  {tamanhoGrupos.map((grupo) => (
-                    <div key={grupo.label}>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">{grupo.label}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {grupo.sizes.map((sz) => {
-                          const selected = answers.tamanho.includes(sz);
-                          return (
-                            <motion.button
-                              key={sz}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.85 }}
-                              onClick={() =>
-                                setAnswers((a) => ({
-                                  ...a,
-                                  tamanho: toggleArray(a.tamanho, sz),
-                                }))
-                              }
-                              className={`h-11 min-w-[44px] px-3 rounded-full border-2 flex items-center justify-center text-xs font-semibold transition-all ${
-                                selected
-                                  ? "border-primary bg-primary text-primary-foreground shadow-md"
-                                  : "border-border bg-card text-foreground hover:border-primary/40"
-                              }`}
-                              style={selected ? { boxShadow: "0 0 12px hsl(var(--primary) / 0.4)" } : {}}
-                            >
-                              {sz}
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-
-              {/* Step 8 — Valor (Custom Slider) */}
-              {step === 8 && !typing && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -793,8 +752,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                 </motion.div>
               )}
 
-              {/* Step 9 — Quantidade */}
-              {step === 9 && !typing && (
+              {/* Step 8 — Quantidade */}
+              {step === 8 && !typing && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
