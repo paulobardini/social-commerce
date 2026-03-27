@@ -96,6 +96,7 @@ const brands = [
 
 const Marcas = () => {
   const [activeCategory, setActiveCategory] = useState("Todas");
+  const [quizOpen, setQuizOpen] = useState(false);
   const navigate = useNavigate();
 
   const filtered = activeCategory === "Todas"
