@@ -1152,7 +1152,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                 onClick={() => {
                   reset();
                   onClose();
-                  navigate(`/marcas/${budgetDetail.brandSlug}`);
+                  navigate(`/marca/${budgetDetail.brandSlug}/produtos`);
                 }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
               >
