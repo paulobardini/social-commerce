@@ -34,7 +34,7 @@ const initialAnswers: QuizAnswers = {
 };
 
 /* ─── step config ─── */
-const TOTAL_STEPS = 10; // 0=welcome, 1-9=questions
+const TOTAL_STEPS = 9; // 0=welcome, 1-8=questions
 
 const aiMessages = [
   "Olá! Sou sua assistente de compras inteligente 🤖",
@@ -44,7 +44,6 @@ const aiMessages = [
   "Que tipo de peça você procura?",
   "Qual linha você procura?",
   "Para qual estação?",
-  "Quais tamanhos você precisa?",
   "Quanto você quer investir por peça?",
   "Quantas peças você precisa?",
 ];
@@ -100,19 +99,6 @@ const estacaoOptions = [
   { id: "meia", label: "Meia-estação", icon: CloudSun, bg: "from-emerald-300 via-teal-200 to-lime-200" },
 ];
 
-interface TamanhoGrupo {
-  label: string;
-  sizes: string[];
-}
-
-const tamanhoGrupos: TamanhoGrupo[] = [
-  { label: "Linha Bebê", sizes: ["RN", "P", "M", "G Bebê"] },
-  { label: "Primeiros Passos (1-3)", sizes: ["1", "2", "3"] },
-  { label: "Infantil (4-8)", sizes: ["4", "6", "8"] },
-  { label: "Teen (10-18)", sizes: ["10", "12", "14", "16", "18"] },
-  { label: "Adulto", sizes: ["PP", "P", "M", "G", "GG", "XG"] },
-  { label: "Plus Size", sizes: ["G1", "G2", "G3"] },
-];
 
 const quantidadeSugestoes = [50, 100, 200, 500, 1000];
 
@@ -215,9 +201,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
       case 4: return answers.categoria.length > 0;
       case 5: return answers.estilo.length > 0;
       case 6: return answers.estacao.length > 0;
-      case 7: return answers.tamanho.length > 0;
-      case 8: return true;
-      case 9: return answers.quantidade > 0;
+      case 7: return true;
+      case 8: return answers.quantidade > 0;
       default: return false;
     }
   }, [step, answers]);
@@ -228,7 +213,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
       setTimeout(() => setShakeNext(false), 600);
       return;
     }
-    if (step === 9) {
+    if (step === 8) {
       runAnalysis();
       return;
     }
@@ -279,10 +264,6 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
           }
           // Price
           if (p.price > sliderValue) return false;
-          // Size
-          if (answers.tamanho.length > 0) {
-            if (!p.sizes.some((s) => answers.tamanho.includes(s))) return false;
-          }
           return true;
         });
 
@@ -709,49 +690,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                 </motion.div>
               )}
 
-              {/* Step 7 — Tamanho (grouped) */}
+              {/* Step 7 — Valor (Custom Slider) */}
               {step === 7 && !typing && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="w-full max-w-lg flex flex-col gap-4"
-                >
-                  {tamanhoGrupos.map((grupo) => (
-                    <div key={grupo.label}>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">{grupo.label}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {grupo.sizes.map((sz) => {
-                          const selected = answers.tamanho.includes(sz);
-                          return (
-                            <motion.button
-                              key={sz}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.85 }}
-                              onClick={() =>
-                                setAnswers((a) => ({
-                                  ...a,
-                                  tamanho: toggleArray(a.tamanho, sz),
-                                }))
-                              }
-                              className={`h-11 min-w-[44px] px-3 rounded-full border-2 flex items-center justify-center text-xs font-semibold transition-all ${
-                                selected
-                                  ? "border-primary bg-primary text-primary-foreground shadow-md"
-                                  : "border-border bg-card text-foreground hover:border-primary/40"
-                              }`}
-                              style={selected ? { boxShadow: "0 0 12px hsl(var(--primary) / 0.4)" } : {}}
-                            >
-                              {sz}
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-
-              {/* Step 8 — Valor (Custom Slider) */}
-              {step === 8 && !typing && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -795,8 +735,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                 </motion.div>
               )}
 
-              {/* Step 9 — Quantidade */}
-              {step === 9 && !typing && (
+              {/* Step 8 — Quantidade */}
+              {step === 8 && !typing && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1028,7 +968,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                   : "bg-muted text-muted-foreground"
               }`}
             >
-              {step === 9 ? "Ver resultados" : "Próximo"} <ArrowRight className="h-4 w-4" />
+              {step === 8 ? "Ver resultados" : "Próximo"} <ArrowRight className="h-4 w-4" />
             </motion.button>
           </div>
         </div>
