@@ -99,19 +99,6 @@ const estacaoOptions = [
   { id: "meia", label: "Meia-estação", icon: CloudSun, bg: "from-emerald-300 via-teal-200 to-lime-200" },
 ];
 
-interface TamanhoGrupo {
-  label: string;
-  sizes: string[];
-}
-
-const tamanhoGrupos: TamanhoGrupo[] = [
-  { label: "Linha Bebê", sizes: ["RN", "P", "M", "G Bebê"] },
-  { label: "Primeiros Passos (1-3)", sizes: ["1", "2", "3"] },
-  { label: "Infantil (4-8)", sizes: ["4", "6", "8"] },
-  { label: "Teen (10-18)", sizes: ["10", "12", "14", "16", "18"] },
-  { label: "Adulto", sizes: ["PP", "P", "M", "G", "GG", "XG"] },
-  { label: "Plus Size", sizes: ["G1", "G2", "G3"] },
-];
 
 const quantidadeSugestoes = [50, 100, 200, 500, 1000];
 
