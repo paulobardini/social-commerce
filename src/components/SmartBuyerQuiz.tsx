@@ -190,6 +190,7 @@ interface SmartBuyerQuizProps {
 
 export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
   const navigate = useNavigate();
+  const cart = useCart();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({ ...initialAnswers });
   const [typing, setTyping] = useState(true);
@@ -200,6 +201,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
   const [shakeNext, setShakeNext] = useState(false);
 
   const [budgetDetail, setBudgetDetail] = useState<MockResult | null>(null);
+  const [showProducts, setShowProducts] = useState(false);
 
   const reset = () => {
     setStep(0);
@@ -210,6 +212,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
     setSliderValue(30);
     setShakeNext(false);
     setBudgetDetail(null);
+    setShowProducts(false);
   };
 
   const canProceed = useCallback(() => {
