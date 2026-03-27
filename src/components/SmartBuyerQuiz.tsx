@@ -4,9 +4,22 @@ import {
   Baby, User, Users, Shirt, Scissors, Sun, Snowflake, CloudSun,
   Sparkles, X, ArrowLeft, ArrowRight, RotateCcw, ShoppingBag,
   Heart, Zap, Crown, Star, Package, ChevronRight, Minus, Plus,
-  Target, Search, TrendingUp, Check, AlertCircle
+  Target, Search, TrendingUp, Check, AlertCircle, FileText, DollarSign
 } from "lucide-react";
 import { brands as allBrands } from "@/data/mockProducts";
+
+interface MockResult {
+  brandSlug: string;
+  brandName: string;
+  brandLogo: string;
+  brandDescription: string;
+  connected: boolean;
+  matchedCount: number;
+  avgPrice: number;
+  minPrice: number;
+  estimatedTotal: number;
+  products: { name: string; category: string; price: number; qty: number }[];
+}
 
 /* ─── types ─── */
 interface QuizAnswers {
@@ -182,6 +195,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
   const [sliderValue, setSliderValue] = useState(30);
   const [shakeNext, setShakeNext] = useState(false);
 
+  const [budgetDetail, setBudgetDetail] = useState<MockResult | null>(null);
+
   const reset = () => {
     setStep(0);
     setAnswers({ ...initialAnswers });
@@ -190,6 +205,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
     setAnalyzeText("");
     setSliderValue(30);
     setShakeNext(false);
+    setBudgetDetail(null);
   };
 
   const canProceed = useCallback(() => {
@@ -247,54 +263,105 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
   };
 
   // Matching logic — only show brands that truly match ALL criteria
-  const getResults = () => {
-    return allBrands
-      .map((brand) => {
-        const products = brand.products;
+  const getResults = (): MockResult[] => {
+    const qty = answers.quantidade;
+    const perBrand = Math.ceil(qty / 6);
+    const brandData = allBrands.slice(0, 6);
 
-        // Filter products matching ALL answers
-        const matched = products.filter((p) => {
-          // Gender
-          if (answers.genero.length > 0) {
-            if (!answers.genero.includes(p.gender) && p.gender !== "Unissex") return false;
-          }
-          // Category
-          if (answers.categoria.length > 0) {
-            if (!answers.categoria.includes(p.category)) return false;
-          }
-          // Price
-          if (p.price > sliderValue) return false;
-          return true;
-        });
-
-        if (matched.length === 0) return null;
-
-        const connected = brand.connections > 10;
-        const avgPrice = matched.reduce((s, p) => s + p.price, 0) / matched.length;
-        const minPrice = Math.min(...matched.map((p) => p.price));
-        const totalPecas = Math.min(matched.length * 5, answers.quantidade);
-
-        return {
-          brand,
-          matchedCount: matched.length,
-          connected,
-          avgPrice,
-          minPrice,
-          totalPecas,
-          estimatedTotal: avgPrice * answers.quantidade,
-          proportionLabel: `${totalPecas} de ${answers.quantidade} peças`,
-        };
-      })
-      .filter(Boolean) as {
-        brand: typeof allBrands[0];
-        matchedCount: number;
-        connected: boolean;
-        avgPrice: number;
-        minPrice: number;
-        totalPecas: number;
-        estimatedTotal: number;
-        proportionLabel: string;
-      }[];
+    return [
+      // 3 connected
+      {
+        brandSlug: brandData[0]?.slug || "brandili",
+        brandName: brandData[0]?.name || "Brandili",
+        brandLogo: brandData[0]?.logo || "",
+        brandDescription: brandData[0]?.description || "",
+        connected: true,
+        matchedCount: 45,
+        avgPrice: Math.min(sliderValue * 0.75, 38.9),
+        minPrice: Math.min(sliderValue * 0.4, 19.9),
+        estimatedTotal: Math.min(sliderValue * 0.75, 38.9) * perBrand,
+        products: [
+          { name: "Camiseta Meia Malha", category: "Camiseta", price: 29.9, qty: Math.ceil(perBrand * 0.3) },
+          { name: "Conjunto Moletom", category: "Conjunto", price: 49.9, qty: Math.ceil(perBrand * 0.25) },
+          { name: "Calça Jogging", category: "Calça", price: 39.9, qty: Math.ceil(perBrand * 0.2) },
+          { name: "Blusão Felpado", category: "Blusão", price: 44.9, qty: Math.ceil(perBrand * 0.15) },
+          { name: "Bermuda Sarja", category: "Bermuda", price: 34.9, qty: Math.ceil(perBrand * 0.1) },
+        ],
+      },
+      {
+        brandSlug: brandData[1]?.slug || "kyly",
+        brandName: brandData[1]?.name || "Kyly",
+        brandLogo: brandData[1]?.logo || "",
+        brandDescription: brandData[1]?.description || "",
+        connected: true,
+        matchedCount: 38,
+        avgPrice: Math.min(sliderValue * 0.8, 42.5),
+        minPrice: Math.min(sliderValue * 0.35, 22.9),
+        estimatedTotal: Math.min(sliderValue * 0.8, 42.5) * perBrand,
+        products: [
+          { name: "Vestido Florido", category: "Vestido", price: 45.9, qty: Math.ceil(perBrand * 0.3) },
+          { name: "Legging Cotton", category: "Legging", price: 24.9, qty: Math.ceil(perBrand * 0.25) },
+          { name: "Blusa Babado", category: "Blusa", price: 35.9, qty: Math.ceil(perBrand * 0.2) },
+          { name: "Conjunto Malha", category: "Conjunto", price: 49.9, qty: Math.ceil(perBrand * 0.15) },
+          { name: "Jaqueta Bomber", category: "Jaqueta", price: 59.9, qty: Math.ceil(perBrand * 0.1) },
+        ],
+      },
+      {
+        brandSlug: brandData[2]?.slug || "hering",
+        brandName: brandData[2]?.name || "Hering",
+        brandLogo: brandData[2]?.logo || "",
+        brandDescription: brandData[2]?.description || "",
+        connected: true,
+        matchedCount: 52,
+        avgPrice: Math.min(sliderValue * 0.85, 45.0),
+        minPrice: Math.min(sliderValue * 0.45, 25.9),
+        estimatedTotal: Math.min(sliderValue * 0.85, 45.0) * perBrand,
+        products: [
+          { name: "Camiseta Básica", category: "Camiseta", price: 34.9, qty: Math.ceil(perBrand * 0.35) },
+          { name: "Polo Piquet", category: "Polo", price: 49.9, qty: Math.ceil(perBrand * 0.2) },
+          { name: "Calça Chino", category: "Calça", price: 59.9, qty: Math.ceil(perBrand * 0.2) },
+          { name: "Bermuda Sarja", category: "Bermuda", price: 44.9, qty: Math.ceil(perBrand * 0.15) },
+          { name: "Moletom Canguru", category: "Blusão", price: 54.9, qty: Math.ceil(perBrand * 0.1) },
+        ],
+      },
+      // 3 not connected
+      {
+        brandSlug: brandData[3]?.slug || "malwee",
+        brandName: brandData[3]?.name || "Malwee",
+        brandLogo: brandData[3]?.logo || "",
+        brandDescription: brandData[3]?.description || "",
+        connected: false,
+        matchedCount: 30,
+        avgPrice: Math.min(sliderValue * 0.7, 35.0),
+        minPrice: Math.min(sliderValue * 0.3, 18.9),
+        estimatedTotal: Math.min(sliderValue * 0.7, 35.0) * perBrand,
+        products: [],
+      },
+      {
+        brandSlug: brandData[4]?.slug || "lunender",
+        brandName: brandData[4]?.name || "Lunender",
+        brandLogo: brandData[4]?.logo || "",
+        brandDescription: brandData[4]?.description || "",
+        connected: false,
+        matchedCount: 25,
+        avgPrice: Math.min(sliderValue * 0.9, 48.0),
+        minPrice: Math.min(sliderValue * 0.5, 28.9),
+        estimatedTotal: Math.min(sliderValue * 0.9, 48.0) * perBrand,
+        products: [],
+      },
+      {
+        brandSlug: brandData[5]?.slug || "marisol",
+        brandName: brandData[5]?.name || "Marisol",
+        brandLogo: brandData[5]?.logo || "",
+        brandDescription: brandData[5]?.description || "",
+        connected: false,
+        matchedCount: 28,
+        avgPrice: Math.min(sliderValue * 0.65, 32.0),
+        minPrice: Math.min(sliderValue * 0.28, 15.9),
+        estimatedTotal: Math.min(sliderValue * 0.65, 32.0) * perBrand,
+        products: [],
+      },
+    ];
   };
 
   const variants = {
@@ -803,7 +870,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
         )}
 
         {/* Results */}
-        {step === TOTAL_STEPS && !analyzing && (() => {
+        {step === TOTAL_STEPS && !analyzing && !budgetDetail && (() => {
           const results = getResults();
           return (
             <motion.div
@@ -811,7 +878,6 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
               animate={{ opacity: 1, y: 0 }}
               className="w-full max-w-3xl mx-auto overflow-y-auto max-h-[70vh] px-1"
             >
-              {/* Summary bar */}
               <div className="text-center mb-4">
                 <motion.div
                   initial={{ scale: 0 }}
@@ -820,62 +886,52 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-3"
                 >
                   <Target className="h-4 w-4" />
-                  {results.length > 0
-                    ? `${results.length} marca${results.length > 1 ? "s" : ""} atendem sua busca`
-                    : "Nenhuma marca atendeu todos os critérios"}
+                  {results.length} marca{results.length > 1 ? "s" : ""} atendem sua busca
                 </motion.div>
-                <h2 className="text-2xl font-bold text-foreground">
-                  {results.length > 0 ? "Suas Recomendações" : "Tente ajustar seus filtros"}
-                </h2>
+                <h2 className="text-2xl font-bold text-foreground">Suas Recomendações</h2>
               </div>
 
-              {/* Summary stats */}
-              {results.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="grid grid-cols-3 gap-3 mb-4"
-                >
-                  <div className="bg-card border border-border rounded-xl p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Qtd. desejada</p>
-                    <p className="text-lg font-bold text-foreground">{answers.quantidade}</p>
-                  </div>
-                  <div className="bg-card border border-border rounded-xl p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Valor por peça (até)</p>
-                    <p className="text-lg font-bold text-primary">R$ {sliderValue}</p>
-                  </div>
-                  <div className="bg-card border border-border rounded-xl p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Orçamento estimado</p>
-                    <p className="text-lg font-bold text-foreground">
-                      R$ {(sliderValue * answers.quantidade).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="grid grid-cols-3 gap-3 mb-4"
+              >
+                <div className="bg-card border border-border rounded-xl p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Qtd. desejada</p>
+                  <p className="text-lg font-bold text-foreground">{answers.quantidade}</p>
+                </div>
+                <div className="bg-card border border-border rounded-xl p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Valor por peça (até)</p>
+                  <p className="text-lg font-bold text-primary">R$ {sliderValue}</p>
+                </div>
+                <div className="bg-card border border-border rounded-xl p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Orçamento estimado</p>
+                  <p className="text-lg font-bold text-foreground">
+                    R$ {(sliderValue * answers.quantidade).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </motion.div>
 
-              <div className="grid gap-3">
-                {results.map((result, idx) => (
+              {/* Connected brands */}
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 mt-4">Marcas conectadas</p>
+              <div className="grid gap-3 mb-4">
+                {results.filter((r) => r.connected).map((result, idx) => (
                   <motion.div
-                    key={result.brand.slug}
+                    key={result.brandSlug}
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.1 }}
                     className="bg-card border border-border rounded-2xl p-4 flex items-start gap-4"
                   >
-                    <img
-                      src={result.brand.logo}
-                      alt={result.brand.name}
-                      className="h-14 w-14 rounded-xl object-cover border border-border flex-shrink-0"
-                    />
+                    <img src={result.brandLogo} alt={result.brandName} className="h-14 w-14 rounded-xl object-cover border border-border flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold text-foreground">{result.brand.name}</h3>
-                        <span className="text-xs text-muted-foreground">{result.matchedCount} peças encontradas</span>
+                        <h3 className="font-bold text-foreground">{result.brandName}</h3>
+                        <span className="text-xs text-muted-foreground">{result.matchedCount} peças</span>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{result.brand.description}</p>
-
-                      <div className="grid grid-cols-3 gap-2 text-center">
+                      <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{result.brandDescription}</p>
+                      <div className="grid grid-cols-3 gap-2 text-center mb-2">
                         <div className="bg-muted/50 rounded-lg py-1.5 px-2">
                           <p className="text-[10px] text-muted-foreground">Preço mín.</p>
                           <p className="text-xs font-bold text-foreground">R$ {result.minPrice.toFixed(2)}</p>
@@ -891,23 +947,64 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                           </p>
                         </div>
                       </div>
-
-                      {result.connected ? (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[10px] font-medium">
-                            <Check className="h-3 w-3" /> Conectado
-                          </span>
-                        </div>
-                      ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-medium">
+                          <Check className="h-3 w-3" /> Conectado
+                        </span>
                         <motion.button
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: idx * 0.1 + 0.4 }}
-                          className="mt-2 px-3 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => setBudgetDetail(result)}
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
                         >
-                          Solicitar conexão
+                          <FileText className="h-3 w-3" /> Ver orçamento
                         </motion.button>
-                      )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Not connected brands */}
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Marcas disponíveis</p>
+              <div className="grid gap-3">
+                {results.filter((r) => !r.connected).map((result, idx) => (
+                  <motion.div
+                    key={result.brandSlug}
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: (idx + 3) * 0.1 }}
+                    className="bg-card border border-border rounded-2xl p-4 flex items-start gap-4 opacity-90"
+                  >
+                    <img src={result.brandLogo} alt={result.brandName} className="h-14 w-14 rounded-xl object-cover border border-border flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-bold text-foreground">{result.brandName}</h3>
+                        <span className="text-xs text-muted-foreground">{result.matchedCount} peças</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{result.brandDescription}</p>
+                      <div className="grid grid-cols-3 gap-2 text-center mb-2">
+                        <div className="bg-muted/50 rounded-lg py-1.5 px-2">
+                          <p className="text-[10px] text-muted-foreground">Preço mín.</p>
+                          <p className="text-xs font-bold text-foreground">R$ {result.minPrice.toFixed(2)}</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg py-1.5 px-2">
+                          <p className="text-[10px] text-muted-foreground">Preço médio</p>
+                          <p className="text-xs font-bold text-primary">R$ {result.avgPrice.toFixed(2)}</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg py-1.5 px-2">
+                          <p className="text-[10px] text-muted-foreground">Total estimado</p>
+                          <p className="text-xs font-bold text-foreground">
+                            R$ {result.estimatedTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors animate-pulse"
+                      >
+                        Solicitar conexão
+                      </motion.button>
                     </div>
                   </motion.div>
                 ))}
@@ -934,6 +1031,144 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
             </motion.div>
           );
         })()}
+
+        {/* Budget Detail View */}
+        {budgetDetail && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-3xl mx-auto overflow-y-auto max-h-[70vh] px-1"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setBudgetDetail(null)}
+                className="p-2 rounded-xl hover:bg-muted transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+              </motion.button>
+              <img src={budgetDetail.brandLogo} alt={budgetDetail.brandName} className="h-10 w-10 rounded-lg object-cover border border-border" />
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Orçamento — {budgetDetail.brandName}</h2>
+                <p className="text-xs text-muted-foreground">{budgetDetail.brandDescription}</p>
+              </div>
+            </div>
+
+            {/* Summary cards */}
+            <div className="grid grid-cols-4 gap-3 mb-6">
+              <div className="bg-card border border-border rounded-xl p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">Qtd. Peças</p>
+                <p className="text-lg font-bold text-foreground">{answers.quantidade}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">Preço Médio</p>
+                <p className="text-lg font-bold text-primary">R$ {budgetDetail.avgPrice.toFixed(2)}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">Preço Mínimo</p>
+                <p className="text-lg font-bold text-foreground">R$ {budgetDetail.minPrice.toFixed(2)}</p>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-3 text-center">
+                <p className="text-[10px] text-muted-foreground">Total Estimado</p>
+                <p className="text-lg font-bold text-primary">
+                  R$ {budgetDetail.estimatedTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+
+            {/* Products table */}
+            <div className="bg-card border border-border rounded-2xl overflow-hidden mb-6">
+              <div className="px-4 py-3 bg-muted/30 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4 text-primary" /> Composição do Pedido
+                </h3>
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="text-left py-2 px-4 font-medium text-xs">Produto</th>
+                    <th className="text-left py-2 px-4 font-medium text-xs">Categoria</th>
+                    <th className="text-right py-2 px-4 font-medium text-xs">Qtd.</th>
+                    <th className="text-right py-2 px-4 font-medium text-xs">Preço unit.</th>
+                    <th className="text-right py-2 px-4 font-medium text-xs">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {budgetDetail.products.map((p, i) => (
+                    <tr key={i} className="border-b border-border/50 last:border-0">
+                      <td className="py-2.5 px-4 font-medium text-foreground">{p.name}</td>
+                      <td className="py-2.5 px-4 text-muted-foreground">{p.category}</td>
+                      <td className="py-2.5 px-4 text-right text-foreground">{p.qty}</td>
+                      <td className="py-2.5 px-4 text-right text-foreground">R$ {p.price.toFixed(2)}</td>
+                      <td className="py-2.5 px-4 text-right font-semibold text-foreground">
+                        R$ {(p.price * p.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-muted/20">
+                    <td colSpan={2} className="py-3 px-4 font-bold text-foreground">Total</td>
+                    <td className="py-3 px-4 text-right font-bold text-foreground">
+                      {budgetDetail.products.reduce((s, p) => s + p.qty, 0)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-muted-foreground">—</td>
+                    <td className="py-3 px-4 text-right font-bold text-primary text-base">
+                      R$ {budgetDetail.products.reduce((s, p) => s + p.price * p.qty, 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Proportion info */}
+            <div className="bg-card border border-border rounded-2xl p-4 mb-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-primary" /> Proporção do Pedido
+              </h3>
+              <div className="space-y-2">
+                {budgetDetail.products.map((p, i) => {
+                  const totalQty = budgetDetail.products.reduce((s, pr) => s + pr.qty, 0);
+                  const pct = Math.round((p.qty / totalQty) * 100);
+                  return (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="text-xs text-foreground w-32 truncate">{p.name}</span>
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ delay: i * 0.1, duration: 0.5 }}
+                          className="h-full bg-primary rounded-full"
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-primary w-10 text-right">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex justify-center gap-3 pb-4">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setBudgetDetail(null)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" /> Voltar aos resultados
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { reset(); onClose(); }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                <ShoppingBag className="h-4 w-4" /> Ver todas as marcas
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Navigation */}
