@@ -1154,14 +1154,140 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
+                onClick={() => setShowProducts(true)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                <ShoppingBag className="h-4 w-4" /> Ver produtos do orçamento
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Products View */}
+        {budgetDetail && showProducts && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-3xl mx-auto overflow-y-auto max-h-[70vh] px-1"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowProducts(false)}
+                className="p-2 rounded-xl hover:bg-muted transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+              </motion.button>
+              <img src={budgetDetail.brandLogo} alt={budgetDetail.brandName} className="h-10 w-10 rounded-lg object-cover border border-border" />
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Produtos — {budgetDetail.brandName}</h2>
+                <p className="text-xs text-muted-foreground">{budgetDetail.products.length} itens do orçamento</p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 mb-6">
+              {budgetDetail.products.map((p, i) => {
+                const brand = allBrands.find((b) => b.slug === budgetDetail.brandSlug);
+                const imgs = brand?.products[0]?.variants[0]?.images || [];
+                const img = imgs[i % Math.max(imgs.length, 1)] || "";
+
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4"
+                  >
+                    {img && (
+                      <img src={img} alt={p.name} className="h-20 w-20 rounded-xl object-cover border border-border flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-foreground text-sm">{p.name}</h3>
+                      <p className="text-xs text-muted-foreground mb-1">{p.category}</p>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-primary">R$ {p.price.toFixed(2)}</span>
+                        <span className="text-xs text-muted-foreground">× {p.qty} peças</span>
+                        <span className="text-xs font-semibold text-foreground">
+                          = R$ {(p.price * p.qty).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        const brand = allBrands.find((b) => b.slug === budgetDetail.brandSlug);
+                        if (!brand) return;
+                        // Find a real product that matches the category or use first
+                        const realProduct = brand.products.find((rp) => rp.category === p.category) || brand.products[0];
+                        if (!realProduct) return;
+
+                        const qtyPerSize: Record<string, number> = {};
+                        const perSize = Math.max(1, Math.floor(p.qty / realProduct.sizes.length));
+                        realProduct.sizes.forEach((s) => { qtyPerSize[s] = perSize; });
+
+                        cart.addItem({
+                          product: { ...realProduct, price: p.price, name: p.name },
+                          brandSlug: budgetDetail.brandSlug,
+                          brandName: budgetDetail.brandName,
+                          brandLogo: budgetDetail.brandLogo,
+                          quantities: qtyPerSize,
+                          selectedColors: [realProduct.variants[0]?.color || "Branco"],
+                        });
+                        toast.success(`${p.name} adicionado ao carrinho`);
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors flex-shrink-0"
+                    >
+                      <ShoppingCart className="h-3.5 w-3.5" /> Adicionar
+                    </motion.button>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Add all to cart */}
+            <div className="flex flex-wrap justify-center gap-3 pb-4">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowProducts(false)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" /> Voltar ao orçamento
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => {
-                  reset();
-                  onClose();
-                  navigate(`/marca/${budgetDetail.brandSlug}/produtos`);
+                  const brand = allBrands.find((b) => b.slug === budgetDetail.brandSlug);
+                  if (!brand) return;
+
+                  budgetDetail.products.forEach((p) => {
+                    const realProduct = brand.products.find((rp) => rp.category === p.category) || brand.products[0];
+                    if (!realProduct) return;
+
+                    const qtyPerSize: Record<string, number> = {};
+                    const perSize = Math.max(1, Math.floor(p.qty / realProduct.sizes.length));
+                    realProduct.sizes.forEach((s) => { qtyPerSize[s] = perSize; });
+
+                    cart.addItem({
+                      product: { ...realProduct, price: p.price, name: p.name },
+                      brandSlug: budgetDetail.brandSlug,
+                      brandName: budgetDetail.brandName,
+                      brandLogo: budgetDetail.brandLogo,
+                      quantities: qtyPerSize,
+                      selectedColors: [realProduct.variants[0]?.color || "Branco"],
+                    });
+                  });
+
+                  toast.success(`Todos os ${budgetDetail.products.length} itens adicionados ao carrinho!`);
+                  cart.setIsOpen(true);
                 }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
               >
-                <ShoppingBag className="h-4 w-4" /> Ver todos os produtos
+                <ShoppingCart className="h-4 w-4" /> Adicionar tudo ao carrinho
               </motion.button>
             </div>
           </motion.div>
