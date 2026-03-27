@@ -4,18 +4,18 @@ import {
   Baby, User, Users, Shirt, Scissors, Sun, Snowflake, CloudSun,
   Sparkles, X, ArrowLeft, ArrowRight, RotateCcw, ShoppingBag,
   Heart, Zap, Crown, Star, Package, ChevronRight, Minus, Plus,
-  Target, Search, TrendingUp, Check
+  Target, Search, TrendingUp, Check, AlertCircle
 } from "lucide-react";
 import { brands as allBrands } from "@/data/mockProducts";
 
 /* ─── types ─── */
 interface QuizAnswers {
   tipo: string[];
-  genero: string;
-  idade: string;
+  genero: string[];
+  idade: string[];
   categoria: string[];
   estilo: string[];
-  estacao: string;
+  estacao: string[];
   tamanho: string[];
   valorRange: [number, number];
   quantidade: number;
@@ -23,13 +23,13 @@ interface QuizAnswers {
 
 const initialAnswers: QuizAnswers = {
   tipo: [],
-  genero: "",
-  idade: "",
+  genero: [],
+  idade: [],
   categoria: [],
   estilo: [],
-  estacao: "",
+  estacao: [],
   tamanho: [],
-  valorRange: [0, 500],
+  valorRange: [0, 50],
   quantidade: 100,
 };
 
@@ -42,10 +42,10 @@ const aiMessages = [
   "Para quem são esses produtos?",
   "Qual a faixa etária?",
   "Que tipo de peça você procura?",
-  "Qual o estilo desejado?",
+  "Qual linha você procura?",
   "Para qual estação?",
   "Quais tamanhos você precisa?",
-  "Quanto quer investir por peça?",
+  "Quanto você quer investir por peça?",
   "Quantas peças você precisa?",
 ];
 
@@ -65,10 +65,12 @@ const generoOptions = [
 ];
 
 const idadeOptions = [
-  { id: "bebe", label: "Bebê", sub: "0-2 anos", position: 0 },
-  { id: "kids", label: "Kids", sub: "2-8 anos", position: 33 },
-  { id: "teen", label: "Teen", sub: "8-14 anos", position: 66 },
-  { id: "adulto", label: "Adulto", sub: "15+", position: 100 },
+  { id: "bebe", label: "Bebê", sub: "RN ao G Bebê" },
+  { id: "primeiros-passos", label: "Primeiros Passos", sub: "1 a 3 anos" },
+  { id: "infantil", label: "Infantil", sub: "4 ao 8" },
+  { id: "teen", label: "Teen", sub: "10 ao 18" },
+  { id: "adulto", label: "Adulto", sub: "P ao XG" },
+  { id: "plus-size", label: "Plus Size", sub: "G1, G2, G3" },
 ];
 
 const categoriaOptions = [
@@ -83,10 +85,12 @@ const categoriaOptions = [
 ];
 
 const estiloOptions = [
+  { id: "popular", label: "Popular", gradient: "from-amber-400 to-orange-500", desc: "Preço acessível, alto giro" },
   { id: "basico", label: "Básico", gradient: "from-gray-400 to-gray-600", desc: "Essenciais do guarda-roupa" },
   { id: "casual", label: "Casual", gradient: "from-green-400 to-emerald-600", desc: "Dia a dia confortável" },
   { id: "fashion", label: "Fashion", gradient: "from-fuchsia-400 to-purple-600", desc: "Tendências e ousadia" },
-  { id: "social", label: "Social", gradient: "from-amber-400 to-yellow-600", desc: "Elegância e formalidade" },
+  { id: "premium", label: "Premium", gradient: "from-yellow-400 to-amber-600", desc: "Alta qualidade e acabamento" },
+  { id: "social", label: "Social", gradient: "from-indigo-400 to-blue-600", desc: "Elegância e formalidade" },
   { id: "esportivo", label: "Esportivo", gradient: "from-cyan-400 to-blue-600", desc: "Performance e conforto" },
 ];
 
@@ -96,8 +100,19 @@ const estacaoOptions = [
   { id: "meia", label: "Meia-estação", icon: CloudSun, bg: "from-emerald-300 via-teal-200 to-lime-200" },
 ];
 
-const tamanhoInfantil = ["RN", "P", "M", "G", "1", "2", "3", "4", "6", "8", "10", "12", "14", "16"];
-const tamanhoAdulto = ["PP", "P", "M", "G", "GG", "XG", "XXG", "34", "36", "38", "40", "42", "44", "46"];
+interface TamanhoGrupo {
+  label: string;
+  sizes: string[];
+}
+
+const tamanhoGrupos: TamanhoGrupo[] = [
+  { label: "Linha Bebê", sizes: ["RN", "P", "M", "G Bebê"] },
+  { label: "Primeiros Passos (1-3)", sizes: ["1", "2", "3"] },
+  { label: "Infantil (4-8)", sizes: ["4", "6", "8"] },
+  { label: "Teen (10-18)", sizes: ["10", "12", "14", "16", "18"] },
+  { label: "Adulto", sizes: ["PP", "P", "M", "G", "GG", "XG"] },
+  { label: "Plus Size", sizes: ["G1", "G2", "G3"] },
+];
 
 const quantidadeSugestoes = [50, 100, 200, 500, 1000];
 
@@ -125,7 +140,7 @@ const Typewriter = ({ text, onDone }: { text: string; onDone?: () => void }) => 
   );
 };
 
-/* ─── Floating Particles (CSS-only feel via framer) ─── */
+/* ─── Floating Particles ─── */
 const Particles = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
     {Array.from({ length: 20 }).map((_, i) => (
@@ -178,7 +193,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeText, setAnalyzeText] = useState("");
   const [direction, setDirection] = useState(1);
-  const [sliderValue, setSliderValue] = useState(250);
+  const [sliderValue, setSliderValue] = useState(30);
+  const [shakeNext, setShakeNext] = useState(false);
 
   const reset = () => {
     setStep(0);
@@ -186,18 +202,19 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
     setTyping(true);
     setAnalyzing(false);
     setAnalyzeText("");
-    setSliderValue(250);
+    setSliderValue(30);
+    setShakeNext(false);
   };
 
   const canProceed = useCallback(() => {
     switch (step) {
       case 0: return true;
       case 1: return answers.tipo.length > 0;
-      case 2: return !!answers.genero;
-      case 3: return !!answers.idade;
+      case 2: return answers.genero.length > 0;
+      case 3: return answers.idade.length > 0;
       case 4: return answers.categoria.length > 0;
       case 5: return answers.estilo.length > 0;
-      case 6: return !!answers.estacao;
+      case 6: return answers.estacao.length > 0;
       case 7: return answers.tamanho.length > 0;
       case 8: return true;
       case 9: return answers.quantidade > 0;
@@ -206,7 +223,11 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
   }, [step, answers]);
 
   const goNext = () => {
-    if (!canProceed()) return;
+    if (!canProceed()) {
+      setShakeNext(true);
+      setTimeout(() => setShakeNext(false), 600);
+      return;
+    }
     if (step === 9) {
       runAnalysis();
       return;
@@ -225,7 +246,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
 
   const runAnalysis = () => {
     setAnalyzing(true);
-    const msgs = ["Cruzando dados...", "Encontrando marcas...", "Calculando compatibilidade...", "Montando orçamento..."];
+    const msgs = ["Cruzando dados...", "Encontrando marcas...", "Calculando orçamento...", "Montando resultado..."];
     let i = 0;
     setAnalyzeText(msgs[0]);
     const iv = setInterval(() => {
@@ -240,61 +261,59 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
     }, 800);
   };
 
-  // Matching logic
+  // Matching logic — only show brands that truly match ALL criteria
   const getResults = () => {
-    return allBrands.map((brand) => {
-      let score = 0;
-      let total = 0;
-      const products = brand.products;
+    return allBrands
+      .map((brand) => {
+        const products = brand.products;
 
-      // Gender match
-      if (answers.genero) {
-        total += 30;
-        const genderMatch = products.filter(
-          (p) => p.gender === answers.genero || p.gender === "Unissex"
-        ).length;
-        score += Math.min(30, (genderMatch / Math.max(products.length, 1)) * 30);
-      }
+        // Filter products matching ALL answers
+        const matched = products.filter((p) => {
+          // Gender
+          if (answers.genero.length > 0) {
+            if (!answers.genero.includes(p.gender) && p.gender !== "Unissex") return false;
+          }
+          // Category
+          if (answers.categoria.length > 0) {
+            if (!answers.categoria.includes(p.category)) return false;
+          }
+          // Price
+          if (p.price > sliderValue) return false;
+          // Size
+          if (answers.tamanho.length > 0) {
+            if (!p.sizes.some((s) => answers.tamanho.includes(s))) return false;
+          }
+          return true;
+        });
 
-      // Category match
-      if (answers.categoria.length > 0) {
-        total += 30;
-        const catMatch = products.filter((p) =>
-          answers.categoria.includes(p.category)
-        ).length;
-        score += Math.min(30, (catMatch / Math.max(products.length, 1)) * 40);
-      }
+        if (matched.length === 0) return null;
 
-      // Price match
-      total += 20;
-      const avgPrice =
-        products.reduce((s, p) => s + p.price, 0) / Math.max(products.length, 1);
-      if (avgPrice <= sliderValue) score += 20;
-      else if (avgPrice <= sliderValue * 1.3) score += 10;
+        const connected = brand.connections > 10;
+        const avgPrice = matched.reduce((s, p) => s + p.price, 0) / matched.length;
+        const minPrice = Math.min(...matched.map((p) => p.price));
+        const totalPecas = Math.min(matched.length * 5, answers.quantidade);
 
-      // Size match
-      if (answers.tamanho.length > 0) {
-        total += 20;
-        const sizeMatch = products.filter((p) =>
-          p.sizes.some((s) => answers.tamanho.includes(s))
-        ).length;
-        score += Math.min(20, (sizeMatch / Math.max(products.length, 1)) * 25);
-      }
-
-      const pct = total > 0 ? Math.round((score / total) * 100) : 50;
-      const connected = brand.connections > 10;
-      const avgP =
-        products.reduce((s, p) => s + p.price, 0) / Math.max(products.length, 1);
-
-      return {
-        brand,
-        score: Math.min(pct, 99),
-        connected,
-        avgPrice: avgP,
-        estimatedTotal: avgP * answers.quantidade,
-      };
-    })
-      .sort((a, b) => b.score - a.score);
+        return {
+          brand,
+          matchedCount: matched.length,
+          connected,
+          avgPrice,
+          minPrice,
+          totalPecas,
+          estimatedTotal: avgPrice * answers.quantidade,
+          proportionLabel: `${totalPecas} de ${answers.quantidade} peças`,
+        };
+      })
+      .filter(Boolean) as {
+        brand: typeof allBrands[0];
+        matchedCount: number;
+        connected: boolean;
+        avgPrice: number;
+        minPrice: number;
+        totalPecas: number;
+        estimatedTotal: number;
+        proportionLabel: string;
+      }[];
   };
 
   const variants = {
@@ -307,9 +326,6 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
 
   const toggleArray = (arr: string[], val: string) =>
     arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val];
-
-  const tamanhos = answers.tipo.includes("infantil") || answers.idade === "kids" || answers.idade === "teen" || answers.idade === "bebe"
-    ? tamanhoInfantil : tamanhoAdulto;
 
   return (
     <motion.div
@@ -345,7 +361,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
       )}
 
       {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 relative overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 relative overflow-y-auto">
         {/* Analyzing overlay */}
         {analyzing && (
           <motion.div
@@ -463,22 +479,22 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                 </motion.div>
               )}
 
-              {/* Step 2 — Gênero */}
+              {/* Step 2 — Gênero (Multi-select) */}
               {step === 2 && !typing && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex gap-4 md:gap-6 justify-center"
+                  className="flex gap-4 md:gap-6 justify-center flex-wrap"
                 >
                   {generoOptions.map((opt) => {
-                    const selected = answers.genero === opt.id;
+                    const selected = answers.genero.includes(opt.id);
                     return (
                       <motion.button
                         key={opt.id}
                         whileHover={{ y: -8, boxShadow: "0 20px 40px -10px rgba(0,0,0,0.3)" }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => setAnswers((a) => ({ ...a, genero: opt.id }))}
-                        className={`flex flex-col items-center gap-3 p-6 rounded-3xl border-2 transition-all w-28 md:w-36 ${
+                        onClick={() => setAnswers((a) => ({ ...a, genero: toggleArray(a.genero, opt.id) }))}
+                        className={`relative flex flex-col items-center gap-3 p-6 rounded-3xl border-2 transition-all w-28 md:w-36 ${
                           selected
                             ? "border-primary bg-primary/10 shadow-xl"
                             : "border-border bg-card hover:border-primary/30"
@@ -488,59 +504,60 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                           <opt.icon className="h-7 w-7 md:h-8 md:w-8" />
                         </div>
                         <span className="font-semibold text-foreground text-sm">{opt.label}</span>
+                        {selected && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary flex items-center justify-center"
+                          >
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </motion.div>
+                        )}
                       </motion.button>
                     );
                   })}
                 </motion.div>
               )}
 
-              {/* Step 3 — Idade (Timeline) */}
+              {/* Step 3 — Idade (Cards multi-select) */}
               {step === 3 && !typing && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="w-full max-w-lg"
+                  className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full"
                 >
-                  <div className="relative py-8">
-                    <div className="absolute top-1/2 left-0 right-0 h-1 bg-muted rounded-full -translate-y-1/2" />
-                    {answers.idade && (
-                      <motion.div
-                        className="absolute top-1/2 left-0 h-1 bg-primary rounded-full -translate-y-1/2"
-                        initial={{ width: 0 }}
-                        animate={{
-                          width: `${idadeOptions.find((o) => o.id === answers.idade)?.position ?? 0}%`,
-                        }}
-                        transition={{ duration: 0.4 }}
-                      />
-                    )}
-                    <div className="relative flex justify-between">
-                      {idadeOptions.map((opt) => {
-                        const selected = answers.idade === opt.id;
-                        return (
-                          <motion.button
-                            key={opt.id}
-                            whileHover={{ scale: 1.15 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setAnswers((a) => ({ ...a, idade: opt.id }))}
-                            className="flex flex-col items-center gap-2 -mt-3"
+                  {idadeOptions.map((opt, idx) => {
+                    const selected = answers.idade.includes(opt.id);
+                    return (
+                      <motion.button
+                        key={opt.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setAnswers((a) => ({ ...a, idade: toggleArray(a.idade, opt.id) }))}
+                        className={`relative p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
+                          selected
+                            ? "border-primary bg-primary/10 shadow-lg"
+                            : "border-border bg-card hover:border-primary/30"
+                        }`}
+                        style={selected ? { boxShadow: "0 0 16px hsl(var(--primary) / 0.3)" } : {}}
+                      >
+                        <span className="font-bold text-foreground text-sm">{opt.label}</span>
+                        <span className="text-xs text-muted-foreground">{opt.sub}</span>
+                        {selected && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary flex items-center justify-center"
                           >
-                            <motion.div
-                              className={`h-8 w-8 rounded-full border-3 transition-all ${
-                                selected
-                                  ? "bg-primary border-primary shadow-lg"
-                                  : "bg-card border-muted-foreground/30"
-                              }`}
-                              animate={selected ? { boxShadow: "0 0 15px hsl(var(--primary) / 0.5)" } : {}}
-                            />
-                            <span className={`text-xs font-semibold ${selected ? "text-primary" : "text-muted-foreground"}`}>
-                              {opt.label}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">{opt.sub}</span>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
                 </motion.div>
               )}
 
@@ -603,7 +620,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                 </motion.div>
               )}
 
-              {/* Step 5 — Estilo */}
+              {/* Step 5 — Linha (Estilo) */}
               {step === 5 && !typing && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -623,7 +640,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                             estilo: toggleArray(a.estilo, opt.id),
                           }))
                         }
-                        className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
+                        className={`relative flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
                           selected
                             ? "border-primary bg-primary/5 shadow-md"
                             : "border-border bg-card hover:border-primary/30"
@@ -651,7 +668,7 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                 </motion.div>
               )}
 
-              {/* Step 6 — Estação */}
+              {/* Step 6 — Estação (Multi-select) */}
               {step === 6 && !typing && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -659,20 +676,20 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                   className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full"
                 >
                   {estacaoOptions.map((opt) => {
-                    const selected = answers.estacao === opt.id;
+                    const selected = answers.estacao.includes(opt.id);
                     return (
                       <motion.button
                         key={opt.id}
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        onClick={() => setAnswers((a) => ({ ...a, estacao: opt.id }))}
+                        onClick={() => setAnswers((a) => ({ ...a, estacao: toggleArray(a.estacao, opt.id) }))}
                         className={`relative p-6 rounded-2xl border-2 transition-all overflow-hidden ${
                           selected
                             ? "border-primary shadow-xl"
                             : "border-border hover:border-primary/30"
                         }`}
                       >
-                        <div className={`absolute inset-0 bg-gradient-to-br ${opt.bg} opacity-${selected ? "30" : "10"} transition-opacity`} />
+                        <div className={`absolute inset-0 bg-gradient-to-br ${opt.bg} ${selected ? "opacity-30" : "opacity-10"} transition-opacity`} />
                         <div className="relative flex flex-col items-center gap-3">
                           <opt.icon className={`h-10 w-10 ${selected ? "text-primary" : "text-muted-foreground"}`} />
                           <span className="font-semibold text-foreground text-sm">{opt.label}</span>
@@ -692,40 +709,44 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                 </motion.div>
               )}
 
-              {/* Step 7 — Tamanho */}
+              {/* Step 7 — Tamanho (grouped) */}
               {step === 7 && !typing && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-wrap justify-center gap-2 w-full max-w-md"
+                  className="w-full max-w-lg flex flex-col gap-4"
                 >
-                  {tamanhos.map((sz, idx) => {
-                    const selected = answers.tamanho.includes(sz);
-                    return (
-                      <motion.button
-                        key={sz}
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: idx * 0.03, type: "spring", stiffness: 300 }}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.85 }}
-                        onClick={() =>
-                          setAnswers((a) => ({
-                            ...a,
-                            tamanho: toggleArray(a.tamanho, sz),
-                          }))
-                        }
-                        className={`h-12 w-12 rounded-full border-2 flex items-center justify-center text-sm font-semibold transition-all ${
-                          selected
-                            ? "border-primary bg-primary text-primary-foreground shadow-md"
-                            : "border-border bg-card text-foreground hover:border-primary/40"
-                        }`}
-                        style={selected ? { boxShadow: "0 0 12px hsl(var(--primary) / 0.4)" } : {}}
-                      >
-                        {sz}
-                      </motion.button>
-                    );
-                  })}
+                  {tamanhoGrupos.map((grupo) => (
+                    <div key={grupo.label}>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">{grupo.label}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {grupo.sizes.map((sz) => {
+                          const selected = answers.tamanho.includes(sz);
+                          return (
+                            <motion.button
+                              key={sz}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.85 }}
+                              onClick={() =>
+                                setAnswers((a) => ({
+                                  ...a,
+                                  tamanho: toggleArray(a.tamanho, sz),
+                                }))
+                              }
+                              className={`h-11 min-w-[44px] px-3 rounded-full border-2 flex items-center justify-center text-xs font-semibold transition-all ${
+                                selected
+                                  ? "border-primary bg-primary text-primary-foreground shadow-md"
+                                  : "border-border bg-card text-foreground hover:border-primary/40"
+                              }`}
+                              style={selected ? { boxShadow: "0 0 12px hsl(var(--primary) / 0.4)" } : {}}
+                            >
+                              {sz}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </motion.div>
               )}
 
@@ -745,11 +766,14 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                     R$ {sliderValue}
                   </motion.div>
                   <p className="text-sm text-muted-foreground">por peça (até)</p>
+                  <p className="text-xs text-muted-foreground/70 text-center">
+                    Com esse valor calcularemos a média do seu pedido
+                  </p>
                   <input
                     type="range"
-                    min={10}
-                    max={500}
-                    step={10}
+                    min={5}
+                    max={150}
+                    step={5}
                     value={sliderValue}
                     onChange={(e) => {
                       const v = Number(e.target.value);
@@ -765,8 +789,8 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
                       [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-background"
                   />
                   <div className="flex justify-between w-full text-xs text-muted-foreground">
-                    <span>R$ 10</span>
-                    <span>R$ 500</span>
+                    <span>R$ 5</span>
+                    <span>R$ 150</span>
                   </div>
                 </motion.div>
               )}
@@ -839,101 +863,137 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
         )}
 
         {/* Results */}
-        {step === TOTAL_STEPS && !analyzing && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-3xl mx-auto overflow-y-auto max-h-[70vh] px-1"
-          >
-            <div className="text-center mb-6">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-3"
-              >
-                <Target className="h-4 w-4" />
-                Encontramos {getResults().filter((r) => r.score >= 30).length} marcas para você
-              </motion.div>
-              <h2 className="text-2xl font-bold text-foreground">Suas Recomendações</h2>
-            </div>
-
-            <div className="grid gap-3">
-              {getResults().map((result, idx) => (
+        {step === TOTAL_STEPS && !analyzing && (() => {
+          const results = getResults();
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-3xl mx-auto overflow-y-auto max-h-[70vh] px-1"
+            >
+              {/* Summary bar */}
+              <div className="text-center mb-4">
                 <motion.div
-                  key={result.brand.slug}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-3"
                 >
-                  <img
-                    src={result.brand.logo}
-                    alt={result.brand.name}
-                    className="h-14 w-14 rounded-xl object-cover border border-border flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-bold text-foreground">{result.brand.name}</h3>
-                      <span className="text-sm font-bold text-primary">{result.score}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden mb-2">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${result.score}%` }}
-                        transition={{ delay: idx * 0.1 + 0.3, duration: 0.6 }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{result.brand.description}</p>
-                    {result.connected && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Orçamento estimado:</span>
-                        <motion.span
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: idx * 0.1 + 0.6 }}
-                          className="text-sm font-bold text-primary"
-                        >
-                          R$ {result.estimatedTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </motion.span>
-                      </div>
-                    )}
-                    {!result.connected && (
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: idx * 0.1 + 0.4 }}
-                        className="mt-2 px-3 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
-                      >
-                        Solicitar conexão
-                      </motion.button>
-                    )}
+                  <Target className="h-4 w-4" />
+                  {results.length > 0
+                    ? `${results.length} marca${results.length > 1 ? "s" : ""} atendem sua busca`
+                    : "Nenhuma marca atendeu todos os critérios"}
+                </motion.div>
+                <h2 className="text-2xl font-bold text-foreground">
+                  {results.length > 0 ? "Suas Recomendações" : "Tente ajustar seus filtros"}
+                </h2>
+              </div>
+
+              {/* Summary stats */}
+              {results.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="grid grid-cols-3 gap-3 mb-4"
+                >
+                  <div className="bg-card border border-border rounded-xl p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Qtd. desejada</p>
+                    <p className="text-lg font-bold text-foreground">{answers.quantidade}</p>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Valor por peça (até)</p>
+                    <p className="text-lg font-bold text-primary">R$ {sliderValue}</p>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Orçamento estimado</p>
+                    <p className="text-lg font-bold text-foreground">
+                      R$ {(sliderValue * answers.quantidade).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </p>
                   </div>
                 </motion.div>
-              ))}
-            </div>
+              )}
 
-            <div className="flex justify-center gap-3 mt-6 pb-4">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={reset}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-colors"
-              >
-                <RotateCcw className="h-4 w-4" /> Refazer
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => { reset(); onClose(); }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                <ShoppingBag className="h-4 w-4" /> Ver todas as marcas
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
+              <div className="grid gap-3">
+                {results.map((result, idx) => (
+                  <motion.div
+                    key={result.brand.slug}
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="bg-card border border-border rounded-2xl p-4 flex items-start gap-4"
+                  >
+                    <img
+                      src={result.brand.logo}
+                      alt={result.brand.name}
+                      className="h-14 w-14 rounded-xl object-cover border border-border flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-bold text-foreground">{result.brand.name}</h3>
+                        <span className="text-xs text-muted-foreground">{result.matchedCount} peças encontradas</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{result.brand.description}</p>
+
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="bg-muted/50 rounded-lg py-1.5 px-2">
+                          <p className="text-[10px] text-muted-foreground">Preço mín.</p>
+                          <p className="text-xs font-bold text-foreground">R$ {result.minPrice.toFixed(2)}</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg py-1.5 px-2">
+                          <p className="text-[10px] text-muted-foreground">Preço médio</p>
+                          <p className="text-xs font-bold text-primary">R$ {result.avgPrice.toFixed(2)}</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg py-1.5 px-2">
+                          <p className="text-[10px] text-muted-foreground">Total estimado</p>
+                          <p className="text-xs font-bold text-foreground">
+                            R$ {result.estimatedTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      </div>
+
+                      {result.connected ? (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[10px] font-medium">
+                            <Check className="h-3 w-3" /> Conectado
+                          </span>
+                        </div>
+                      ) : (
+                        <motion.button
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: idx * 0.1 + 0.4 }}
+                          className="mt-2 px-3 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                        >
+                          Solicitar conexão
+                        </motion.button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="flex justify-center gap-3 mt-6 pb-4">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={reset}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-colors"
+                >
+                  <RotateCcw className="h-4 w-4" /> Refazer
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { reset(); onClose(); }}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <ShoppingBag className="h-4 w-4" /> Ver todas as marcas
+                </motion.button>
+              </div>
+            </motion.div>
+          );
+        })()}
       </div>
 
       {/* Navigation */}
@@ -945,19 +1005,32 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
           >
             <ArrowLeft className="h-4 w-4" /> Voltar
           </button>
-          <motion.button
-            whileHover={{ scale: canProceed() ? 1.03 : 1 }}
-            whileTap={{ scale: canProceed() ? 0.97 : 1 }}
-            onClick={goNext}
-            disabled={!canProceed()}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              canProceed()
-                ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-            }`}
-          >
-            {step === 9 ? "Ver resultados" : "Próximo"} <ArrowRight className="h-4 w-4" />
-          </motion.button>
+          <div className="flex items-center gap-2">
+            {shakeNext && (
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+                className="text-xs text-destructive flex items-center gap-1"
+              >
+                <AlertCircle className="h-3.5 w-3.5" /> Selecione uma opção
+              </motion.span>
+            )}
+            <motion.button
+              animate={shakeNext ? { x: [0, -6, 6, -6, 6, 0] } : {}}
+              transition={{ duration: 0.4 }}
+              whileHover={{ scale: canProceed() ? 1.03 : 1 }}
+              whileTap={{ scale: canProceed() ? 0.97 : 1 }}
+              onClick={goNext}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                canProceed()
+                  ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {step === 9 ? "Ver resultados" : "Próximo"} <ArrowRight className="h-4 w-4" />
+            </motion.button>
+          </div>
         </div>
       )}
     </motion.div>
