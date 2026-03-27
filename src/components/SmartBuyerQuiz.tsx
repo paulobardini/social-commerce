@@ -4,9 +4,22 @@ import {
   Baby, User, Users, Shirt, Scissors, Sun, Snowflake, CloudSun,
   Sparkles, X, ArrowLeft, ArrowRight, RotateCcw, ShoppingBag,
   Heart, Zap, Crown, Star, Package, ChevronRight, Minus, Plus,
-  Target, Search, TrendingUp, Check, AlertCircle
+  Target, Search, TrendingUp, Check, AlertCircle, FileText, DollarSign
 } from "lucide-react";
 import { brands as allBrands } from "@/data/mockProducts";
+
+interface MockResult {
+  brandSlug: string;
+  brandName: string;
+  brandLogo: string;
+  brandDescription: string;
+  connected: boolean;
+  matchedCount: number;
+  avgPrice: number;
+  minPrice: number;
+  estimatedTotal: number;
+  products: { name: string; category: string; price: number; qty: number }[];
+}
 
 /* ─── types ─── */
 interface QuizAnswers {
