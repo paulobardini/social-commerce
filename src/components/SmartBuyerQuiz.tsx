@@ -5,9 +5,11 @@ import {
   Baby, User, Users, Shirt, Scissors, Sun, Snowflake, CloudSun,
   Sparkles, X, ArrowLeft, ArrowRight, RotateCcw, ShoppingBag,
   Heart, Zap, Crown, Star, Package, ChevronRight, Minus, Plus,
-  Target, Search, TrendingUp, Check, AlertCircle, FileText, DollarSign
+  Target, Search, TrendingUp, Check, AlertCircle, FileText, DollarSign, ShoppingCart
 } from "lucide-react";
 import { brands as allBrands } from "@/data/mockProducts";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 interface MockResult {
   brandSlug: string;
