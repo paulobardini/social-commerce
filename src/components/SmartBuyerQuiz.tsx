@@ -263,54 +263,105 @@ export const SmartBuyerQuiz = ({ open, onClose }: SmartBuyerQuizProps) => {
   };
 
   // Matching logic — only show brands that truly match ALL criteria
-  const getResults = () => {
-    return allBrands
-      .map((brand) => {
-        const products = brand.products;
+  const getResults = (): MockResult[] => {
+    const qty = answers.quantidade;
+    const perBrand = Math.ceil(qty / 6);
+    const brandData = allBrands.slice(0, 6);
 
-        // Filter products matching ALL answers
-        const matched = products.filter((p) => {
-          // Gender
-          if (answers.genero.length > 0) {
-            if (!answers.genero.includes(p.gender) && p.gender !== "Unissex") return false;
-          }
-          // Category
-          if (answers.categoria.length > 0) {
-            if (!answers.categoria.includes(p.category)) return false;
-          }
-          // Price
-          if (p.price > sliderValue) return false;
-          return true;
-        });
-
-        if (matched.length === 0) return null;
-
-        const connected = brand.connections > 10;
-        const avgPrice = matched.reduce((s, p) => s + p.price, 0) / matched.length;
-        const minPrice = Math.min(...matched.map((p) => p.price));
-        const totalPecas = Math.min(matched.length * 5, answers.quantidade);
-
-        return {
-          brand,
-          matchedCount: matched.length,
-          connected,
-          avgPrice,
-          minPrice,
-          totalPecas,
-          estimatedTotal: avgPrice * answers.quantidade,
-          proportionLabel: `${totalPecas} de ${answers.quantidade} peças`,
-        };
-      })
-      .filter(Boolean) as {
-        brand: typeof allBrands[0];
-        matchedCount: number;
-        connected: boolean;
-        avgPrice: number;
-        minPrice: number;
-        totalPecas: number;
-        estimatedTotal: number;
-        proportionLabel: string;
-      }[];
+    return [
+      // 3 connected
+      {
+        brandSlug: brandData[0]?.slug || "brandili",
+        brandName: brandData[0]?.name || "Brandili",
+        brandLogo: brandData[0]?.logo || "",
+        brandDescription: brandData[0]?.description || "",
+        connected: true,
+        matchedCount: 45,
+        avgPrice: Math.min(sliderValue * 0.75, 38.9),
+        minPrice: Math.min(sliderValue * 0.4, 19.9),
+        estimatedTotal: Math.min(sliderValue * 0.75, 38.9) * perBrand,
+        products: [
+          { name: "Camiseta Meia Malha", category: "Camiseta", price: 29.9, qty: Math.ceil(perBrand * 0.3) },
+          { name: "Conjunto Moletom", category: "Conjunto", price: 49.9, qty: Math.ceil(perBrand * 0.25) },
+          { name: "Calça Jogging", category: "Calça", price: 39.9, qty: Math.ceil(perBrand * 0.2) },
+          { name: "Blusão Felpado", category: "Blusão", price: 44.9, qty: Math.ceil(perBrand * 0.15) },
+          { name: "Bermuda Sarja", category: "Bermuda", price: 34.9, qty: Math.ceil(perBrand * 0.1) },
+        ],
+      },
+      {
+        brandSlug: brandData[1]?.slug || "kyly",
+        brandName: brandData[1]?.name || "Kyly",
+        brandLogo: brandData[1]?.logo || "",
+        brandDescription: brandData[1]?.description || "",
+        connected: true,
+        matchedCount: 38,
+        avgPrice: Math.min(sliderValue * 0.8, 42.5),
+        minPrice: Math.min(sliderValue * 0.35, 22.9),
+        estimatedTotal: Math.min(sliderValue * 0.8, 42.5) * perBrand,
+        products: [
+          { name: "Vestido Florido", category: "Vestido", price: 45.9, qty: Math.ceil(perBrand * 0.3) },
+          { name: "Legging Cotton", category: "Legging", price: 24.9, qty: Math.ceil(perBrand * 0.25) },
+          { name: "Blusa Babado", category: "Blusa", price: 35.9, qty: Math.ceil(perBrand * 0.2) },
+          { name: "Conjunto Malha", category: "Conjunto", price: 49.9, qty: Math.ceil(perBrand * 0.15) },
+          { name: "Jaqueta Bomber", category: "Jaqueta", price: 59.9, qty: Math.ceil(perBrand * 0.1) },
+        ],
+      },
+      {
+        brandSlug: brandData[2]?.slug || "hering",
+        brandName: brandData[2]?.name || "Hering",
+        brandLogo: brandData[2]?.logo || "",
+        brandDescription: brandData[2]?.description || "",
+        connected: true,
+        matchedCount: 52,
+        avgPrice: Math.min(sliderValue * 0.85, 45.0),
+        minPrice: Math.min(sliderValue * 0.45, 25.9),
+        estimatedTotal: Math.min(sliderValue * 0.85, 45.0) * perBrand,
+        products: [
+          { name: "Camiseta Básica", category: "Camiseta", price: 34.9, qty: Math.ceil(perBrand * 0.35) },
+          { name: "Polo Piquet", category: "Polo", price: 49.9, qty: Math.ceil(perBrand * 0.2) },
+          { name: "Calça Chino", category: "Calça", price: 59.9, qty: Math.ceil(perBrand * 0.2) },
+          { name: "Bermuda Sarja", category: "Bermuda", price: 44.9, qty: Math.ceil(perBrand * 0.15) },
+          { name: "Moletom Canguru", category: "Blusão", price: 54.9, qty: Math.ceil(perBrand * 0.1) },
+        ],
+      },
+      // 3 not connected
+      {
+        brandSlug: brandData[3]?.slug || "malwee",
+        brandName: brandData[3]?.name || "Malwee",
+        brandLogo: brandData[3]?.logo || "",
+        brandDescription: brandData[3]?.description || "",
+        connected: false,
+        matchedCount: 30,
+        avgPrice: Math.min(sliderValue * 0.7, 35.0),
+        minPrice: Math.min(sliderValue * 0.3, 18.9),
+        estimatedTotal: Math.min(sliderValue * 0.7, 35.0) * perBrand,
+        products: [],
+      },
+      {
+        brandSlug: brandData[4]?.slug || "lunender",
+        brandName: brandData[4]?.name || "Lunender",
+        brandLogo: brandData[4]?.logo || "",
+        brandDescription: brandData[4]?.description || "",
+        connected: false,
+        matchedCount: 25,
+        avgPrice: Math.min(sliderValue * 0.9, 48.0),
+        minPrice: Math.min(sliderValue * 0.5, 28.9),
+        estimatedTotal: Math.min(sliderValue * 0.9, 48.0) * perBrand,
+        products: [],
+      },
+      {
+        brandSlug: brandData[5]?.slug || "marisol",
+        brandName: brandData[5]?.name || "Marisol",
+        brandLogo: brandData[5]?.logo || "",
+        brandDescription: brandData[5]?.description || "",
+        connected: false,
+        matchedCount: 28,
+        avgPrice: Math.min(sliderValue * 0.65, 32.0),
+        minPrice: Math.min(sliderValue * 0.28, 15.9),
+        estimatedTotal: Math.min(sliderValue * 0.65, 32.0) * perBrand,
+        products: [],
+      },
+    ];
   };
 
   const variants = {
