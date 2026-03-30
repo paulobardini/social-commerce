@@ -65,6 +65,14 @@ const marcasMock = [
   { slug: "marisol", name: "Marisol", logo: brandMarisol, category: "Infantil" },
   { slug: "elian", name: "Elian", logo: brandElian, category: "Feminino" },
   { slug: "coloritta", name: "Colorittá", logo: brandColoritta, category: "Infantil" },
+  { slug: "hering-kids", name: "Hering Kids", logo: brandHering, category: "Infantil" },
+  { slug: "malwee-kids", name: "Malwee Kids", logo: brandMalwee, category: "Infantil" },
+  { slug: "lunender-plus", name: "Lunender Plus", logo: brandLunender, category: "Plus Size" },
+  { slug: "hering-intimates", name: "Hering Intimates", logo: brandHering, category: "Íntima" },
+  { slug: "malwee-liberta", name: "Malwee Liberta", logo: brandMalwee, category: "Feminino" },
+  { slug: "kyly-fitness", name: "Kyly Fitness", logo: brandKyly, category: "Fitness" },
+  { slug: "marisol-praia", name: "Marisol Praia", logo: brandMarisol, category: "Moda Praia" },
+  { slug: "elian-premium", name: "Elian Premium", logo: brandElian, category: "Premium" },
 ];
 
 const investFaixas = [
@@ -148,9 +156,13 @@ const Onboarding = () => {
     }
   }, [step]);
 
-  // Match brands — show ALL that match any interest or known brand
+  // Match brands — show ALL that match any interest or known brand, minimum 6
   const matchedBrands = useMemo(() => {
-    return marcasMock.filter((b) => interesses.includes(b.category) || marcasConhecidas.includes(b.slug));
+    const matched = marcasMock.filter((b) => interesses.includes(b.category) || marcasConhecidas.includes(b.slug));
+    if (matched.length >= 6) return matched;
+    // Fill with remaining brands to ensure at least 6
+    const remaining = marcasMock.filter((b) => !matched.some((m) => m.slug === b.slug));
+    return [...matched, ...remaining].slice(0, Math.max(matched.length, 8));
   }, [interesses, marcasConhecidas]);
 
   const handleRequestConnection = (brandSlug: string) => {
@@ -587,12 +599,12 @@ const Onboarding = () => {
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 + i * 0.08 }}
-                      className={`relative p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors ${
+                      className={`relative p-4 pt-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors overflow-visible ${
                         isConnected ? "border-accent/50 bg-accent/5" : "border-border bg-card hover:border-accent/40"
                       }`}
                     >
                       {isKnown && (
-                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-xs bg-accent text-accent-foreground px-3 py-1 rounded-full font-bold shadow-md whitespace-nowrap">
+                        <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 text-[11px] bg-accent text-accent-foreground px-4 py-1.5 rounded-full font-bold shadow-lg whitespace-nowrap">
                           ⭐ Já conhece
                         </span>
                       )}
