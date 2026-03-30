@@ -43,7 +43,7 @@ interface AuthContextType {
   login: (email: string, password: string) => void;
   signup: (data: { name: string; phone: string; email: string; password: string }) => void;
   logout: () => void;
-  completeOnboarding: (data: { segmento: string; porte: string; interesses: string[] }) => void;
+  completeOnboarding: (data: { segmento: string; porte: string; interesses: string[]; regiao?: string; marcasConhecidas?: string[]; faixaInvestimento?: string }) => void;
   completePJ: (data: Partial<UserProfile>) => void;
   onboardingCompleted: boolean;
 }
