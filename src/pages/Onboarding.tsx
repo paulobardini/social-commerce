@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ArrowRight, Zap, Sparkles, MapPin } from "lucide-react";
+import { Check, ArrowRight, Zap, Sparkles, Link2, AlertTriangle } from "lucide-react";
 import nextilLogo from "@/assets/nextil-logo.png";
+import { CadastroPJModal } from "@/components/CadastroPJModal";
 
 import brandBrandili from "@/assets/brand-brandili.jpg";
 import brandKyly from "@/assets/brand-kyly.jpg";
@@ -89,6 +90,11 @@ const Onboarding = () => {
   const [processingText, setProcessingText] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [shakeNext, setShakeNext] = useState(false);
+  const [showPJModal, setShowPJModal] = useState(false);
+  const [pendingConnectionBrand, setPendingConnectionBrand] = useState<string | null>(null);
+  const [connectedBrands, setConnectedBrands] = useState<string[]>([]);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [connectAllPending, setConnectAllPending] = useState(false);
 
   const { completeOnboarding, user } = useAuth();
   const navigate = useNavigate();
@@ -105,7 +111,7 @@ const Onboarding = () => {
     if (step === 2) return !!porte;
     if (step === 3) return !!regiao;
     if (step === 4) return interesses.length >= 3;
-    if (step === 5) return true; // can skip
+    if (step === 5) return true;
     if (step === 6) return !!faixaInvestimento;
     return true;
   }, [step, segmento, porte, regiao, interesses, faixaInvestimento]);
@@ -142,10 +148,40 @@ const Onboarding = () => {
     }
   }, [step]);
 
-  // Match brands
+  // Match brands — show ALL that match any interest or known brand
   const matchedBrands = useMemo(() => {
     return marcasMock.filter((b) => interesses.includes(b.category) || marcasConhecidas.includes(b.slug));
   }, [interesses, marcasConhecidas]);
+
+  const handleRequestConnection = (brandSlug: string) => {
+    if (user?.pjCompleted) {
+      setConnectedBrands((prev) => [...prev, brandSlug]);
+    } else {
+      setPendingConnectionBrand(brandSlug);
+      setShowPJModal(true);
+    }
+  };
+
+  const handleRequestAllConnections = () => {
+    if (user?.pjCompleted) {
+      const allSlugs = matchedBrands.map((b) => b.slug).filter((s) => !connectedBrands.includes(s));
+      setConnectedBrands((prev) => [...prev, ...allSlugs]);
+    } else {
+      setConnectAllPending(true);
+      setShowPJModal(true);
+    }
+  };
+
+  const handlePJComplete = () => {
+    if (connectAllPending) {
+      const allSlugs = matchedBrands.map((b) => b.slug).filter((s) => !connectedBrands.includes(s));
+      setConnectedBrands((prev) => [...prev, ...allSlugs]);
+      setConnectAllPending(false);
+    } else if (pendingConnectionBrand) {
+      setConnectedBrands((prev) => [...prev, pendingConnectionBrand]);
+      setPendingConnectionBrand(null);
+    }
+  };
 
   const handleFinish = () => {
     completeOnboarding({
@@ -157,6 +193,15 @@ const Onboarding = () => {
       faixaInvestimento,
     });
     navigate("/");
+  };
+
+  const handleTryExit = () => {
+    const uncommitted = matchedBrands.filter((b) => !connectedBrands.includes(b.slug));
+    if (uncommitted.length > 0) {
+      setShowExitConfirm(true);
+    } else {
+      handleFinish();
+    }
   };
 
   const handleSkip = () => {
@@ -211,11 +256,7 @@ const Onboarding = () => {
 
   const renderSegmento = () => (
     <div className="flex-1 flex flex-col items-center pt-8 px-4">
-      <motion.h2
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2"
-      >
+      <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2">
         Como você atua?
       </motion.h2>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="text-muted-foreground text-sm mb-8 text-center">
@@ -230,14 +271,9 @@ const Onboarding = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
-              onClick={() => {
-                setSegmento(s.id);
-                autoAdvance(2);
-              }}
+              onClick={() => { setSegmento(s.id); autoAdvance(2); }}
               className={`relative p-5 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors ${
-                selected
-                  ? "border-accent bg-accent/10 shadow-md"
-                  : "border-border bg-card hover:border-accent/40"
+                selected ? "border-accent bg-accent/10 shadow-md" : "border-border bg-card hover:border-accent/40"
               }`}
             >
               {selected && (
@@ -258,11 +294,7 @@ const Onboarding = () => {
 
   const renderPorte = () => (
     <div className="flex-1 flex flex-col items-center pt-8 px-4">
-      <motion.h2
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2"
-      >
+      <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2">
         Em que momento está seu negócio?
       </motion.h2>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="text-muted-foreground text-sm mb-8 text-center">
@@ -277,14 +309,9 @@ const Onboarding = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
-              onClick={() => {
-                setPorte(p.id);
-                autoAdvance(3);
-              }}
+              onClick={() => { setPorte(p.id); autoAdvance(3); }}
               className={`relative p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors ${
-                selected
-                  ? "border-accent bg-accent/10 shadow-md"
-                  : "border-border bg-card hover:border-accent/40"
+                selected ? "border-accent bg-accent/10 shadow-md" : "border-border bg-card hover:border-accent/40"
               }`}
             >
               {selected && (
@@ -306,11 +333,7 @@ const Onboarding = () => {
 
   const renderRegiao = () => (
     <div className="flex-1 flex flex-col items-center pt-8 px-4">
-      <motion.h2
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2"
-      >
+      <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2">
         De onde você compra?
       </motion.h2>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="text-muted-foreground text-sm mb-8 text-center">
@@ -325,14 +348,9 @@ const Onboarding = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.06 }}
-              onClick={() => {
-                setRegiao(r.id);
-                autoAdvance(4);
-              }}
+              onClick={() => { setRegiao(r.id); autoAdvance(4); }}
               className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-colors ${
-                selected
-                  ? "border-accent bg-accent/10"
-                  : "border-border bg-card hover:border-accent/40"
+                selected ? "border-accent bg-accent/10" : "border-border bg-card hover:border-accent/40"
               }`}
             >
               <span className="text-2xl">{r.emoji}</span>
@@ -356,18 +374,12 @@ const Onboarding = () => {
 
   const renderInteresses = () => (
     <div className="flex-1 flex flex-col items-center pt-8 px-4">
-      <motion.h2
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2"
-      >
+      <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2">
         O que te interessa?
       </motion.h2>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="text-muted-foreground text-sm mb-4 text-center">
         Selecione pelo menos 3 categorias
       </motion.p>
-
-      {/* Progress bar */}
       <div className="w-full max-w-md mb-6">
         <div className="flex items-center gap-2">
           <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
@@ -382,8 +394,6 @@ const Onboarding = () => {
           </span>
         </div>
       </div>
-
-      {/* Chips */}
       <div className="flex flex-wrap justify-center gap-3 max-w-xl">
         {interessesList.map((item, i) => {
           const selected = interesses.includes(item.label);
@@ -400,9 +410,7 @@ const Onboarding = () => {
                 );
               }}
               className={`px-5 py-3 rounded-full border-2 text-sm font-semibold transition-colors ${
-                selected
-                  ? "bg-accent text-accent-foreground border-accent"
-                  : "bg-card border-border text-foreground hover:border-accent/40"
+                selected ? "bg-accent text-accent-foreground border-accent" : "bg-card border-border text-foreground hover:border-accent/40"
               }`}
             >
               <span className="mr-1.5">{item.emoji}</span>
@@ -419,11 +427,7 @@ const Onboarding = () => {
 
   const renderMarcas = () => (
     <div className="flex-1 flex flex-col items-center pt-8 px-4">
-      <motion.h2
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2"
-      >
+      <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2">
         Quais marcas você já conhece?
       </motion.h2>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="text-muted-foreground text-sm mb-8 text-center">
@@ -444,17 +448,11 @@ const Onboarding = () => {
                 )
               }
               className={`relative p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors ${
-                selected
-                  ? "border-accent bg-accent/10 shadow-md"
-                  : "border-border bg-card hover:border-accent/30"
+                selected ? "border-accent bg-accent/10 shadow-md" : "border-border bg-card hover:border-accent/30"
               }`}
             >
               {selected && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent flex items-center justify-center z-10"
-                >
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent flex items-center justify-center z-10">
                   <Check className="h-3 w-3 text-accent-foreground" />
                 </motion.div>
               )}
@@ -473,11 +471,7 @@ const Onboarding = () => {
 
   const renderInvestimento = () => (
     <div className="flex-1 flex flex-col items-center pt-8 px-4">
-      <motion.h2
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2"
-      >
+      <motion.h2 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2">
         Quanto pretende investir por mês?
       </motion.h2>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="text-muted-foreground text-sm mb-8 text-center">
@@ -492,14 +486,9 @@ const Onboarding = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
-              onClick={() => {
-                setFaixaInvestimento(f.id);
-                autoAdvance(7);
-              }}
+              onClick={() => { setFaixaInvestimento(f.id); autoAdvance(7); }}
               className={`relative p-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors ${
-                selected
-                  ? "border-accent bg-accent/10 shadow-md"
-                  : "border-border bg-card hover:border-accent/40"
+                selected ? "border-accent bg-accent/10 shadow-md" : "border-border bg-card hover:border-accent/40"
               }`}
             >
               {selected && (
@@ -519,8 +508,10 @@ const Onboarding = () => {
 
   // ── Step 7: Result ────────────────────────────
 
+  const uncommittedCount = matchedBrands.filter((b) => !connectedBrands.includes(b.slug)).length;
+
   const renderResultado = () => (
-    <div className="flex-1 flex flex-col items-center justify-center px-4">
+    <div className="flex-1 flex flex-col items-center px-4 overflow-hidden">
       <AnimatePresence mode="wait">
         {processing ? (
           <motion.div
@@ -528,7 +519,7 @@ const Onboarding = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-6"
+            className="flex-1 flex flex-col items-center justify-center gap-6"
           >
             <motion.div
               className="w-20 h-20 rounded-full border-4 border-accent/30 border-t-accent"
@@ -549,72 +540,110 @@ const Onboarding = () => {
             key="results"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full max-w-2xl"
+            className="w-full max-w-3xl flex flex-col flex-1 overflow-hidden pt-6"
           >
-            <div className="text-center mb-8">
+            {/* Header */}
+            <div className="text-center mb-6 shrink-0">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", delay: 0.2 }}
-                className="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-bold mb-4"
+                className="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-bold mb-3"
               >
                 <Sparkles className="h-4 w-4" />
-                {matchedBrands.length} marcas encontradas
+                {matchedBrands.length} marcas encontradas para você
               </motion.div>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                 Suas marcas ideais
               </h2>
-              <p className="text-muted-foreground text-sm mt-2">
-                Com base no seu perfil, estas marcas combinam com você
+              <p className="text-muted-foreground text-sm mt-1">
+                Solicite conexão para começar a comprar direto da indústria
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {matchedBrands.map((brand, i) => {
-                const isKnown = marcasConhecidas.includes(brand.slug);
-                return (
-                  <motion.div
-                    key={brand.slug}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.1 }}
-                    className="relative p-4 rounded-2xl border-2 border-border bg-card flex flex-col items-center gap-3 hover:border-accent/40 transition-colors"
-                  >
-                    {isKnown && (
-                      <span className="absolute -top-2 left-2 text-[10px] bg-accent/15 text-accent px-2 py-0.5 rounded-full font-bold">
-                        Já conhece
-                      </span>
-                    )}
-                    <div className="w-14 h-14 rounded-xl overflow-hidden">
-                      <img src={brand.logo} alt={brand.name} className="w-full h-full object-cover" />
-                    </div>
-                    <span className="text-xs font-bold text-foreground text-center">{brand.name}</span>
-                    <span className="text-[10px] text-muted-foreground">{brand.category}</span>
-                    <button className="w-full mt-1 text-[10px] bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent py-1.5 rounded-full font-bold transition-colors">
-                      Solicitar conexão
-                    </button>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {matchedBrands.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                <p className="text-lg font-medium mb-2">Nenhuma marca encontrada com esses critérios</p>
-                <p className="text-sm">Tente ajustar seus interesses para ver mais opções</p>
-              </div>
+            {/* Connect all button */}
+            {uncommittedCount > 0 && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                onClick={handleRequestAllConnections}
+                className="shrink-0 mx-auto mb-5 flex items-center gap-2 px-6 h-11 rounded-full bg-accent text-accent-foreground font-bold text-sm shadow-md hover:shadow-lg transition-all"
+              >
+                <Link2 className="h-4 w-4" />
+                Solicitar conexão com todas ({uncommittedCount})
+              </motion.button>
             )}
 
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              onClick={handleFinish}
-              className="w-full max-w-sm mx-auto flex items-center justify-center gap-2 h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-lg hover:shadow-xl transition-all"
-            >
-              <Zap className="h-5 w-5" />
-              Explorar plataforma
-            </motion.button>
+            {/* Scrollable brand grid */}
+            <div className="flex-1 overflow-y-auto pb-4 min-h-0">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {matchedBrands.map((brand, i) => {
+                  const isKnown = marcasConhecidas.includes(brand.slug);
+                  const isConnected = connectedBrands.includes(brand.slug);
+                  return (
+                    <motion.div
+                      key={brand.slug}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + i * 0.08 }}
+                      className={`relative p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors ${
+                        isConnected ? "border-accent/50 bg-accent/5" : "border-border bg-card hover:border-accent/40"
+                      }`}
+                    >
+                      {isKnown && (
+                        <span className="absolute -top-2 left-2 text-[10px] bg-accent/15 text-accent px-2 py-0.5 rounded-full font-bold">
+                          Já conhece
+                        </span>
+                      )}
+                      {isConnected && (
+                        <span className="absolute -top-2 right-2 text-[10px] bg-green-500/15 text-green-600 px-2 py-0.5 rounded-full font-bold">
+                          ✓ Solicitado
+                        </span>
+                      )}
+                      <div className="w-14 h-14 rounded-xl overflow-hidden">
+                        <img src={brand.logo} alt={brand.name} className="w-full h-full object-cover" />
+                      </div>
+                      <span className="text-xs font-bold text-foreground text-center">{brand.name}</span>
+                      <span className="text-[10px] text-muted-foreground">{brand.category}</span>
+                      {isConnected ? (
+                        <span className="w-full text-center text-[10px] text-green-600 py-1.5 font-bold">
+                          Conexão solicitada
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleRequestConnection(brand.slug)}
+                          className="w-full mt-1 text-[10px] bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent py-1.5 rounded-full font-bold transition-colors"
+                        >
+                          Solicitar conexão
+                        </button>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {matchedBrands.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p className="text-lg font-medium mb-2">Nenhuma marca encontrada com esses critérios</p>
+                  <p className="text-sm">Tente ajustar seus interesses para ver mais opções</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="shrink-0 pt-4 pb-2">
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                onClick={handleTryExit}
+                className="w-full max-w-sm mx-auto flex items-center justify-center gap-2 h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+              >
+                <Zap className="h-5 w-5" />
+                Explorar plataforma
+              </motion.button>
+            </div>
           </motion.div>
         ) : null}
       </AnimatePresence>
@@ -625,7 +654,6 @@ const Onboarding = () => {
 
   const steps = [renderIntro, renderSegmento, renderPorte, renderRegiao, renderInteresses, renderMarcas, renderInvestimento, renderResultado];
 
-  // Determine if current step is multi-select (needs Continue button)
   const isMultiSelectStep = step === 4 || step === 5;
   const showFooter = step > 0 && step < 7;
 
@@ -667,20 +695,17 @@ const Onboarding = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.25 }}
-          className="flex-1 flex flex-col"
+          className="flex-1 flex flex-col overflow-hidden"
         >
           {steps[step]()}
         </motion.div>
       </AnimatePresence>
 
-      {/* Footer — only for multi-select steps */}
+      {/* Footer — multi-select steps */}
       {showFooter && isMultiSelectStep && (
         <div className="px-5 py-5">
           <div className="flex items-center justify-between max-w-2xl mx-auto">
-            <button
-              onClick={() => step > 0 && setStep(step - 1)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <button onClick={() => step > 0 && setStep(step - 1)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               ← Voltar
             </button>
             <motion.button
@@ -688,9 +713,7 @@ const Onboarding = () => {
               animate={shakeNext ? { x: [0, -8, 8, -8, 8, 0] } : {}}
               transition={{ duration: 0.4 }}
               className={`flex items-center gap-2 px-8 h-12 rounded-full font-bold transition-all shadow-lg ${
-                canNext()
-                  ? "bg-primary text-primary-foreground hover:shadow-xl"
-                  : "bg-secondary text-muted-foreground"
+                canNext() ? "bg-primary text-primary-foreground hover:shadow-xl" : "bg-secondary text-muted-foreground"
               }`}
             >
               {step === 5 && marcasConhecidas.length === 0 ? "Pular" : "Continuar"}
@@ -704,15 +727,69 @@ const Onboarding = () => {
       {showFooter && !isMultiSelectStep && (
         <div className="px-5 py-5">
           <div className="max-w-2xl mx-auto">
-            <button
-              onClick={() => step > 0 && setStep(step - 1)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <button onClick={() => step > 0 && setStep(step - 1)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               ← Voltar
             </button>
           </div>
         </div>
       )}
+
+      {/* PJ Modal */}
+      <CadastroPJModal
+        open={showPJModal}
+        onOpenChange={setShowPJModal}
+        onComplete={handlePJComplete}
+      />
+
+      {/* Exit Confirm Overlay */}
+      <AnimatePresence>
+        {showExitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4"
+            onClick={() => setShowExitConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card rounded-2xl border border-border shadow-2xl p-6 max-w-sm w-full"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">Tem certeza?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Você ainda tem {uncommittedCount} marca{uncommittedCount > 1 ? "s" : ""} sem conexão solicitada
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                Solicitar conexão agora garante acesso mais rápido a condições exclusivas e catálogos completos.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowExitConfirm(false)}
+                  className="flex-1 h-10 rounded-xl border border-border text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+                >
+                  Voltar e conectar
+                </button>
+                <button
+                  onClick={() => { setShowExitConfirm(false); handleFinish(); }}
+                  className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  Sair mesmo assim
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
