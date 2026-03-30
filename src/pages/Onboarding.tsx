@@ -156,9 +156,13 @@ const Onboarding = () => {
     }
   }, [step]);
 
-  // Match brands — show ALL that match any interest or known brand
+  // Match brands — show ALL that match any interest or known brand, minimum 6
   const matchedBrands = useMemo(() => {
-    return marcasMock.filter((b) => interesses.includes(b.category) || marcasConhecidas.includes(b.slug));
+    const matched = marcasMock.filter((b) => interesses.includes(b.category) || marcasConhecidas.includes(b.slug));
+    if (matched.length >= 6) return matched;
+    // Fill with remaining brands to ensure at least 6
+    const remaining = marcasMock.filter((b) => !matched.some((m) => m.slug === b.slug));
+    return [...matched, ...remaining].slice(0, Math.max(matched.length, 8));
   }, [interesses, marcasConhecidas]);
 
   const handleRequestConnection = (brandSlug: string) => {
