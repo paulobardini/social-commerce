@@ -18,6 +18,9 @@ export interface UserProfile {
   segmento?: string;
   porte?: string;
   interesses?: string[];
+  regiao?: string;
+  marcasConhecidas?: string[];
+  faixaInvestimento?: string;
   // PJ data (filled later)
   pjCompleted?: boolean;
   cpfCnpj?: string;
