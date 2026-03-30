@@ -65,6 +65,14 @@ const marcasMock = [
   { slug: "marisol", name: "Marisol", logo: brandMarisol, category: "Infantil" },
   { slug: "elian", name: "Elian", logo: brandElian, category: "Feminino" },
   { slug: "coloritta", name: "Colorittá", logo: brandColoritta, category: "Infantil" },
+  { slug: "hering-kids", name: "Hering Kids", logo: brandHering, category: "Infantil" },
+  { slug: "malwee-kids", name: "Malwee Kids", logo: brandMalwee, category: "Infantil" },
+  { slug: "lunender-plus", name: "Lunender Plus", logo: brandLunender, category: "Plus Size" },
+  { slug: "hering-intimates", name: "Hering Intimates", logo: brandHering, category: "Íntima" },
+  { slug: "malwee-liberta", name: "Malwee Liberta", logo: brandMalwee, category: "Feminino" },
+  { slug: "kyly-fitness", name: "Kyly Fitness", logo: brandKyly, category: "Fitness" },
+  { slug: "marisol-praia", name: "Marisol Praia", logo: brandMarisol, category: "Moda Praia" },
+  { slug: "elian-premium", name: "Elian Premium", logo: brandElian, category: "Premium" },
 ];
 
 const investFaixas = [
