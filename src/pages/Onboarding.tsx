@@ -588,8 +588,8 @@ const Onboarding = () => {
             )}
 
             {/* Scrollable brand grid */}
-            <div className="flex-1 overflow-y-auto pb-4 min-h-0">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="flex-1 overflow-y-auto pb-4 pt-4 min-h-0">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {matchedBrands.map((brand, i) => {
                   const isKnown = marcasConhecidas.includes(brand.slug);
                   const isConnected = connectedBrands.includes(brand.slug);
