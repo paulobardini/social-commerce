@@ -599,12 +599,12 @@ const Onboarding = () => {
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 + i * 0.08 }}
-                      className={`relative p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors ${
+                      className={`relative p-4 pt-6 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors overflow-visible ${
                         isConnected ? "border-accent/50 bg-accent/5" : "border-border bg-card hover:border-accent/40"
                       }`}
                     >
                       {isKnown && (
-                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-xs bg-accent text-accent-foreground px-3 py-1 rounded-full font-bold shadow-md whitespace-nowrap">
+                        <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 text-[11px] bg-accent text-accent-foreground px-4 py-1.5 rounded-full font-bold shadow-lg whitespace-nowrap">
                           ⭐ Já conhece
                         </span>
                       )}
