@@ -1,85 +1,108 @@
 
 
-## Comprador Inteligente — Experiencia Interativa e Imersiva
+## Novo Onboarding — Experiencia Disruptiva e Imersiva
 
-### Conceito
+### Conceito Central
 
-Um fluxo fullscreen que simula uma conversa com IA, onde cada step e uma tela inteira com animacoes ricas, ilustracoes/icones grandes e interacoes taticas (arrastar slider, tocar cards que flipam, animacao de particulas ao selecionar). Zero reutilizacao de componentes existentes como FilterSheet, Select ou chips padrao — tudo custom.
+Abandonar completamente o formato "formulario com steps". O onboarding sera uma **jornada narrativa interativa**, como se o usuario estivesse entrando em um universo. Cada tela e uma experiencia sensorial completa — nao um formulario, mas uma **conversa visual com a plataforma**.
 
-### UX por Step
+### Mecanicas Disruptivas
 
-**Step 0 — Boas-vindas (tela de entrada)**
-- Fundo gradiente animado com particulas sutis (CSS puro)
-- Texto grande: "Vou te ajudar a encontrar os melhores produtos"
-- Botao pulsante "Começar" que dispara a transicao
+**1. Entrada cinematica** — Tela preta com o logo Nextil que "explode" em particulas e revela o universo. Texto aparece letra por letra como terminal/hacker: "Bem-vindo ao futuro da moda."
 
-**Step 1 — "O que voce procura?" (Tipo)**
-- Cards grandes com ilustracoes/icones (Baby, Criança, Adulto, Verão, Inverno, Kits, Coleção)
-- Ao clicar, card faz animacao de "flip 3D" e muda de cor confirmando selecao
-- Multi-select permitido
+**2. Swiping cards (tipo Tinder)** — Em vez de clicar em opcoes, o usuario **arrasta cards para os lados**. Direita = gosto, esquerda = nao me interessa. Cada swipe dispara particulas e feedback háptico visual. Usado para segmento e interesses.
 
-**Step 2 — "Para quem é?" (Genero)**
-- 3 cards circulares grandes lado a lado com icones estilizados
-- Hover faz card "levitar" com sombra animada
-- Single select
+**3. Drag-and-drop de bolhas** — Para selecionar interesses, bolhas flutuantes com categorias ficam "boiando" na tela. O usuario arrasta as que quer para um circulo central que "absorve" cada bolha com animacao magnetica.
 
-**Step 3 — "Qual a faixa etaria?" (Idade)**
-- Timeline horizontal interativa com pontos clicaveis (Bebe 0-2, Kids 2-8, Teen 8-14, Adulto)
-- Ao clicar num ponto, linha se preenche ate ele com animacao fluida
-- Condicional: so aparece se Step 1 inclui "Infantil" ou "Adulto"
+**4. Slider gravitacional** — Para faixa de investimento, em vez de um slider linear, o usuario arrasta uma "bola" em um arco gravitacional. Quanto mais alto, maior o investimento. A bola "pesa" mais conforme sobe.
 
-**Step 4 — "Que tipo de peça?" (Categoria)**
-- Grid de cards com icones desenhados (camiseta, calca, vestido, jaqueta, conjunto)
-- Multi-select com animacao de "bounce" ao selecionar
-- Badge animado mostra quantidade selecionada
+**5. Mapa interativo pulsante** — Para regiao, um mapa estilizado do Brasil onde cada regiao pulsa. Ao tocar, a regiao "acende" com glow e as outras escurecem.
 
-**Step 5 — "Qual o estilo?" (Tipo/Estilo)**
-- Cards horizontais com gradientes diferentes por estilo (Basico=neutro, Casual=colorido, Fashion=vibrante, Social=elegante)
-- Multi-select
+**6. Logo wall animado** — Para marcas conhecidas, os logos flutuam em movimento orbital lento. O usuario toca para "capturar" cada marca — ela vai para uma orbita pessoal no centro da tela.
 
-**Step 6 — "Qual estacao?" (Estacao)**
-- 3 cards grandes com background tematico (sol para verao, folhas para inverno, misto para meia-estacao)
-- Animacao de clima sutil no fundo do card selecionado
+**7. Resultado como "desbloqueio"** — A tela final simula um cofre/portal se abrindo, revelando as marcas recomendadas como se fossem premios desbloqueados, com contagem animada.
 
-**Step 7 — "Qual tamanho?" (Tamanho)**
-- Grid circular de tamanhos com efeito ripple ao tocar
-- Multi-select
+### Fluxo (7 telas)
 
-**Step 8 — "Quanto voce quer investir por peca?" (Valor)**
-- Slider customizado grande com thumb animado
-- Valor exibido em tempo real com animacao de contagem (count-up)
-- Ranges: R$0 — R$500
+```text
+Tela 0: CINEMATICA DE ENTRADA
+  - Fundo preto → logo explode em particulas
+  - Texto typewriter: "Bem-vindo ao futuro da moda"
+  - Auto-avanca em 3s ou toque
 
-**Step 9 — "Quantas pecas voce precisa?" (Quantidade)**
-- Input central grande estilizado com botoes +/- animados
-- Sugestoes rapidas como bolhas flutuantes (50, 100, 200, 500)
+Tela 1: SEGMENTO (Swipe Cards)
+  - "Como voce atua?"
+  - 6 cards empilhados (Sacoleira, Lojista, Rede, E-commerce, Atacadista, Criador)
+  - Swipe right = selecionar, aparece proximo card
+  - Card selecionado fica como miniatura no topo
 
-**Transicao Final — "Analisando..."**
-- Tela com animacao de "radar" ou "scanning" por 2-3s
-- Texto animado: "Cruzando dados...", "Encontrando marcas...", "Montando orcamento..."
+Tela 2: PORTE (Cards que "crescem")
+  - "Em que momento esta seu negocio?"
+  - 4 cards lado a lado que comecam pequenos
+  - Ao tocar, o selecionado cresce e ocupa 60% da tela
+  - Os outros encolhem e desfocam
 
-**Resultado**
-- Cards de marca com barra de compatibilidade animada (preenche de 0 a X%)
-- Marca conectada: orcamento detalhado com contagem animada do valor total
-- Marca nao conectada: botao "Solicitar conexao" com pulse
-- Botoes "Refazer" e "Ver todas as marcas"
+Tela 3: REGIAO (Mapa interativo)
+  - "De onde voce compra?"
+  - Mapa estilizado do Brasil dividido em 5 regioes
+  - CSS puro com divs posicionadas ou SVG simples
+  - Toque acende regiao com glow neon
+  - Selecao unica
 
-### Animacoes (framer-motion)
+Tela 4: INTERESSES (Bolhas flutuantes)
+  - "O que te interessa?"
+  - 12 bolhas com emojis flutuando com animacao CSS
+  - Clique faz bolha "voar" para barra de coleta no topo
+  - Minimo 3, barra de progresso preenche
+  - Bolhas restantes se reorganizam
 
-- Cada step entra com `slideInFromRight` e sai com `slideOutToLeft`
-- Texto da IA aparece com efeito typewriter (letra por letra)
-- Barra de progresso custom no topo com glow animado
-- Particulas/confetti sutil ao completar cada step
+Tela 5: MARCAS CONHECIDAS (Logo wall orbital)
+  - "Quais marcas voce ja conhece?"
+  - 8 logos em grid animado com leve flutuacao
+  - Toque faz logo "pulsar" e ganhar borda glow
+  - Pode pular ("Nenhuma por enquanto")
 
-### Dados
+Tela 6: INVESTIMENTO (Faixas visuais)
+  - "Quanto pretende investir por mes?"
+  - 4 blocos que representam faixas (ate 5k, 5-15k, 15-50k, +50k)
+  - Cada bloco tem ilustracao/icone tematico
+  - Selecao faz bloco expandir com animacao
 
-Campos novos na interface Product: `age`, `season`, `type`, `style`. Populados nos mocks existentes.
+Tela 7: RESULTADO — DESBLOQUEIO
+  - Animacao de "processando perfil" (2.5s)
+  - Texto sequencial: "Analisando perfil...", "Encontrando marcas...", "Montando sugestoes..."
+  - "Portal" se abre revelando grid de marcas recomendadas
+  - Cada marca aparece com delay escalonado (stagger)
+  - Botao "Solicitar conexao" em cada marca
+  - Botao final: "Explorar plataforma" → fecha onboarding
+```
+
+### Detalhes Tecnicos
+
+- **Animacoes**: 100% framer-motion (ja instalado) — drag gestures, layout animations, spring physics
+- **Swipe**: `drag="x"` com `onDragEnd` do framer-motion, sem lib extra
+- **Bolhas flutuantes**: CSS `@keyframes` com variacao random de posicao, clique dispara `animate` do framer
+- **Mapa**: SVG inline simples com 5 paths (regioes), interativo via onClick
+- **Particulas**: Divs pequenas com animacao de expansao radial (CSS puro)
+- **Sem libs novas**: Tudo com framer-motion + CSS
+
+### Dados Salvos no AuthContext
+
+Expandir `UserProfile` e `completeOnboarding`:
+```
+regiao?: string;
+marcasConhecidas?: string[];
+faixaInvestimento?: string;
+```
+
+### Match de Marcas (Tela 7)
+
+Cruza `interesses` do usuario com `category` das marcas mock. Prioriza marcas que o usuario marcou como conhecidas. Exibe 4-6 marcas com badge "Voce ja conhece" quando aplicavel.
 
 ### Arquivos
 
 | Arquivo | Acao |
 |---|---|
-| `src/data/mockProducts.ts` | Editar — adicionar `age`, `season`, `type`, `style` ao Product e dados mock |
-| `src/components/SmartBuyerQuiz.tsx` | Novo — componente fullscreen com 10 steps, animacoes custom, logica de matching e resultado |
-| `src/pages/Marcas.tsx` | Editar — botao de entrada estilizado para abrir o quiz |
+| `src/pages/Onboarding.tsx` | Reescrever completo — 8 telas imersivas |
+| `src/contexts/AuthContext.tsx` | Editar — novos campos no perfil e completeOnboarding |
 
