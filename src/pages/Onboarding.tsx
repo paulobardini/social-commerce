@@ -592,8 +592,8 @@ const Onboarding = () => {
                       }`}
                     >
                       {isKnown && (
-                        <span className="absolute -top-2 left-2 text-[10px] bg-accent/15 text-accent px-2 py-0.5 rounded-full font-bold">
-                          Já conhece
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-xs bg-accent text-accent-foreground px-3 py-1 rounded-full font-bold shadow-md whitespace-nowrap">
+                          ⭐ Já conhece
                         </span>
                       )}
                       {isConnected && (
