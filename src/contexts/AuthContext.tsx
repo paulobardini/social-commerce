@@ -18,6 +18,9 @@ export interface UserProfile {
   segmento?: string;
   porte?: string;
   interesses?: string[];
+  regiao?: string;
+  marcasConhecidas?: string[];
+  faixaInvestimento?: string;
   // PJ data (filled later)
   pjCompleted?: boolean;
   cpfCnpj?: string;
@@ -40,7 +43,7 @@ interface AuthContextType {
   login: (email: string, password: string) => void;
   signup: (data: { name: string; phone: string; email: string; password: string }) => void;
   logout: () => void;
-  completeOnboarding: (data: { segmento: string; porte: string; interesses: string[] }) => void;
+  completeOnboarding: (data: { segmento: string; porte: string; interesses: string[]; regiao?: string; marcasConhecidas?: string[]; faixaInvestimento?: string }) => void;
   completePJ: (data: Partial<UserProfile>) => void;
   onboardingCompleted: boolean;
 }
@@ -93,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("nextil_onboarding");
   };
 
-  const completeOnboarding = (data: { segmento: string; porte: string; interesses: string[] }) => {
+  const completeOnboarding = (data: { segmento: string; porte: string; interesses: string[]; regiao?: string; marcasConhecidas?: string[]; faixaInvestimento?: string }) => {
     if (user) {
       // Derive role from segmento
       let role: UserRole = "lojista";
