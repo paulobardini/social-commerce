@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("nextil_onboarding");
   };
 
-  const completeOnboarding = (data: { segmento: string; porte: string; interesses: string[] }) => {
+  const completeOnboarding = (data: { segmento: string; porte: string; interesses: string[]; regiao?: string; marcasConhecidas?: string[]; faixaInvestimento?: string }) => {
     if (user) {
       // Derive role from segmento
       let role: UserRole = "lojista";
