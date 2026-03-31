@@ -66,7 +66,6 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
   } | null>(null);
 
   // Step 1: Commercial profile
-  const [porte, setPorte] = useState("");
   const [faturamentoAnual, setFaturamentoAnual] = useState("");
 
   const handleCnpjSubmit = async () => {
