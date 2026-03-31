@@ -233,7 +233,7 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
               </button>
               <button
                 onClick={handleFinish}
-                disabled={!porte || !faturamentoAnual}
+                disabled={!faturamentoAnual}
                 className="flex items-center gap-2 px-6 h-10 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
               >
                 Cadastre-se
