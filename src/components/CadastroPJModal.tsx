@@ -8,7 +8,6 @@ import {
 import { Check, ArrowRight, Store, BarChart3, Loader2 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-const portes = ["MEI", "Microempresa", "Pequeno porte", "Médio porte", "Grande porte"];
 const faixasFaturamento = [
   "Até R$81.000",
   "R$81.000 - R$360.000",
@@ -67,7 +66,6 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
   } | null>(null);
 
   // Step 1: Commercial profile
-  const [porte, setPorte] = useState("");
   const [faturamentoAnual, setFaturamentoAnual] = useState("");
 
   const handleCnpjSubmit = async () => {
@@ -86,7 +84,6 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
       razaoSocial: dadosReceita.razaoSocial,
       tipoCliente: dadosReceita.tipoCliente,
       endereco: dadosReceita.endereco,
-      porte,
       faturamentoAnual,
     });
     onOpenChange(false);
@@ -221,16 +218,6 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Porte da empresa <span className="text-destructive">*</span></label>
-              <select value={porte} onChange={(e) => setPorte(e.target.value)} className={inputClass} required>
-                <option value="">Selecionar porte</option>
-                {portes.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Faturamento anual <span className="text-destructive">*</span></label>
               <select value={faturamentoAnual} onChange={(e) => setFaturamentoAnual(e.target.value)} className={inputClass} required>
                 <option value="">Selecionar faixa</option>
@@ -246,7 +233,7 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
               </button>
               <button
                 onClick={handleFinish}
-                disabled={!porte || !faturamentoAnual}
+                disabled={!faturamentoAnual}
                 className="flex items-center gap-2 px-6 h-10 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
               >
                 Cadastre-se
