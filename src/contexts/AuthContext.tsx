@@ -21,6 +21,7 @@ export interface UserProfile {
   regiao?: string;
   marcasConhecidas?: string[];
   faixaInvestimento?: string;
+  investimentoMensal?: string;
   // PJ data (filled later)
   pjCompleted?: boolean;
   cpfCnpj?: string;
