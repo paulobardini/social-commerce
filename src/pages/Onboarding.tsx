@@ -393,8 +393,8 @@ const Onboarding = () => {
               </motion.button>
             )}
 
-            <div className="flex-1 overflow-y-auto pb-4 pt-4 min-h-0">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="flex-1 overflow-y-auto pb-4 pt-2 min-h-0">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {matchedBrands.map((brand, i) => {
                   const isConnected = connectedBrands.includes(brand.slug);
                   const nichoLabel = nichos.find((n) => n.id === brand.category)?.label || brand.category;
@@ -404,32 +404,38 @@ const Onboarding = () => {
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 + i * 0.06 }}
-                      className={`relative p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-colors ${
-                        isConnected ? "border-accent/50 bg-accent/5" : "border-border bg-card hover:border-accent/40"
+                      className={`relative rounded-2xl border bg-card overflow-hidden transition-all hover:shadow-md ${
+                        isConnected ? "border-accent/40 ring-1 ring-accent/20" : "border-border"
                       }`}
                     >
-                      {isConnected && (
-                        <span className="absolute -top-2 right-2 text-[10px] bg-green-500/15 text-green-600 px-2 py-0.5 rounded-full font-bold">
-                          ✓ Solicitado
-                        </span>
-                      )}
-                      <div className="w-14 h-14 rounded-xl overflow-hidden">
-                        <img src={brand.logo} alt={brand.name} className="w-full h-full object-cover" />
+                      {/* Logo area */}
+                      <div className="bg-secondary/30 p-6 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden bg-background shadow-sm">
+                          <img src={brand.logo} alt={brand.name} className="w-full h-full object-cover" />
+                        </div>
                       </div>
-                      <span className="text-xs font-bold text-foreground text-center">{brand.name}</span>
-                      <span className="text-[10px] text-muted-foreground">{nichoLabel}</span>
-                      {isConnected ? (
-                        <span className="w-full text-center text-[10px] text-green-600 py-1.5 font-bold">
-                          Conexão solicitada
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleRequestConnection(brand.slug)}
-                          className="w-full mt-1 text-[10px] bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent py-1.5 rounded-full font-bold transition-colors"
-                        >
-                          Solicitar conexão
-                        </button>
-                      )}
+
+                      {/* Info */}
+                      <div className="p-4 text-center space-y-1">
+                        <h3 className="text-sm font-bold text-foreground">{brand.name}</h3>
+                        <p className="text-xs text-muted-foreground">{nichoLabel}</p>
+
+                        {isConnected ? (
+                          <div className="flex items-center justify-center gap-1.5 pt-2">
+                            <div className="w-5 h-5 rounded-full bg-accent/15 flex items-center justify-center">
+                              <Check className="h-3 w-3 text-accent" />
+                            </div>
+                            <span className="text-xs font-semibold text-accent">Conexão solicitada</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleRequestConnection(brand.slug)}
+                            className="w-full mt-2 text-xs bg-accent text-accent-foreground py-2 rounded-xl font-semibold hover:bg-accent/90 transition-colors"
+                          >
+                            Solicitar conexão
+                          </button>
+                        )}
+                      </div>
                     </motion.div>
                   );
                 })}
