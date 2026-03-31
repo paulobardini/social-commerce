@@ -5,10 +5,18 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, ArrowRight, Store, MapPin } from "lucide-react";
+import { Check, ArrowRight, Store, MapPin, BarChart3 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const tiposCliente = ["Sacoleira", "Lojista", "E-commerce", "Importadora", "Atacadista", "Distribuidora"];
+const portes = ["MEI", "Microempresa", "Pequeno porte", "Médio porte", "Grande porte"];
+const faixasInvestimento = [
+  "Até R$5.000",
+  "R$5.000 - R$15.000",
+  "R$15.000 - R$50.000",
+  "R$50.000 - R$100.000",
+  "Acima de R$100.000",
+];
 
 interface CadastroPJModalProps {
   open: boolean;
@@ -20,7 +28,7 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
   const [step, setStep] = useState(0);
   const { completePJ } = useAuth();
 
-  // Step 0: Store data (PJ)
+  // Step 0: Store data
   const [cpfCnpj, setCpfCnpj] = useState("");
   const [nomeFantasia, setNomeFantasia] = useState("");
   const [razaoSocial, setRazaoSocial] = useState("");
@@ -37,6 +45,10 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
   const [rua, setRua] = useState("");
   const [numero, setNumero] = useState("");
 
+  // Step 2: Commercial profile
+  const [porte, setPorte] = useState("");
+  const [investimentoMensal, setInvestimentoMensal] = useState("");
+
   const handleFinish = () => {
     completePJ({
       cpfCnpj,
@@ -44,6 +56,8 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
       razaoSocial,
       tipoCliente,
       endereco: { cep, uf, cidade, bairro, rua, numero },
+      porte,
+      investimentoMensal,
     });
     onOpenChange(false);
     onComplete?.();
@@ -54,13 +68,14 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
   const steps = [
     { icon: Store, label: "Dados da loja" },
     { icon: MapPin, label: "Endereço" },
+    { icon: BarChart3, label: "Perfil comercial" },
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0 gap-0 z-[200]">
         <VisuallyHidden><DialogTitle>Cadastro PJ</DialogTitle></VisuallyHidden>
-        {/* Header with context */}
+        {/* Header */}
         <div className="bg-primary/5 border-b border-border px-6 pt-6 pb-5 rounded-t-lg">
           <h2 className="text-lg font-bold text-foreground text-center">
             Falta pouco para conectar! 🤝
@@ -70,20 +85,20 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
           </p>
 
           {/* Step indicator */}
-          <div className="flex items-center justify-center gap-3 mt-5">
+          <div className="flex items-center justify-center gap-2 mt-5">
             {steps.map((s, i) => {
               const Icon = s.icon;
               const isActive = step === i;
               const isDone = step > i;
               return (
-                <div key={i} className="flex items-center gap-2">
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                <div key={i} className="flex items-center gap-1.5">
+                  <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
                     isActive ? "bg-accent text-accent-foreground" :
                     isDone ? "bg-accent/20 text-accent" :
                     "bg-secondary text-muted-foreground"
                   }`}>
                     {isDone ? <Check className="h-3 w-3" /> : <Icon className="h-3 w-3" />}
-                    {s.label}
+                    <span className="hidden sm:inline">{s.label}</span>
                   </div>
                   {i < steps.length - 1 && (
                     <ArrowRight className="h-3 w-3 text-muted-foreground" />
@@ -205,8 +220,51 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
                 ← Voltar
               </button>
               <button
-                onClick={handleFinish}
+                onClick={() => setStep(2)}
                 disabled={!cep || !bairro || !rua}
+                className="flex items-center gap-2 px-6 h-10 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+              >
+                Próximo
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Commercial profile */}
+        {step === 2 && (
+          <div className="px-6 py-5 space-y-5">
+            <p className="text-xs text-muted-foreground -mt-1 mb-2">
+              Essas informações nos ajudam a oferecer condições comerciais mais adequadas ao seu perfil.
+            </p>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Porte da empresa <span className="text-destructive">*</span></label>
+              <select value={porte} onChange={(e) => setPorte(e.target.value)} className={inputClass} required>
+                <option value="">Selecionar porte</option>
+                {portes.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Investimento mensal médio <span className="text-destructive">*</span></label>
+              <select value={investimentoMensal} onChange={(e) => setInvestimentoMensal(e.target.value)} className={inputClass} required>
+                <option value="">Selecionar faixa</option>
+                {faixasInvestimento.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-border">
+              <button onClick={() => setStep(1)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                ← Voltar
+              </button>
+              <button
+                onClick={handleFinish}
+                disabled={!porte || !investimentoMensal}
                 className="flex items-center gap-2 px-6 h-10 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
               >
                 Cadastre-se
