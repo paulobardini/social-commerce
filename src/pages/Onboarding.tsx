@@ -141,6 +141,7 @@ const Onboarding = () => {
       const allSlugs = matchedBrands.map((b) => b.slug).filter((s) => !connectedBrands.includes(s));
       setConnectedBrands((prev) => [...prev, ...allSlugs]);
       setConnectAllPending(false);
+      setTimeout(() => handleFinish(), 600);
     } else if (pendingConnectionBrand) {
       setConnectedBrands((prev) => [...prev, pendingConnectionBrand]);
       setPendingConnectionBrand(null);
