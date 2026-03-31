@@ -84,7 +84,6 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
       razaoSocial: dadosReceita.razaoSocial,
       tipoCliente: dadosReceita.tipoCliente,
       endereco: dadosReceita.endereco,
-      porte,
       faturamentoAnual,
     });
     onOpenChange(false);
