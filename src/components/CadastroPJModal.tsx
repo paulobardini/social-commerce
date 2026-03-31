@@ -32,8 +32,6 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
   const [cpfCnpj, setCpfCnpj] = useState("");
   const [nomeFantasia, setNomeFantasia] = useState("");
   const [razaoSocial, setRazaoSocial] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [emailPJ, setEmailPJ] = useState("");
   const [tipoCliente, setTipoCliente] = useState("");
   const [termos, setTermos] = useState(false);
 
