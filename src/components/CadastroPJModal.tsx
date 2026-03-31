@@ -8,7 +8,6 @@ import {
 import { Check, ArrowRight, Store, BarChart3, Loader2 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-const portes = ["MEI", "Microempresa", "Pequeno porte", "Médio porte", "Grande porte"];
 const faixasFaturamento = [
   "Até R$81.000",
   "R$81.000 - R$360.000",
