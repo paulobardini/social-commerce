@@ -129,6 +129,7 @@ const Onboarding = () => {
     if (user?.pjCompleted) {
       const allSlugs = matchedBrands.map((b) => b.slug).filter((s) => !connectedBrands.includes(s));
       setConnectedBrands((prev) => [...prev, ...allSlugs]);
+      setTimeout(() => handleFinish(), 600);
     } else {
       setConnectAllPending(true);
       setShowPJModal(true);
