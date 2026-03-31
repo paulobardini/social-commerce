@@ -32,8 +32,6 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
   const [cpfCnpj, setCpfCnpj] = useState("");
   const [nomeFantasia, setNomeFantasia] = useState("");
   const [razaoSocial, setRazaoSocial] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [emailPJ, setEmailPJ] = useState("");
   const [tipoCliente, setTipoCliente] = useState("");
   const [termos, setTermos] = useState(false);
 
@@ -127,16 +125,8 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
                 <label className="block text-sm font-medium text-foreground mb-1">Razão Social <span className="text-destructive">*</span></label>
                 <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Digite aqui" className={inputClass} required />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Telefone <span className="text-destructive">*</span></label>
-                <input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(00) 0 0000-0000" className={inputClass} required />
-              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">E-mail <span className="text-destructive">*</span></label>
-                <input value={emailPJ} onChange={(e) => setEmailPJ(e.target.value)} placeholder="exemplo@mail.com" className={inputClass} required />
-              </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Tipo de Cliente <span className="text-destructive">*</span></label>
                 <select value={tipoCliente} onChange={(e) => setTipoCliente(e.target.value)} className={inputClass} required>
