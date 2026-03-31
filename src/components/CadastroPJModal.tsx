@@ -134,10 +134,6 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">E-mail <span className="text-destructive">*</span></label>
-                <input value={emailPJ} onChange={(e) => setEmailPJ(e.target.value)} placeholder="exemplo@mail.com" className={inputClass} required />
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Tipo de Cliente <span className="text-destructive">*</span></label>
                 <select value={tipoCliente} onChange={(e) => setTipoCliente(e.target.value)} className={inputClass} required>
                   <option value="">Selecionar</option>
