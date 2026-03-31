@@ -218,16 +218,6 @@ export function CadastroPJModal({ open, onOpenChange, onComplete }: CadastroPJMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Porte da empresa <span className="text-destructive">*</span></label>
-              <select value={porte} onChange={(e) => setPorte(e.target.value)} className={inputClass} required>
-                <option value="">Selecionar porte</option>
-                {portes.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Faturamento anual <span className="text-destructive">*</span></label>
               <select value={faturamentoAnual} onChange={(e) => setFaturamentoAnual(e.target.value)} className={inputClass} required>
                 <option value="">Selecionar faixa</option>
