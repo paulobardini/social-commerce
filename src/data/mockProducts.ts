@@ -314,70 +314,30 @@ export const brands: Brand[] = [
 
 export interface Opportunity {
   id: string;
-  title: string;
-  description: string;
+  productId: string;
+  brandSlug: string;
   discountPercent: number;
+  originalPrice: number;
+  promoPrice: number;
   badgeText: string;
   expiresAt: string;
-  productIds: string[];
-  brandSlug: string;
-  highlightColor: string;
-  previewImages: string[];
+  reason: string;
 }
 
 const tomorrow = new Date(Date.now() + 86400000).toISOString();
 const in3days = new Date(Date.now() + 86400000 * 3).toISOString();
 const in7days = new Date(Date.now() + 86400000 * 7).toISOString();
+const in12h = new Date(Date.now() + 43200000).toISOString();
 
 export const mockOpportunities: Opportunity[] = [
-  {
-    id: "opp-1",
-    title: "Queima de Estoque Inverno",
-    description: "Últimas peças da coleção inverno com descontos imperdíveis. Estoque limitado!",
-    discountPercent: 40,
-    badgeText: "QUEIMA",
-    expiresAt: tomorrow,
-    productIds: brands[0].products.slice(0, 8).map((p) => p.id),
-    brandSlug: "brandili",
-    highlightColor: "bg-gradient-to-br from-red-500 to-orange-500",
-    previewImages: [concept1, concept2, concept3],
-  },
-  {
-    id: "opp-2",
-    title: "Lançamento Exclusivo Verão 25",
-    description: "Primeiros lojistas a comprar ganham condições especiais na nova coleção.",
-    discountPercent: 15,
-    badgeText: "EXCLUSIVO",
-    expiresAt: in7days,
-    productIds: brands[2].products.slice(0, 10).map((p) => p.id),
-    brandSlug: "hering",
-    highlightColor: "bg-gradient-to-br from-violet-600 to-indigo-500",
-    previewImages: [concept5, concept6, concept7],
-  },
-  {
-    id: "opp-3",
-    title: "Compre 5 Leve 7",
-    description: "Na compra de 5 peças, ganhe 2 extras. Válido para toda linha kids.",
-    discountPercent: 28,
-    badgeText: "LEVE MAIS",
-    expiresAt: in3days,
-    productIds: brands[1].products.slice(0, 12).map((p) => p.id),
-    brandSlug: "kyly",
-    highlightColor: "bg-gradient-to-br from-emerald-500 to-teal-500",
-    previewImages: [concept3, concept4, concept8],
-  },
-  {
-    id: "opp-4",
-    title: "Desconto Progressivo",
-    description: "10% acima de R$500, 20% acima de R$1000, 30% acima de R$2000.",
-    discountPercent: 30,
-    badgeText: "PROGRESSIVO",
-    expiresAt: in7days,
-    productIds: brands[3].products.slice(0, 10).map((p) => p.id),
-    brandSlug: "malwee",
-    highlightColor: "bg-gradient-to-br from-amber-500 to-yellow-500",
-    previewImages: [concept4, concept2, concept6],
-  },
+  { id: "opp-1", productId: brands[0].products[0].id, brandSlug: "brandili", discountPercent: 40, originalPrice: brands[0].products[0].price, promoPrice: +(brands[0].products[0].price * 0.6).toFixed(2), badgeText: "QUEIMA", expiresAt: in12h, reason: "Última peças do estoque" },
+  { id: "opp-2", productId: brands[0].products[3].id, brandSlug: "brandili", discountPercent: 25, originalPrice: brands[0].products[3].price, promoPrice: +(brands[0].products[3].price * 0.75).toFixed(2), badgeText: "OFERTA", expiresAt: tomorrow, reason: "Preço especial por tempo limitado" },
+  { id: "opp-3", productId: brands[2].products[1].id, brandSlug: "hering", discountPercent: 30, originalPrice: brands[2].products[1].price, promoPrice: +(brands[2].products[1].price * 0.7).toFixed(2), badgeText: "IMPERDÍVEL", expiresAt: in3days, reason: "Encerramento de coleção" },
+  { id: "opp-4", productId: brands[1].products[2].id, brandSlug: "kyly", discountPercent: 35, originalPrice: brands[1].products[2].price, promoPrice: +(brands[1].products[2].price * 0.65).toFixed(2), badgeText: "FLASH", expiresAt: in12h, reason: "Venda relâmpago" },
+  { id: "opp-5", productId: brands[3].products[0].id, brandSlug: "malwee", discountPercent: 20, originalPrice: brands[3].products[0].price, promoPrice: +(brands[3].products[0].price * 0.8).toFixed(2), badgeText: "EXCLUSIVO", expiresAt: in7days, reason: "Exclusivo para primeiros compradores" },
+  { id: "opp-6", productId: brands[4].products[4].id, brandSlug: "lunender", discountPercent: 45, originalPrice: brands[4].products[4].price, promoPrice: +(brands[4].products[4].price * 0.55).toFixed(2), badgeText: "QUEIMA", expiresAt: tomorrow, reason: "Estoque limitado — últimas unidades" },
+  { id: "opp-7", productId: brands[2].products[5].id, brandSlug: "hering", discountPercent: 15, originalPrice: brands[2].products[5].price, promoPrice: +(brands[2].products[5].price * 0.85).toFixed(2), badgeText: "LANÇAMENTO", expiresAt: in7days, reason: "Pré-venda com desconto" },
+  { id: "opp-8", productId: brands[5].products[1].id, brandSlug: "marisol", discountPercent: 50, originalPrice: brands[5].products[1].price, promoPrice: +(brands[5].products[1].price * 0.5).toFixed(2), badgeText: "50% OFF", expiresAt: in3days, reason: "Mega liquidação" },
 ];
 
 export function getBrandBySlug(slug: string): Brand | undefined {
