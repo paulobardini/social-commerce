@@ -102,7 +102,7 @@ export default function Vendedor() {
       case "price-desc": list = [...list].sort((a, b) => b.price - a.price); break;
     }
     return list;
-  }, [searchTerm, selectedBrands, selectedCategories, selectedGenders, selectedSizes, priceRange, sortBy, opportunityProducts]);
+  }, [searchTerm, selectedBrands, selectedCategories, selectedGenders, selectedSizes, priceRange, sortBy]);
 
   const toggleBrand = (slug: string) =>
     setSelectedBrands((prev) => prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]);
