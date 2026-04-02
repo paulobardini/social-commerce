@@ -377,10 +377,9 @@ export default function Vendedor() {
       {/* Modals */}
       {selectedProduct && selectedBrand && (
         <ProductDetailModal
-          open={!!selectedProduct}
-          onOpenChange={(o) => !o && setSelectedProduct(null)}
           product={selectedProduct}
           brand={selectedBrand}
+          onClose={() => setSelectedProduct(null)}
         />
       )}
 
@@ -389,7 +388,6 @@ export default function Vendedor() {
           open={showGrade}
           onOpenChange={setShowGrade}
           product={allProducts[0]}
-          brand={brands[0]}
         />
       )}
     </div>

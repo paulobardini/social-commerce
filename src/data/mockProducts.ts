@@ -312,7 +312,83 @@ export const brands: Brand[] = [
   },
 ];
 
+export interface Opportunity {
+  id: string;
+  title: string;
+  description: string;
+  discountPercent: number;
+  badgeText: string;
+  expiresAt: string;
+  productIds: string[];
+  brandSlug: string;
+  highlightColor: string;
+  previewImages: string[];
+}
+
+const tomorrow = new Date(Date.now() + 86400000).toISOString();
+const in3days = new Date(Date.now() + 86400000 * 3).toISOString();
+const in7days = new Date(Date.now() + 86400000 * 7).toISOString();
+
+export const mockOpportunities: Opportunity[] = [
+  {
+    id: "opp-1",
+    title: "Queima de Estoque Inverno",
+    description: "Últimas peças da coleção inverno com descontos imperdíveis. Estoque limitado!",
+    discountPercent: 40,
+    badgeText: "QUEIMA",
+    expiresAt: tomorrow,
+    productIds: brands[0].products.slice(0, 8).map((p) => p.id),
+    brandSlug: "brandili",
+    highlightColor: "bg-gradient-to-br from-red-500 to-orange-500",
+    previewImages: [concept1, concept2, concept3],
+  },
+  {
+    id: "opp-2",
+    title: "Lançamento Exclusivo Verão 25",
+    description: "Primeiros lojistas a comprar ganham condições especiais na nova coleção.",
+    discountPercent: 15,
+    badgeText: "EXCLUSIVO",
+    expiresAt: in7days,
+    productIds: brands[2].products.slice(0, 10).map((p) => p.id),
+    brandSlug: "hering",
+    highlightColor: "bg-gradient-to-br from-violet-600 to-indigo-500",
+    previewImages: [concept5, concept6, concept7],
+  },
+  {
+    id: "opp-3",
+    title: "Compre 5 Leve 7",
+    description: "Na compra de 5 peças, ganhe 2 extras. Válido para toda linha kids.",
+    discountPercent: 28,
+    badgeText: "LEVE MAIS",
+    expiresAt: in3days,
+    productIds: brands[1].products.slice(0, 12).map((p) => p.id),
+    brandSlug: "kyly",
+    highlightColor: "bg-gradient-to-br from-emerald-500 to-teal-500",
+    previewImages: [concept3, concept4, concept8],
+  },
+  {
+    id: "opp-4",
+    title: "Desconto Progressivo",
+    description: "10% acima de R$500, 20% acima de R$1000, 30% acima de R$2000.",
+    discountPercent: 30,
+    badgeText: "PROGRESSIVO",
+    expiresAt: in7days,
+    productIds: brands[3].products.slice(0, 10).map((p) => p.id),
+    brandSlug: "malwee",
+    highlightColor: "bg-gradient-to-br from-amber-500 to-yellow-500",
+    previewImages: [concept4, concept2, concept6],
+  },
+];
+
 export function getBrandBySlug(slug: string): Brand | undefined {
+  return brands.find((b) => b.slug === slug);
+}
+
+export function getProductById(brandSlug: string, productId: string) {
+  const brand = getBrandBySlug(brandSlug);
+  if (!brand) return undefined;
+  return brand.products.find((p) => p.id === productId);
+}
   return brands.find((b) => b.slug === slug);
 }
 
