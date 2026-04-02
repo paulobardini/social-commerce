@@ -143,10 +143,6 @@ const MarcaDetalhe = () => {
             </motion.div>
           </div>
 
-          {/* Oportunidades da marca */}
-          {mockOpportunities.some(o => o.brandSlug === slug) && (
-            <OpportunitiesSection showConnectionGating />
-          )}
 
           {/* Sub-brand tabs */}
           <div className="flex justify-center py-8 md:py-10">

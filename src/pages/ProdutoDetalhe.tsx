@@ -229,6 +229,11 @@ const ProdutoDetalhe = () => {
             </div>
           </div>
 
+          {/* Oportunidades da marca */}
+          {mockOpportunities.some(o => o.brandSlug === slug) && (
+            <OpportunitiesSection showConnectionGating />
+          )}
+
           {/* Product grid */}
           <div className="px-3 md:px-6 py-4">
             <AnimatePresence mode="wait">
