@@ -15,7 +15,7 @@ import { Slider } from "@/components/ui/slider";
 import { brands, type Product, type Brand, mockOpportunities, type Opportunity } from "@/data/mockProducts";
 import {
   ChevronDown, ChevronRight, LayoutGrid, List, Search, SlidersHorizontal,
-  Plus, Clock, Flame, Zap, Tag, ArrowUpDown, X, ChevronLeft
+  Plus, Clock, Flame, Zap, Tag, ArrowUpDown, X, ChevronLeft, Eye, EyeOff
 } from "lucide-react";
 
 const allProducts = brands.flatMap((b) =>
