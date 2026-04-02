@@ -4,6 +4,7 @@ import {
   User,
   Bell,
   Star,
+  ClipboardList,
   Settings,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -11,6 +12,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 const menuItems = [
   { icon: Home, label: "Página Inicial", path: "/" },
   { icon: Compass, label: "Explorar", path: "/explorar" },
+  { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
   { icon: User, label: "Meu Perfil", path: "/perfil" },
   { icon: Bell, label: "Atualizações", path: "/" },
   { icon: Star, label: "Minhas Marcas", path: "/marcas" },

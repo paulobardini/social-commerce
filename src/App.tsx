@@ -18,6 +18,7 @@ import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Onboarding from "./pages/Onboarding";
+import Vendedor from "./pages/Vendedor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/cadastro" element={<Cadastro />} />
                 <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/vendedor" element={<Vendedor />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
