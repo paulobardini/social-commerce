@@ -74,19 +74,16 @@ export default function Vendedor() {
   const [showGrade, setShowGrade] = useState(false);
   const [mobileFilters, setMobileFilters] = useState(false);
 
-  const opportunityProducts = useMemo(() => {
-    if (!selectedOpportunity) return null;
-    const opp = mockOpportunities.find((o) => o.id === selectedOpportunity);
-    if (!opp) return null;
-    return opp.productIds;
-  }, [selectedOpportunity]);
+  // Resolve opportunity products
+  const oppProducts = useMemo(() => {
+    return mockOpportunities.map((opp) => {
+      const prod = allProducts.find((p) => p.id === opp.productId);
+      return { opp, product: prod };
+    }).filter((x) => x.product);
+  }, []);
 
   const filtered = useMemo(() => {
     let list = allProducts;
-
-    if (opportunityProducts) {
-      list = list.filter((p) => opportunityProducts.includes(p.id));
-    }
 
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
