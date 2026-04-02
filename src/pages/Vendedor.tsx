@@ -226,59 +226,85 @@ export default function Vendedor() {
           </div>
 
           {/* Oportunidades — produto individual com countdown */}
+          {showOpportunities && oppProducts.filter(({ opp }) => !hiddenOpps.includes(opp.id)).length > 0 && (
           <div className="border-b border-border px-4 md:px-6 py-4">
             <div className="flex items-center gap-2 mb-3">
               <Flame className="h-5 w-5 text-destructive" />
               <h2 className="font-semibold text-foreground">Oportunidades</h2>
-              <Badge variant="secondary" className="text-[10px]">{oppProducts.length} ofertas</Badge>
+              <Badge variant="secondary" className="text-[10px]">
+                {oppProducts.filter(({ opp }) => !hiddenOpps.includes(opp.id)).length} ofertas
+              </Badge>
+              <div className="flex-1" />
+              {hiddenOpps.length > 0 && (
+                <button onClick={() => setHiddenOpps([])} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+                  <Eye className="h-3 w-3" /> Mostrar ocultas ({hiddenOpps.length})
+                </button>
+              )}
+              <button onClick={() => setShowOpportunities(false)} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+                <EyeOff className="h-3 w-3" /> Ocultar seção
+              </button>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-              {oppProducts.map(({ opp, product }) => {
+              {oppProducts.filter(({ opp }) => !hiddenOpps.includes(opp.id)).map(({ opp, product }) => {
                 if (!product) return null;
                 const img = product.variants[0]?.images[0];
                 const isUrgent = new Date(opp.expiresAt).getTime() - Date.now() < 86400000;
                 return (
-                  <button
-                    key={opp.id}
-                    onClick={() => setSelectedProduct(product)}
-                    className="flex-shrink-0 w-[160px] group text-left bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-200 relative"
-                  >
-                    {/* Discount badge */}
-                    <div className="absolute top-2 left-2 z-10">
-                      <Badge className={`border-0 text-[10px] font-bold px-1.5 py-0.5 ${isUrgent ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-accent text-accent-foreground"}`}>
-                        -{opp.discountPercent}%
-                      </Badge>
-                    </div>
-                    <div className="absolute top-2 right-2 z-10">
-                      <Badge variant="secondary" className="text-[9px] px-1 py-0 bg-card/80 backdrop-blur-sm">
-                        {opp.badgeText}
-                      </Badge>
-                    </div>
+                  <div key={opp.id} className="flex-shrink-0 w-[160px] relative group/card">
+                    {/* Hide single opp button */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setHiddenOpps((prev) => [...prev, opp.id]); }}
+                      title="Ocultar esta oportunidade"
+                      className="absolute top-2 right-2 z-20 opacity-0 group-hover/card:opacity-100 transition-opacity bg-card/90 backdrop-blur-sm rounded-full p-1 hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
 
-                    {/* Image */}
-                    <div className="aspect-square relative overflow-hidden bg-muted">
-                      <img src={img} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    </div>
+                    <button
+                      onClick={() => setSelectedProduct(product)}
+                      className="w-full text-left bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-200 relative"
+                    >
+                      <div className="absolute top-2 left-2 z-10">
+                        <Badge className={`border-0 text-[10px] font-bold px-1.5 py-0.5 ${isUrgent ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-accent text-accent-foreground"}`}>
+                          -{opp.discountPercent}%
+                        </Badge>
+                      </div>
 
-                    {/* Info */}
-                    <div className="p-2.5 space-y-1">
-                      <p className="text-[10px] text-muted-foreground">{product.brandName} · Ref. {product.ref}</p>
-                      <p className="text-xs font-medium text-foreground line-clamp-2 leading-tight">{product.name}</p>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-xs line-through text-muted-foreground">R$ {opp.originalPrice.toFixed(2)}</span>
-                        <span className="text-sm font-bold text-destructive">R$ {opp.promoPrice.toFixed(2)}</span>
+                      <div className="aspect-square relative overflow-hidden bg-muted">
+                        <img src={img} alt={product.name} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-300" />
                       </div>
-                      <p className="text-[10px] text-muted-foreground">{opp.reason}</p>
-                      <div className={`flex items-center gap-1 text-[10px] ${isUrgent ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                        <Clock className="h-3 w-3" />
-                        <CountdownTimer expiresAt={opp.expiresAt} />
+
+                      <div className="p-2.5 space-y-1">
+                        <p className="text-[10px] text-muted-foreground">{product.brandName} · Ref. {product.ref}</p>
+                        <p className="text-xs font-medium text-foreground line-clamp-2 leading-tight">{product.name}</p>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xs line-through text-muted-foreground">R$ {opp.originalPrice.toFixed(2)}</span>
+                          <span className="text-sm font-bold text-destructive">R$ {opp.promoPrice.toFixed(2)}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">{opp.reason}</p>
+                        <div className={`flex items-center gap-1 text-[10px] ${isUrgent ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                          <Clock className="h-3 w-3" />
+                          <CountdownTimer expiresAt={opp.expiresAt} />
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  </div>
                 );
               })}
             </div>
           </div>
+          )}
+
+          {/* Show opportunities toggle when hidden */}
+          {!showOpportunities && (
+            <div className="border-b border-border px-4 md:px-6 py-2">
+              <button onClick={() => setShowOpportunities(true)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Eye className="h-4 w-4" />
+                <span>Mostrar oportunidades</span>
+                <Badge variant="secondary" className="text-[10px]">{oppProducts.length}</Badge>
+              </button>
+            </div>
+          )}
 
           {/* Main content area */}
           <div className="flex">
