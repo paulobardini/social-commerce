@@ -120,7 +120,7 @@ export default function Vendedor() {
     setSelectedSizes([]);
     setPriceRange([0, 300]);
     setDiscountFilter(0);
-    setSelectedOpportunity(null);
+    
   };
 
   const hasFilters = selectedBrands.length || selectedCategories.length || selectedGenders.length || selectedSizes.length || priceRange[0] > 0 || priceRange[1] < 300 || selectedOpportunity;
