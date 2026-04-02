@@ -170,6 +170,9 @@ export function OpportunitiesSection({ onSelectProduct, showConnectionGating = f
                     </>
                   ) : (
                     <div className="space-y-2 pt-1">
+                      <div className={`flex items-center gap-1 text-[10px] ${isUrgent ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                        <CountdownTimer expiresAt={opp.expiresAt} />
+                      </div>
                       <p className="text-[10px] text-muted-foreground">Conecte-se à marca para ver os valores</p>
                       <Button
                         size="sm"
