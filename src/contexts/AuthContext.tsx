@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = (email: string, _password: string) => {
-    const mockUser: UserProfile = { name: "Usuário", phone: "(00) 0 0000-0000", email };
+    const mockUser: UserProfile = { name: "Usuário", phone: "(00) 0 0000-0000", email, connectedBrands: DEFAULT_CONNECTED_BRANDS };
     persist(mockUser);
     setOnboardingCompleted(true);
     localStorage.setItem("nextil_onboarding", "true");
