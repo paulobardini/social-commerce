@@ -1,30 +1,73 @@
 
 
-## Adicionar Perfil Comercial ao CadastroPJModal (sem Região)
+## Modo Vendedor + Oportunidades
 
-Como o endereço já captura o estado (UF), o campo região é redundante e será removido.
+### O que sera construido
 
-### Mudanças
+Uma nova pagina `/vendedor` que replica a interface de catalogo B2B da imagem de referencia, com layout sidebar de filtros a esquerda + grid de produtos a direita. Alem disso, adiciona uma secao de **Oportunidades** — promocoes destacadas pela fabrica para chamar atencao do vendedor.
 
-**1. CadastroPJModal.tsx — Novo step 2 "Perfil Comercial"**
-- Steps passam de 2 para 3: Dados da loja → Endereço → Perfil Comercial
-- Novo step com apenas 2 campos:
-  - **Porte**: select (MEI, Microempresa, Pequeno porte, Médio porte, Grande porte)
-  - **Investimento mensal**: select com faixas (Até R$5.000, R$5.000-R$15.000, R$15.000-R$50.000, R$50.000-R$100.000, Acima de R$100.000)
-- Step 1 (Endereço) avança para step 2 em vez de finalizar
-- Step 2 tem "Voltar" e "Cadastre-se"
-- Indicador de steps atualizado com 3 items (ícone BarChart3 para o novo)
+### Estrutura da pagina
 
-**2. AuthContext.tsx**
-- Adicionar `investimentoMensal?: string` ao `UserProfile`
+```text
+┌──────────────────────────────────────────────────┐
+│  NextilHeader (existente)                        │
+├────┬─────────────────────────────────────────────┤
+│    │  Breadcrumb: Orcamentos > Novo Orcamento    │
+│    ├─────────────────────────────────────────────┤
+│    │  🔥 OPORTUNIDADES (banner/carousel)         │
+│    │  Cards promocionais com countdown, % off,   │
+│    │  badge "Oportunidade", destaque visual      │
+│ S  ├──────────┬──────────────────────────────────┤
+│ I  │ FILTROS  │  Toolbar: list/grid, sort, search│
+│ D  │ Lojista  │  "678 produtos"                  │
+│ E  │ Desconto │  ┌────┐ ┌────┐ ┌────┐ ┌────┐    │
+│ B  │ Faixa $  │  │prod│ │prod│ │prod│ │prod│    │
+│ A  │ Marcas   │  └────┘ └────┘ └────┘ └────┘    │
+│ R  │ Categoria│  ┌────┐ ┌────┐ ┌────┐ ┌────┐    │
+│    │ Genero   │  │prod│ │prod│ │prod│ │prod│    │
+│    │ Idade    │  └────┘ └────┘ └────┘ └────┘    │
+│    │ Tamanho  │                                  │
+│    │ Subcat   │                                  │
+└────┴──────────┴──────────────────────────────────┘
+```
 
-**3. handleFinish**
-- Incluir `porte` e `investimentoMensal` no objeto passado para `completePJ`
+### 1. Nova pagina `src/pages/Vendedor.tsx`
+
+- Layout com sidebar de filtros fixa a esquerda (estilo accordion como na imagem)
+- Filtros: Lojista (select), Desconto, Faixa de preco, Marcas (com badge de contagem), Marcas do kit, Categoria, Genero, Idade, Tamanho, Subcategoria
+- Area principal com toolbar (toggle lista/grid, ordenacao A-Z, busca, "Adicionar todos (N)")
+- Grid de produtos 4-5 colunas mostrando: imagem, marca (badge colorido), ref, nome, preco
+- Botao "Montar grade" no topo esquerdo
+- Icones de visualizacao e exportacao no canto superior direito
+- Reutiliza dados de `mockProducts.ts` (todas as marcas juntas)
+
+### 2. Secao Oportunidades
+
+- Dados mock: `mockOpportunities` em `src/data/mockProducts.ts`
+  - Cada oportunidade: `id`, `title`, `description`, `discountPercent`, `badgeText`, `expiresAt`, `products` (subset de Product[]), `brandSlug`, `highlightColor`
+- Tipos de oportunidade: "Queima de estoque", "Lancamento exclusivo", "Compre X leve Y", "Desconto progressivo"
+- UI: Barra horizontal scrollavel no topo da area de produtos, antes do grid
+  - Cards com gradiente chamativo, badge "OPORTUNIDADE", percentual de desconto grande, timer de expiracao, mini preview de 2-3 produtos
+  - Ao clicar, filtra o grid para mostrar apenas produtos daquela oportunidade
+  - Visual que quebra o padrao do restante (cores vibrantes, animacao sutil de pulse no badge)
+
+### 3. Rota e navegacao
+
+- Adicionar rota `/vendedor` em `App.tsx`
+- Adicionar item "Orcamentos" no sidebar (`NextilSidebar.tsx`) com icone `ClipboardList`
+
+### 4. Componentes reutilizados
+
+- `ProductDetailModal` — ao clicar em produto
+- `GradeAbertaModal` — botao "Montar grade"
+- Dados de `brands` e `Product` do `mockProducts.ts`
 
 ### Arquivos
 
-| Arquivo | Ação |
+| Arquivo | Acao |
 |---|---|
-| `src/components/CadastroPJModal.tsx` | Editar — adicionar step 2 com porte e investimento mensal |
-| `src/contexts/AuthContext.tsx` | Editar — adicionar `investimentoMensal` ao UserProfile |
+| `src/pages/Vendedor.tsx` | Criar — pagina completa modo vendedor |
+| `src/data/mockProducts.ts` | Editar — adicionar `mockOpportunities` |
+| `src/App.tsx` | Editar — adicionar rota `/vendedor` |
+| `src/components/NextilSidebar.tsx` | Editar — adicionar link Orcamentos |
 
