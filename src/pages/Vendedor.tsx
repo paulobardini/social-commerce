@@ -224,50 +224,58 @@ export default function Vendedor() {
             <span className="font-medium text-foreground">Novo Orçamento</span>
           </div>
 
-          {/* Oportunidades */}
+          {/* Oportunidades — produto individual com countdown */}
           <div className="border-b border-border px-4 md:px-6 py-4">
             <div className="flex items-center gap-2 mb-3">
-              <Flame className="h-5 w-5 text-orange-500" />
+              <Flame className="h-5 w-5 text-destructive" />
               <h2 className="font-semibold text-foreground">Oportunidades</h2>
-              {selectedOpportunity && (
-                <button onClick={() => setSelectedOpportunity(null)} className="ml-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-                  <X className="h-3 w-3" /> Limpar filtro
-                </button>
-              )}
+              <Badge variant="secondary" className="text-[10px]">{oppProducts.length} ofertas</Badge>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-              {mockOpportunities.map((opp) => (
-                <button
-                  key={opp.id}
-                  onClick={() => setSelectedOpportunity(selectedOpportunity === opp.id ? null : opp.id)}
-                  className={`flex-shrink-0 relative overflow-hidden rounded-xl border-2 transition-all duration-200 w-[260px] ${
-                    selectedOpportunity === opp.id
-                      ? "border-primary shadow-lg scale-[1.02]"
-                      : "border-transparent hover:border-primary/30 hover:shadow-md"
-                  }`}
-                >
-                  <div className={`p-4 text-left ${opp.highlightColor}`}>
-                    <div className="flex items-start justify-between mb-2">
-                      <Badge className="bg-white/20 text-white border-0 text-[10px] font-bold animate-pulse">
+              {oppProducts.map(({ opp, product }) => {
+                if (!product) return null;
+                const img = product.variants[0]?.images[0];
+                const isUrgent = new Date(opp.expiresAt).getTime() - Date.now() < 86400000;
+                return (
+                  <button
+                    key={opp.id}
+                    onClick={() => setSelectedProduct(product)}
+                    className="flex-shrink-0 w-[160px] group text-left bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-200 relative"
+                  >
+                    {/* Discount badge */}
+                    <div className="absolute top-2 left-2 z-10">
+                      <Badge className={`border-0 text-[10px] font-bold px-1.5 py-0.5 ${isUrgent ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-accent text-accent-foreground"}`}>
+                        -{opp.discountPercent}%
+                      </Badge>
+                    </div>
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge variant="secondary" className="text-[9px] px-1 py-0 bg-card/80 backdrop-blur-sm">
                         {opp.badgeText}
                       </Badge>
-                      <span className="text-2xl font-black text-white">
-                        {opp.discountPercent}%
-                      </span>
                     </div>
-                    <h3 className="font-bold text-white text-sm leading-tight mb-1">{opp.title}</h3>
-                    <p className="text-white/80 text-xs mb-3 line-clamp-2">{opp.description}</p>
-                    <div className="flex items-center justify-between">
-                      <CountdownTimer expiresAt={opp.expiresAt} />
-                      <div className="flex -space-x-2">
-                        {opp.previewImages.slice(0, 3).map((img, i) => (
-                          <img key={i} src={img} alt="" className="h-8 w-8 rounded-md border-2 border-white/30 object-cover" />
-                        ))}
+
+                    {/* Image */}
+                    <div className="aspect-square relative overflow-hidden bg-muted">
+                      <img src={img} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+
+                    {/* Info */}
+                    <div className="p-2.5 space-y-1">
+                      <p className="text-[10px] text-muted-foreground">{product.brandName} · Ref. {product.ref}</p>
+                      <p className="text-xs font-medium text-foreground line-clamp-2 leading-tight">{product.name}</p>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-xs line-through text-muted-foreground">R$ {opp.originalPrice.toFixed(2)}</span>
+                        <span className="text-sm font-bold text-destructive">R$ {opp.promoPrice.toFixed(2)}</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{opp.reason}</p>
+                      <div className={`flex items-center gap-1 text-[10px] ${isUrgent ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                        <Clock className="h-3 w-3" />
+                        <CountdownTimer expiresAt={opp.expiresAt} />
                       </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
