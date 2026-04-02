@@ -2,14 +2,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { NextilHeader } from "@/components/NextilHeader";
 import { NextilSidebar } from "@/components/NextilSidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { getBrandBySlug, mockOpportunities } from "@/data/mockProducts";
+import { getBrandBySlug } from "@/data/mockProducts";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link2, Shirt, Heart, MessageCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { CadastroPJModal } from "@/components/CadastroPJModal";
-import { OpportunitiesSection } from "@/components/OpportunitiesSection";
+
 
 const MarcaDetalhe = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -143,10 +143,6 @@ const MarcaDetalhe = () => {
             </motion.div>
           </div>
 
-          {/* Oportunidades da marca */}
-          {mockOpportunities.some(o => o.brandSlug === slug) && (
-            <OpportunitiesSection showConnectionGating />
-          )}
 
           {/* Sub-brand tabs */}
           <div className="flex justify-center py-8 md:py-10">

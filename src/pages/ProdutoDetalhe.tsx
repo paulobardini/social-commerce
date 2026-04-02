@@ -2,7 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { NextilHeader } from "@/components/NextilHeader";
 import { NextilSidebar } from "@/components/NextilSidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { getBrandBySlug, type Product } from "@/data/mockProducts";
+import { getBrandBySlug, mockOpportunities, type Product } from "@/data/mockProducts";
+import { OpportunitiesSection } from "@/components/OpportunitiesSection";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { FilterSheet, defaultFilters, countActiveFilters, type FilterState } from "@/components/FilterSheet";
 import { DiscountModal } from "@/components/DiscountModal";
@@ -227,6 +228,11 @@ const ProdutoDetalhe = () => {
               </div>
             </div>
           </div>
+
+          {/* Oportunidades da marca */}
+          {mockOpportunities.some(o => o.brandSlug === slug) && (
+            <OpportunitiesSection showConnectionGating />
+          )}
 
           {/* Product grid */}
           <div className="px-3 md:px-6 py-4">
