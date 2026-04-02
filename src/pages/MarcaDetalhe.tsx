@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { NextilHeader } from "@/components/NextilHeader";
 import { NextilSidebar } from "@/components/NextilSidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { getBrandBySlug, mockOpportunities } from "@/data/mockProducts";
+import { getBrandBySlug } from "@/data/mockProducts";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link2, Shirt, Heart, MessageCircle, Lock } from "lucide-react";
