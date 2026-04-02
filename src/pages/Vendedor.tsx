@@ -70,6 +70,7 @@ export default function Vendedor() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 300]);
   const [discountFilter, setDiscountFilter] = useState<number>(0);
   
+  const [selectedProduct, setSelectedProduct] = useState<EnrichedProduct | null>(null);
   const [showOpportunities, setShowOpportunities] = useState(true);
   const [hiddenOpps, setHiddenOpps] = useState<string[]>([]);
   const [showGrade, setShowGrade] = useState(false);
