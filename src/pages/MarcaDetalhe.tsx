@@ -9,7 +9,7 @@ import { Link2, Shirt, Heart, MessageCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { CadastroPJModal } from "@/components/CadastroPJModal";
-import { OpportunitiesSection } from "@/components/OpportunitiesSection";
+
 
 const MarcaDetalhe = () => {
   const { slug } = useParams<{ slug: string }>();
