@@ -389,11 +389,3 @@ export function getProductById(brandSlug: string, productId: string) {
   if (!brand) return undefined;
   return brand.products.find((p) => p.id === productId);
 }
-  return brands.find((b) => b.slug === slug);
-}
-
-export function getProductById(brandSlug: string, productId: string) {
-  const brand = getBrandBySlug(brandSlug);
-  if (!brand) return undefined;
-  return brand.products.find((p) => p.id === productId);
-}
