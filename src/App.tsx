@@ -18,6 +18,7 @@ import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Onboarding from "./pages/Onboarding";
+import Vendedor from "./pages/Vendedor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
