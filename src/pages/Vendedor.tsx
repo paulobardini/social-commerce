@@ -123,7 +123,7 @@ export default function Vendedor() {
     
   };
 
-  const hasFilters = selectedBrands.length || selectedCategories.length || selectedGenders.length || selectedSizes.length || priceRange[0] > 0 || priceRange[1] < 300 || selectedOpportunity;
+  const hasFilters = selectedBrands.length || selectedCategories.length || selectedGenders.length || selectedSizes.length || priceRange[0] > 0 || priceRange[1] < 300;
 
   const selectedBrand = selectedProduct ? brands.find((b) => b.slug === selectedProduct.brandSlug) : undefined;
 
