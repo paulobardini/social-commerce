@@ -4,41 +4,52 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   TrendingUp, Target, FileText, CheckSquare, AlertTriangle, Users, 
-  Phone, Calendar, ArrowRight, Clock, Flame, Plus 
+  Phone, Calendar, ArrowRight, Clock, Flame, Plus, MessageCircle, UserX,
+  MapPin, ShoppingBag,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { dashboardKPIs, mockOportunidades, mockTarefas, compromissos, etapaMap, tagColors, tagLabels, type TagCRM } from "@/data/mockCRM";
+import { mockConversas, mockClientes360, mockCompromissos, tipoCompromissoLabels } from "@/data/mockCRM360";
 
 export default function VendedorDashboard() {
   const navigate = useNavigate();
 
-  const oportunidadesQuentes = mockOportunidades.filter(o => o.tags.includes("quente") || o.prioridade === "alta").filter(o => o.etapa !== "ganho" && o.etapa !== "perdido").slice(0, 5);
+  const oportunidadesQuentes = mockOportunidades.filter(o => o.tags.includes("quente") || o.prioridade === "alta").filter(o => o.etapa !== "ganho" && o.etapa !== "perdido").slice(0, 4);
   const tarefasPendentes = mockTarefas.filter(t => t.status !== "concluida").slice(0, 5);
   const tarefasAtrasadas = mockTarefas.filter(t => t.status === "atrasada");
+  const totalNaoLidas = mockConversas.reduce((s, c) => s + c.naoLidas, 0);
+  const clientesSemContato = mockClientes360.filter(c => c.temperaturaComercial === "fria" && (c.status === "em_risco" || c.status === "reativacao" || c.status === "inativo"));
+  const proximosCompromissos = mockCompromissos.filter(c => c.status === "agendado").slice(0, 4);
 
   const kpiCards = [
-    { label: "Oportunidades abertas", value: dashboardKPIs.oportunidadesAbertas, icon: Target, color: "text-blue-600" },
-    { label: "Em negociação", value: dashboardKPIs.emNegociacao, icon: TrendingUp, color: "text-orange-600" },
-    { label: "Orçamentos enviados", value: dashboardKPIs.orcamentosEnviados, icon: FileText, color: "text-purple-600" },
-    { label: "Tarefas pendentes", value: dashboardKPIs.tarefasPendentes, icon: CheckSquare, color: "text-emerald-600" },
-    { label: "Tarefas atrasadas", value: dashboardKPIs.tarefasAtrasadas, icon: AlertTriangle, color: "text-red-600" },
-    { label: "Taxa de conversão", value: `${dashboardKPIs.taxaConversao}%`, icon: TrendingUp, color: "text-green-600" },
+    { label: "Oportunidades abertas", value: dashboardKPIs.oportunidadesAbertas, icon: Target, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Em negociação", value: dashboardKPIs.emNegociacao, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
+    { label: "Orçamentos enviados", value: dashboardKPIs.orcamentosEnviados, icon: FileText, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: "Tarefas pendentes", value: dashboardKPIs.tarefasPendentes, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Tarefas atrasadas", value: dashboardKPIs.tarefasAtrasadas, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
+    { label: "Mensagens não lidas", value: totalNaoLidas, icon: MessageCircle, color: "text-green-600", bg: "bg-green-50" },
   ];
 
-  // Pipeline summary
-  const etapas: Array<{ etapa: string; count: number; valor: number }> = [];
   const activeOps = mockOportunidades.filter(o => o.etapa !== "ganho" && o.etapa !== "perdido");
   const etapaOrder = ["novo_lead", "contato_iniciado", "em_qualificacao", "proposta_construcao", "orcamento_enviado", "em_negociacao"] as const;
-  etapaOrder.forEach(e => {
+  const etapas = etapaOrder.map(e => {
     const ops = activeOps.filter(o => o.etapa === e);
-    if (ops.length > 0) {
-      etapas.push({ etapa: etapaMap[e], count: ops.length, valor: ops.reduce((s, o) => s + o.valorEstimado, 0) });
-    }
-  });
+    return { etapa: etapaMap[e], count: ops.length, valor: ops.reduce((s, o) => s + o.valorEstimado, 0) };
+  }).filter(e => e.count > 0);
+
+  const tipoIcons: Record<string, any> = {
+    ligacao: Phone, reuniao: Calendar, visita: MapPin, follow_up: ArrowRight,
+    retorno_orcamento: Clock, apresentacao: FileText,
+  };
+  const tipoColors: Record<string, string> = {
+    ligacao: "bg-green-100 text-green-600", reuniao: "bg-blue-100 text-blue-600",
+    visita: "bg-purple-100 text-purple-600", follow_up: "bg-orange-100 text-orange-600",
+    retorno_orcamento: "bg-yellow-100 text-yellow-600", apresentacao: "bg-indigo-100 text-indigo-600",
+  };
 
   return (
     <VendedorLayout>
-      <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
+      <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -56,15 +67,19 @@ export default function VendedorDashboard() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {kpiCards.map(kpi => (
-            <Card key={kpi.label} className="border border-border">
+            <Card key={kpi.label} className="border border-border hover:border-accent/30 transition-colors cursor-pointer" onClick={() => {
+              if (kpi.label.includes("Mensagens")) navigate("/vendedor/whatsapp");
+              else if (kpi.label.includes("Tarefa")) navigate("/vendedor/tarefas");
+              else if (kpi.label.includes("Oportunidades") || kpi.label.includes("negociação")) navigate("/vendedor/oportunidades");
+            }}>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
+                <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${kpi.bg}`}>
+                  <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
                 </div>
                 <p className="text-2xl font-bold font-heading text-foreground">{kpi.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{kpi.label}</p>
               </CardContent>
             </Card>
           ))}
@@ -73,7 +88,10 @@ export default function VendedorDashboard() {
         {/* Pipeline value */}
         <Card className="border border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-heading">Valor do pipeline ativo</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-heading">Valor do pipeline ativo</CardTitle>
+              <p className="text-xs text-muted-foreground">Taxa de conversão: <span className="font-semibold text-foreground">{dashboardKPIs.taxaConversao}%</span></p>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-end gap-6 mb-4">
@@ -90,7 +108,6 @@ export default function VendedorDashboard() {
                 <p className="text-xs text-muted-foreground">Ticket médio</p>
               </div>
             </div>
-            {/* Pipeline bar */}
             <div className="flex h-3 rounded-full overflow-hidden bg-muted">
               {etapas.map((e, i) => {
                 const colors = ["bg-slate-400", "bg-blue-400", "bg-purple-400", "bg-yellow-400", "bg-orange-400", "bg-orange-500"];
@@ -112,7 +129,7 @@ export default function VendedorDashboard() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Hot opportunities */}
           <Card className="border border-border">
             <CardHeader className="pb-3">
@@ -130,7 +147,7 @@ export default function VendedorDashboard() {
                 <button
                   key={op.id}
                   onClick={() => navigate(`/vendedor/oportunidades/${op.id}`)}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
+                  className="w-full flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 hover:border-accent/30 transition-all text-left"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground truncate">{op.nome}</p>
@@ -162,6 +179,9 @@ export default function VendedorDashboard() {
                     <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{tarefasAtrasadas.length} atrasadas</Badge>
                   )}
                 </CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/vendedor/tarefas")} className="text-xs">
+                  Ver todas <ArrowRight className="h-3 w-3 ml-1" />
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -181,15 +201,9 @@ export default function VendedorDashboard() {
                   </div>
                   <div className="text-right ml-3 shrink-0">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {t.vencimento}
+                      <Clock className="h-3 w-3" /> {t.vencimento}
                     </div>
-                    <Badge
-                      variant={t.prioridade === "alta" ? "destructive" : "secondary"}
-                      className="text-[10px] mt-1"
-                    >
-                      {t.prioridade}
-                    </Badge>
+                    <Badge variant={t.prioridade === "alta" ? "destructive" : "secondary"} className="text-[10px] mt-1">{t.prioridade}</Badge>
                   </div>
                 </div>
               ))}
@@ -197,35 +211,77 @@ export default function VendedorDashboard() {
           </Card>
         </div>
 
-        {/* Upcoming appointments */}
-        <Card className="border border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-heading flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-blue-500" /> Próximos compromissos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {compromissos.map(c => (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Upcoming appointments */}
+          <Card className="border border-border lg:col-span-2">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-heading flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-500" /> Próximos compromissos
+                </CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/vendedor/agenda")} className="text-xs">
+                  Ver agenda <ArrowRight className="h-3 w-3 ml-1" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {proximosCompromissos.map(c => {
+                  const Icon = tipoIcons[c.tipo] || Calendar;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => c.clienteId && navigate(`/vendedor/360/${c.clienteId}`)}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 hover:border-accent/30 transition-all text-left"
+                    >
+                      <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${tipoColors[c.tipo]}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground truncate">{c.titulo}</p>
+                        <p className="text-xs text-muted-foreground">{c.data} · {c.hora} · {c.duracao}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Clients without contact */}
+          <Card className="border border-border">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-heading flex items-center gap-2">
+                  <UserX className="h-4 w-4 text-red-500" /> Atenção
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {clientesSemContato.map(c => (
                 <button
                   key={c.id}
-                  onClick={() => navigate(`/vendedor/oportunidades/${c.oportunidadeId}`)}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
+                  onClick={() => navigate(`/vendedor/360/${c.id}`)}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
                 >
-                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${
-                    c.tipo === "reuniao" ? "bg-blue-100 text-blue-600" : c.tipo === "ligacao" ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"
-                  }`}>
-                    {c.tipo === "reuniao" ? <Calendar className="h-4 w-4" /> : c.tipo === "ligacao" ? <Phone className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+                  <div className="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-red-600">{c.nomeFantasia[0]}</span>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{c.titulo}</p>
-                    <p className="text-xs text-muted-foreground">{c.data}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{c.nomeFantasia}</p>
+                    <p className="text-[10px] text-muted-foreground">Último: {c.ultimoContato}</p>
                   </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${c.status === "em_risco" ? "bg-red-100 text-red-700 border-red-200" : c.status === "reativacao" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-slate-100 text-slate-500 border-slate-200"}`}>
+                    {c.status === "em_risco" ? "Em risco" : c.status === "reativacao" ? "Reativação" : "Inativo"}
+                  </span>
                 </button>
               ))}
-            </div>
-          </CardContent>
-        </Card>
+              {clientesSemContato.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhum alerta</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </VendedorLayout>
   );

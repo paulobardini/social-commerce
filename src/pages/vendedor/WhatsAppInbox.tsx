@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Search, Filter, MessageCircle, Phone, Send, Paperclip, CheckSquare, Target,
-  Clock, User, ExternalLink, X,
+  Search, MessageCircle, Phone, Send, Paperclip, CheckSquare, Target,
+  Clock, User, ExternalLink, MapPin, ShoppingBag, FileText, Calendar,
 } from "lucide-react";
 import {
   mockConversas, mockMensagens, mockClientes360, type Conversa,
@@ -78,7 +78,7 @@ export default function WhatsAppInbox() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className={`text-sm truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
-                    <span className="text-[10px] text-muted-foreground shrink-0">{conv.ultimaHora}</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0 ml-1">{conv.ultimaHora}</span>
                   </div>
                   <p className={`text-xs truncate mt-0.5 ${conv.naoLidas > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>{conv.ultimaMensagem}</p>
                 </div>
@@ -142,41 +142,54 @@ export default function WhatsAppInbox() {
           </div>
         )}
 
-        {/* Right - Client panel */}
+        {/* Right - Client panel (improved) */}
         {selected && cliente && (
-          <div className="w-[260px] border-l border-border bg-card overflow-y-auto p-4 space-y-4 shrink-0">
-            <div className="text-center">
-              <div className="h-14 w-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
-                <span className="text-xl font-bold text-green-700">{cliente.nomeFantasia[0]}</span>
+          <div className="w-[280px] border-l border-border bg-card overflow-y-auto shrink-0">
+            <div className="p-4 text-center border-b border-border">
+              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl font-bold text-green-700">{cliente.nomeFantasia[0]}</span>
               </div>
               <p className="text-sm font-semibold">{cliente.nomeFantasia}</p>
               <p className="text-[10px] text-muted-foreground">{cliente.documento}</p>
             </div>
 
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center gap-2 text-muted-foreground"><User className="h-3 w-3" /> {cliente.representante}</div>
-              <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-3 w-3" /> {cliente.whatsapp}</div>
-              <div className="flex items-center gap-2 text-muted-foreground">{cliente.cidade}/{cliente.estado}</div>
+            <div className="p-4 space-y-3 border-b border-border">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground"><User className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{cliente.representante}</span></div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground"><Phone className="h-3.5 w-3.5 shrink-0" /> <span>{cliente.whatsapp}</span></div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground"><MapPin className="h-3.5 w-3.5 shrink-0" /> <span>{cliente.cidade}/{cliente.estado}</span></div>
             </div>
 
-            <div className="space-y-1.5 pt-2 border-t border-border">
+            <div className="p-4 space-y-2 border-b border-border">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Comercial</p>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Nicho</span><span className="font-medium capitalize">{cliente.nicho}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Interesse</span><span className="font-medium">{cliente.interessePrincipal}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Oportunidades</span><span className="font-medium">{cliente.oportunidadesAbertas}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Pedidos</span><span className="font-medium">{cliente.pedidosRealizados}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Último contato</span><span className="font-medium">{cliente.ultimoContato}</span></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-muted/50 rounded-lg p-2 text-center">
+                  <p className="text-lg font-bold font-heading text-purple-600">{cliente.oportunidadesAbertas}</p>
+                  <p className="text-[9px] text-muted-foreground">Oportunidades</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-2 text-center">
+                  <p className="text-lg font-bold font-heading text-green-600">{cliente.pedidosRealizados}</p>
+                  <p className="text-[9px] text-muted-foreground">Pedidos</p>
+                </div>
+              </div>
+              <div className="text-xs space-y-1.5 pt-1">
+                <div className="flex justify-between"><span className="text-muted-foreground">Nicho</span><span className="font-medium">{cliente.nicho === "infantil" ? "Infantil" : cliente.nicho === "adulto" ? "Adulto" : cliente.nicho === "fitness" ? "Fitness" : "Multimarcas"}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Interesse</span><span className="font-medium truncate ml-2 max-w-[120px] text-right">{cliente.interessePrincipal}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Último contato</span><span className="font-medium">{cliente.ultimoContato}</span></div>
+              </div>
             </div>
 
-            <div className="space-y-1.5 pt-2 border-t border-border">
-              <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => navigate(`/vendedor/360/${cliente.id}`)}>
-                <ExternalLink className="h-3 w-3 mr-1" /> Abrir Nextil 360
+            <div className="p-4 space-y-1.5">
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start" onClick={() => navigate(`/vendedor/360/${cliente.id}`)}>
+                <ExternalLink className="h-3.5 w-3.5 mr-2" /> Abrir Nextil 360
               </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs">
-                <Target className="h-3 w-3 mr-1" /> Criar oportunidade
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
+                <Target className="h-3.5 w-3.5 mr-2" /> Criar oportunidade
               </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs">
-                <CheckSquare className="h-3 w-3 mr-1" /> Criar tarefa
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
+                <CheckSquare className="h-3.5 w-3.5 mr-2" /> Criar tarefa
+              </Button>
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
+                <Calendar className="h-3.5 w-3.5 mr-2" /> Agendar compromisso
               </Button>
             </div>
           </div>
