@@ -19,6 +19,11 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Onboarding from "./pages/Onboarding";
 import Vendedor from "./pages/Vendedor";
+import VendedorOrcamentos from "./pages/vendedor/VendedorOrcamentos";
+import NovoOrcamento from "./pages/vendedor/NovoOrcamento";
+import GradeEdicao from "./pages/vendedor/GradeEdicao";
+import VendedorCarteira from "./pages/vendedor/VendedorCarteira";
+import OrcamentoViewer from "./pages/vendedor/OrcamentoViewer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,7 +50,13 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/cadastro" element={<Cadastro />} />
                 <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/vendedor" element={<Vendedor />} />
+                <Route path="/vendedor-antigo" element={<Vendedor />} />
+                <Route path="/vendedor" element={<VendedorOrcamentos />} />
+                <Route path="/vendedor/novo-orcamento" element={<NovoOrcamento />} />
+                <Route path="/vendedor/orcamento/:id" element={<NovoOrcamento />} />
+                <Route path="/vendedor/grade" element={<GradeEdicao />} />
+                <Route path="/vendedor/carteira" element={<VendedorCarteira />} />
+                <Route path="/vendedor/orcamento-viewer" element={<OrcamentoViewer />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
