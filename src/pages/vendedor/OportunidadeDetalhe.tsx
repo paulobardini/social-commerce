@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { TagBadge } from "@/components/vendedor/TagBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +51,7 @@ export default function OportunidadeDetalhe() {
   const currentIdx = etapaOrder.indexOf(op.etapa);
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 max-w-[1200px] mx-auto space-y-6">
         <Breadcrumbs items={[
           { label: "Oportunidades", path: "/vendedor/oportunidades" },
@@ -329,6 +328,6 @@ export default function OportunidadeDetalhe() {
           </TabsContent>
         </Tabs>
       </div>
-    </VendedorLayout>
+    </>
   );
 }

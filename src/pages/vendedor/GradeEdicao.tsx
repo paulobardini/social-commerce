@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +34,7 @@ export default function GradeEdicao() {
   const valorMedio = totalPecas > 0 ? valorTotal / totalPecas : 0;
 
   return (
-    <VendedorLayout>
+    <>
       <div className="flex flex-col h-full">
         {/* Breadcrumb bar */}
         <div className="border-b border-border px-6 py-3 flex items-center justify-between shrink-0">
@@ -191,6 +190,6 @@ export default function GradeEdicao() {
           onClose={() => setShowMontarGrade(false)}
         />
       )}
-    </VendedorLayout>
+    </>
   );
 }

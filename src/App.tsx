@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ContentProvider } from "@/contexts/ContentContext";
 import { CommentsProvider } from "@/contexts/CommentsContext";
 import { CartDrawer } from "@/components/CartDrawer";
+import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
 import Explorar from "./pages/Explorar";
 import Perfil from "./pages/Perfil";
@@ -50,6 +51,14 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function LayoutRoute({ children }: { children: React.ReactNode }) {
+  return <AppLayout>{children}</AppLayout>;
+}
+
+function FullHeightRoute({ children }: { children: React.ReactNode }) {
+  return <AppLayout fullHeight>{children}</AppLayout>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -62,46 +71,51 @@ const App = () => (
             <BrowserRouter>
               <CartDrawer />
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/explorar" element={<Explorar />} />
-                <Route path="/perfil" element={<Perfil />} />
-                <Route path="/marcas" element={<Marcas />} />
-                <Route path="/marca/:slug" element={<MarcaDetalhe />} />
-                <Route path="/marca/:slug/produtos" element={<ProdutoDetalhe />} />
-                <Route path="/checkout" element={<Checkout />} />
+                {/* Bare pages (no sidebar/topbar) */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/cadastro" element={<Cadastro />} />
                 <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/vendedor-antigo" element={<Vendedor />} />
-                <Route path="/vendedor" element={<VendedorOrcamentos />} />
-                <Route path="/vendedor/dashboard" element={<VendedorDashboard />} />
-                <Route path="/vendedor/oportunidades" element={<VendedorOportunidades />} />
-                <Route path="/vendedor/oportunidades/nova" element={<VendedorOportunidades />} />
-                <Route path="/vendedor/oportunidades/:id" element={<OportunidadeDetalhe />} />
-                <Route path="/vendedor/novo-orcamento" element={<NovoOrcamento />} />
-                <Route path="/vendedor/orcamento/:id" element={<NovoOrcamento />} />
-                <Route path="/vendedor/grade" element={<GradeEdicao />} />
-                <Route path="/vendedor/carteira-antiga" element={<VendedorCarteira />} />
-                <Route path="/vendedor/orcamento-viewer" element={<OrcamentoViewer />} />
-                <Route path="/vendedor/configuracoes" element={<VendedorConfiguracoes />} />
-                <Route path="/vendedor/clientes" element={<ClientesListing />} />
-                <Route path="/vendedor/clientes/kanban" element={<KanbanClientesPage />} />
-                <Route path="/vendedor/clientes/kanban/config" element={<FunilClientesConfigPage />} />
-                <Route path="/vendedor/clientes/redistribuir" element={<RedistribuicaoPage />} />
-                <Route path="/vendedor/360/:id" element={<Cliente360Page />} />
-                <Route path="/vendedor/whatsapp" element={<WhatsAppInbox />} />
-                <Route path="/vendedor/tarefas" element={<TarefasPage />} />
-                <Route path="/vendedor/agenda" element={<AgendaPage />} />
-                <Route path="/vendedor/carteira" element={<CarteiraPage />} />
-                <Route path="/vendedor/representantes" element={<RepresentantesPage />} />
-                <Route path="/vendedor/representantes/:id" element={<RepresentanteDetalhePage />} />
-                <Route path="/vendedor/segmentacoes" element={<SegmentacoesPage />} />
-                <Route path="/vendedor/dashboard-gerencial" element={<DashboardGerencial />} />
-                <Route path="/vendedor/relatorios" element={<RelatoriosCentral />} />
-                <Route path="/vendedor/relatorios/novo" element={<ReportBuilder />} />
-                <Route path="/vendedor/relatorios/:id" element={<RelatorioViewer />} />
-                <Route path="/vendedor/insights" element={<InsightsPage />} />
-                <Route path="/vendedor/visoes-salvas" element={<VisoesSalvasPage />} />
+
+                {/* Consumer pages */}
+                <Route path="/" element={<LayoutRoute><Index /></LayoutRoute>} />
+                <Route path="/explorar" element={<LayoutRoute><Explorar /></LayoutRoute>} />
+                <Route path="/perfil" element={<LayoutRoute><Perfil /></LayoutRoute>} />
+                <Route path="/marcas" element={<LayoutRoute><Marcas /></LayoutRoute>} />
+                <Route path="/marca/:slug" element={<LayoutRoute><MarcaDetalhe /></LayoutRoute>} />
+                <Route path="/marca/:slug/produtos" element={<LayoutRoute><ProdutoDetalhe /></LayoutRoute>} />
+                <Route path="/checkout" element={<LayoutRoute><Checkout /></LayoutRoute>} />
+                <Route path="/vendedor-antigo" element={<LayoutRoute><Vendedor /></LayoutRoute>} />
+
+                {/* CRM pages */}
+                <Route path="/vendedor" element={<LayoutRoute><VendedorOrcamentos /></LayoutRoute>} />
+                <Route path="/vendedor/dashboard" element={<LayoutRoute><VendedorDashboard /></LayoutRoute>} />
+                <Route path="/vendedor/oportunidades" element={<LayoutRoute><VendedorOportunidades /></LayoutRoute>} />
+                <Route path="/vendedor/oportunidades/nova" element={<LayoutRoute><VendedorOportunidades /></LayoutRoute>} />
+                <Route path="/vendedor/oportunidades/:id" element={<LayoutRoute><OportunidadeDetalhe /></LayoutRoute>} />
+                <Route path="/vendedor/novo-orcamento" element={<LayoutRoute><NovoOrcamento /></LayoutRoute>} />
+                <Route path="/vendedor/orcamento/:id" element={<LayoutRoute><NovoOrcamento /></LayoutRoute>} />
+                <Route path="/vendedor/grade" element={<LayoutRoute><GradeEdicao /></LayoutRoute>} />
+                <Route path="/vendedor/carteira-antiga" element={<LayoutRoute><VendedorCarteira /></LayoutRoute>} />
+                <Route path="/vendedor/orcamento-viewer" element={<LayoutRoute><OrcamentoViewer /></LayoutRoute>} />
+                <Route path="/vendedor/configuracoes" element={<LayoutRoute><VendedorConfiguracoes /></LayoutRoute>} />
+                <Route path="/vendedor/clientes" element={<LayoutRoute><ClientesListing /></LayoutRoute>} />
+                <Route path="/vendedor/clientes/kanban" element={<LayoutRoute><KanbanClientesPage /></LayoutRoute>} />
+                <Route path="/vendedor/clientes/kanban/config" element={<LayoutRoute><FunilClientesConfigPage /></LayoutRoute>} />
+                <Route path="/vendedor/clientes/redistribuir" element={<LayoutRoute><RedistribuicaoPage /></LayoutRoute>} />
+                <Route path="/vendedor/360/:id" element={<LayoutRoute><Cliente360Page /></LayoutRoute>} />
+                <Route path="/vendedor/whatsapp" element={<FullHeightRoute><WhatsAppInbox /></FullHeightRoute>} />
+                <Route path="/vendedor/tarefas" element={<LayoutRoute><TarefasPage /></LayoutRoute>} />
+                <Route path="/vendedor/agenda" element={<LayoutRoute><AgendaPage /></LayoutRoute>} />
+                <Route path="/vendedor/carteira" element={<LayoutRoute><CarteiraPage /></LayoutRoute>} />
+                <Route path="/vendedor/representantes" element={<LayoutRoute><RepresentantesPage /></LayoutRoute>} />
+                <Route path="/vendedor/representantes/:id" element={<LayoutRoute><RepresentanteDetalhePage /></LayoutRoute>} />
+                <Route path="/vendedor/segmentacoes" element={<LayoutRoute><SegmentacoesPage /></LayoutRoute>} />
+                <Route path="/vendedor/dashboard-gerencial" element={<LayoutRoute><DashboardGerencial /></LayoutRoute>} />
+                <Route path="/vendedor/relatorios" element={<LayoutRoute><RelatoriosCentral /></LayoutRoute>} />
+                <Route path="/vendedor/relatorios/novo" element={<LayoutRoute><ReportBuilder /></LayoutRoute>} />
+                <Route path="/vendedor/relatorios/:id" element={<LayoutRoute><RelatorioViewer /></LayoutRoute>} />
+                <Route path="/vendedor/insights" element={<LayoutRoute><InsightsPage /></LayoutRoute>} />
+                <Route path="/vendedor/visoes-salvas" element={<LayoutRoute><VisoesSalvasPage /></LayoutRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

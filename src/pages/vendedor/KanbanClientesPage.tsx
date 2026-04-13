@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +50,7 @@ export default function KanbanClientesPage() {
   const tempIcon = (t: string) => t === "quente" ? "🔥" : t === "morna" ? "🌤" : "❄️";
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-4 h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -181,6 +180,6 @@ export default function KanbanClientesPage() {
           </div>
         </div>
       </div>
-    </VendedorLayout>
+    </>
   );
 }

@@ -1,4 +1,3 @@
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ export default function InsightsPage() {
   const baixas = alertasGerenciais.filter(a => a.severidade === "baixa");
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
         <div className="flex items-center justify-between">
           <div>
@@ -106,7 +105,7 @@ export default function InsightsPage() {
           </Card>
         )}
       </div>
-    </VendedorLayout>
+    </>
   );
 }
 

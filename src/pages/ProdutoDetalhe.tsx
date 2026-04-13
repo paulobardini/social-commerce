@@ -1,7 +1,4 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { NextilHeader } from "@/components/NextilHeader";
-import { NextilSidebar } from "@/components/NextilSidebar";
-import { MobileNav } from "@/components/MobileNav";
 import { getBrandBySlug, mockOpportunities, type Product } from "@/data/mockProducts";
 import { OpportunitiesSection } from "@/components/OpportunitiesSection";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
@@ -148,11 +145,7 @@ const ProdutoDetalhe = () => {
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
   return (
-    <div className="min-h-screen bg-background">
-      <NextilHeader />
-      <div className="flex">
-        <NextilSidebar />
-        <div className={`flex-1 min-w-0 pb-16 md:pb-0 transition-all duration-300 ${sideMode && selectedProduct ? 'mr-[380px]' : ''}`}>
+    <div className={`flex-1 min-w-0 pb-16 md:pb-0 transition-all duration-300 ${sideMode && selectedProduct ? 'mr-[380px]' : ''}`}>
           {/* Compact sticky header */}
           <div className="sticky top-14 md:top-16 z-30 bg-card border-b border-border">
             <div className="px-3 md:px-6 py-2 flex items-center justify-between gap-3">
@@ -358,9 +351,6 @@ const ProdutoDetalhe = () => {
               </motion.div>
             </AnimatePresence>
           </div>
-        </div>
-      </div>
-      <MobileNav />
 
       {/* Product Detail Modal */}
       <AnimatePresence>

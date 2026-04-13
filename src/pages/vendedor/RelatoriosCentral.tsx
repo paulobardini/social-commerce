@@ -1,4 +1,3 @@
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,7 @@ export default function RelatoriosCentral() {
   });
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
@@ -114,7 +113,7 @@ export default function RelatoriosCentral() {
           </TabsContent>
         </Tabs>
       </div>
-    </VendedorLayout>
+    </>
   );
 }
 

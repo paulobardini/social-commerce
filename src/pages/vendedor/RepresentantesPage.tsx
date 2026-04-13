@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +44,7 @@ export default function RepresentantesPage() {
   const totalRisco = mockRepresentantes.reduce((s, r) => s + r.clientesEmRisco, 0);
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -157,6 +156,6 @@ export default function RepresentantesPage() {
           </Table>
         </div>
       </div>
-    </VendedorLayout>
+    </>
   );
 }

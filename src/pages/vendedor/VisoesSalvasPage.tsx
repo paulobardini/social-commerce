@@ -1,4 +1,3 @@
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ export default function VisoesSalvasPage() {
   const { toast } = useToast();
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -73,6 +72,6 @@ export default function VisoesSalvasPage() {
           ))}
         </div>
       </div>
-    </VendedorLayout>
+    </>
   );
 }

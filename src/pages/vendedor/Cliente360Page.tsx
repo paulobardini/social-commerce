@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { TagBadge } from "@/components/vendedor/TagBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,7 +75,7 @@ export default function Cliente360Page() {
   const proximoCompromisso = compromissos.filter(c => c.status === "agendado")[0];
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 max-w-[1200px] mx-auto space-y-5">
         <Breadcrumbs items={[
           { label: "Clientes", path: "/vendedor/clientes" },
@@ -524,6 +523,6 @@ export default function Cliente360Page() {
           </TabsContent>
         </Tabs>
       </div>
-    </VendedorLayout>
+    </>
   );
 }

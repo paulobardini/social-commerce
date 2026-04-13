@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +55,7 @@ export default function RedistribuicaoPage() {
 
   if (confirmed) {
     return (
-      <VendedorLayout>
+      <>
         <div className="p-6">
           <div className="max-w-lg mx-auto text-center py-16 space-y-4">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -71,12 +70,12 @@ export default function RedistribuicaoPage() {
             </div>
           </div>
         </div>
-      </VendedorLayout>
+      </>
     );
   }
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -198,6 +197,6 @@ export default function RedistribuicaoPage() {
           </Card>
         )}
       </div>
-    </VendedorLayout>
+    </>
   );
 }

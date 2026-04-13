@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { KanbanBoard } from "@/components/vendedor/KanbanBoard";
 import { FunilConfigModal } from "@/components/vendedor/FunilConfigModal";
 import { NovaOportunidadeModal } from "@/components/vendedor/NovaOportunidadeModal";
@@ -53,7 +52,7 @@ export default function VendedorOportunidades() {
   const activeFilterCount = filterTags.length + (filterPrioridade ? 1 : 0);
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -201,6 +200,6 @@ export default function VendedorOportunidades() {
 
       <FunilConfigModal open={showFunil} onOpenChange={setShowFunil} />
       <NovaOportunidadeModal open={showNova} onOpenChange={setShowNova} />
-    </VendedorLayout>
+    </>
   );
 }

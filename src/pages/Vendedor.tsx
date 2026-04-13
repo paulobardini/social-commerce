@@ -1,7 +1,4 @@
 import { useState, useMemo } from "react";
-import { NextilHeader } from "@/components/NextilHeader";
-import { NextilSidebar } from "@/components/NextilSidebar";
-import { MobileNav } from "@/components/MobileNav";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { GradeAbertaModal } from "@/components/GradeAbertaModal";
 import { Badge } from "@/components/ui/badge";
@@ -214,11 +211,8 @@ export default function Vendedor() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <NextilHeader />
-      <div className="flex">
-        <NextilSidebar />
-        <main className="flex-1 min-h-[calc(100vh-4rem)]">
+    <>
+    <main className="flex-1 min-h-0">
           {/* Breadcrumb */}
           <div className="border-b border-border px-4 md:px-6 py-3 flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Orçamentos</span>
@@ -402,10 +396,8 @@ export default function Vendedor() {
                 )}
               </div>
             </div>
-          </div>
-        </main>
-      </div>
-      <MobileNav />
+        </div>
+      </main>
 
       {/* Modals */}
       {selectedProduct && selectedBrand && (
@@ -423,7 +415,7 @@ export default function Vendedor() {
           product={allProducts[0]}
         />
       )}
-    </div>
+    </>
   );
 }
 

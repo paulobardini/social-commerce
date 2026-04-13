@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,7 +35,7 @@ export default function VendedorCarteira() {
   );
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -139,6 +138,6 @@ export default function VendedorCarteira() {
           </div>
         )}
       </div>
-    </VendedorLayout>
+    </>
   );
 }

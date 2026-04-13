@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,7 +40,7 @@ export default function AgendaPage() {
   const todayEvents = mockCompromissos.filter(c => c.data === selectedDay);
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -227,6 +226,6 @@ export default function AgendaPage() {
           </div>
         </div>
       </div>
-    </VendedorLayout>
+    </>
   );
 }

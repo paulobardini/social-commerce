@@ -2,9 +2,6 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { NextilHeader } from "@/components/NextilHeader";
-import { NextilSidebar } from "@/components/NextilSidebar";
-import { MobileNav } from "@/components/MobileNav";
 import { useCart, type CartItem } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -174,29 +171,19 @@ const Checkout = () => {
 
   if (cart.items.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
-        <NextilHeader />
-        <div className="flex">
-          <NextilSidebar />
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
-            <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
-            <p className="text-muted-foreground">Sua sacola está vazia</p>
-            <Button variant="outline" onClick={() => navigate("/marcas")}>
-              Explorar marcas
-            </Button>
-          </div>
-        </div>
-        <MobileNav />
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
+        <ShoppingBag className="h-16 w-16 text-muted-foreground/30" />
+        <p className="text-muted-foreground">Sua sacola está vazia</p>
+        <Button variant="outline" onClick={() => navigate("/marcas")}>
+          Explorar marcas
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <NextilHeader />
-      <div className="flex">
-        <NextilSidebar />
-        <div className="flex-1 min-w-0 pb-16 md:pb-0">
+    <div className="flex-1 min-w-0 pb-16 md:pb-0">
+      <div className="max-w-6xl mx-auto px-3 md:px-6 py-4 md:py-6">
           <div className="max-w-6xl mx-auto px-3 md:px-6 py-4 md:py-6">
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
@@ -476,9 +463,7 @@ const Checkout = () => {
               </div>
             </div>
           </div>
-        </div>
       </div>
-      <MobileNav />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +17,7 @@ export default function OrcamentoViewer() {
   const [zoom, setZoom] = useState(100);
 
   return (
-    <VendedorLayout>
+    <>
       <div className="flex flex-col h-full">
         {/* Top bar */}
         <div className="bg-primary text-primary-foreground px-6 py-2.5 flex items-center justify-between shrink-0">
@@ -204,6 +203,6 @@ export default function OrcamentoViewer() {
           </div>
         </div>
       </div>
-    </VendedorLayout>
+    </>
   );
 }
