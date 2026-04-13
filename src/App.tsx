@@ -24,6 +24,10 @@ import NovoOrcamento from "./pages/vendedor/NovoOrcamento";
 import GradeEdicao from "./pages/vendedor/GradeEdicao";
 import VendedorCarteira from "./pages/vendedor/VendedorCarteira";
 import OrcamentoViewer from "./pages/vendedor/OrcamentoViewer";
+import VendedorDashboard from "./pages/vendedor/VendedorDashboard";
+import VendedorOportunidades from "./pages/vendedor/VendedorOportunidades";
+import OportunidadeDetalhe from "./pages/vendedor/OportunidadeDetalhe";
+import VendedorConfiguracoes from "./pages/vendedor/VendedorConfiguracoes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
