@@ -53,19 +53,19 @@ export default function VendedorOportunidades() {
 
   return (
     <>
-      <div className="p-6 space-y-4">
+      <div className="p-4 md:p-6 space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-heading font-bold text-foreground">Oportunidades</h1>
             <p className="text-sm text-muted-foreground">Gerencie seu pipeline comercial</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowFunil(true)}>
-              <Settings className="h-4 w-4 mr-1" /> Configurar funil
+              <Settings className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Configurar funil</span><span className="sm:hidden">Funil</span>
             </Button>
             <Button size="sm" onClick={() => setShowNova(true)}>
-              <Plus className="h-4 w-4 mr-1" /> Nova oportunidade
+              <Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Nova oportunidade</span><span className="sm:hidden">Nova</span>
             </Button>
           </div>
         </div>
