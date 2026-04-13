@@ -1,11 +1,11 @@
 import {
-  Home, Compass, User, Star, ShoppingBag,
+  Home, Compass, User, Star,
   LayoutDashboard, BarChart3, Kanban, Users, Target, Briefcase,
   UserCog, MessageCircle, ClipboardList, CheckSquare, Calendar,
-  Settings, Lightbulb, Tag, ChevronLeft, ChevronRight,
+  Settings, Lightbulb, Tag, ChevronLeft, ChevronRight, ShoppingBag,
+  FileText,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface MenuItem {
@@ -31,20 +31,25 @@ const sections: MenuSection[] = [
     ],
   },
   {
-    title: "CRM",
+    title: "Comercial",
     items: [
-      { icon: LayoutDashboard, label: "Dashboard", path: "/vendedor/dashboard" },
-      { icon: BarChart3, label: "Gerencial", path: "/vendedor/dashboard-gerencial" },
+      { icon: LayoutDashboard, label: "Painel", path: "/vendedor/dashboard" },
       { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
+      { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
       { icon: Users, label: "Clientes", path: "/vendedor/clientes" },
       { icon: Target, label: "Nextil 360", path: "/vendedor/360", highlight: true },
-      { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
-      { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
       { icon: MessageCircle, label: "WhatsApp", path: "/vendedor/whatsapp" },
-      { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
       { icon: CheckSquare, label: "Tarefas", path: "/vendedor/tarefas" },
       { icon: Calendar, label: "Agenda", path: "/vendedor/agenda" },
-      { icon: BarChart3, label: "Relatórios", path: "/vendedor/relatorios" },
+    ],
+  },
+  {
+    title: "Gestão",
+    items: [
+      { icon: BarChart3, label: "Gerencial", path: "/vendedor/dashboard-gerencial" },
+      { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
+      { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
+      { icon: FileText, label: "Relatórios", path: "/vendedor/relatorios" },
       { icon: Lightbulb, label: "Insights", path: "/vendedor/insights" },
       { icon: Tag, label: "Segmentações", path: "/vendedor/segmentacoes" },
     ],
@@ -90,7 +95,7 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 space-y-4">
+      <nav className="flex-1 overflow-y-auto px-2 space-y-3">
         {sections.map((section) => (
           <div key={section.title}>
             {!collapsed && (
@@ -154,7 +159,7 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-sidebar-primary truncate">Paulo Bardini</p>
-                <p className="text-[10px] text-sidebar-foreground truncate">Vendedor · Brandili</p>
+                <p className="text-[10px] text-sidebar-foreground truncate">Comercial · Brandili</p>
               </div>
             </div>
           </div>
