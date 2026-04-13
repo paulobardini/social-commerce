@@ -79,6 +79,15 @@ function isPathActive(path: string, currentPath: string): boolean {
 export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ Comercial: true, Gestão: true });
+
+  const toggleSection = (title: string) => {
+    setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  // Auto-open section if active route is inside it
+  const isSectionActive = (section: MenuSection) =>
+    section.items.some((item) => isPathActive(item.path, location.pathname));
 
   return (
     <aside
