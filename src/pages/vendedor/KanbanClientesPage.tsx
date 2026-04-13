@@ -109,7 +109,7 @@ export default function KanbanClientesPage() {
         <div className="flex-1 overflow-x-auto">
           <div className="flex gap-3 h-full min-h-[500px]">
             {columns.map(col => (
-              <div key={col.id} className="flex flex-col w-[260px] min-w-[260px] bg-muted/30 rounded-lg border border-border">
+              <div key={col.id} className="flex flex-col w-[260px] min-w-[260px] bg-muted/60 rounded-lg border border-border/80">
                 {/* Column header */}
                 <div className="p-3 border-b border-border">
                   <div className="flex items-center gap-2 mb-1">
