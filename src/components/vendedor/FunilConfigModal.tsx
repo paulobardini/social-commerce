@@ -57,13 +57,13 @@ export function FunilConfigModal({ open, onOpenChange }: FunilConfigModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="font-heading">Configurar funil de oportunidades</DialogTitle>
           <p className="text-sm text-muted-foreground">Personalize as etapas do seu pipeline. Arraste para reordenar.</p>
         </DialogHeader>
 
-        <div className="space-y-1.5 mt-4 max-h-[400px] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
           {etapas.map(etapa => (
             <div
               key={etapa.id}
@@ -75,7 +75,7 @@ export function FunilConfigModal({ open, onOpenChange }: FunilConfigModalProps) 
               <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: etapa.cor }} />
 
               {editingId === etapa.id ? (
-                <div className="flex items-center gap-1 flex-1">
+                <div className="flex items-center gap-1 flex-1 min-w-0">
                   <Input
                     value={editName}
                     onChange={e => setEditName(e.target.value)}
@@ -83,11 +83,11 @@ export function FunilConfigModal({ open, onOpenChange }: FunilConfigModalProps) 
                     autoFocus
                     onKeyDown={e => e.key === "Enter" && saveEdit()}
                   />
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={saveEdit}><Check className="h-3 w-3" /></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(null)}><X className="h-3 w-3" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={saveEdit}><Check className="h-3 w-3" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setEditingId(null)}><X className="h-3 w-3" /></Button>
                 </div>
               ) : (
-                <button onClick={() => startEdit(etapa)} className="flex-1 text-left text-sm font-medium text-foreground hover:text-accent transition-colors">
+                <button onClick={() => startEdit(etapa)} className="flex-1 text-left text-sm font-medium text-foreground hover:text-accent transition-colors truncate min-w-0">
                   {etapa.nome}
                 </button>
               )}
@@ -103,27 +103,29 @@ export function FunilConfigModal({ open, onOpenChange }: FunilConfigModalProps) 
                 className="shrink-0"
               />
 
-              {etapa.tipo === "meio" && (
+              {etapa.tipo === "meio" ? (
                 <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => removeEtapa(etapa.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
+              ) : (
+                <div className="w-7 shrink-0" />
               )}
             </div>
           ))}
         </div>
 
-        <Button variant="outline" className="w-full mt-2" onClick={addEtapa}>
+        <Button variant="outline" className="w-full shrink-0" onClick={addEtapa}>
           <Plus className="h-4 w-4 mr-1" /> Adicionar etapa
         </Button>
 
         {/* Preview */}
-        <div className="mt-4 pt-4 border-t border-border">
+        <div className="pt-3 border-t border-border shrink-0">
           <p className="text-xs text-muted-foreground mb-2 font-medium">Preview do funil</p>
-          <div className="flex items-center gap-1 overflow-x-auto">
+          <div className="flex items-center gap-1 overflow-x-auto pb-1">
             {etapas.filter(e => e.ativa).map((e, i, arr) => (
-              <div key={e.id} className="flex items-center gap-1">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium" style={{ backgroundColor: `${e.cor}20`, color: e.cor }}>
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: e.cor }} />
+              <div key={e.id} className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap" style={{ backgroundColor: `${e.cor}20`, color: e.cor }}>
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: e.cor }} />
                   {e.nome}
                 </div>
                 {i < arr.length - 1 && <span className="text-muted-foreground/30 text-xs">→</span>}
@@ -132,7 +134,7 @@ export function FunilConfigModal({ open, onOpenChange }: FunilConfigModalProps) 
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="flex justify-end gap-2 shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={() => onOpenChange(false)}>Salvar configuração</Button>
         </div>
