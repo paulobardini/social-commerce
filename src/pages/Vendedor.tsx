@@ -395,7 +395,7 @@ export default function Vendedor() {
                 )}
               </div>
             </div>
-          </div>
+        </div>
       </main>
 
       {/* Modals */}
