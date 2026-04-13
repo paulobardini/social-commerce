@@ -33,14 +33,13 @@ const sections: MenuSection[] = [
     ],
   },
   {
-    title: "Comercial",
+    title: "Nextil 360",
     collapsible: true,
     items: [
       { icon: LayoutDashboard, label: "Painel", path: "/vendedor/dashboard" },
       { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
       { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
       { icon: Users, label: "Clientes", path: "/vendedor/clientes" },
-      { icon: Target, label: "Nextil 360", path: "/vendedor/360", highlight: true },
       { icon: MessageCircle, label: "WhatsApp", path: "/vendedor/whatsapp" },
       { icon: CheckSquare, label: "Tarefas", path: "/vendedor/tarefas" },
       { icon: Calendar, label: "Agenda", path: "/vendedor/agenda" },
