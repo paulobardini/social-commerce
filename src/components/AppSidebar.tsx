@@ -2,10 +2,11 @@ import {
   Home, Compass, User, Star,
   LayoutDashboard, BarChart3, Kanban, Users, Target, Briefcase,
   UserCog, MessageCircle, ClipboardList, CheckSquare, Calendar,
-  Settings, Lightbulb, Tag, ChevronLeft, ChevronRight, ShoppingBag,
-  FileText,
+  Settings, Lightbulb, Tag, ChevronLeft, ChevronRight,
+  FileText, ChevronDown,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface MenuItem {
