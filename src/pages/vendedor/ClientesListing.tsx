@@ -52,18 +52,18 @@ export default function ClientesListing() {
 
   return (
     <>
-      <div className="p-6 space-y-4">
+      <div className="p-4 md:p-6 space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-heading font-bold text-foreground">Clientes</h1>
             <p className="text-sm text-muted-foreground">{filtered.length} clientes na carteira</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/kanban")}><Kanban className="h-4 w-4 mr-1" /> Kanban</Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}><Shuffle className="h-4 w-4 mr-1" /> Redistribuir</Button>
-            <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" /> Exportar</Button>
-            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Novo cliente</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}><Shuffle className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Redistribuir</span><span className="sm:hidden">Redist.</span></Button>
+            <Button variant="outline" size="sm" className="hidden sm:flex"><Download className="h-4 w-4 mr-1" /> Exportar</Button>
+            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Novo cliente</span><span className="sm:hidden">Novo</span></Button>
           </div>
         </div>
 

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Search, MessageCircle, Phone, Send, Paperclip, CheckSquare, Target,
-  Clock, User, ExternalLink, MapPin, ShoppingBag, FileText, Calendar,
+  Clock, User, ExternalLink, MapPin, ShoppingBag, FileText, Calendar, ChevronLeft,
 } from "lucide-react";
 import {
   mockConversas, mockMensagens, mockClientes360, type Conversa,
@@ -35,7 +35,7 @@ export default function WhatsAppInbox() {
     <>
       <div className="flex h-[calc(100vh-56px)] overflow-hidden">
         {/* Left - Conversations list */}
-        <div className="w-[320px] border-r border-border flex flex-col bg-card shrink-0">
+        <div className={`${selectedId && selected ? "hidden md:flex" : "flex"} w-full md:w-[320px] border-r border-border flex-col bg-card shrink-0`}>
           <div className="p-3 border-b border-border space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-heading font-bold flex items-center gap-2">
@@ -91,8 +91,11 @@ export default function WhatsAppInbox() {
 
         {/* Center - Chat */}
         {selected ? (
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className={`${!selectedId || !selected ? "hidden md:flex" : "flex"} flex-1 flex-col min-w-0`}>
             <div className="h-14 border-b border-border flex items-center px-4 gap-3 bg-card shrink-0">
+              <button onClick={() => setSelectedId("")} className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg hover:bg-muted">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
               <div className="relative">
                 <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
                   <span className="text-sm font-bold text-green-700">{selected.clienteNome[0]}</span>
@@ -103,11 +106,11 @@ export default function WhatsAppInbox() {
                 <p className="text-sm font-semibold truncate">{selected.clienteNome}</p>
                 <p className="text-[10px] text-muted-foreground">{selected.online ? "Online" : "Offline"}{cliente ? ` · ${cliente.cidade}/${cliente.estado}` : ""}</p>
               </div>
-              <div className="flex gap-1 shrink-0">
+              <div className="hidden sm:flex gap-1 shrink-0">
                 <Button variant="ghost" size="sm" className="text-xs"><CheckSquare className="h-3.5 w-3.5 mr-1" /> Tarefa</Button>
                 <Button variant="ghost" size="sm" className="text-xs"><Target className="h-3.5 w-3.5 mr-1" /> Oportunidade</Button>
                 <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate(`/vendedor/360/${selected.clienteId}`)}>
-                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Nextil 360
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> 360
                 </Button>
               </div>
             </div>
@@ -143,7 +146,7 @@ export default function WhatsAppInbox() {
 
         {/* Right - Client panel (improved) */}
         {selected && cliente && (
-          <div className="w-[280px] border-l border-border bg-card overflow-y-auto shrink-0">
+          <div className="hidden lg:block w-[280px] border-l border-border bg-card overflow-y-auto shrink-0">
             <div className="p-4 text-center border-b border-border">
               <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl font-bold text-green-700">{cliente.nomeFantasia[0]}</span>

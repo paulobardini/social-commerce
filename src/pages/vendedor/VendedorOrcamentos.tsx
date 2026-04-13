@@ -70,9 +70,9 @@ export default function VendedorOrcamentos() {
 
   return (
     <>
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h1 className="text-xl font-bold text-foreground font-heading">Orçamentos</h1>
           <Button
             onClick={() => navigate("/vendedor/novo-orcamento")}
@@ -84,8 +84,8 @@ export default function VendedorOrcamentos() {
         </div>
 
         {/* Tabs + Controls */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-0 overflow-x-auto">
             {statusTabs.map((tab) => (
               <button
                 key={tab.key}

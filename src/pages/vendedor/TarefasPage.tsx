@@ -64,9 +64,9 @@ export default function TarefasPage() {
 
   return (
     <>
-      <div className="p-6 space-y-4">
+      <div className="p-4 md:p-6 space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-heading font-bold text-foreground flex items-center gap-2">
               <CheckSquare className="h-5 w-5" /> Tarefas
@@ -81,7 +81,7 @@ export default function TarefasPage() {
         </div>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: "Total", value: counts.total, color: "text-foreground", bg: "bg-muted/50", icon: CheckSquare },
             { label: "Pendentes", value: counts.pendentes, color: "text-blue-600", bg: "bg-blue-50", icon: Clock },
