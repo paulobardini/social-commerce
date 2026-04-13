@@ -85,7 +85,7 @@ export default function VendedorOrcamentos() {
 
         {/* Tabs + Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-0">
+          <div className="flex items-center gap-0 overflow-x-auto">
             {statusTabs.map((tab) => (
               <button
                 key={tab.key}
