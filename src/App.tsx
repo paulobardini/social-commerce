@@ -28,6 +28,11 @@ import VendedorDashboard from "./pages/vendedor/VendedorDashboard";
 import VendedorOportunidades from "./pages/vendedor/VendedorOportunidades";
 import OportunidadeDetalhe from "./pages/vendedor/OportunidadeDetalhe";
 import VendedorConfiguracoes from "./pages/vendedor/VendedorConfiguracoes";
+import ClientesListing from "./pages/vendedor/ClientesListing";
+import Cliente360Page from "./pages/vendedor/Cliente360Page";
+import WhatsAppInbox from "./pages/vendedor/WhatsAppInbox";
+import TarefasPage from "./pages/vendedor/TarefasPage";
+import AgendaPage from "./pages/vendedor/AgendaPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +71,11 @@ const App = () => (
                 <Route path="/vendedor/carteira" element={<VendedorCarteira />} />
                 <Route path="/vendedor/orcamento-viewer" element={<OrcamentoViewer />} />
                 <Route path="/vendedor/configuracoes" element={<VendedorConfiguracoes />} />
+                <Route path="/vendedor/clientes" element={<ClientesListing />} />
+                <Route path="/vendedor/360/:id" element={<Cliente360Page />} />
+                <Route path="/vendedor/whatsapp" element={<WhatsAppInbox />} />
+                <Route path="/vendedor/tarefas" element={<TarefasPage />} />
+                <Route path="/vendedor/agenda" element={<AgendaPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
