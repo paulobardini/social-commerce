@@ -19,6 +19,7 @@ interface MenuItem {
 interface MenuSection {
   title: string;
   items: MenuItem[];
+  collapsible?: boolean;
 }
 
 const sections: MenuSection[] = [
