@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { EditClienteModal } from "@/components/vendedor/EditClienteModal";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TagBadge } from "@/components/vendedor/TagBadge";
@@ -30,6 +31,7 @@ export default function ClientesListing() {
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [filterNicho, setFilterNicho] = useState<string>("");
   const [filterTemperatura, setFilterTemperatura] = useState<string>("");
+  const [editCliente, setEditCliente] = useState<Cliente360 | null>(null);
 
   const filtered = useMemo(() => {
     return mockClientes360.filter(c => {
@@ -159,8 +161,8 @@ export default function ClientesListing() {
                         <button onClick={e => { e.stopPropagation(); navigate(`/vendedor/360/${c.id}`); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-accent hover:bg-muted transition-colors">
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button onClick={e => e.stopPropagation()} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-accent hover:bg-muted transition-colors">
-                          <Edit3 className="h-4 w-4" />
+                        <button onClick={e => { e.stopPropagation(); setEditCliente(c); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-accent hover:bg-muted transition-colors">
+                           <Edit3 className="h-4 w-4" />
                         </button>
                       </div>
                     </TableCell>
@@ -217,6 +219,12 @@ export default function ClientesListing() {
           </div>
         )}
       </div>
+
+      <EditClienteModal
+        open={!!editCliente}
+        onOpenChange={open => !open && setEditCliente(null)}
+        cliente={editCliente}
+      />
     </>
   );
 }
