@@ -34,6 +34,7 @@ const sections: MenuSection[] = [
   },
   {
     title: "Comercial",
+    collapsible: true,
     items: [
       { icon: LayoutDashboard, label: "Painel", path: "/vendedor/dashboard" },
       { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
@@ -47,6 +48,7 @@ const sections: MenuSection[] = [
   },
   {
     title: "Gestão",
+    collapsible: true,
     items: [
       { icon: BarChart3, label: "Gerencial", path: "/vendedor/dashboard-gerencial" },
       { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
