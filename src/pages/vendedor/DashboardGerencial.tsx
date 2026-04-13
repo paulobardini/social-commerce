@@ -41,9 +41,9 @@ export default function DashboardGerencial() {
 
   return (
     <>
-      <div className="p-6 space-y-5 max-w-[1500px] mx-auto">
+      <div className="p-4 md:p-6 space-y-5 max-w-[1500px] mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-heading font-bold text-foreground">Dashboard Gerencial</h1>
             <p className="text-sm text-muted-foreground mt-1">Visão executiva consolidada da operação comercial</p>

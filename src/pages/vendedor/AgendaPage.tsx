@@ -41,27 +41,27 @@ export default function AgendaPage() {
 
   return (
     <>
-      <div className="p-6 space-y-4">
+      <div className="p-4 md:p-6 space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-heading font-bold text-foreground flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" /> Agenda
             </h1>
             <p className="text-sm text-muted-foreground">Semana de 14 a 18 de abril de 2026</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" size="sm"><ChevronLeft className="h-4 w-4" /></Button>
             <Button variant="outline" size="sm">Hoje</Button>
             <Button variant="outline" size="sm"><ChevronRight className="h-4 w-4" /></Button>
-            <div className="flex items-center border border-border rounded-lg overflow-hidden ml-2">
+            <div className="flex items-center border border-border rounded-lg overflow-hidden">
               {(["day", "week", "month"] as const).map(m => (
                 <button key={m} onClick={() => setViewMode(m)} className={`px-3 py-1.5 text-xs transition-colors capitalize ${viewMode === m ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted"}`}>
                   {m === "day" ? "Dia" : m === "week" ? "Semana" : "Mês"}
                 </button>
               ))}
             </div>
-            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Novo compromisso</Button>
+            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Novo compromisso</span><span className="sm:hidden">Novo</span></Button>
           </div>
         </div>
 

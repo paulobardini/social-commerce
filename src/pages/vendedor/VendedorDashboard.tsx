@@ -48,19 +48,19 @@ export default function VendedorDashboard() {
 
   return (
     <>
-      <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
+      <div className="p-4 md:p-6 space-y-5 max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-heading font-bold text-foreground">Bom dia, Paulo 👋</h1>
+            <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground">Bom dia, Paulo 👋</h1>
             <p className="text-sm text-muted-foreground mt-1">Aqui está o resumo do seu dia — 13 de abril de 2026</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/oportunidades")}>
-              <Flame className="h-4 w-4 mr-1" /> Ver pipeline
+              <Flame className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Ver pipeline</span><span className="sm:hidden">Pipeline</span>
             </Button>
             <Button size="sm" onClick={() => navigate("/vendedor/oportunidades/nova")}>
-              <Plus className="h-4 w-4 mr-1" /> Nova oportunidade
+              <Plus className="h-4 w-4 mr-1" /> Nova
             </Button>
           </div>
         </div>
