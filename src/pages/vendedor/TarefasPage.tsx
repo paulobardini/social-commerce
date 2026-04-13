@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Search, Plus, Filter, CheckSquare, Clock, AlertTriangle, X,
+  Search, Plus, CheckSquare, Clock, AlertTriangle, X,
   List, Kanban, Phone, MapPin, Calendar, User, ExternalLink,
+  ArrowRight, Target,
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -56,8 +57,11 @@ export default function TarefasPage() {
     pendente: "bg-blue-100 text-blue-700", atrasada: "bg-red-100 text-red-700",
     concluida: "bg-green-100 text-green-700", cancelada: "bg-slate-100 text-slate-500",
   };
-
+  const statusIconColors: Record<string, string> = {
+    pendente: "text-blue-500", atrasada: "text-red-500", concluida: "text-green-500",
+  };
   const boardStatuses = ["pendente", "atrasada", "concluida"] as const;
+  const activeFilters = [filterStatus, filterPrioridade, filterTipo].filter(Boolean).length;
 
   return (
     <VendedorLayout>
@@ -75,6 +79,28 @@ export default function TarefasPage() {
           <Button size="sm" onClick={() => setShowNova(true)}>
             <Plus className="h-4 w-4 mr-1" /> Nova tarefa
           </Button>
+        </div>
+
+        {/* Summary cards */}
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { label: "Total", value: counts.total, color: "text-foreground", bg: "bg-muted/50", icon: CheckSquare },
+            { label: "Pendentes", value: counts.pendentes, color: "text-blue-600", bg: "bg-blue-50", icon: Clock },
+            { label: "Atrasadas", value: counts.atrasadas, color: "text-red-600", bg: "bg-red-50", icon: AlertTriangle },
+            { label: "Concluídas", value: counts.concluidas, color: "text-green-600", bg: "bg-green-50", icon: CheckSquare },
+          ].map(c => (
+            <Card key={c.label} className="border border-border">
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${c.bg}`}>
+                  <c.icon className={`h-4 w-4 ${c.color}`} />
+                </div>
+                <div>
+                  <p className={`text-xl font-bold font-heading ${c.color}`}>{c.value}</p>
+                  <p className="text-[10px] text-muted-foreground">{c.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Toolbar */}
@@ -108,6 +134,11 @@ export default function TarefasPage() {
               {Object.entries(tipoTarefaLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
             </SelectContent>
           </Select>
+          {activeFilters > 0 && (
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setFilterStatus(""); setFilterPrioridade(""); setFilterTipo(""); }}>
+              <X className="h-3 w-3 mr-1" /> Limpar ({activeFilters})
+            </Button>
+          )}
           <div className="flex items-center border border-border rounded-lg overflow-hidden ml-auto">
             <button onClick={() => setView("list")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${view === "list" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted"}`}>
               <List className="h-4 w-4" /> Lista
@@ -124,6 +155,7 @@ export default function TarefasPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
+                  <TableHead className="font-semibold w-8"></TableHead>
                   <TableHead className="font-semibold">Tarefa</TableHead>
                   <TableHead className="font-semibold">Cliente</TableHead>
                   <TableHead className="font-semibold">Tipo</TableHead>
@@ -134,14 +166,17 @@ export default function TarefasPage() {
               </TableHeader>
               <TableBody>
                 {filtered.map(t => (
-                  <TableRow key={t.id} className="hover:bg-muted/30">
+                  <TableRow key={t.id} className={`hover:bg-muted/30 cursor-pointer ${t.status === "atrasada" ? "bg-red-50/30" : ""}`}>
                     <TableCell>
-                      <p className="text-sm font-medium">{t.titulo}</p>
-                      {t.oportunidadeNome && <p className="text-[10px] text-muted-foreground">→ {t.oportunidadeNome}</p>}
+                      <CheckSquare className={`h-4 w-4 ${statusIconColors[t.status] || "text-muted-foreground"}`} />
+                    </TableCell>
+                    <TableCell>
+                      <p className={`text-sm font-medium ${t.status === "concluida" ? "line-through text-muted-foreground" : ""}`}>{t.titulo}</p>
+                      {t.oportunidadeNome && <p className="text-[10px] text-accent flex items-center gap-1"><Target className="h-3 w-3" /> {t.oportunidadeNome}</p>}
                     </TableCell>
                     <TableCell>
                       {t.clienteNome ? (
-                        <button onClick={() => navigate(`/vendedor/360/${t.clienteId}`)} className="text-sm text-accent hover:underline">{t.clienteNome}</button>
+                        <button onClick={(e) => { e.stopPropagation(); navigate(`/vendedor/360/${t.clienteId}`); }} className="text-sm text-accent hover:underline">{t.clienteNome}</button>
                       ) : <span className="text-sm text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell><Badge variant="secondary" className="text-[10px]">{tipoTarefaLabels[t.tipo]}</Badge></TableCell>
@@ -162,7 +197,7 @@ export default function TarefasPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {filtered.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">Nenhuma tarefa encontrada</TableCell></TableRow>}
+                {filtered.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">Nenhuma tarefa encontrada</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
@@ -171,34 +206,45 @@ export default function TarefasPage() {
             {boardStatuses.map(status => {
               const tasks = filtered.filter(t => t.status === status);
               return (
-                <div key={status} className="w-[300px] min-w-[300px] shrink-0">
+                <div key={status} className="w-[320px] min-w-[320px] shrink-0">
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
                       {status === "atrasada" && <AlertTriangle className="h-4 w-4 text-red-500" />}
-                      <span className="text-sm font-semibold capitalize">{statusLabel[status]}</span>
+                      {status === "pendente" && <Clock className="h-4 w-4 text-blue-500" />}
+                      {status === "concluida" && <CheckSquare className="h-4 w-4 text-green-500" />}
+                      <span className="text-sm font-semibold">{statusLabel[status]}</span>
                       <Badge variant="secondary" className="text-[10px] h-5">{tasks.length}</Badge>
                     </div>
                   </div>
-                  <div className="space-y-2 bg-muted/30 rounded-xl p-2 min-h-[200px]">
+                  <div className="space-y-2 bg-muted/30 rounded-xl p-2.5 min-h-[300px]">
                     {tasks.map(t => (
-                      <Card key={t.id} className={`border cursor-pointer hover:shadow-md transition-all ${status === "atrasada" ? "border-red-200" : "border-border"}`}>
+                      <Card key={t.id} className={`border cursor-pointer hover:shadow-md hover:border-accent/30 transition-all ${status === "atrasada" ? "border-red-200" : "border-border"}`}>
                         <CardContent className="p-3">
-                          <div className="flex items-center gap-1.5 mb-1">
+                          <div className="flex items-center gap-1.5 mb-1.5">
                             <div className={`w-2 h-2 rounded-full ${prioridadeDot[t.prioridade]}`} />
                             <span className="text-[10px] text-muted-foreground capitalize">{t.prioridade}</span>
                             <Badge variant="secondary" className="text-[9px] ml-auto">{tipoTarefaLabels[t.tipo]}</Badge>
                           </div>
-                          <p className="text-sm font-medium mb-1">{t.titulo}</p>
+                          <p className={`text-sm font-medium mb-1 ${status === "concluida" ? "line-through text-muted-foreground" : ""}`}>{t.titulo}</p>
                           {t.clienteNome && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" /> {t.clienteNome}</p>
+                            <button onClick={() => navigate(`/vendedor/360/${t.clienteId}`)} className="text-xs text-accent hover:underline flex items-center gap-1 mb-1">
+                              <User className="h-3 w-3" /> {t.clienteNome}
+                            </button>
                           )}
-                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-2">
-                            <Clock className="h-3 w-3" /> {t.vencimento}
+                          {t.oportunidadeNome && (
+                            <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3" /> {t.oportunidadeNome}</p>
+                          )}
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
+                            <Clock className="h-3 w-3" /> {t.vencimento}{t.hora ? ` · ${t.hora}` : ""}
                           </div>
                         </CardContent>
                       </Card>
                     ))}
-                    {tasks.length === 0 && <div className="flex items-center justify-center h-24 text-xs text-muted-foreground border-2 border-dashed border-border rounded-lg">Nenhuma tarefa</div>}
+                    {tasks.length === 0 && (
+                      <div className="flex items-center justify-center h-24 text-xs text-muted-foreground border-2 border-dashed border-border rounded-lg">
+                        Nenhuma tarefa
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -235,6 +281,10 @@ export default function TarefasPage() {
                 </Select>
               </div>
               <div><Label className="text-xs">Data de vencimento</Label><Input type="date" className="mt-1" /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs">Hora</Label><Input type="time" className="mt-1" /></div>
+              <div><Label className="text-xs">Responsável</Label><Input value="Paulo Bardini" className="mt-1" readOnly /></div>
             </div>
             <div><Label className="text-xs">Observação</Label><Textarea placeholder="Notas adicionais" className="mt-1" rows={2} /></div>
           </div>
