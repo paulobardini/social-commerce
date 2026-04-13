@@ -33,6 +33,13 @@ import Cliente360Page from "./pages/vendedor/Cliente360Page";
 import WhatsAppInbox from "./pages/vendedor/WhatsAppInbox";
 import TarefasPage from "./pages/vendedor/TarefasPage";
 import AgendaPage from "./pages/vendedor/AgendaPage";
+import KanbanClientesPage from "./pages/vendedor/KanbanClientesPage";
+import CarteiraPage from "./pages/vendedor/CarteiraPage";
+import RepresentantesPage from "./pages/vendedor/RepresentantesPage";
+import RepresentanteDetalhePage from "./pages/vendedor/RepresentanteDetalhePage";
+import RedistribuicaoPage from "./pages/vendedor/RedistribuicaoPage";
+import SegmentacoesPage from "./pages/vendedor/SegmentacoesPage";
+import FunilClientesConfigPage from "./pages/vendedor/FunilClientesConfigPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,14 +75,21 @@ const App = () => (
                 <Route path="/vendedor/novo-orcamento" element={<NovoOrcamento />} />
                 <Route path="/vendedor/orcamento/:id" element={<NovoOrcamento />} />
                 <Route path="/vendedor/grade" element={<GradeEdicao />} />
-                <Route path="/vendedor/carteira" element={<VendedorCarteira />} />
+                <Route path="/vendedor/carteira-antiga" element={<VendedorCarteira />} />
                 <Route path="/vendedor/orcamento-viewer" element={<OrcamentoViewer />} />
                 <Route path="/vendedor/configuracoes" element={<VendedorConfiguracoes />} />
                 <Route path="/vendedor/clientes" element={<ClientesListing />} />
+                <Route path="/vendedor/clientes/kanban" element={<KanbanClientesPage />} />
+                <Route path="/vendedor/clientes/kanban/config" element={<FunilClientesConfigPage />} />
+                <Route path="/vendedor/clientes/redistribuir" element={<RedistribuicaoPage />} />
                 <Route path="/vendedor/360/:id" element={<Cliente360Page />} />
                 <Route path="/vendedor/whatsapp" element={<WhatsAppInbox />} />
                 <Route path="/vendedor/tarefas" element={<TarefasPage />} />
                 <Route path="/vendedor/agenda" element={<AgendaPage />} />
+                <Route path="/vendedor/carteira" element={<CarteiraPage />} />
+                <Route path="/vendedor/representantes" element={<RepresentantesPage />} />
+                <Route path="/vendedor/representantes/:id" element={<RepresentanteDetalhePage />} />
+                <Route path="/vendedor/segmentacoes" element={<SegmentacoesPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
