@@ -1,8 +1,9 @@
-import { LayoutDashboard, Kanban, ClipboardList, Users, MessageCircle, CheckSquare, Calendar, Settings, UserCircle, X, Target, Briefcase, UserCog, Tag } from "lucide-react";
+import { LayoutDashboard, Kanban, ClipboardList, Users, MessageCircle, CheckSquare, Calendar, Settings, UserCircle, X, Target, Briefcase, UserCog, Tag, BarChart3, Lightbulb } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/vendedor/dashboard" },
+  { icon: BarChart3, label: "Dashboard Gerencial", path: "/vendedor/dashboard-gerencial" },
   { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
   { icon: Users, label: "Clientes", path: "/vendedor/clientes" },
   { icon: Target, label: "Nextil 360", path: "/vendedor/360", highlight: true },
@@ -12,6 +13,8 @@ const menuItems = [
   { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
   { icon: CheckSquare, label: "Tarefas", path: "/vendedor/tarefas" },
   { icon: Calendar, label: "Agenda", path: "/vendedor/agenda" },
+  { icon: BarChart3, label: "Relatórios", path: "/vendedor/relatorios" },
+  { icon: Lightbulb, label: "Insights", path: "/vendedor/insights" },
   { icon: Tag, label: "Segmentações", path: "/vendedor/segmentacoes" },
   { icon: Settings, label: "Configurações", path: "/vendedor/configuracoes" },
 ];
@@ -37,6 +40,9 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
     if (path === "/vendedor/agenda") return location.pathname.startsWith("/vendedor/agenda");
     if (path === "/vendedor/segmentacoes") return location.pathname.startsWith("/vendedor/segmentacoes");
     if (path === "/vendedor/dashboard") return location.pathname === "/vendedor/dashboard";
+    if (path === "/vendedor/dashboard-gerencial") return location.pathname === "/vendedor/dashboard-gerencial";
+    if (path === "/vendedor/relatorios") return location.pathname.startsWith("/vendedor/relatorios");
+    if (path === "/vendedor/insights") return location.pathname.startsWith("/vendedor/insights");
     if (path === "/vendedor/configuracoes") return location.pathname.startsWith("/vendedor/configuracoes");
     return location.pathname === path;
   };

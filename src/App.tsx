@@ -40,6 +40,12 @@ import RepresentanteDetalhePage from "./pages/vendedor/RepresentanteDetalhePage"
 import RedistribuicaoPage from "./pages/vendedor/RedistribuicaoPage";
 import SegmentacoesPage from "./pages/vendedor/SegmentacoesPage";
 import FunilClientesConfigPage from "./pages/vendedor/FunilClientesConfigPage";
+import DashboardGerencial from "./pages/vendedor/DashboardGerencial";
+import RelatoriosCentral from "./pages/vendedor/RelatoriosCentral";
+import ReportBuilder from "./pages/vendedor/ReportBuilder";
+import RelatorioViewer from "./pages/vendedor/RelatorioViewer";
+import InsightsPage from "./pages/vendedor/InsightsPage";
+import VisoesSalvasPage from "./pages/vendedor/VisoesSalvasPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -90,6 +96,12 @@ const App = () => (
                 <Route path="/vendedor/representantes" element={<RepresentantesPage />} />
                 <Route path="/vendedor/representantes/:id" element={<RepresentanteDetalhePage />} />
                 <Route path="/vendedor/segmentacoes" element={<SegmentacoesPage />} />
+                <Route path="/vendedor/dashboard-gerencial" element={<DashboardGerencial />} />
+                <Route path="/vendedor/relatorios" element={<RelatoriosCentral />} />
+                <Route path="/vendedor/relatorios/novo" element={<ReportBuilder />} />
+                <Route path="/vendedor/relatorios/:id" element={<RelatorioViewer />} />
+                <Route path="/vendedor/insights" element={<InsightsPage />} />
+                <Route path="/vendedor/visoes-salvas" element={<VisoesSalvasPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
