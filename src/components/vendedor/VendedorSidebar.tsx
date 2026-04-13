@@ -1,13 +1,15 @@
-import { LayoutDashboard, Kanban, ClipboardList, Users, Briefcase, BarChart3, Settings, UserCircle, X } from "lucide-react";
+import { LayoutDashboard, Kanban, ClipboardList, Users, MessageCircle, CheckSquare, Calendar, Settings, UserCircle, X, Target } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/vendedor/dashboard" },
   { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
+  { icon: Users, label: "Clientes", path: "/vendedor/clientes" },
+  { icon: Target, label: "Nextil 360", path: "/vendedor/360", highlight: true },
+  { icon: MessageCircle, label: "WhatsApp", path: "/vendedor/whatsapp" },
   { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
-  { icon: Users, label: "Clientes", path: "/vendedor/carteira" },
-  { icon: Briefcase, label: "Representantes", path: "/vendedor/representantes", disabled: true },
-  { icon: BarChart3, label: "Relatórios", path: "/vendedor/relatorios", disabled: true },
+  { icon: CheckSquare, label: "Tarefas", path: "/vendedor/tarefas" },
+  { icon: Calendar, label: "Agenda", path: "/vendedor/agenda" },
   { icon: Settings, label: "Configurações", path: "/vendedor/configuracoes" },
 ];
 
@@ -23,8 +25,12 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
   const isActive = (path: string) => {
     if (path === "/vendedor") return location.pathname === "/vendedor" || location.pathname.startsWith("/vendedor/novo-orcamento") || location.pathname.startsWith("/vendedor/orcamento") || location.pathname === "/vendedor/grade" || location.pathname === "/vendedor/orcamento-viewer";
     if (path === "/vendedor/oportunidades") return location.pathname.startsWith("/vendedor/oportunidades");
+    if (path === "/vendedor/clientes") return location.pathname === "/vendedor/clientes";
+    if (path === "/vendedor/360") return location.pathname.startsWith("/vendedor/360");
+    if (path === "/vendedor/whatsapp") return location.pathname.startsWith("/vendedor/whatsapp");
+    if (path === "/vendedor/tarefas") return location.pathname.startsWith("/vendedor/tarefas");
+    if (path === "/vendedor/agenda") return location.pathname.startsWith("/vendedor/agenda");
     if (path === "/vendedor/dashboard") return location.pathname === "/vendedor/dashboard";
-    if (path === "/vendedor/carteira") return location.pathname === "/vendedor/carteira";
     if (path === "/vendedor/configuracoes") return location.pathname.startsWith("/vendedor/configuracoes");
     return location.pathname === path;
   };
@@ -46,25 +52,21 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
         {menuItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
-          const disabled = (item as any).disabled;
+          const highlight = (item as any).highlight;
           return (
             <button
               key={item.label}
-              onClick={() => !disabled && navigate(item.path)}
-              disabled={disabled}
+              onClick={() => navigate(item.path)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                disabled
-                  ? "text-sidebar-foreground/30 cursor-not-allowed"
-                  : active
+                active
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : highlight
+                  ? "text-[hsl(191,100%,50%)] hover:bg-sidebar-accent/20"
                   : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{item.label}</span>
-              {disabled && (
-                <span className="ml-auto text-[9px] uppercase tracking-wider text-sidebar-foreground/30">Em breve</span>
-              )}
             </button>
           );
         })}
