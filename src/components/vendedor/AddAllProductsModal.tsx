@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Minus, Plus, Trash2 } from "lucide-react";
+import { X, Minus, Plus, Trash2, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   resumoPorTipo,
