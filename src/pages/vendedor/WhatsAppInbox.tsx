@@ -146,7 +146,7 @@ export default function WhatsAppInbox() {
 
         {/* Right - Client panel (improved) */}
         {selected && cliente && (
-          <div className="w-[280px] border-l border-border bg-card overflow-y-auto shrink-0">
+          <div className="hidden lg:block w-[280px] border-l border-border bg-card overflow-y-auto shrink-0">
             <div className="p-4 text-center border-b border-border">
               <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl font-bold text-green-700">{cliente.nomeFantasia[0]}</span>
