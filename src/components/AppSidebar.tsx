@@ -2,10 +2,11 @@ import {
   Home, Compass, User, Star,
   LayoutDashboard, BarChart3, Kanban, Users, Target, Briefcase,
   UserCog, MessageCircle, ClipboardList, CheckSquare, Calendar,
-  Settings, Lightbulb, Tag, ChevronLeft, ChevronRight, ShoppingBag,
-  FileText,
+  Settings, Lightbulb, Tag, ChevronLeft, ChevronRight,
+  FileText, ChevronDown,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface MenuItem {
@@ -18,6 +19,7 @@ interface MenuItem {
 interface MenuSection {
   title: string;
   items: MenuItem[];
+  collapsible?: boolean;
 }
 
 const sections: MenuSection[] = [
@@ -32,6 +34,7 @@ const sections: MenuSection[] = [
   },
   {
     title: "Comercial",
+    collapsible: true,
     items: [
       { icon: LayoutDashboard, label: "Painel", path: "/vendedor/dashboard" },
       { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
@@ -45,6 +48,7 @@ const sections: MenuSection[] = [
   },
   {
     title: "Gestão",
+    collapsible: true,
     items: [
       { icon: BarChart3, label: "Gerencial", path: "/vendedor/dashboard-gerencial" },
       { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
@@ -75,6 +79,15 @@ function isPathActive(path: string, currentPath: string): boolean {
 export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ Comercial: true, Gestão: true });
+
+  const toggleSection = (title: string) => {
+    setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  // Auto-open section if active route is inside it
+  const isSectionActive = (section: MenuSection) =>
+    section.items.some((item) => isPathActive(item.path, location.pathname));
 
   return (
     <aside
@@ -96,41 +109,62 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-3">
-        {sections.map((section) => (
-          <div key={section.title}>
-            {!collapsed && (
-              <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-                {section.title}
-              </p>
-            )}
-            {collapsed && <div className="border-t border-sidebar-border/30 mx-2 mb-2" />}
-            <div className="flex flex-col gap-0.5">
-              {section.items.map((item) => {
-                const Icon = item.icon;
-                const active = isPathActive(item.path, location.pathname);
-                return (
-                  <button
-                    key={item.path + item.label}
-                    onClick={() => navigate(item.path)}
-                    title={collapsed ? item.label : undefined}
+        {sections.map((section) => {
+          const isOpen = !section.collapsible || openSections[section.title] || isSectionActive(section);
+          return (
+            <div key={section.title}>
+              {!collapsed && section.collapsible ? (
+                <button
+                  onClick={() => toggleSection(section.title)}
+                  className="flex items-center justify-between w-full px-3 mb-1.5 group"
+                >
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                    {section.title}
+                  </span>
+                  <ChevronDown
                     className={cn(
-                      "flex items-center rounded-lg text-[13px] font-medium transition-all duration-150",
-                      collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
-                      active
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : item.highlight
-                        ? "text-[hsl(var(--tertiary))] hover:bg-sidebar-accent/20"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
+                      "h-3 w-3 text-sidebar-foreground/40 transition-transform duration-200",
+                      !isOpen && "-rotate-90"
                     )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                  </button>
-                );
-              })}
+                  />
+                </button>
+              ) : !collapsed ? (
+                <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                  {section.title}
+                </p>
+              ) : (
+                <div className="border-t border-sidebar-border/30 mx-2 mb-2" />
+              )}
+              {isOpen && (
+                <div className="flex flex-col gap-0.5">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = isPathActive(item.path, location.pathname);
+                    return (
+                      <button
+                        key={item.path + item.label}
+                        onClick={() => navigate(item.path)}
+                        title={collapsed ? item.label : undefined}
+                        className={cn(
+                          "flex items-center rounded-lg text-[13px] font-medium transition-all duration-150",
+                          collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
+                          active
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : item.highlight
+                            ? "text-[hsl(var(--tertiary))] hover:bg-sidebar-accent/20"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
+                        )}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span className="truncate">{item.label}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Settings + User */}
