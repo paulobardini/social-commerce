@@ -30,8 +30,8 @@ export default function InsightsPage() {
 
   return (
     <>
-      <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
-        <div className="flex items-center justify-between">
+      <div className="p-4 md:p-6 space-y-5 max-w-[1200px] mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-heading font-bold text-foreground flex items-center gap-2">
               <Lightbulb className="h-6 w-6 text-amber-500" /> Alertas & Insights
