@@ -24,6 +24,10 @@ import NovoOrcamento from "./pages/vendedor/NovoOrcamento";
 import GradeEdicao from "./pages/vendedor/GradeEdicao";
 import VendedorCarteira from "./pages/vendedor/VendedorCarteira";
 import OrcamentoViewer from "./pages/vendedor/OrcamentoViewer";
+import VendedorDashboard from "./pages/vendedor/VendedorDashboard";
+import VendedorOportunidades from "./pages/vendedor/VendedorOportunidades";
+import OportunidadeDetalhe from "./pages/vendedor/OportunidadeDetalhe";
+import VendedorConfiguracoes from "./pages/vendedor/VendedorConfiguracoes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,11 +56,16 @@ const App = () => (
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/vendedor-antigo" element={<Vendedor />} />
                 <Route path="/vendedor" element={<VendedorOrcamentos />} />
+                <Route path="/vendedor/dashboard" element={<VendedorDashboard />} />
+                <Route path="/vendedor/oportunidades" element={<VendedorOportunidades />} />
+                <Route path="/vendedor/oportunidades/nova" element={<VendedorOportunidades />} />
+                <Route path="/vendedor/oportunidades/:id" element={<OportunidadeDetalhe />} />
                 <Route path="/vendedor/novo-orcamento" element={<NovoOrcamento />} />
                 <Route path="/vendedor/orcamento/:id" element={<NovoOrcamento />} />
                 <Route path="/vendedor/grade" element={<GradeEdicao />} />
                 <Route path="/vendedor/carteira" element={<VendedorCarteira />} />
                 <Route path="/vendedor/orcamento-viewer" element={<OrcamentoViewer />} />
+                <Route path="/vendedor/configuracoes" element={<VendedorConfiguracoes />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
