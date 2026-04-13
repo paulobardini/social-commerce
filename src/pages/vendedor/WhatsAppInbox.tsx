@@ -35,7 +35,7 @@ export default function WhatsAppInbox() {
     <>
       <div className="flex h-[calc(100vh-56px)] overflow-hidden">
         {/* Left - Conversations list */}
-        <div className="w-[320px] border-r border-border flex flex-col bg-card shrink-0">
+        <div className={`${selectedId && selected ? "hidden md:flex" : "flex"} w-full md:w-[320px] border-r border-border flex-col bg-card shrink-0`}>
           <div className="p-3 border-b border-border space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-heading font-bold flex items-center gap-2">
