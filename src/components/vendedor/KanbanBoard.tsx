@@ -75,7 +75,7 @@ export function KanbanBoard({ searchQuery = "", filterTags = [], filterPrioridad
             </div>
 
             {/* Cards */}
-            <div className="flex-1 space-y-2 bg-muted/30 rounded-xl p-2 min-h-[200px]">
+            <div className="flex-1 space-y-2 bg-muted/60 rounded-xl p-2 min-h-[200px] border border-border/60">
               {columnOps.length === 0 && (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground border-2 border-dashed border-border rounded-lg">
                   Nenhuma oportunidade
