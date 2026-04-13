@@ -1,7 +1,4 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { NextilHeader } from "@/components/NextilHeader";
-import { NextilSidebar } from "@/components/NextilSidebar";
-import { MobileNav } from "@/components/MobileNav";
 import { getBrandBySlug } from "@/data/mockProducts";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,11 +33,7 @@ const MarcaDetalhe = () => {
   const vitrineImages = activeSubBrandObj?.vitrineImages || [];
 
   return (
-    <div className="min-h-screen bg-background">
-      <NextilHeader />
-      <div className="flex">
-        <NextilSidebar />
-        <div className="flex-1 min-w-0 pb-16 md:pb-0">
+    <div className="flex-1 min-w-0 pb-16 md:pb-0">
           {/* Hero Banner — full-width, tall, editorial feel */}
           <div className="relative h-64 md:h-[420px] overflow-hidden bg-foreground">
             <img
@@ -322,9 +315,6 @@ const MarcaDetalhe = () => {
               )}
             </motion.div>
           </AnimatePresence>
-        </div>
-      </div>
-      <MobileNav />
       <CadastroPJModal
         open={showPJModal}
         onOpenChange={setShowPJModal}
