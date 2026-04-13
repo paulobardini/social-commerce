@@ -106,11 +106,11 @@ export default function WhatsAppInbox() {
                 <p className="text-sm font-semibold truncate">{selected.clienteNome}</p>
                 <p className="text-[10px] text-muted-foreground">{selected.online ? "Online" : "Offline"}{cliente ? ` · ${cliente.cidade}/${cliente.estado}` : ""}</p>
               </div>
-              <div className="flex gap-1 shrink-0">
+              <div className="hidden sm:flex gap-1 shrink-0">
                 <Button variant="ghost" size="sm" className="text-xs"><CheckSquare className="h-3.5 w-3.5 mr-1" /> Tarefa</Button>
                 <Button variant="ghost" size="sm" className="text-xs"><Target className="h-3.5 w-3.5 mr-1" /> Oportunidade</Button>
                 <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate(`/vendedor/360/${selected.clienteId}`)}>
-                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Nextil 360
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> 360
                 </Button>
               </div>
             </div>
