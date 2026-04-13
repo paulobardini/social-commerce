@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Search, MessageCircle, Phone, Send, Paperclip, CheckSquare, Target,
-  Clock, User, ExternalLink, MapPin, ShoppingBag, FileText, Calendar,
+  Clock, User, ExternalLink, MapPin, ShoppingBag, FileText, Calendar, ChevronLeft,
 } from "lucide-react";
 import {
   mockConversas, mockMensagens, mockClientes360, type Conversa,
