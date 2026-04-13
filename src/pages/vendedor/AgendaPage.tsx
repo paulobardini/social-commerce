@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Button } from "@/components/ui/button";
@@ -6,14 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight,
-  Phone, MapPin, Clock, User, Video, Footprints, ArrowRight, Presentation,
+  Phone, MapPin, Clock, User, Video, ArrowRight, Presentation,
 } from "lucide-react";
 import {
   mockCompromissos, tipoCompromissoLabels, type Compromisso,
 } from "@/data/mockCRM360";
 
 const tipoIcons: Record<string, any> = {
-  ligacao: Phone, reuniao: Video, visita: Footprints, follow_up: ArrowRight,
+  ligacao: Phone, reuniao: Video, visita: MapPin, follow_up: ArrowRight,
   retorno_orcamento: Clock, apresentacao: Presentation,
 };
 const tipoColors: Record<string, string> = {
@@ -22,9 +22,6 @@ const tipoColors: Record<string, string> = {
   retorno_orcamento: "bg-yellow-100 text-yellow-600", apresentacao: "bg-indigo-100 text-indigo-600",
 };
 
-const WEEK_DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-
-// Generate dates for week view
 const weekDates = [
   { day: "Seg", date: "14/04", full: "14/04/2026" },
   { day: "Ter", date: "15/04", full: "15/04/2026" },
@@ -33,6 +30,7 @@ const weekDates = [
   { day: "Sex", date: "18/04", full: "18/04/2026" },
 ];
 
+const WEEK_DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 const hours = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
 
 export default function AgendaPage() {
@@ -40,8 +38,7 @@ export default function AgendaPage() {
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week");
   const [selectedDay, setSelectedDay] = useState("14/04/2026");
 
-  const dayCompromissos = mockCompromissos.filter(c => c.data === selectedDay);
-  const todayCompromissos = mockCompromissos.filter(c => c.data === "14/04/2026");
+  const todayEvents = mockCompromissos.filter(c => c.data === selectedDay);
 
   return (
     <VendedorLayout>
@@ -69,29 +66,44 @@ export default function AgendaPage() {
           </div>
         </div>
 
+        {/* Summary bar */}
+        <div className="flex gap-3">
+          {Object.entries(tipoCompromissoLabels).map(([key, label]) => {
+            const count = mockCompromissos.filter(c => c.tipo === key && c.status === "agendado").length;
+            if (count === 0) return null;
+            const Icon = tipoIcons[key] || CalendarIcon;
+            return (
+              <div key={key} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ${tipoColors[key]}`}>
+                <Icon className="h-3.5 w-3.5" />
+                <span className="font-medium">{label}</span>
+                <Badge variant="secondary" className="text-[9px] h-4 px-1">{count}</Badge>
+              </div>
+            );
+          })}
+        </div>
+
         <div className="flex gap-6">
           {/* Main calendar area */}
           <div className="flex-1">
             {viewMode === "week" ? (
               <div className="border border-border rounded-lg overflow-hidden">
-                {/* Week header */}
-                <div className="grid grid-cols-5 border-b border-border bg-muted/50">
+                <div className="grid grid-cols-[60px_repeat(5,1fr)] border-b border-border bg-muted/50">
+                  <div className="p-3" />
                   {weekDates.map(d => (
-                    <button key={d.full} onClick={() => setSelectedDay(d.full)} className={`p-3 text-center transition-colors ${selectedDay === d.full ? "bg-accent/10" : "hover:bg-muted"}`}>
+                    <button key={d.full} onClick={() => setSelectedDay(d.full)} className={`p-3 text-center transition-colors border-l border-border/50 ${selectedDay === d.full ? "bg-accent/10" : "hover:bg-muted"}`}>
                       <p className="text-[10px] text-muted-foreground uppercase">{d.day}</p>
                       <p className={`text-lg font-bold font-heading ${d.full === "14/04/2026" ? "text-accent" : ""}`}>{d.date.split("/")[0]}</p>
                     </button>
                   ))}
                 </div>
-                {/* Time grid */}
                 <div className="relative">
                   {hours.map(h => (
-                    <div key={h} className="grid grid-cols-5 border-b border-border/50">
+                    <div key={h} className="grid grid-cols-[60px_repeat(5,1fr)] border-b border-border/30">
+                      <div className="p-1.5 text-[10px] text-muted-foreground text-right pr-2 border-r border-border/30">{h}</div>
                       {weekDates.map(d => {
                         const events = mockCompromissos.filter(c => c.data === d.full && c.hora === h);
                         return (
-                          <div key={d.full + h} className="min-h-[60px] p-1 border-r border-border/30 last:border-r-0 relative">
-                            {d === weekDates[0] && <span className="absolute -left-0 top-1 text-[9px] text-muted-foreground">{h}</span>}
+                          <div key={d.full + h} className="min-h-[56px] p-1 border-l border-border/20">
                             {events.map(ev => {
                               const Icon = tipoIcons[ev.tipo] || CalendarIcon;
                               return (
@@ -125,12 +137,12 @@ export default function AgendaPage() {
                     const events = mockCompromissos.filter(c => c.data === selectedDay && c.hora === h);
                     return (
                       <div key={h} className="flex min-h-[60px]">
-                        <div className="w-16 p-2 text-xs text-muted-foreground shrink-0 border-r border-border/30">{h}</div>
+                        <div className="w-16 p-2 text-xs text-muted-foreground shrink-0 border-r border-border/30 text-right pr-3">{h}</div>
                         <div className="flex-1 p-1">
                           {events.map(ev => {
                             const Icon = tipoIcons[ev.tipo] || CalendarIcon;
                             return (
-                              <button key={ev.id} onClick={() => ev.clienteId && navigate(`/vendedor/360/${ev.clienteId}`)} className={`w-full text-left p-2 rounded-md mb-1 ${tipoColors[ev.tipo]} hover:opacity-80 transition-opacity`}>
+                              <button key={ev.id} onClick={() => ev.clienteId && navigate(`/vendedor/360/${ev.clienteId}`)} className={`w-full text-left p-2.5 rounded-md mb-1 ${tipoColors[ev.tipo]} hover:opacity-80 transition-opacity`}>
                                 <div className="flex items-center gap-2">
                                   <Icon className="h-4 w-4 shrink-0" />
                                   <div>
@@ -148,10 +160,9 @@ export default function AgendaPage() {
                 </div>
               </div>
             ) : (
-              /* Month simplified */
               <div className="border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground text-center">Visão mensal — Abril 2026</p>
-                <div className="grid grid-cols-7 gap-1 mt-4">
+                <p className="text-sm text-muted-foreground text-center mb-4">Abril 2026</p>
+                <div className="grid grid-cols-7 gap-1">
                   {WEEK_DAYS.map(d => <div key={d} className="text-center text-[10px] text-muted-foreground font-medium py-1">{d}</div>)}
                   {Array.from({ length: 2 }, (_, i) => <div key={`empty-${i}`} className="h-16" />)}
                   {Array.from({ length: 30 }, (_, i) => {
@@ -178,32 +189,38 @@ export default function AgendaPage() {
             )}
           </div>
 
-          {/* Right sidebar - Today's events */}
-          <div className="w-[260px] shrink-0 space-y-4">
+          {/* Right sidebar - Day events */}
+          <div className="w-[280px] shrink-0 space-y-4">
             <div>
-              <p className="text-sm font-semibold font-heading mb-2">Compromissos do dia</p>
-              <p className="text-xs text-muted-foreground mb-3">{selectedDay}</p>
+              <p className="text-sm font-semibold font-heading mb-1">Compromissos do dia</p>
+              <p className="text-xs text-muted-foreground mb-3">{selectedDay} · {todayEvents.length} evento{todayEvents.length !== 1 ? "s" : ""}</p>
               <div className="space-y-2">
-                {mockCompromissos.filter(c => c.data === selectedDay).map(c => {
+                {todayEvents.map(c => {
                   const Icon = tipoIcons[c.tipo] || CalendarIcon;
                   return (
-                    <Card key={c.id} className="border border-border cursor-pointer hover:border-accent/40 transition-all" onClick={() => c.clienteId && navigate(`/vendedor/360/${c.clienteId}`)}>
+                    <Card key={c.id} className="border border-border cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all" onClick={() => c.clienteId && navigate(`/vendedor/360/${c.clienteId}`)}>
                       <CardContent className="p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className={`h-6 w-6 rounded-md flex items-center justify-center ${tipoColors[c.tipo]}`}>
-                            <Icon className="h-3 w-3" />
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${tipoColors[c.tipo]}`}>
+                            <Icon className="h-3.5 w-3.5" />
                           </div>
-                          <span className="text-[10px] text-muted-foreground">{c.hora} · {c.duracao}</span>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[10px] text-muted-foreground">{c.hora} · {c.duracao}</span>
+                          </div>
+                          <Badge variant="secondary" className="text-[9px]">{tipoCompromissoLabels[c.tipo]}</Badge>
                         </div>
                         <p className="text-sm font-medium">{c.titulo}</p>
-                        {c.clienteNome && <p className="text-xs text-muted-foreground mt-0.5">{c.clienteNome}</p>}
+                        {c.clienteNome && <p className="text-xs text-accent mt-0.5">{c.clienteNome}</p>}
                         <p className="text-[10px] text-muted-foreground mt-1">{c.descricao}</p>
                       </CardContent>
                     </Card>
                   );
                 })}
-                {mockCompromissos.filter(c => c.data === selectedDay).length === 0 && (
-                  <p className="text-xs text-muted-foreground py-4 text-center">Nenhum compromisso</p>
+                {todayEvents.length === 0 && (
+                  <div className="text-center py-8 border-2 border-dashed border-border rounded-lg">
+                    <CalendarIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground/30" />
+                    <p className="text-xs text-muted-foreground">Nenhum compromisso</p>
+                  </div>
                 )}
               </div>
             </div>
