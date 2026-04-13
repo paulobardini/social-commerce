@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,7 +78,7 @@ export default function NovoOrcamento() {
   };
 
   return (
-    <VendedorLayout>
+    <>
       <div className="flex flex-col h-full">
         {/* Top breadcrumb bar */}
         <div className="border-b border-border px-6 py-3 flex items-center justify-between shrink-0">
@@ -356,6 +355,6 @@ export default function NovoOrcamento() {
           onClose={() => setShowAddAll(false)}
         />
       )}
-    </VendedorLayout>
+    </>
   );
 }

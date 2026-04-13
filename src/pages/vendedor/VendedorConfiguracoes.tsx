@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FunilConfigModal } from "@/components/vendedor/FunilConfigModal";
@@ -15,7 +14,7 @@ export default function VendedorConfiguracoes() {
   ];
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 max-w-[800px] mx-auto space-y-6">
         <div>
           <h1 className="text-xl font-heading font-bold text-foreground flex items-center gap-2">
@@ -47,6 +46,6 @@ export default function VendedorConfiguracoes() {
       </div>
 
       <FunilConfigModal open={showFunil} onOpenChange={setShowFunil} />
-    </VendedorLayout>
+    </>
   );
 }

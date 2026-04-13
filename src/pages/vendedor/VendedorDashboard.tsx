@@ -1,4 +1,3 @@
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,7 @@ export default function VendedorDashboard() {
   };
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -283,6 +282,6 @@ export default function VendedorDashboard() {
           </Card>
         </div>
       </div>
-    </VendedorLayout>
+    </>
   );
 }

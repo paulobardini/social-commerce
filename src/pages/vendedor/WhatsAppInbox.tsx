@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +32,7 @@ export default function WhatsAppInbox() {
   const totalNaoLidas = mockConversas.reduce((s, c) => s + c.naoLidas, 0);
 
   return (
-    <VendedorLayout>
+    <>
       <div className="flex h-[calc(100vh-56px)] overflow-hidden">
         {/* Left - Conversations list */}
         <div className="w-[320px] border-r border-border flex flex-col bg-card shrink-0">
@@ -195,6 +194,6 @@ export default function WhatsAppInbox() {
           </div>
         )}
       </div>
-    </VendedorLayout>
+    </>
   );
 }

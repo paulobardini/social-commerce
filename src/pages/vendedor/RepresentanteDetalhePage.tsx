@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,9 +23,9 @@ export default function RepresentanteDetalhePage() {
   const rep = mockRepresentantes.find(r => r.id === id);
   if (!rep) {
     return (
-      <VendedorLayout>
+      <>
         <div className="p-6 text-center text-muted-foreground">Representante não encontrado</div>
-      </VendedorLayout>
+      </>
     );
   }
 
@@ -34,7 +33,7 @@ export default function RepresentanteDetalhePage() {
   const pctMeta = Math.round((rep.faturamentoMes / rep.metaMensal) * 100);
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-6">
         {/* Back + Header */}
         <div className="flex items-center gap-3">
@@ -254,6 +253,6 @@ export default function RepresentanteDetalhePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </VendedorLayout>
+    </>
   );
 }

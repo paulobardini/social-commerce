@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +38,7 @@ export default function CarteiraPage() {
   const clientesPrioritarios = mockClientes360.filter(c => c.tags.includes("alto_potencial") || c.tags.includes("urgente")).slice(0, 5);
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -222,6 +221,6 @@ export default function CarteiraPage() {
           </Card>
         </div>
       </div>
-    </VendedorLayout>
+    </>
   );
 }

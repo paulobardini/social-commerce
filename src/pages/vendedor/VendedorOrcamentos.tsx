@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +69,7 @@ export default function VendedorOrcamentos() {
   };
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -238,6 +237,6 @@ export default function VendedorOrcamentos() {
           </div>
         )}
       </div>
-    </VendedorLayout>
+    </>
   );
 }

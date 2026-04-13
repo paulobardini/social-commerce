@@ -1,4 +1,3 @@
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,7 @@ export default function RelatorioViewer() {
   };
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -198,6 +197,6 @@ export default function RelatorioViewer() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </VendedorLayout>
+    </>
   );
 }

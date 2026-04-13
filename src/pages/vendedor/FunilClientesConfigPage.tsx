@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { VendedorLayout } from "@/components/vendedor/VendedorLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +56,7 @@ export default function FunilClientesConfigPage() {
   const colors = ["#3b82f6", "#8b5cf6", "#10b981", "#06b6d4", "#f59e0b", "#ef4444", "#f97316", "#6366f1", "#94a3b8", "#ec4899"];
 
   return (
-    <VendedorLayout>
+    <>
       <div className="p-6 space-y-6 max-w-3xl">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -152,6 +151,6 @@ export default function FunilClientesConfigPage() {
           </CardContent>
         </Card>
       </div>
-    </VendedorLayout>
+    </>
   );
 }
