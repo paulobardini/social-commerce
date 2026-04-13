@@ -1,7 +1,4 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { NextilHeader } from "@/components/NextilHeader";
-import { NextilSidebar } from "@/components/NextilSidebar";
-import { MobileNav } from "@/components/MobileNav";
 import { getBrandBySlug, mockOpportunities, type Product } from "@/data/mockProducts";
 import { OpportunitiesSection } from "@/components/OpportunitiesSection";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
