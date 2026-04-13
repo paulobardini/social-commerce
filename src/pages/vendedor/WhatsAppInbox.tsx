@@ -91,8 +91,11 @@ export default function WhatsAppInbox() {
 
         {/* Center - Chat */}
         {selected ? (
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className={`${!selectedId || !selected ? "hidden md:flex" : "flex"} flex-1 flex-col min-w-0`}>
             <div className="h-14 border-b border-border flex items-center px-4 gap-3 bg-card shrink-0">
+              <button onClick={() => setSelectedId("")} className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg hover:bg-muted">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
               <div className="relative">
                 <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
                   <span className="text-sm font-bold text-green-700">{selected.clienteNome[0]}</span>
