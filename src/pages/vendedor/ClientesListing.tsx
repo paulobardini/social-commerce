@@ -61,6 +61,8 @@ export default function ClientesListing() {
             <p className="text-sm text-muted-foreground">{filtered.length} clientes na carteira</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/kanban")}><Kanban className="h-4 w-4 mr-1" /> Kanban</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}><Shuffle className="h-4 w-4 mr-1" /> Redistribuir</Button>
             <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" /> Exportar</Button>
             <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Novo cliente</Button>
           </div>
