@@ -58,16 +58,16 @@ export function KanbanBoard({ searchQuery = "", filterTags = [], filterPrioridad
         return (
           <div
             key={etapa.id}
-            className="flex flex-col w-[280px] min-w-[280px] shrink-0"
+            className="flex flex-col w-[280px] min-w-[280px] shrink-0 bg-secondary/70 rounded-xl border border-border/50 overflow-hidden"
             onDragOver={e => e.preventDefault()}
             onDrop={() => handleDrop(etapa.id)}
           >
             {/* Column header */}
-            <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/50 bg-secondary">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: etapa.cor }} />
                 <span className="text-sm font-semibold text-foreground">{etapa.nome}</span>
-                <Badge variant="secondary" className="text-[10px] px-1.5 h-5">{columnOps.length}</Badge>
+                <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-background/80">{columnOps.length}</Badge>
               </div>
               <span className="text-[11px] text-muted-foreground font-medium">
                 R$ {somaValor.toLocaleString("pt-BR")}
@@ -75,7 +75,7 @@ export function KanbanBoard({ searchQuery = "", filterTags = [], filterPrioridad
             </div>
 
             {/* Cards */}
-            <div className="flex-1 space-y-2 bg-muted/60 rounded-xl p-2 min-h-[200px] border border-border/60">
+            <div className="flex-1 space-y-2 p-2 min-h-[200px]">
               {columnOps.length === 0 && (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground border-2 border-dashed border-border rounded-lg">
                   Nenhuma oportunidade
