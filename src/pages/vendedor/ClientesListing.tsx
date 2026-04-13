@@ -8,7 +8,7 @@ import { TagBadge } from "@/components/vendedor/TagBadge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Search, Plus, Filter, Download, ChevronLeft, ChevronRight, Eye, Edit3,
-  LayoutGrid, List, X, Thermometer, Building, MapPin, Target,
+  LayoutGrid, List, X, Thermometer, Building, MapPin, Target, Kanban, Shuffle,
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
