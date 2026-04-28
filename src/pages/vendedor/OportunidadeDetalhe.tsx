@@ -285,6 +285,25 @@ export default function OportunidadeDetalhe() {
 
           {/* Histórico */}
           <TabsContent value="historico" className="space-y-3">
+            {automacoesAplicadas.map(aa => (
+              <div key={aa.id} className="flex gap-3 items-start">
+                <div className="flex flex-col items-center">
+                  <div className="h-7 w-7 rounded-full flex items-center justify-center bg-amber-100 text-amber-600">
+                    <Zap className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="w-px flex-1 bg-border mt-1" />
+                </div>
+                <div className="pb-4">
+                  <p className="text-sm font-medium">
+                    Automação aplicada: <span className="text-accent">{aa.automacaoNome}</span>
+                  </p>
+                  {aa.encerradaEm && (
+                    <p className="text-xs text-muted-foreground mt-0.5">Encerrada em {aa.encerradaEm}</p>
+                  )}
+                  <p className="text-[11px] text-muted-foreground mt-1">{aa.dataAplicacao} · {aa.aplicadaPor}</p>
+                </div>
+              </div>
+            ))}
             {atividades.map(a => {
               const Icon = atividadeIcons[a.tipo] || StickyNote;
               return (
@@ -308,31 +327,64 @@ export default function OportunidadeDetalhe() {
           {/* Tarefas */}
           <TabsContent value="tarefas" className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">{tarefas.length} tarefas vinculadas</p>
+              <p className="text-sm text-muted-foreground">{tarefas.length} tarefa(s) vinculada(s)</p>
               <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nova tarefa</Button>
             </div>
             <div className="space-y-2">
-              {tarefas.map(t => (
-                <div
-                  key={t.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                    t.status === "atrasada" ? "border-red-200 bg-red-50/50" : t.status === "concluida" ? "border-green-200 bg-green-50/50" : "border-border"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <CheckSquare className={`h-4 w-4 ${t.status === "concluida" ? "text-green-500" : t.status === "atrasada" ? "text-red-500" : "text-muted-foreground"}`} />
-                    <div>
-                      <p className="text-sm font-medium">{t.titulo}</p>
-                      <p className="text-xs text-muted-foreground">{t.descricao}</p>
+              {tarefas.map(t => {
+                const TipoIcon = t.tipo ? tarefaTipoIcon[t.tipo] : CheckSquare;
+                const isCancelada = t.status === "cancelada";
+                const isConcluida = t.status === "concluida";
+                const isAtrasada = t.status === "atrasada";
+                return (
+                  <div
+                    key={t.id}
+                    className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${
+                      isCancelada ? "border-border bg-muted/30 opacity-70" :
+                      isAtrasada ? "border-red-200 bg-red-50/50" :
+                      isConcluida ? "border-green-200 bg-green-50/50" :
+                      "border-border"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
+                        isCancelada ? "bg-muted text-muted-foreground" :
+                        isConcluida ? "bg-green-100 text-green-600" :
+                        isAtrasada ? "bg-red-100 text-red-600" :
+                        "bg-accent/10 text-accent"
+                      }`}>
+                        <TipoIcon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-sm font-medium truncate ${isCancelada || isConcluida ? "line-through text-muted-foreground" : ""}`}>
+                          {t.titulo}
+                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          {t.tipo && (
+                            <Badge variant="secondary" className="text-[10px]">{automacaoTipoLabels[t.tipo]}</Badge>
+                          )}
+                          {t.automacaoNome && (
+                            <Badge variant="outline" className="text-[10px] gap-1 border-amber-200 bg-amber-50 text-amber-700">
+                              <Zap className="h-2.5 w-2.5" /> {t.automacaoNome}
+                            </Badge>
+                          )}
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> {t.vencimento}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={t.prioridade === "alta" ? "destructive" : "secondary"} className="text-[10px] capitalize">{t.prioridade}</Badge>
+                      {!isConcluida && !isCancelada && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => concluirTarefa(t.id)}>
+                          Concluir
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>{t.vencimento}</span>
-                    <Badge variant={t.prioridade === "alta" ? "destructive" : "secondary"} className="text-[10px]">{t.prioridade}</Badge>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {tarefas.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground text-sm">Nenhuma tarefa vinculada</div>
               )}
