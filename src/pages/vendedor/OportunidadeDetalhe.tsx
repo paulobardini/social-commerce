@@ -9,10 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowRight, Edit, FileText, Phone, MessageSquare, CheckSquare, Clock,
   Calendar, Plus, Send, ThumbsUp, ThumbsDown, User, Building, Target, TrendingUp,
-  Mail, Video, StickyNote,
+  Mail, Video, StickyNote, Zap, MessageCircle, MapPin, Sparkles,
 } from "lucide-react";
 import {
-  mockOportunidades, mockAtividades, mockTarefas, etapaMap, etapaCorMap,
+  mockOportunidades, mockAtividades, etapaMap, etapaCorMap,
   type Oportunidade, type AtividadeCRM,
 } from "@/data/mockCRM";
 import { mockOrcamentos } from "@/data/mockVendedor";
@@ -20,10 +20,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAutomacoes } from "@/contexts/AutomacoesContext";
+import { automacaoTipoLabels, type AutomacaoTipoTarefa } from "@/data/mockAutomacoes";
 
 const atividadeIcons: Record<string, any> = {
   ligacao: Phone, reuniao: Video, email: Mail, follow_up: Clock,
   nota: StickyNote, mudanca_etapa: ArrowRight, orcamento_criado: FileText, tarefa: CheckSquare,
+  automacao: Zap,
 };
 
 const atividadeColors: Record<string, string> = {
@@ -31,6 +34,12 @@ const atividadeColors: Record<string, string> = {
   email: "bg-purple-100 text-purple-600", follow_up: "bg-orange-100 text-orange-600",
   nota: "bg-yellow-100 text-yellow-600", mudanca_etapa: "bg-slate-100 text-slate-600",
   orcamento_criado: "bg-indigo-100 text-indigo-600", tarefa: "bg-emerald-100 text-emerald-600",
+  automacao: "bg-amber-100 text-amber-600",
+};
+
+const tarefaTipoIcon: Record<AutomacaoTipoTarefa, any> = {
+  ligacao: Phone, whatsapp: MessageCircle, email: Mail,
+  visita: MapPin, proposta: FileText, personalizado: Sparkles,
 };
 
 export default function OportunidadeDetalhe() {
@@ -39,9 +48,12 @@ export default function OportunidadeDetalhe() {
   const [tab, setTab] = useState("resumo");
   const [novaAtividade, setNovaAtividade] = useState("");
 
+  const { tarefas: tarefasAll, aplicadas, concluirTarefa, editarTarefa } = useAutomacoes();
+
   const op = mockOportunidades.find(o => o.id === id) || mockOportunidades[0];
   const atividades = mockAtividades.filter(a => a.oportunidadeId === op.id);
-  const tarefas = mockTarefas.filter(t => t.oportunidadeId === op.id);
+  const tarefas = tarefasAll.filter(t => t.oportunidadeId === op.id);
+  const automacoesAplicadas = aplicadas.filter(a => a.oportunidadeId === op.id);
   const orcamentos = mockOrcamentos.filter(o => op.orcamentoIds.includes(o.id));
 
   const prioridadeDot: Record<string, string> = { alta: "bg-red-500", media: "bg-yellow-500", baixa: "bg-green-500" };
