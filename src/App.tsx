@@ -47,6 +47,8 @@ import ReportBuilder from "./pages/vendedor/ReportBuilder";
 import RelatorioViewer from "./pages/vendedor/RelatorioViewer";
 import InsightsPage from "./pages/vendedor/InsightsPage";
 import VisoesSalvasPage from "./pages/vendedor/VisoesSalvasPage";
+import AutomacoesPage from "./pages/vendedor/AutomacoesPage";
+import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +68,7 @@ const App = () => (
         <ContentProvider>
           <CartProvider>
           <CommentsProvider>
+            <AutomacoesProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -98,6 +101,7 @@ const App = () => (
                 <Route path="/vendedor/carteira-antiga" element={<LayoutRoute><VendedorCarteira /></LayoutRoute>} />
                 <Route path="/vendedor/orcamento-viewer" element={<LayoutRoute><OrcamentoViewer /></LayoutRoute>} />
                 <Route path="/vendedor/configuracoes" element={<LayoutRoute><VendedorConfiguracoes /></LayoutRoute>} />
+                <Route path="/vendedor/configuracoes/automacoes" element={<LayoutRoute><AutomacoesPage /></LayoutRoute>} />
                 <Route path="/vendedor/clientes" element={<LayoutRoute><ClientesListing /></LayoutRoute>} />
                 <Route path="/vendedor/clientes/kanban" element={<LayoutRoute><KanbanClientesPage /></LayoutRoute>} />
                 <Route path="/vendedor/clientes/kanban/config" element={<LayoutRoute><FunilClientesConfigPage /></LayoutRoute>} />
@@ -120,6 +124,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </AutomacoesProvider>
           </CommentsProvider>
           </CartProvider>
         </ContentProvider>

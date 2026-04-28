@@ -9,10 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowRight, Edit, FileText, Phone, MessageSquare, CheckSquare, Clock,
   Calendar, Plus, Send, ThumbsUp, ThumbsDown, User, Building, Target, TrendingUp,
-  Mail, Video, StickyNote,
+  Mail, Video, StickyNote, Zap, MessageCircle, MapPin, Sparkles,
 } from "lucide-react";
 import {
-  mockOportunidades, mockAtividades, mockTarefas, etapaMap, etapaCorMap,
+  mockOportunidades, mockAtividades, etapaMap, etapaCorMap,
   type Oportunidade, type AtividadeCRM,
 } from "@/data/mockCRM";
 import { mockOrcamentos } from "@/data/mockVendedor";
@@ -20,10 +20,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAutomacoes } from "@/contexts/AutomacoesContext";
+import { automacaoTipoLabels, type AutomacaoTipoTarefa } from "@/data/mockAutomacoes";
 
 const atividadeIcons: Record<string, any> = {
   ligacao: Phone, reuniao: Video, email: Mail, follow_up: Clock,
   nota: StickyNote, mudanca_etapa: ArrowRight, orcamento_criado: FileText, tarefa: CheckSquare,
+  automacao: Zap,
 };
 
 const atividadeColors: Record<string, string> = {
@@ -31,6 +34,12 @@ const atividadeColors: Record<string, string> = {
   email: "bg-purple-100 text-purple-600", follow_up: "bg-orange-100 text-orange-600",
   nota: "bg-yellow-100 text-yellow-600", mudanca_etapa: "bg-slate-100 text-slate-600",
   orcamento_criado: "bg-indigo-100 text-indigo-600", tarefa: "bg-emerald-100 text-emerald-600",
+  automacao: "bg-amber-100 text-amber-600",
+};
+
+const tarefaTipoIcon: Record<AutomacaoTipoTarefa, any> = {
+  ligacao: Phone, whatsapp: MessageCircle, email: Mail,
+  visita: MapPin, proposta: FileText, personalizado: Sparkles,
 };
 
 export default function OportunidadeDetalhe() {
@@ -39,9 +48,12 @@ export default function OportunidadeDetalhe() {
   const [tab, setTab] = useState("resumo");
   const [novaAtividade, setNovaAtividade] = useState("");
 
+  const { tarefas: tarefasAll, aplicadas, concluirTarefa, editarTarefa } = useAutomacoes();
+
   const op = mockOportunidades.find(o => o.id === id) || mockOportunidades[0];
   const atividades = mockAtividades.filter(a => a.oportunidadeId === op.id);
-  const tarefas = mockTarefas.filter(t => t.oportunidadeId === op.id);
+  const tarefas = tarefasAll.filter(t => t.oportunidadeId === op.id);
+  const automacoesAplicadas = aplicadas.filter(a => a.oportunidadeId === op.id);
   const orcamentos = mockOrcamentos.filter(o => op.orcamentoIds.includes(o.id));
 
   const prioridadeDot: Record<string, string> = { alta: "bg-red-500", media: "bg-yellow-500", baixa: "bg-green-500" };
@@ -273,6 +285,25 @@ export default function OportunidadeDetalhe() {
 
           {/* Histórico */}
           <TabsContent value="historico" className="space-y-3">
+            {automacoesAplicadas.map(aa => (
+              <div key={aa.id} className="flex gap-3 items-start">
+                <div className="flex flex-col items-center">
+                  <div className="h-7 w-7 rounded-full flex items-center justify-center bg-amber-100 text-amber-600">
+                    <Zap className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="w-px flex-1 bg-border mt-1" />
+                </div>
+                <div className="pb-4">
+                  <p className="text-sm font-medium">
+                    Automação aplicada: <span className="text-accent">{aa.automacaoNome}</span>
+                  </p>
+                  {aa.encerradaEm && (
+                    <p className="text-xs text-muted-foreground mt-0.5">Encerrada em {aa.encerradaEm}</p>
+                  )}
+                  <p className="text-[11px] text-muted-foreground mt-1">{aa.dataAplicacao} · {aa.aplicadaPor}</p>
+                </div>
+              </div>
+            ))}
             {atividades.map(a => {
               const Icon = atividadeIcons[a.tipo] || StickyNote;
               return (
@@ -296,31 +327,64 @@ export default function OportunidadeDetalhe() {
           {/* Tarefas */}
           <TabsContent value="tarefas" className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">{tarefas.length} tarefas vinculadas</p>
+              <p className="text-sm text-muted-foreground">{tarefas.length} tarefa(s) vinculada(s)</p>
               <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nova tarefa</Button>
             </div>
             <div className="space-y-2">
-              {tarefas.map(t => (
-                <div
-                  key={t.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                    t.status === "atrasada" ? "border-red-200 bg-red-50/50" : t.status === "concluida" ? "border-green-200 bg-green-50/50" : "border-border"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <CheckSquare className={`h-4 w-4 ${t.status === "concluida" ? "text-green-500" : t.status === "atrasada" ? "text-red-500" : "text-muted-foreground"}`} />
-                    <div>
-                      <p className="text-sm font-medium">{t.titulo}</p>
-                      <p className="text-xs text-muted-foreground">{t.descricao}</p>
+              {tarefas.map(t => {
+                const TipoIcon = t.tipo ? tarefaTipoIcon[t.tipo] : CheckSquare;
+                const isCancelada = t.status === "cancelada";
+                const isConcluida = t.status === "concluida";
+                const isAtrasada = t.status === "atrasada";
+                return (
+                  <div
+                    key={t.id}
+                    className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${
+                      isCancelada ? "border-border bg-muted/30 opacity-70" :
+                      isAtrasada ? "border-red-200 bg-red-50/50" :
+                      isConcluida ? "border-green-200 bg-green-50/50" :
+                      "border-border"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
+                        isCancelada ? "bg-muted text-muted-foreground" :
+                        isConcluida ? "bg-green-100 text-green-600" :
+                        isAtrasada ? "bg-red-100 text-red-600" :
+                        "bg-accent/10 text-accent"
+                      }`}>
+                        <TipoIcon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-sm font-medium truncate ${isCancelada || isConcluida ? "line-through text-muted-foreground" : ""}`}>
+                          {t.titulo}
+                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          {t.tipo && (
+                            <Badge variant="secondary" className="text-[10px]">{automacaoTipoLabels[t.tipo]}</Badge>
+                          )}
+                          {t.automacaoNome && (
+                            <Badge variant="outline" className="text-[10px] gap-1 border-amber-200 bg-amber-50 text-amber-700">
+                              <Zap className="h-2.5 w-2.5" /> {t.automacaoNome}
+                            </Badge>
+                          )}
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> {t.vencimento}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={t.prioridade === "alta" ? "destructive" : "secondary"} className="text-[10px] capitalize">{t.prioridade}</Badge>
+                      {!isConcluida && !isCancelada && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => concluirTarefa(t.id)}>
+                          Concluir
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>{t.vencimento}</span>
-                    <Badge variant={t.prioridade === "alta" ? "destructive" : "secondary"} className="text-[10px]">{t.prioridade}</Badge>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {tarefas.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground text-sm">Nenhuma tarefa vinculada</div>
               )}

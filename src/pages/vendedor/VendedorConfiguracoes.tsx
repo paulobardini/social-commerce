@@ -2,13 +2,16 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FunilConfigModal } from "@/components/vendedor/FunilConfigModal";
-import { Settings, Kanban, Bell, User } from "lucide-react";
+import { Settings, Kanban, Bell, User, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function VendedorConfiguracoes() {
   const [showFunil, setShowFunil] = useState(false);
+  const navigate = useNavigate();
 
   const sections = [
     { icon: Kanban, title: "Funil de oportunidades", desc: "Configure as etapas do seu pipeline comercial", action: () => setShowFunil(true), btnLabel: "Configurar" },
+    { icon: Zap, title: "Automações de followup", desc: "Crie sequências de tarefas disparadas pelas etapas do funil", action: () => navigate("/vendedor/configuracoes/automacoes"), btnLabel: "Configurar" },
     { icon: Bell, title: "Notificações", desc: "Gerencie alertas e lembretes do sistema", action: undefined, btnLabel: "Em breve", disabled: true },
     { icon: User, title: "Perfil do vendedor", desc: "Edite suas informações e preferências", action: undefined, btnLabel: "Em breve", disabled: true },
   ];
