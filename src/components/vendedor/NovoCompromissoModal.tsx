@@ -48,7 +48,7 @@ export function NovoCompromissoModal({ open, onOpenChange, defaultDate }: Props)
     const novo: CompromissoExt = {
       id: `c-${Date.now()}`,
       titulo,
-      tipo,
+      tipo: tipo as CompromissoExt["tipo"],
       data,
       hora,
       duracao,
