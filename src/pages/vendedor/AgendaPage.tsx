@@ -75,9 +75,9 @@ export default function AgendaPage() {
         </div>
 
         {/* Summary bar */}
-        <div className="flex gap-3">
-          {Object.entries(tipoCompromissoLabels).map(([key, label]) => {
-            const count = eventos.filter(c => c.tipo === key && c.status === "agendado").length;
+        <div className="flex gap-3 flex-wrap">
+          {Object.entries(tipoLabelsExtended).map(([key, label]) => {
+            const count = eventos.filter(c => c.displayTipo === key && c.status === "agendado").length;
             if (count === 0) return null;
             const Icon = tipoIcons[key] || CalendarIcon;
             return (
