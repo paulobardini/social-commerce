@@ -52,6 +52,7 @@ import MessageTemplatesPage from "./pages/vendedor/MessageTemplatesPage";
 import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
 import { MetasProvider } from "@/contexts/MetasContext";
 import { MessageTemplatesProvider } from "@/contexts/MessageTemplatesContext";
+import { TarefasProvider } from "@/contexts/TarefasContext";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ const App = () => (
             <AutomacoesProvider>
             <MetasProvider>
             <MessageTemplatesProvider>
+            <TarefasProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -130,6 +132,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </TarefasProvider>
             </MessageTemplatesProvider>
             </MetasProvider>
             </AutomacoesProvider>

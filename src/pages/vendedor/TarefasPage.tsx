@@ -6,8 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Search, Plus, CheckSquare, Clock, AlertTriangle, X,
-  List, Kanban, Phone, MapPin, Calendar, User, ExternalLink,
-  ArrowRight, Target,
+  List, Kanban, User, Target, RefreshCw,
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -20,12 +19,23 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  mockTarefas360, tipoTarefaLabels, mockClientes360, type TarefaCRM360,
+  tipoTarefaLabels, mockClientes360,
 } from "@/data/mockCRM360";
+import { useTarefas, type Recorrencia } from "@/contexts/TarefasContext";
+
+const recorrenciaLabels: Record<Recorrencia, string> = {
+  nenhuma: "Não repetir",
+  diaria: "Diariamente",
+  semanal: "Semanalmente",
+  mensal: "Mensalmente",
+  personalizada: "Personalizado",
+};
 
 export default function TarefasPage() {
   const navigate = useNavigate();
+  const { tarefas, addTarefa, toggleConcluida } = useTarefas();
   const [view, setView] = useState<"list" | "board">("list");
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("");
@@ -33,21 +43,33 @@ export default function TarefasPage() {
   const [filterTipo, setFilterTipo] = useState<string>("");
   const [showNova, setShowNova] = useState(false);
 
+  // Form state
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [tipo, setTipo] = useState<string>("follow_up");
+  const [prioridade, setPrioridade] = useState<"alta" | "media" | "baixa">("media");
+  const [clienteId, setClienteId] = useState<string>("");
+  const [vencimento, setVencimento] = useState<string>("");
+  const [hora, setHora] = useState<string>("");
+  const [observacao, setObservacao] = useState<string>("");
+  const [recorrencia, setRecorrencia] = useState<Recorrencia>("nenhuma");
+  const [intervaloCustom, setIntervaloCustom] = useState<number>(7);
+
   const filtered = useMemo(() => {
-    return mockTarefas360.filter(t => {
+    return tarefas.filter(t => {
       if (search && !t.titulo.toLowerCase().includes(search.toLowerCase()) && !(t.clienteNome || "").toLowerCase().includes(search.toLowerCase())) return false;
       if (filterStatus && t.status !== filterStatus) return false;
       if (filterPrioridade && t.prioridade !== filterPrioridade) return false;
       if (filterTipo && t.tipo !== filterTipo) return false;
       return true;
     });
-  }, [search, filterStatus, filterPrioridade, filterTipo]);
+  }, [tarefas, search, filterStatus, filterPrioridade, filterTipo]);
 
   const counts = {
-    total: mockTarefas360.length,
-    pendentes: mockTarefas360.filter(t => t.status === "pendente").length,
-    atrasadas: mockTarefas360.filter(t => t.status === "atrasada").length,
-    concluidas: mockTarefas360.filter(t => t.status === "concluida").length,
+    total: tarefas.length,
+    pendentes: tarefas.filter(t => t.status === "pendente").length,
+    atrasadas: tarefas.filter(t => t.status === "atrasada").length,
+    concluidas: tarefas.filter(t => t.status === "concluida").length,
   };
 
   const prioridadeDot: Record<string, string> = { alta: "bg-red-500", media: "bg-yellow-500", baixa: "bg-green-500" };
@@ -61,6 +83,41 @@ export default function TarefasPage() {
   };
   const boardStatuses = ["pendente", "atrasada", "concluida"] as const;
   const activeFilters = [filterStatus, filterPrioridade, filterTipo].filter(Boolean).length;
+
+  const formatVencimento = (iso: string) => {
+    if (!iso) return "";
+    if (iso.includes("/")) return iso;
+    const [y, m, d] = iso.split("-");
+    return `${d}/${m}/${y}`;
+  };
+
+  const resetForm = () => {
+    setTitulo(""); setDescricao(""); setTipo("follow_up"); setPrioridade("media");
+    setClienteId(""); setVencimento(""); setHora(""); setObservacao("");
+    setRecorrencia("nenhuma"); setIntervaloCustom(7);
+  };
+
+  const handleCreate = () => {
+    if (!titulo.trim() || !vencimento) return;
+    const cliente = mockClientes360.find(c => c.id === clienteId);
+    addTarefa({
+      titulo,
+      descricao,
+      tipo: tipo as any,
+      clienteId: clienteId || undefined,
+      clienteNome: cliente?.nomeFantasia,
+      prioridade,
+      vencimento: formatVencimento(vencimento),
+      hora: hora || undefined,
+      responsavel: "Paulo Bardini",
+      status: "pendente",
+      observacao: observacao || undefined,
+      recorrencia,
+      recorrenciaIntervaloDias: recorrencia === "personalizada" ? intervaloCustom : undefined,
+    });
+    setShowNova(false);
+    resetForm();
+  };
 
   return (
     <>
@@ -165,12 +222,24 @@ export default function TarefasPage() {
               </TableHeader>
               <TableBody>
                 {filtered.map(t => (
-                  <TableRow key={t.id} className={`hover:bg-muted/30 cursor-pointer ${t.status === "atrasada" ? "bg-red-50/30" : ""}`}>
+                  <TableRow key={t.id} className={`hover:bg-muted/30 ${t.status === "atrasada" ? "bg-red-50/30" : ""}`}>
                     <TableCell>
-                      <CheckSquare className={`h-4 w-4 ${statusIconColors[t.status] || "text-muted-foreground"}`} />
+                      <button onClick={() => toggleConcluida(t.id)} aria-label="Concluir tarefa">
+                        <CheckSquare className={`h-4 w-4 ${statusIconColors[t.status] || "text-muted-foreground"} hover:scale-110 transition-transform`} />
+                      </button>
                     </TableCell>
                     <TableCell>
-                      <p className={`text-sm font-medium ${t.status === "concluida" ? "line-through text-muted-foreground" : ""}`}>{t.titulo}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className={`text-sm font-medium ${t.status === "concluida" ? "line-through text-muted-foreground" : ""}`}>{t.titulo}</p>
+                        {t.recorrencia && t.recorrencia !== "nenhuma" && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <RefreshCw className="h-3 w-3 text-accent" />
+                            </TooltipTrigger>
+                            <TooltipContent>Tarefa recorrente: {recorrenciaLabels[t.recorrencia]}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
                       {t.oportunidadeNome && <p className="text-[10px] text-accent flex items-center gap-1"><Target className="h-3 w-3" /> {t.oportunidadeNome}</p>}
                     </TableCell>
                     <TableCell>
@@ -222,6 +291,9 @@ export default function TarefasPage() {
                           <div className="flex items-center gap-1.5 mb-1.5">
                             <div className={`w-2 h-2 rounded-full ${prioridadeDot[t.prioridade]}`} />
                             <span className="text-[10px] text-muted-foreground capitalize">{t.prioridade}</span>
+                            {t.recorrencia && t.recorrencia !== "nenhuma" && (
+                              <RefreshCw className="h-3 w-3 text-accent" aria-label="Recorrente" />
+                            )}
                             <Badge variant="secondary" className="text-[9px] ml-auto">{tipoTarefaLabels[t.tipo]}</Badge>
                           </div>
                           <p className={`text-sm font-medium mb-1 ${status === "concluida" ? "line-through text-muted-foreground" : ""}`}>{t.titulo}</p>
@@ -233,8 +305,11 @@ export default function TarefasPage() {
                           {t.oportunidadeNome && (
                             <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3" /> {t.oportunidadeNome}</p>
                           )}
-                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
-                            <Clock className="h-3 w-3" /> {t.vencimento}{t.hora ? ` · ${t.hora}` : ""}
+                          <div className="flex items-center justify-between gap-1 text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
+                            <div className="flex items-center gap-1"><Clock className="h-3 w-3" /> {t.vencimento}{t.hora ? ` · ${t.hora}` : ""}</div>
+                            <button onClick={() => toggleConcluida(t.id)} className="text-accent hover:underline">
+                              {t.status === "concluida" ? "Reabrir" : "Concluir"}
+                            </button>
                           </div>
                         </CardContent>
                       </Card>
@@ -253,43 +328,65 @@ export default function TarefasPage() {
       </div>
 
       {/* Nova Tarefa Modal */}
-      <Dialog open={showNova} onOpenChange={setShowNova}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+      <Dialog open={showNova} onOpenChange={(o) => { setShowNova(o); if (!o) resetForm(); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="font-heading">Nova tarefa</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div><Label className="text-xs">Título *</Label><Input placeholder="Ex: Follow-up com cliente" className="mt-1" /></div>
-            <div><Label className="text-xs">Descrição</Label><Textarea placeholder="Detalhes da tarefa" className="mt-1" rows={2} /></div>
+          <div className="space-y-4 mt-2 overflow-y-auto pr-1">
+            <div><Label className="text-xs">Título *</Label><Input value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Ex: Follow-up com cliente" className="mt-1" /></div>
+            <div><Label className="text-xs">Descrição</Label><Textarea value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Detalhes da tarefa" className="mt-1" rows={2} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs">Tipo</Label>
-                <Select><SelectTrigger className="mt-1"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <Select value={tipo} onValueChange={setTipo}><SelectTrigger className="mt-1"><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>{Object.entries(tipoTarefaLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div><Label className="text-xs">Prioridade</Label>
-                <Select><SelectTrigger className="mt-1"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <Select value={prioridade} onValueChange={(v: any) => setPrioridade(v)}><SelectTrigger className="mt-1"><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent><SelectItem value="alta">Alta</SelectItem><SelectItem value="media">Média</SelectItem><SelectItem value="baixa">Baixa</SelectItem></SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs">Cliente</Label>
-                <Select><SelectTrigger className="mt-1"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <Select value={clienteId} onValueChange={setClienteId}><SelectTrigger className="mt-1"><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>{mockClientes360.map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label className="text-xs">Data de vencimento</Label><Input type="date" className="mt-1" /></div>
+              <div><Label className="text-xs">Data de vencimento *</Label><Input type="date" value={vencimento} onChange={e => setVencimento(e.target.value)} className="mt-1" /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-xs">Hora</Label><Input type="time" className="mt-1" /></div>
+              <div><Label className="text-xs">Hora</Label><Input type="time" value={hora} onChange={e => setHora(e.target.value)} className="mt-1" /></div>
               <div><Label className="text-xs">Responsável</Label><Input value="Paulo Bardini" className="mt-1" readOnly /></div>
             </div>
-            <div><Label className="text-xs">Observação</Label><Textarea placeholder="Notas adicionais" className="mt-1" rows={2} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs flex items-center gap-1"><RefreshCw className="h-3 w-3" /> Repetir</Label>
+                <Select value={recorrencia} onValueChange={(v: any) => setRecorrencia(v)}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(recorrenciaLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              {recorrencia === "personalizada" && (
+                <div>
+                  <Label className="text-xs">A cada (dias)</Label>
+                  <Input type="number" min={1} value={intervaloCustom} onChange={e => setIntervaloCustom(Number(e.target.value) || 1)} className="mt-1" />
+                </div>
+              )}
+            </div>
+            <div><Label className="text-xs">Observação</Label><Textarea value={observacao} onChange={e => setObservacao(e.target.value)} placeholder="Notas adicionais" className="mt-1" rows={2} /></div>
+            {hora && vencimento && (
+              <p className="text-[11px] text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
+                ℹ️ Esta tarefa também aparecerá na <strong>Agenda</strong> como evento do tipo "Tarefa".
+              </p>
+            )}
           </div>
-          <div className="flex justify-end gap-2 mt-4">
+          <div className="flex justify-end gap-2 mt-4 shrink-0">
             <Button variant="outline" onClick={() => setShowNova(false)}>Cancelar</Button>
-            <Button onClick={() => setShowNova(false)}>Criar tarefa</Button>
+            <Button onClick={handleCreate} disabled={!titulo.trim() || !vencimento}>Criar tarefa</Button>
           </div>
         </DialogContent>
       </Dialog>
