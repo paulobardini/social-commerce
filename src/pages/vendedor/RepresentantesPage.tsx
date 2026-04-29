@@ -54,9 +54,11 @@ export default function RepresentantesPage() {
             <h1 className="text-xl font-heading font-bold text-foreground">Representantes</h1>
             <p className="text-sm text-muted-foreground">{mockRepresentantes.length} representantes • {totalCarteira} clientes na base</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}>
-            <Shuffle className="h-4 w-4 mr-1" /> Redistribuir carteira
-          </Button>
+          {showRedistribuir && (
+            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}>
+              <Shuffle className="h-4 w-4 mr-1" /> Redistribuir carteira
+            </Button>
+          )}
         </div>
 
         {/* Summary cards */}
