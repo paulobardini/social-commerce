@@ -125,11 +125,22 @@ export default function NovoOrcamento() {
             ]}
           />
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2 text-sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-sm"
+              disabled={!nomeValido}
+              onClick={() => tentarAcao("visualizar", () => toast.success("Pré-visualização gerada."))}
+            >
               <Eye className="h-4 w-4" />
               Visualizar orçamento
             </Button>
-            <Button size="sm" className="text-sm bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button
+              size="sm"
+              className="text-sm bg-accent hover:bg-accent/90 text-accent-foreground"
+              disabled={!nomeValido}
+              onClick={() => tentarAcao("grade", () => toast.success("Iniciando montagem da grade."))}
+            >
               Montar grade
             </Button>
           </div>
