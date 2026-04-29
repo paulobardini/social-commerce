@@ -5,6 +5,7 @@ import { useStartData } from "../contexts/StartDataContext";
 import { useStartAuth } from "../contexts/StartAuthContext";
 import { startClasses, formatBRL } from "../styles/tokens";
 import { CATEGORIAS_PRODUTO, StartProduto } from "../data/mockStart";
+import { ProdutoFoto } from "../components/ProdutoFoto";
 
 export default function StartCatalogo() {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ export default function StartCatalogo() {
       {lista.length === 0 ? (
         <EmptyCatalogo onCreate={() => navigate("/start/catalogo/novo")} />
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {lista.map(p => <ProdCard key={p.id} produto={p} onClick={() => navigate(`/start/catalogo/${p.id}`)} />)}
         </div>
       )}
@@ -80,15 +81,12 @@ function ProdCard({ produto, onClick }: { produto: StartProduto; onClick: () => 
     total === 0 ? { c: "bg-[#FCEBEB] text-[#A32D2D]", t: "Sem estoque" } :
     total <= 10 ? { c: "bg-[#FAEEDA] text-[#854F0B]", t: "Pouco estoque" } :
     { c: "bg-[#E1F5EE] text-[#0F6E56]", t: "Disponível" };
-  const iniciais = produto.nome.split(" ").slice(0, 2).map(s => s[0]).join("");
 
   return (
     <button onClick={onClick} className="text-left bg-white border border-[rgba(0,0,0,0.08)] rounded-xl overflow-hidden hover:border-[#1D9E75] transition-colors">
-      <div className="aspect-square flex items-center justify-center text-[#1A1A1A]/30 text-[24px] font-medium" style={{ background: produto.fotoCor || "#F0F0F0" }}>
-        {iniciais}
-      </div>
-      <div className="p-3">
-        <p className="text-[13px] font-medium truncate">{produto.nome}</p>
+      <ProdutoFoto fotoUrl={produto.fotoUrl} fotoCor={produto.fotoCor} alt={produto.nome} aspect="aspect-square" />
+      <div className="p-2.5 md:p-3">
+        <p className="text-[12px] md:text-[13px] font-medium line-clamp-2 min-h-[34px]">{produto.nome}</p>
         <p className="text-[14px] font-medium text-[#0F6E56] mt-0.5">{formatBRL(produto.preco)}</p>
         <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-medium ${badge.c}`}>{badge.t}</span>
       </div>

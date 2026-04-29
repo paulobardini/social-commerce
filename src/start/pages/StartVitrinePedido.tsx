@@ -4,6 +4,7 @@ import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Loader2 } from "lucide-rea
 import { useStartCart } from "../contexts/StartCartContext";
 import { useStartData } from "../contexts/StartDataContext";
 import { useStartAuth } from "../contexts/StartAuthContext";
+import { ProdutoFoto } from "../components/ProdutoFoto";
 import { TAMANHOS_POR_TIPO, UFS } from "../data/mockStart";
 import { formatBRL, startClasses } from "../styles/tokens";
 
@@ -170,7 +171,9 @@ export default function StartVitrinePedido() {
                 return (
                   <div key={it.produtoId} className="py-4 first:pt-0 last:pb-0">
                     <div className="flex gap-3">
-                      <div className="w-16 h-20 rounded-lg shrink-0" style={{ background: it.fotoCor || "#F8F8F6" }} />
+                      <div className="w-16 h-20 rounded-lg shrink-0 overflow-hidden">
+                        <ProdutoFoto fotoUrl={it.fotoUrl} fotoCor={it.fotoCor} alt={it.produtoNome} aspect="aspect-[4/5]" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">

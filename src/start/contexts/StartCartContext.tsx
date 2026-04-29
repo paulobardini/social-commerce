@@ -5,6 +5,7 @@ export interface VitrineCartItem {
   produtoNome: string;
   precoUnit: number;
   fotoCor?: string;
+  fotoUrl?: string;
   // quantidades por tamanho (pode haver mais de uma variação no mesmo produto)
   porTamanho: Record<string, number>;
 }
