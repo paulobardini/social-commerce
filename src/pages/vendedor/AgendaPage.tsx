@@ -77,7 +77,7 @@ export default function AgendaPage() {
         {/* Summary bar */}
         <div className="flex gap-3">
           {Object.entries(tipoCompromissoLabels).map(([key, label]) => {
-            const count = mockCompromissos.filter(c => c.tipo === key && c.status === "agendado").length;
+            const count = eventos.filter(c => c.tipo === key && c.status === "agendado").length;
             if (count === 0) return null;
             const Icon = tipoIcons[key] || CalendarIcon;
             return (
@@ -109,7 +109,7 @@ export default function AgendaPage() {
                     <div key={h} className="grid grid-cols-[60px_repeat(5,1fr)] border-b border-border/30">
                       <div className="p-1.5 text-[10px] text-muted-foreground text-right pr-2 border-r border-border/30">{h}</div>
                       {weekDates.map(d => {
-                        const events = mockCompromissos.filter(c => c.data === d.full && c.hora === h);
+                        const events = eventos.filter(c => c.data === d.full && c.hora === h);
                         return (
                           <div key={d.full + h} className="min-h-[56px] p-1 border-l border-border/20">
                             {events.map(ev => {
@@ -142,7 +142,7 @@ export default function AgendaPage() {
                 </div>
                 <div className="divide-y divide-border/50">
                   {hours.map(h => {
-                    const events = mockCompromissos.filter(c => c.data === selectedDay && c.hora === h);
+                    const events = eventos.filter(c => c.data === selectedDay && c.hora === h);
                     return (
                       <div key={h} className="flex min-h-[60px]">
                         <div className="w-16 p-2 text-xs text-muted-foreground shrink-0 border-r border-border/30 text-right pr-3">{h}</div>
@@ -176,7 +176,7 @@ export default function AgendaPage() {
                   {Array.from({ length: 30 }, (_, i) => {
                     const day = i + 1;
                     const dateStr = `${day.toString().padStart(2, "0")}/04/2026`;
-                    const events = mockCompromissos.filter(c => c.data === dateStr);
+                    const events = eventos.filter(c => c.data === dateStr);
                     const isToday = day === 14;
                     return (
                       <button key={day} onClick={() => { setSelectedDay(dateStr); setViewMode("day"); }} className={`h-16 p-1 border border-border/30 rounded-md text-left hover:bg-muted/50 transition-colors ${isToday ? "bg-accent/5 border-accent/30" : ""}`}>
