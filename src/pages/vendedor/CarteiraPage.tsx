@@ -88,6 +88,10 @@ export default function CarteiraPage() {
                   <span className="text-xs text-muted-foreground">{kpi.label}</span>
                 </div>
                 <p className="text-2xl font-bold">{kpi.value}</p>
+                <div className="mt-1.5">
+                  <Sparkline data={sparkPoints(kpi.label)} color="hsl(var(--primary))" width={100} height={22} />
+                </div>
+                <p className="text-[9px] text-muted-foreground/70 mt-0.5">Últimos 6 meses</p>
               </CardContent>
             </Card>
           ))}
@@ -103,7 +107,8 @@ export default function CarteiraPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {mockRepresentantes.filter(r => r.status !== "inativo").map(rep => {
-                const pct = Math.round((rep.faturamentoMes / rep.metaMensal) * 100);
+                const temMeta = rep.metaMensal && rep.metaMensal > 0;
+                const pct = temMeta ? Math.round((rep.faturamentoMes / rep.metaMensal) * 100) : 0;
                 return (
                   <div key={rep.id} className="space-y-1">
                     <div className="flex items-center justify-between">
@@ -116,10 +121,21 @@ export default function CarteiraPage() {
                         <Badge variant="secondary" className="text-[10px]">{rep.regiao}</Badge>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Progress value={pct} className="h-2 flex-1" />
-                      <span className="text-[11px] font-medium w-10 text-right">{pct}%</span>
-                    </div>
+                    {temMeta ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-2 cursor-help">
+                            <Progress value={pct} className="h-2 flex-1" />
+                            <span className="text-[11px] font-medium w-10 text-right">{pct}%</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-[260px] text-xs">
+                          % de faturamento do mês em relação à meta de carteira ativa configurada para este representante.
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Meta não definida</span>
+                    )}
                   </div>
                 );
               })}
