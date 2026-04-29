@@ -10,9 +10,25 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { mockClientes360, nichoLabels, type Nicho } from "@/data/mockCRM360";
 import { mockRepresentantes } from "@/data/mockRepresentantes";
 import { Progress } from "@/components/ui/progress";
+import { Sparkline } from "@/components/vendedor/Sparkline";
+
+// MOCK: histórico dos últimos 6 meses por métrica
+const meses6 = ["Nov", "Dez", "Jan", "Fev", "Mar", "Abr"];
+const sparkHistorico: Record<string, number[]> = {
+  Total: [10, 11, 12, 12, 13, 14],
+  Ativos: [6, 6, 7, 7, 8, 8],
+  Novos: [1, 0, 2, 1, 2, 3],
+  "Em risco": [3, 3, 4, 3, 2, 2],
+  Reativação: [0, 1, 1, 0, 1, 1],
+  Inativos: [4, 4, 3, 3, 2, 2],
+};
+function sparkPoints(label: string) {
+  return (sparkHistorico[label] || []).map((v, i) => ({ label: meses6[i], value: v }));
+}
 
 export default function CarteiraPage() {
   const navigate = useNavigate();
