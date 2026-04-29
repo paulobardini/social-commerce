@@ -98,6 +98,8 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <CartDrawer />
+              <StartAuthProvider>
+              <StartDataProvider>
               <Routes>
                 {/* Bare pages (no sidebar/topbar) */}
                 <Route path="/login" element={<Login />} />
@@ -146,9 +148,29 @@ const App = () => (
                 <Route path="/vendedor/relatorios/:id" element={<LayoutRoute><RelatorioViewer /></LayoutRoute>} />
                 <Route path="/vendedor/insights" element={<LayoutRoute><InsightsPage /></LayoutRoute>} />
                 <Route path="/vendedor/visoes-salvas" element={<LayoutRoute><VisoesSalvasPage /></LayoutRoute>} />
+
+                {/* Nextil Start - área pública */}
+                <Route path="/start" element={<Navigate to="/start/inicio" replace />} />
+                <Route path="/start/login" element={<StartLayout bare><StartLogin /></StartLayout>} />
+                <Route path="/start/cadastro" element={<StartLayout bare><StartCadastro /></StartLayout>} />
+
+                {/* Nextil Start - área autenticada */}
+                <Route path="/start/onboarding" element={<StartProtectedRoute><StartLayout bare><StartOnboarding /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/inicio" element={<StartProtectedRoute><StartLayout><StartInicio /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/catalogo" element={<StartProtectedRoute><StartLayout><StartCatalogo /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/catalogo/novo" element={<StartProtectedRoute><StartLayout><StartProdutoForm /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/catalogo/:id" element={<StartProtectedRoute><StartLayout><StartProdutoForm /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/pedidos" element={<StartProtectedRoute><StartLayout><StartPedidos /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/pedidos/:id" element={<StartProtectedRoute><StartLayout><StartPedidoDetalhe /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/compradores" element={<StartProtectedRoute><StartLayout><StartCompradores /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/compradores/novo" element={<StartProtectedRoute><StartLayout><StartCompradorNovo /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/compradores/:id" element={<StartProtectedRoute><StartLayout><StartCompradorDetalhe /></StartLayout></StartProtectedRoute>} />
+
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </StartDataProvider>
+              </StartAuthProvider>
             </BrowserRouter>
             </RemindersProvider>
             </TarefasProvider>
