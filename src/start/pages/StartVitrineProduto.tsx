@@ -49,6 +49,7 @@ export default function StartVitrineProduto() {
       produtoNome: produto.nome,
       precoUnit: produto.preco,
       fotoCor: produto.fotoCor,
+      fotoUrl: produto.fotoUrl,
       porTamanho: { ...qts },
     });
     setAdded(true);
