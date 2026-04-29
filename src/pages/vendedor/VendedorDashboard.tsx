@@ -345,6 +345,14 @@ export default function VendedorDashboard() {
           </Card>
         </div>
       </div>
+
+      <MetasModal open={showMeta} onOpenChange={setShowMeta} />
+      <QuickTaskModal
+        open={taskModal.open}
+        onOpenChange={(o) => setTaskModal({ open: o, cliente: o ? taskModal.cliente : "" })}
+        defaultClienteNome={taskModal.cliente}
+        defaultTipo="reativacao"
+      />
     </>
   );
 }
