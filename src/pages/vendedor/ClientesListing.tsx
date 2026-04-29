@@ -70,8 +70,9 @@ export default function ClientesListing() {
             <p className="text-sm text-muted-foreground">{filtered.length} clientes na carteira</p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/kanban")}><Kanban className="h-4 w-4 mr-1" /> Kanban</Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}><Shuffle className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Redistribuir</span><span className="sm:hidden">Redist.</span></Button>
+            {showRedistribuir && (
+              <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}><Shuffle className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Redistribuir</span><span className="sm:hidden">Redist.</span></Button>
+            )}
             <Button variant="outline" size="sm" className="hidden sm:flex"><Download className="h-4 w-4 mr-1" /> Exportar</Button>
             <Button size="sm"><Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Novo cliente</span><span className="sm:hidden">Novo</span></Button>
           </div>
