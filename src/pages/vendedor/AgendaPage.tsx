@@ -5,21 +5,22 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight,
-  Phone, MapPin, Clock, User, Video, ArrowRight, Presentation,
+  Phone, MapPin, Clock, Video, ArrowRight, Presentation, CheckSquare,
 } from "lucide-react";
-import {
-  mockCompromissos, tipoCompromissoLabels, type Compromisso,
-} from "@/data/mockCRM360";
+import { tipoCompromissoLabels } from "@/data/mockCRM360";
+import { useTarefas } from "@/contexts/TarefasContext";
 
 const tipoIcons: Record<string, any> = {
   ligacao: Phone, reuniao: Video, visita: MapPin, follow_up: ArrowRight,
-  retorno_orcamento: Clock, apresentacao: Presentation,
+  retorno_orcamento: Clock, apresentacao: Presentation, tarefa: CheckSquare,
 };
 const tipoColors: Record<string, string> = {
   ligacao: "bg-green-100 text-green-600", reuniao: "bg-blue-100 text-blue-600",
   visita: "bg-purple-100 text-purple-600", follow_up: "bg-orange-100 text-orange-600",
   retorno_orcamento: "bg-yellow-100 text-yellow-600", apresentacao: "bg-indigo-100 text-indigo-600",
+  tarefa: "bg-pink-100 text-pink-700",
 };
+const tipoLabelsExtended: Record<string, string> = { ...tipoCompromissoLabels, tarefa: "Tarefa" };
 
 const weekDates = [
   { day: "Seg", date: "14/04", full: "14/04/2026" },
@@ -34,10 +35,18 @@ const hours = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "1
 
 export default function AgendaPage() {
   const navigate = useNavigate();
+  const { compromissos, updateCompromisso } = useTarefas();
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week");
   const [selectedDay, setSelectedDay] = useState("14/04/2026");
 
-  const todayEvents = mockCompromissos.filter(c => c.data === selectedDay);
+  // Eventos: compromissos manuais + tarefas com horário (origem === "tarefa") são exibidos como tipo "tarefa"
+  const eventos = compromissos.map(c => ({
+    ...c,
+    displayTipo: c.origem === "tarefa" ? "tarefa" : c.tipo,
+  }));
+
+  const todayEvents = eventos.filter(c => c.data === selectedDay);
+
 
   return (
     <>
