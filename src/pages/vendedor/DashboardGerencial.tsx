@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Users, Target, FileText, CheckSquare, AlertTriangle, TrendingUp,
   ShoppingBag, MessageCircle, ArrowRight, Clock, Download, Save, BarChart3,
-  Flame, UserX, Filter, ChevronRight, Eye, Award, PieChart,
+  Flame, UserX, Filter, ChevronRight, Eye, Award, PieChart, TrendingDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,20 +20,37 @@ export default function DashboardGerencial() {
   const [periodo, setPeriodo] = useState("abril_2026");
   const kpis = dashboardGerencialKPIs;
 
-  const kpiCards = [
-    { label: "Clientes totais", value: kpis.clientesTotais, icon: Users, color: "text-blue-600", bg: "bg-blue-50", link: "/vendedor/clientes" },
-    { label: "Clientes ativos", value: kpis.clientesAtivos, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", link: "/vendedor/clientes" },
-    { label: "Clientes em risco", value: kpis.clientesEmRisco, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", link: "/vendedor/clientes" },
-    { label: "Oportunidades abertas", value: kpis.oportunidadesAbertas, icon: Target, color: "text-purple-600", bg: "bg-purple-50", link: "/vendedor/oportunidades" },
-    { label: "Em negociação", value: kpis.oportunidadesNegociacao, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50", link: "/vendedor/oportunidades" },
-    { label: "Taxa de conversão", value: `${kpis.taxaConversao}%`, icon: Award, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Orçamentos abertos", value: kpis.orcamentosAbertos, icon: FileText, color: "text-cyan-600", bg: "bg-cyan-50" },
-    { label: "Tarefas vencidas", value: kpis.tarefasVencidas, icon: CheckSquare, color: "text-red-600", bg: "bg-red-50", link: "/vendedor/tarefas" },
-    { label: "Msgs sem resposta", value: kpis.mensagensSemResposta, icon: MessageCircle, color: "text-green-600", bg: "bg-green-50", link: "/vendedor/whatsapp" },
-    { label: "Pedidos do período", value: kpis.pedidosPeriodo, icon: ShoppingBag, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Ticket médio", value: `R$ ${kpis.ticketMedio.toLocaleString("pt-BR")}`, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50" },
-    { label: "Sem contato recente", value: kpis.clientesSemContato, icon: UserX, color: "text-rose-600", bg: "bg-rose-50", link: "/vendedor/clientes" },
+  // MOCK: deltas vs período anterior. null = sem dados anteriores
+  const kpiCards: Array<{
+    label: string; value: string | number; icon: any; color: string; bg: string;
+    link?: string; delta: number | null;
+  }> = [
+    { label: "Clientes totais", value: kpis.clientesTotais, icon: Users, color: "text-blue-600", bg: "bg-blue-50", link: "/vendedor/clientes", delta: 8 },
+    { label: "Clientes ativos", value: kpis.clientesAtivos, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", link: "/vendedor/clientes", delta: 12 },
+    { label: "Clientes em risco", value: kpis.clientesEmRisco, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", link: "/vendedor/clientes", delta: -25 },
+    { label: "Oportunidades abertas", value: kpis.oportunidadesAbertas, icon: Target, color: "text-purple-600", bg: "bg-purple-50", link: "/vendedor/oportunidades", delta: 15 },
+    { label: "Em negociação", value: kpis.oportunidadesNegociacao, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50", link: "/vendedor/oportunidades", delta: 33 },
+    { label: "Taxa de conversão", value: `${kpis.taxaConversao}%`, icon: Award, color: "text-indigo-600", bg: "bg-indigo-50", delta: 4 },
+    { label: "Orçamentos abertos", value: kpis.orcamentosAbertos, icon: FileText, color: "text-cyan-600", bg: "bg-cyan-50", delta: -10 },
+    { label: "Tarefas vencidas", value: kpis.tarefasVencidas, icon: CheckSquare, color: "text-red-600", bg: "bg-red-50", link: "/vendedor/tarefas", delta: -50 },
+    { label: "Msgs sem resposta", value: kpis.mensagensSemResposta, icon: MessageCircle, color: "text-green-600", bg: "bg-green-50", link: "/vendedor/whatsapp", delta: -18 },
+    { label: "Pedidos do período", value: kpis.pedidosPeriodo, icon: ShoppingBag, color: "text-amber-600", bg: "bg-amber-50", delta: 20 },
+    { label: "Ticket médio", value: `R$ ${kpis.ticketMedio.toLocaleString("pt-BR")}`, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", delta: 6 },
+    { label: "Sem contato recente", value: kpis.clientesSemContato, icon: UserX, color: "text-rose-600", bg: "bg-rose-50", link: "/vendedor/clientes", delta: null },
   ];
+
+  const periodoLabel = periodo === "abril_2026" || periodo === "marco_2026" ? "vs. mês anterior" : "vs. período anterior";
+
+  // MOCK: tempo médio (em dias) que oportunidades ficam em cada etapa do funil
+  const funnelTempoMedio: Record<string, number> = {
+    "Novo Lead": 2,
+    "Contato Iniciado": 4,
+    "Em Qualificação": 5,
+    "Proposta/Construção": 7,
+    "Orçamento Enviado": 6,
+    "Em Negociação": 9,
+    "Ganho": 0,
+  };
 
   const maxFunnel = Math.max(...funnelData.map(f => f.volume));
   const topClientes = [...mockClientes360].filter(c => c.status === "ativo" && c.temperaturaComercial !== "fria").slice(0, 5);
