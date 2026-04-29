@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { tipoCompromissoLabels } from "@/data/mockCRM360";
 import { useTarefas } from "@/contexts/TarefasContext";
+import { NovoCompromissoModal } from "@/components/vendedor/NovoCompromissoModal";
 
 const tipoIcons: Record<string, any> = {
   ligacao: Phone, reuniao: Video, visita: MapPin, follow_up: ArrowRight,
@@ -38,6 +39,7 @@ export default function AgendaPage() {
   const { compromissos, updateCompromisso } = useTarefas();
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week");
   const [selectedDay, setSelectedDay] = useState("14/04/2026");
+  const [novoOpen, setNovoOpen] = useState(false);
 
   // Eventos: compromissos manuais + tarefas com horário (origem === "tarefa") são exibidos como tipo "tarefa"
   const eventos = compromissos.map(c => ({
@@ -70,7 +72,7 @@ export default function AgendaPage() {
                 </button>
               ))}
             </div>
-            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Novo compromisso</span><span className="sm:hidden">Novo</span></Button>
+            <Button size="sm" onClick={() => setNovoOpen(true)}><Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Novo compromisso</span><span className="sm:hidden">Novo</span></Button>
           </div>
         </div>
 
@@ -247,6 +249,7 @@ export default function AgendaPage() {
           </div>
         </div>
       </div>
+      <NovoCompromissoModal open={novoOpen} onOpenChange={setNovoOpen} defaultDate={selectedDay} />
     </>
   );
 }

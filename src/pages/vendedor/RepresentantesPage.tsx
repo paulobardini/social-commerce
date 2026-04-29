@@ -17,6 +17,7 @@ import {
 import { mockRepresentantes, type Representante } from "@/data/mockRepresentantes";
 import { Progress } from "@/components/ui/progress";
 import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const statusColors: Record<string, string> = {
   ativo: "bg-green-100 text-green-700 border-green-200",
@@ -115,13 +116,15 @@ export default function RepresentantesPage() {
                 <TableHead className="font-semibold text-center">Conversão</TableHead>
                 <TableHead className="font-semibold">Meta mensal</TableHead>
                 <TableHead className="font-semibold text-center">Tarefas</TableHead>
+                <TableHead className="font-semibold">Último acesso</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold w-16">Ação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map(rep => {
-                const pctMeta = Math.round((rep.faturamentoMes / rep.metaMensal) * 100);
+                const temMeta = rep.metaMensal && rep.metaMensal > 0;
+                const pctMeta = temMeta ? Math.round((rep.faturamentoMes / rep.metaMensal) * 100) : 0;
                 return (
                   <TableRow key={rep.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/vendedor/representantes/${rep.id}`)}>
                     <TableCell>
@@ -139,12 +142,24 @@ export default function RepresentantesPage() {
                     <TableCell className="text-center text-sm">{rep.oportunidadesAbertas}</TableCell>
                     <TableCell className="text-center text-sm font-medium">{rep.taxaConversao}%</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 min-w-[120px]">
-                        <Progress value={pctMeta} className="h-2 flex-1" />
-                        <span className="text-[11px] font-medium">{pctMeta}%</span>
-                      </div>
+                      {temMeta ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-2 min-w-[120px] cursor-help">
+                              <Progress value={pctMeta} className="h-2 flex-1" />
+                              <span className="text-[11px] font-medium">{pctMeta}%</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[260px] text-xs">
+                            % de faturamento do mês em relação à meta de carteira ativa configurada para este representante.
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Meta não definida</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-center text-sm">{rep.tarefasPendentes}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{rep.ultimoAcesso}</TableCell>
                     <TableCell>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusColors[rep.status]}`}>{statusLabels[rep.status]}</span>
                     </TableCell>
