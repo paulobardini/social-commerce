@@ -75,6 +75,7 @@ const App = () => (
             <AutomacoesProvider>
             <MetasProvider>
             <MessageTemplatesProvider>
+            <TarefasProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
