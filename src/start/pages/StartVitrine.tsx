@@ -21,6 +21,10 @@ export default function StartVitrine() {
   const [estacao, setEstacao] = useState<string>("Todas");
   const [genero, setGenero] = useState<string>("Todos");
   const [ordem, setOrdem] = useState<"recentes" | "menor" | "maior">("recentes");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const filtrosAtivos = (categoria !== "Todas" ? 1 : 0) + (estacao !== "Todas" ? 1 : 0) + (genero !== "Todos" ? 1 : 0);
+  function limparFiltros() { setCategoria("Todas"); setEstacao("Todas"); setGenero("Todos"); }
 
   const slugCorreto = slug === fornecedor.slug;
 
