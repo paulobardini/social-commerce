@@ -86,7 +86,7 @@ export default function StartPedidos() {
 function PedidoCard({ p, onOpen, onConfirm }: { p: StartPedido; onOpen: () => void; onConfirm: () => void }) {
   const isNovo = p.status === "novo";
   const isEntregue = p.status === "entregue";
-  const bg = isNovo ? "bg-[#FFFBF0] border-[#FAC775] start-pulse-border" : isEntregue ? "bg-[#F8F8F6] border-[rgba(0,0,0,0.08)]" : "bg-white border-[rgba(0,0,0,0.08)]";
+  const bg = isNovo ? "bg-[#FFFBF0] border-[#FAC775] shadow-[0_0_0_3px_rgba(250,199,117,0.15)] animate-pulse-soft" : isEntregue ? "bg-[#F8F8F6] border-[rgba(0,0,0,0.08)]" : "bg-white border-[rgba(0,0,0,0.08)]";
   const badge = {
     novo: "bg-[#FAEEDA] text-[#854F0B]",
     em_producao: "bg-[#E6F1FB] text-[#185FA5]",
