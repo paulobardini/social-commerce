@@ -1,18 +1,19 @@
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-  Download,
-  Printer,
-  ZoomIn,
-  ZoomOut,
-  ChevronLeft,
-  ChevronRight,
+  Download, Printer, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Link2,
 } from "lucide-react";
 import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { mockOrcamentos } from "@/data/mockVendedor";
 
 const mockPages = Array.from({ length: 7 }, (_, i) => i + 1);
 
 export default function OrcamentoViewer() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const orc = mockOrcamentos.find((o) => o.id === id) || mockOrcamentos[0];
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(100);
 
