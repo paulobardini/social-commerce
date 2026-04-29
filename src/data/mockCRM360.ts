@@ -41,6 +41,9 @@ export interface Mensagem {
   data: string;
   lida: boolean;
   tipo?: "texto" | "imagem" | "template" | "audio";
+  // Status de entrega (somente mensagens enviadas pelo vendedor).
+  // Conforme dados disponíveis na API do WhatsApp integrado.
+  status?: "enviado" | "entregue" | "lido";
 }
 
 export interface Conversa {
