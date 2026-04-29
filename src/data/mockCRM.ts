@@ -13,6 +13,24 @@ export type OportunidadeEtapa =
 export type Prioridade = "alta" | "media" | "baixa";
 export type TagCRM = "quente" | "recorrente" | "novo_cliente" | "alto_potencial" | "infantil" | "adulto" | "fitness" | "urgente";
 
+// Estrutura nova de classificação de oportunidade (substitui o uso misturado de tags)
+export type Temperatura = "quente" | "morno" | "frio";
+export type CanalOrigem = "Site" | "WhatsApp" | "Feira" | "Indicação" | "Instagram" | "Cold call" | "E-mail" | "Outro";
+
+export const canaisOrigem: CanalOrigem[] = [
+  "Site", "WhatsApp", "Feira", "Indicação", "Instagram", "Cold call", "E-mail", "Outro",
+];
+
+export const temperaturaLabels: Record<Temperatura, string> = {
+  quente: "Quente", morno: "Morno", frio: "Frio",
+};
+
+export const temperaturaColors: Record<Temperatura, string> = {
+  quente: "bg-red-100 text-red-700 border-red-200",
+  morno: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  frio: "bg-blue-100 text-blue-700 border-blue-200",
+};
+
 export interface EtapaFunil {
   id: string;
   nome: string;
