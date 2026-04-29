@@ -17,6 +17,7 @@ import {
 import { mockRepresentantes, type Representante } from "@/data/mockRepresentantes";
 import { Progress } from "@/components/ui/progress";
 import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const statusColors: Record<string, string> = {
   ativo: "bg-green-100 text-green-700 border-green-200",
@@ -115,6 +116,7 @@ export default function RepresentantesPage() {
                 <TableHead className="font-semibold text-center">Conversão</TableHead>
                 <TableHead className="font-semibold">Meta mensal</TableHead>
                 <TableHead className="font-semibold text-center">Tarefas</TableHead>
+                <TableHead className="font-semibold">Último acesso</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold w-16">Ação</TableHead>
               </TableRow>
