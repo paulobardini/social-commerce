@@ -81,22 +81,58 @@ export default function VendedorDashboard() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {kpiCards.map(kpi => (
-            <Card key={kpi.label} className="border border-border hover:border-accent/30 transition-colors cursor-pointer" onClick={() => {
-              if (kpi.label.includes("Mensagens")) navigate("/vendedor/whatsapp");
-              else if (kpi.label.includes("Tarefa")) navigate("/vendedor/tarefas");
-              else if (kpi.label.includes("Oportunidades") || kpi.label.includes("negociação")) navigate("/vendedor/oportunidades");
-            }}>
-              <CardContent className="p-4">
-                <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${kpi.bg}`}>
-                  <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
-                </div>
-                <p className="text-2xl font-bold font-heading text-foreground">{kpi.value}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">{kpi.label}</p>
-              </CardContent>
-            </Card>
-          ))}
+          {kpiCards.map(kpi => {
+            const isAlert = kpi.negative && kpi.value > 0;
+            const isMutedZero = kpi.negative && kpi.value === 0;
+            return (
+              <Card
+                key={kpi.label}
+                className={`border border-border hover:border-accent/30 transition-colors cursor-pointer ${
+                  isAlert ? "border-l-[3px] border-l-destructive" : ""
+                } ${isMutedZero ? "opacity-60" : ""}`}
+                onClick={() => {
+                  if (kpi.label.includes("Mensagens")) navigate("/vendedor/whatsapp");
+                  else if (kpi.label.includes("Tarefa")) navigate("/vendedor/tarefas");
+                  else if (kpi.label.includes("Oportunidades") || kpi.label.includes("negociação")) navigate("/vendedor/oportunidades");
+                }}
+              >
+                <CardContent className="p-4">
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${kpi.bg}`}>
+                    <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+                  </div>
+                  <p className="text-2xl font-bold font-heading text-foreground">{kpi.value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{kpi.label}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
+
+        {/* Meta do mês */}
+        <Card className="border border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-accent" />
+                <span className="text-sm font-semibold text-foreground">Meta do mês</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">R$ {realizadoMes.toLocaleString("pt-BR")}</span>
+                  <span className="mx-1">/</span>
+                  <span>R$ {metaMensal.toLocaleString("pt-BR")}</span>
+                </p>
+                <span className={`text-base font-bold font-heading ${metaTextColor}`}>{pctMeta}%</span>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowMeta(true)} title="Configurar meta">
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+            <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className={`h-full transition-all ${metaBarColor}`} style={{ width: `${pctMeta}%` }} />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Pipeline value */}
         <Card className="border border-border">
