@@ -19,6 +19,7 @@ export interface TarefaExt extends TarefaCRM360 {
 export interface CompromissoExt extends Compromisso {
   origem?: "manual" | "tarefa";
   tarefaId?: string;
+  lembrete?: number; // minutos antes (0 = sem lembrete)
 }
 
 interface TarefasContextType {
