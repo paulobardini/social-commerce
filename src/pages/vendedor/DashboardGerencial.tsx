@@ -98,6 +98,15 @@ export default function DashboardGerencial() {
                 </div>
                 <p className="text-xl font-bold font-heading text-foreground">{kpi.value}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{kpi.label}</p>
+                {kpi.delta === null ? (
+                  <p className="text-[9px] text-muted-foreground/70 mt-1">Sem dados anteriores</p>
+                ) : (
+                  <div className={`flex items-center gap-0.5 mt-1 text-[10px] font-medium ${kpi.delta >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                    {kpi.delta >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                    <span>{kpi.delta >= 0 ? "+" : ""}{kpi.delta}%</span>
+                    <span className="text-muted-foreground font-normal ml-1">{periodoLabel}</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -116,6 +125,13 @@ export default function DashboardGerencial() {
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
+              <div className="flex items-center gap-3 pb-1 border-b border-border/40">
+                <span className="text-[10px] font-medium text-muted-foreground w-[120px] text-right">Etapa</span>
+                <span className="text-[10px] font-medium text-muted-foreground flex-1">Volume</span>
+                <span className="text-[10px] font-medium text-muted-foreground w-[80px] text-right">Valor</span>
+                <span className="text-[10px] font-medium text-muted-foreground w-[50px] text-right" title="Taxa de avanço entre etapas">% avanço</span>
+                <span className="text-[10px] font-medium text-muted-foreground w-[60px] text-right" title="Tempo médio em dias que oportunidades ficam neste estágio antes de avançar">Tempo médio</span>
+              </div>
               {funnelData.map((f, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <span className="text-[11px] text-muted-foreground w-[120px] truncate text-right">{f.etapa}</span>
@@ -130,7 +146,10 @@ export default function DashboardGerencial() {
                   <span className="text-[10px] text-muted-foreground w-[80px] text-right">
                     R$ {(f.valor / 1000).toFixed(0)}k
                   </span>
-                  <span className="text-[10px] text-muted-foreground w-[40px] text-right">{f.taxaAvanco}%</span>
+                  <span className="text-[10px] text-muted-foreground w-[50px] text-right">{f.taxaAvanco}%</span>
+                  <span className="text-[10px] text-foreground font-medium w-[60px] text-right">
+                    {funnelTempoMedio[f.etapa] ? `${funnelTempoMedio[f.etapa]}d` : "—"}
+                  </span>
                 </div>
               ))}
             </CardContent>
