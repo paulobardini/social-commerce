@@ -46,12 +46,46 @@ const filterSections = [
 
 export default function NovoOrcamento() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("az");
   const [searchTerm, setSearchTerm] = useState("");
   const [openFilters, setOpenFilters] = useState<string[]>([]);
   const [showAddAll, setShowAddAll] = useState(false);
   const [lojista, setLojista] = useState("Lojista genérico");
+
+  // Novos campos obrigatórios / vínculo
+  const [nome, setNome] = useState("");
+  const [oportunidadeId, setOportunidadeId] = useState<string>("");
+  const nomeValido = nome.trim().length > 0;
+
+  // Oportunidades abertas (excluindo ganho/perdido)
+  const oportunidadesAbertas = useMemo(
+    () => mockOportunidades.filter(o => o.etapa !== "ganho" && o.etapa !== "perdido"),
+    []
+  );
+
+  // Pré-preenche a partir da query string vinda da OportunidadeDetalhe
+  useEffect(() => {
+    const opId = searchParams.get("oportunidade");
+    const cliente = searchParams.get("cliente");
+    if (opId) {
+      const op = mockOportunidades.find(o => o.id === opId);
+      if (op) {
+        setOportunidadeId(opId);
+        setNome(op.nome);
+        if (cliente) setLojista(cliente);
+      }
+    }
+  }, [searchParams]);
+
+  const tentarAcao = (label: string, cb: () => void) => {
+    if (!nomeValido) {
+      toast.error("Informe o nome do orçamento antes de continuar.");
+      return;
+    }
+    cb();
+  };
 
   const totalProdutos = mockCatalogoProdutos.length;
 
