@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { mockRepresentantes, type Representante } from "@/data/mockRepresentantes";
 import { Progress } from "@/components/ui/progress";
+import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
 
 const statusColors: Record<string, string> = {
   ativo: "bg-green-100 text-green-700 border-green-200",
