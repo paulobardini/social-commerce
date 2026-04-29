@@ -225,9 +225,9 @@ export default function ClientesListing() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="text-sm font-semibold">{c.nomeFantasia}</p>
-                      <p className="text-[11px] text-muted-foreground">{c.documento}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono">{revealCNPJ ? c.documento : maskCNPJ(c.documento)}</p>
                     </div>
-                    <span className="text-lg">{tempIcon(c.temperaturaComercial)}</span>
+                    <span className="text-lg" title="Calculado a partir do último contato">{tempIcon(calcularTemperatura(c.ultimoContato))}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
                     <MapPin className="h-3 w-3" /> {c.cidade}/{c.estado}
