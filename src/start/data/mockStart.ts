@@ -1,3 +1,12 @@
+import prod1 from "../assets/prod-1.jpg";
+import prod2 from "../assets/prod-2.jpg";
+import prod3 from "../assets/prod-3.jpg";
+import prod4 from "../assets/prod-4.jpg";
+import prod5 from "../assets/prod-5.jpg";
+import prod6 from "../assets/prod-6.jpg";
+import prod7 from "../assets/prod-7.jpg";
+import prod8 from "../assets/prod-8.jpg";
+
 export type StartGradeTipo = "letras" | "numeros" | "infantil" | "unico";
 
 export interface StartProduto {
@@ -13,7 +22,8 @@ export interface StartProduto {
   visivel: boolean;
   gradeTipo: StartGradeTipo;
   estoquePorTamanho: Record<string, number>;
-  fotoCor?: string; // gradient hex pair
+  fotoCor?: string; // gradient hex pair (fallback)
+  fotoUrl?: string; // imagem real do produto
 }
 
 export interface StartComprador {
@@ -108,49 +118,49 @@ export const PRODUTOS_INICIAIS: StartProduto[] = [
     id: "prod-1", nome: "Vestido Linho Ombro a Ombro", categoria: "Vestido", preco: 89,
     estacao: "Verão", genero: "Feminino", pedidoMinimo: 6, visivel: true,
     gradeTipo: "letras", estoquePorTamanho: gradeLetras(8, 10, 6, 0),
-    descricao: "Vestido de linho leve, perfeito para o verão.", fotoCor: gradients[0],
+    descricao: "Vestido de linho leve, perfeito para o verão.", fotoCor: gradients[0], fotoUrl: prod1,
   },
   {
     id: "prod-2", nome: "Camiseta Básica Lisa", categoria: "Camiseta", preco: 32,
     estacao: "Atemporal", genero: "Unissex", pedidoMinimo: 12, visivel: true,
     gradeTipo: "letras", estoquePorTamanho: { P: 15, M: 20, G: 15, GG: 10 },
-    fotoCor: gradients[1],
+    fotoCor: gradients[1], fotoUrl: prod2,
   },
   {
     id: "prod-3", nome: "Conjunto Fitness 2 peças", categoria: "Conjunto", preco: 120,
     estacao: "Atemporal", genero: "Feminino", pedidoMinimo: 6, visivel: true,
     gradeTipo: "letras", estoquePorTamanho: gradeLetras(6, 7, 5),
-    fotoCor: gradients[2],
+    fotoCor: gradients[2], fotoUrl: prod3,
   },
   {
     id: "prod-4", nome: "Vestido Floral Midi", categoria: "Vestido", preco: 95,
     estacao: "Verão", genero: "Feminino", pedidoMinimo: 6, visivel: true,
     gradeTipo: "letras", estoquePorTamanho: gradeLetras(4, 5, 3),
-    fotoCor: gradients[3],
+    fotoCor: gradients[3], fotoUrl: prod4,
   },
   {
     id: "prod-5", nome: "Calça Wide Leg", categoria: "Calça", preco: 78,
     estacao: "Meia estação", genero: "Feminino", pedidoMinimo: 6, visivel: true,
     gradeTipo: "numeros", estoquePorTamanho: gradeNumeros({ "36": 5, "38": 6, "40": 5, "42": 4 }),
-    fotoCor: gradients[4],
+    fotoCor: gradients[4], fotoUrl: prod5,
   },
   {
     id: "prod-6", nome: "Blusa Cropped Canelada", categoria: "Blusa", preco: 45,
     estacao: "Atemporal", genero: "Feminino", pedidoMinimo: 12, visivel: true,
     gradeTipo: "letras", estoquePorTamanho: gradeLetras(12, 13, 10),
-    fotoCor: gradients[5],
+    fotoCor: gradients[5], fotoUrl: prod6,
   },
   {
     id: "prod-7", nome: "Short Jeans Barra", categoria: "Shorts", preco: 55,
     estacao: "Verão", genero: "Feminino", pedidoMinimo: 6, visivel: true,
     gradeTipo: "numeros", estoquePorTamanho: gradeNumeros({ "36": 7, "38": 8, "40": 7, "42": 6 }),
-    fotoCor: gradients[6],
+    fotoCor: gradients[6], fotoUrl: prod7,
   },
   {
     id: "prod-8", nome: "Macacão Liso Manga Curta", categoria: "Macacão", preco: 110,
     estacao: "Verão", genero: "Feminino", pedidoMinimo: 6, visivel: true,
     gradeTipo: "letras", estoquePorTamanho: gradeLetras(3, 3, 2),
-    fotoCor: gradients[7],
+    fotoCor: gradients[7], fotoUrl: prod8,
   },
 ];
 
