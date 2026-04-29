@@ -4,6 +4,7 @@ import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Loader2 } from "lucide-rea
 import { useStartCart } from "../contexts/StartCartContext";
 import { useStartData } from "../contexts/StartDataContext";
 import { useStartAuth } from "../contexts/StartAuthContext";
+import { ProdutoFoto } from "../components/ProdutoFoto";
 import { TAMANHOS_POR_TIPO, UFS } from "../data/mockStart";
 import { formatBRL, startClasses } from "../styles/tokens";
 
