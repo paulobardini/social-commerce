@@ -56,6 +56,7 @@ import { TarefasProvider } from "@/contexts/TarefasContext";
 import { RemindersProvider } from "@/contexts/RemindersContext";
 import { StartAuthProvider } from "@/start/contexts/StartAuthContext";
 import { StartDataProvider } from "@/start/contexts/StartDataContext";
+import { StartCartProvider } from "@/start/contexts/StartCartContext";
 import { StartProtectedRoute } from "@/start/components/StartProtectedRoute";
 import { StartLayout } from "@/start/components/StartLayout";
 import StartLogin from "@/start/pages/StartLogin";
@@ -69,6 +70,14 @@ import StartPedidoDetalhe from "@/start/pages/StartPedidoDetalhe";
 import StartCompradores from "@/start/pages/StartCompradores";
 import StartCompradorDetalhe from "@/start/pages/StartCompradorDetalhe";
 import StartCompradorNovo from "@/start/pages/StartCompradorNovo";
+import StartVitrine from "@/start/pages/StartVitrine";
+import StartVitrineProduto from "@/start/pages/StartVitrineProduto";
+import StartVitrinePedido from "@/start/pages/StartVitrinePedido";
+import StartVitrineSucesso from "@/start/pages/StartVitrineSucesso";
+import StartVitrineConfig from "@/start/pages/StartVitrineConfig";
+import StartConfiguracoes from "@/start/pages/StartConfiguracoes";
+import StartPlanos from "@/start/pages/StartPlanos";
+import StartNotFound from "@/start/pages/StartNotFound";
 import { Navigate } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 
@@ -100,6 +109,7 @@ const App = () => (
               <CartDrawer />
               <StartAuthProvider>
               <StartDataProvider>
+              <StartCartProvider>
               <Routes>
                 {/* Bare pages (no sidebar/topbar) */}
                 <Route path="/login" element={<Login />} />
