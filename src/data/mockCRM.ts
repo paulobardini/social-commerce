@@ -260,6 +260,7 @@ mockOportunidades.forEach(op => {
   }
 });
 
+export const mockAtividades: AtividadeCRM[] = [
   { id: "a1", oportunidadeId: "op1", tipo: "ligacao", descricao: "Ligação com Thay para discutir condições", data: "12/04/2026 14:30", autor: "Paulo Bardini", detalhes: "Cliente pediu revisão de preço em 3 itens." },
   { id: "a2", oportunidadeId: "op1", tipo: "email", descricao: "Envio de tabela de preços atualizada", data: "10/04/2026 09:15", autor: "Paulo Bardini" },
   { id: "a3", oportunidadeId: "op1", tipo: "mudanca_etapa", descricao: "Movido de 'Orçamento enviado' para 'Em negociação'", data: "09/04/2026 16:00", autor: "Sistema" },
