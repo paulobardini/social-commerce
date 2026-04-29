@@ -148,7 +148,7 @@ export const mockOportunidades: Oportunidade[] = [
     tags: ["quente", "recorrente", "infantil"], origem: "Indicação", probabilidade: 75,
     dataCriacao: "01/03/2026", previsaoFechamento: "30/04/2026", ultimaInteracao: "12/04/2026",
     proximaAcao: "Enviar contraproposta de preços", observacoes: "Cliente quer exclusividade regional na coleção inverno.",
-    orcamentoIds: ["4", "7"],
+    orcamentoIds: ["2", "4", "7"],
   },
   {
     id: "op2", nome: "Abertura de conta – Fashion Kids", clienteId: "c11", clienteNome: "Fashion Kids Store",
