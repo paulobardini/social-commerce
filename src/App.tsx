@@ -49,6 +49,7 @@ import InsightsPage from "./pages/vendedor/InsightsPage";
 import VisoesSalvasPage from "./pages/vendedor/VisoesSalvasPage";
 import AutomacoesPage from "./pages/vendedor/AutomacoesPage";
 import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
+import { MetasProvider } from "@/contexts/MetasContext";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ const App = () => (
           <CartProvider>
           <CommentsProvider>
             <AutomacoesProvider>
+            <MetasProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -124,6 +126,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </MetasProvider>
             </AutomacoesProvider>
           </CommentsProvider>
           </CartProvider>

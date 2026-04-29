@@ -1,17 +1,25 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { 
   TrendingUp, Target, FileText, CheckSquare, AlertTriangle, Users, 
   Phone, Calendar, ArrowRight, Clock, Flame, Plus, MessageCircle, UserX,
-  MapPin, ShoppingBag,
+  MapPin, ShoppingBag, Pencil,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { dashboardKPIs, mockOportunidades, mockTarefas, compromissos, etapaMap, tagColors, tagLabels, type TagCRM } from "@/data/mockCRM";
 import { mockConversas, mockClientes360, mockCompromissos, tipoCompromissoLabels } from "@/data/mockCRM360";
+import { useMetas } from "@/contexts/MetasContext";
+import { MetasModal } from "@/components/vendedor/MetasModal";
+import { QuickTaskModal } from "@/components/vendedor/QuickTaskModal";
 
 export default function VendedorDashboard() {
   const navigate = useNavigate();
+  const { metaMensal, realizadoMes } = useMetas();
+  const [showMeta, setShowMeta] = useState(false);
+  const [taskModal, setTaskModal] = useState<{ open: boolean; cliente: string }>({ open: false, cliente: "" });
 
   const oportunidadesQuentes = mockOportunidades.filter(o => o.tags.includes("quente") || o.prioridade === "alta").filter(o => o.etapa !== "ganho" && o.etapa !== "perdido").slice(0, 4);
   const tarefasPendentes = mockTarefas.filter(t => t.status !== "concluida").slice(0, 5);
@@ -20,14 +28,20 @@ export default function VendedorDashboard() {
   const clientesSemContato = mockClientes360.filter(c => c.temperaturaComercial === "fria" && (c.status === "em_risco" || c.status === "reativacao" || c.status === "inativo"));
   const proximosCompromissos = mockCompromissos.filter(c => c.status === "agendado").slice(0, 4);
 
+  // negative=true => métrica de "alerta" (atrasadas, não lidas). Recebe border-left vermelho se valor>0; opacidade reduzida se valor=0.
   const kpiCards = [
-    { label: "Oportunidades abertas", value: dashboardKPIs.oportunidadesAbertas, icon: Target, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Em negociação", value: dashboardKPIs.emNegociacao, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
-    { label: "Orçamentos enviados", value: dashboardKPIs.orcamentosEnviados, icon: FileText, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Tarefas pendentes", value: dashboardKPIs.tarefasPendentes, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Tarefas atrasadas", value: dashboardKPIs.tarefasAtrasadas, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
-    { label: "Mensagens não lidas", value: totalNaoLidas, icon: MessageCircle, color: "text-green-600", bg: "bg-green-50" },
+    { label: "Oportunidades abertas", value: dashboardKPIs.oportunidadesAbertas, icon: Target, color: "text-blue-600", bg: "bg-blue-50", negative: false },
+    { label: "Em negociação", value: dashboardKPIs.emNegociacao, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50", negative: false },
+    { label: "Orçamentos enviados", value: dashboardKPIs.orcamentosEnviados, icon: FileText, color: "text-purple-600", bg: "bg-purple-50", negative: false },
+    { label: "Tarefas pendentes", value: dashboardKPIs.tarefasPendentes, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-50", negative: false },
+    { label: "Tarefas atrasadas", value: dashboardKPIs.tarefasAtrasadas, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", negative: true },
+    { label: "Mensagens não lidas", value: totalNaoLidas, icon: MessageCircle, color: "text-green-600", bg: "bg-green-50", negative: true },
   ];
+
+  // Meta do mês
+  const pctMeta = metaMensal > 0 ? Math.min(100, Math.round((realizadoMes / metaMensal) * 100)) : 0;
+  const metaBarColor = pctMeta >= 80 ? "bg-emerald-500" : pctMeta >= 50 ? "bg-yellow-500" : "bg-red-500";
+  const metaTextColor = pctMeta >= 80 ? "text-emerald-600" : pctMeta >= 50 ? "text-yellow-600" : "text-red-600";
 
   const activeOps = mockOportunidades.filter(o => o.etapa !== "ganho" && o.etapa !== "perdido");
   const etapaOrder = ["novo_lead", "contato_iniciado", "em_qualificacao", "proposta_construcao", "orcamento_enviado", "em_negociacao"] as const;
@@ -67,22 +81,58 @@ export default function VendedorDashboard() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {kpiCards.map(kpi => (
-            <Card key={kpi.label} className="border border-border hover:border-accent/30 transition-colors cursor-pointer" onClick={() => {
-              if (kpi.label.includes("Mensagens")) navigate("/vendedor/whatsapp");
-              else if (kpi.label.includes("Tarefa")) navigate("/vendedor/tarefas");
-              else if (kpi.label.includes("Oportunidades") || kpi.label.includes("negociação")) navigate("/vendedor/oportunidades");
-            }}>
-              <CardContent className="p-4">
-                <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${kpi.bg}`}>
-                  <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
-                </div>
-                <p className="text-2xl font-bold font-heading text-foreground">{kpi.value}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">{kpi.label}</p>
-              </CardContent>
-            </Card>
-          ))}
+          {kpiCards.map(kpi => {
+            const isAlert = kpi.negative && kpi.value > 0;
+            const isMutedZero = kpi.negative && kpi.value === 0;
+            return (
+              <Card
+                key={kpi.label}
+                className={`border border-border hover:border-accent/30 transition-colors cursor-pointer ${
+                  isAlert ? "border-l-[3px] border-l-destructive" : ""
+                } ${isMutedZero ? "opacity-60" : ""}`}
+                onClick={() => {
+                  if (kpi.label.includes("Mensagens")) navigate("/vendedor/whatsapp");
+                  else if (kpi.label.includes("Tarefa")) navigate("/vendedor/tarefas");
+                  else if (kpi.label.includes("Oportunidades") || kpi.label.includes("negociação")) navigate("/vendedor/oportunidades");
+                }}
+              >
+                <CardContent className="p-4">
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${kpi.bg}`}>
+                    <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+                  </div>
+                  <p className="text-2xl font-bold font-heading text-foreground">{kpi.value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{kpi.label}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
+
+        {/* Meta do mês */}
+        <Card className="border border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-accent" />
+                <span className="text-sm font-semibold text-foreground">Meta do mês</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">R$ {realizadoMes.toLocaleString("pt-BR")}</span>
+                  <span className="mx-1">/</span>
+                  <span>R$ {metaMensal.toLocaleString("pt-BR")}</span>
+                </p>
+                <span className={`text-base font-bold font-heading ${metaTextColor}`}>{pctMeta}%</span>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowMeta(true)} title="Configurar meta">
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+            <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className={`h-full transition-all ${metaBarColor}`} style={{ width: `${pctMeta}%` }} />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Pipeline value */}
         <Card className="border border-border">
@@ -258,22 +308,35 @@ export default function VendedorDashboard() {
             </CardHeader>
             <CardContent className="space-y-2">
               {clientesSemContato.map(c => (
-                <button
+                <div
                   key={c.id}
-                  onClick={() => navigate(`/vendedor/360/${c.id}`)}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
+                  className="w-full flex items-center gap-2 p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-red-600">{c.nomeFantasia[0]}</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{c.nomeFantasia}</p>
-                    <p className="text-[10px] text-muted-foreground">Último: {c.ultimoContato}</p>
-                  </div>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${c.status === "em_risco" ? "bg-red-100 text-red-700 border-red-200" : c.status === "reativacao" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-slate-100 text-slate-500 border-slate-200"}`}>
+                  <button
+                    onClick={() => navigate(`/vendedor/360/${c.id}`)}
+                    className="flex items-center gap-3 min-w-0 flex-1 text-left"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-red-600">{c.nomeFantasia[0]}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{c.nomeFantasia}</p>
+                      <p className="text-[10px] text-muted-foreground">Último: {c.ultimoContato}</p>
+                    </div>
+                  </button>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${c.status === "em_risco" ? "bg-red-100 text-red-700 border-red-200" : c.status === "reativacao" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-slate-100 text-slate-500 border-slate-200"}`}>
                     {c.status === "em_risco" ? "Em risco" : c.status === "reativacao" ? "Reativação" : "Inativo"}
                   </span>
-                </button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-[10px] shrink-0"
+                    onClick={(e) => { e.stopPropagation(); setTaskModal({ open: true, cliente: c.nomeFantasia }); }}
+                    title="Criar tarefa de reativação"
+                  >
+                    <Plus className="h-3 w-3 mr-0.5" /> Tarefa
+                  </Button>
+                </div>
               ))}
               {clientesSemContato.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-4">Nenhum alerta</p>
@@ -282,6 +345,14 @@ export default function VendedorDashboard() {
           </Card>
         </div>
       </div>
+
+      <MetasModal open={showMeta} onOpenChange={setShowMeta} />
+      <QuickTaskModal
+        open={taskModal.open}
+        onOpenChange={(o) => setTaskModal({ open: o, cliente: o ? taskModal.cliente : "" })}
+        defaultClienteNome={taskModal.cliente}
+        defaultTipo="reativacao"
+      />
     </>
   );
 }
