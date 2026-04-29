@@ -5,6 +5,7 @@ import { useStartData } from "../contexts/StartDataContext";
 import { useStartAuth } from "../contexts/StartAuthContext";
 import { startClasses, formatBRL } from "../styles/tokens";
 import { CATEGORIAS_PRODUTO, StartProduto } from "../data/mockStart";
+import { ProdutoFoto } from "../components/ProdutoFoto";
 
 export default function StartCatalogo() {
   const navigate = useNavigate();
