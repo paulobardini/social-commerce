@@ -28,14 +28,20 @@ export default function VendedorDashboard() {
   const clientesSemContato = mockClientes360.filter(c => c.temperaturaComercial === "fria" && (c.status === "em_risco" || c.status === "reativacao" || c.status === "inativo"));
   const proximosCompromissos = mockCompromissos.filter(c => c.status === "agendado").slice(0, 4);
 
+  // negative=true => métrica de "alerta" (atrasadas, não lidas). Recebe border-left vermelho se valor>0; opacidade reduzida se valor=0.
   const kpiCards = [
-    { label: "Oportunidades abertas", value: dashboardKPIs.oportunidadesAbertas, icon: Target, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Em negociação", value: dashboardKPIs.emNegociacao, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
-    { label: "Orçamentos enviados", value: dashboardKPIs.orcamentosEnviados, icon: FileText, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Tarefas pendentes", value: dashboardKPIs.tarefasPendentes, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Tarefas atrasadas", value: dashboardKPIs.tarefasAtrasadas, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
-    { label: "Mensagens não lidas", value: totalNaoLidas, icon: MessageCircle, color: "text-green-600", bg: "bg-green-50" },
+    { label: "Oportunidades abertas", value: dashboardKPIs.oportunidadesAbertas, icon: Target, color: "text-blue-600", bg: "bg-blue-50", negative: false },
+    { label: "Em negociação", value: dashboardKPIs.emNegociacao, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50", negative: false },
+    { label: "Orçamentos enviados", value: dashboardKPIs.orcamentosEnviados, icon: FileText, color: "text-purple-600", bg: "bg-purple-50", negative: false },
+    { label: "Tarefas pendentes", value: dashboardKPIs.tarefasPendentes, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-50", negative: false },
+    { label: "Tarefas atrasadas", value: dashboardKPIs.tarefasAtrasadas, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", negative: true },
+    { label: "Mensagens não lidas", value: totalNaoLidas, icon: MessageCircle, color: "text-green-600", bg: "bg-green-50", negative: true },
   ];
+
+  // Meta do mês
+  const pctMeta = metaMensal > 0 ? Math.min(100, Math.round((realizadoMes / metaMensal) * 100)) : 0;
+  const metaBarColor = pctMeta >= 80 ? "bg-emerald-500" : pctMeta >= 50 ? "bg-yellow-500" : "bg-red-500";
+  const metaTextColor = pctMeta >= 80 ? "text-emerald-600" : pctMeta >= 50 ? "text-yellow-600" : "text-red-600";
 
   const activeOps = mockOportunidades.filter(o => o.etapa !== "ganho" && o.etapa !== "perdido");
   const etapaOrder = ["novo_lead", "contato_iniciado", "em_qualificacao", "proposta_construcao", "orcamento_enviado", "em_negociacao"] as const;
