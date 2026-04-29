@@ -1,91 +1,155 @@
-# Automação de Followup por Etapa do Funil
 
-Implementação completa do fluxo de automações de tarefas por etapa do Kanban de oportunidades, mantendo o design system atual (sidebar única, cards, badges, modais de altura fixa).
+# Nextil Start — Protótipo navegável
 
-## 1. Modelo de dados (mock)
+## Estratégia: mesmo projeto, módulo isolado
 
-Novo arquivo `src/data/mockAutomacoes.ts`:
+**Não dividir o projeto.** O Nextil Start vive no mesmo repositório React/Vite atual, mas como **módulo paralelo isolado**, sob o prefixo de rota `/start/*` e pasta `src/start/`. Isso preserva 100% do produto atual (Nextil + área Vendedor/CRM) e permite reaproveitar:
 
-- `AutomacaoTarefa`: `{ id, nome, tipo: "ligacao"|"whatsapp"|"email"|"visita"|"proposta"|"personalizado", intervaloDias, responsavelPadrao? }`
-- `Automacao`: `{ id, nome, descricao, etapasVinculadas: EtapaId[], isPosVenda?: boolean, tarefas: AutomacaoTarefa[], createdAt }`
-- `AutomacaoAplicada` (histórico por oportunidade): `{ id, oportunidadeId, automacaoId, automacaoNome, dataAplicacao, aplicadaPor, encerradaEm? }`
-- 4 mocks de exemplo: "Followup Proposta Enviada" (3 tarefas D+0, D+2, D+5), "Reativação de Lead Frio", "Qualificação inicial", "Pós-venda padrão" (marcado `isPosVenda`).
+- Stack já instalada (React 18, React Router v6, Tailwind, Lucide, sonner, shadcn/ui)
+- Componentes base (`Button`, `Input`, `Card`, `Dialog`, `Badge`, etc.)
+- Toaster já montado no `App.tsx`
 
-Estender `mockTarefas` em `mockCRM.ts` com campos opcionais: `automacaoId?`, `automacaoNome?`, `status: "pendente"|"concluida"|"cancelada"`, `tipo` mapeado para os tipos de automação.
+**Isolamento garantido por:**
+- Rotas próprias: todas começam com `/start/...` (login, vitrine, área autenticada)
+- Pasta exclusiva `src/start/` (pages, components, contexts, data, layout)
+- Context API próprio (`StartAuthContext`, `StartDataContext`) — nada conversa com o `AuthContext` ou contextos do CRM existente
+- Design system local em `src/start/styles/` aplicado via classes Tailwind arbitrárias com as cores do brief (verdes #1D9E75, etc.) — **não** alteramos `index.css` global nem `tailwind.config.ts` para evitar contaminar o Nextil principal
 
-## 2. Configurações > Automações
+**Logo "nextil start"** será wordmark em texto puro (lowercase, peso 500, "nextil" preto + "start" verde), sem afetar o branding do Nextil principal.
 
-Atualizar `src/pages/vendedor/VendedorConfiguracoes.tsx`: adicionar card "Automações de followup" com botão "Configurar" → navega para nova rota `/vendedor/configuracoes/automacoes`.
+---
 
-Nova página `src/pages/vendedor/AutomacoesPage.tsx`:
-- Header com título, descrição e botão "Nova automação".
-- Lista em cards: nome, badge das etapas vinculadas, badge "Pós-venda" se aplicável, contagem de tarefas, ações (editar, duplicar, excluir).
-- Estado local (useState) — sem persistência real.
+## Mapa de rotas (todas em /start)
 
-Novo componente `src/components/vendedor/AutomacaoFormModal.tsx`:
-- Modal alto (max-h 90vh, header/footer fixos, corpo scrollável — segue padrão `FunilConfigModal`).
-- Campos: Nome, Descrição, multiselect de etapas do funil (chips), toggle "Etapa de fechamento (pós-venda)".
-- Editor de sequência de tarefas: lista ordenável, cada linha com nome, select de tipo, input numérico "D+ dias desde anterior", select de responsável (opcional). Botões "Adicionar tarefa" e remover.
-- Footer fixo: Cancelar / Salvar.
+```text
+Públicas
+  /start/login
+  /start/cadastro
+  /start/vitrine/:slug
+  /start/vitrine/:slug/produto/:id
+  /start/vitrine/:slug/pedido
+  /start/vitrine/:slug/pedido/sucesso
 
-## 3. Disparo no Kanban (drag-and-drop)
+Autenticadas (StartProtectedRoute)
+  /start                       → redirect login | inicio
+  /start/onboarding
+  /start/inicio
+  /start/catalogo
+  /start/catalogo/novo
+  /start/catalogo/:id
+  /start/pedidos
+  /start/pedidos/:id
+  /start/compradores
+  /start/compradores/novo
+  /start/compradores/:id
+  /start/vitrine-config
+  /start/configuracoes
+  /start/configuracoes/plano
+```
 
-Em `src/components/vendedor/KanbanBoard.tsx`, no `handleDrop`:
+Adicionado um único bloco de rotas no `App.tsx` existente, fora do `AppLayout` e do `VendedorLayout`, com seu próprio `<StartLayout>`.
 
-1. Mover o card normalmente.
-2. Cancelar tarefas pendentes vinculadas a `automacaoId` ativo da oportunidade (status → "cancelada"); manter "concluida".
-3. Buscar automações cuja `etapasVinculadas` inclua a nova etapa.
-4. Se 0: sem modal. Se 1: abrir direto modal de prévia. Se ≥2: abrir modal de seleção.
-5. Se a etapa for de fechamento (`ganho`): aplicar automaticamente a automação `isPosVenda` se houver.
+---
 
-Novo componente `src/components/vendedor/AplicarAutomacaoModal.tsx` em duas etapas:
-- **Passo 1 (escolha)** — exibido só quando há múltiplas: lista de automações disponíveis com nome, descrição, contagem de tarefas, radio para selecionar, botão "Continuar".
-- **Passo 2 (prévia)**: campo de data "Data da primeira tarefa" (default = hoje), tabela com prévia das tarefas: nome, ícone do tipo, data calculada (data inicial + soma cumulativa dos `intervaloDias`). Botões "Voltar" / "Confirmar e criar tarefas".
+## Divisão em 2 etapas
 
-Ao confirmar: insere tarefas no estado de tarefas com `automacaoId`, `automacaoNome`, status "pendente"; registra `AutomacaoAplicada` no histórico; adiciona entrada na timeline da oportunidade ("Automação X aplicada por Vendedor em DD/MM").
+Como o brief é extenso (14 itens da ordem de implementação), divido em **2 entregas** com preview entre elas. Confirme cada uma antes de avançar.
 
-## 4. Visualização nas oportunidades
+### ETAPA 1 — Fundação + Área autenticada do fornecedor
 
-Em `src/pages/vendedor/OportunidadeDetalhe.tsx`:
-- Aba/seção "Tarefas" já existente: renderizar lista com status (pendente/concluída/cancelada), tipo (ícone), data, nome, badge cinza com nome da automação de origem quando aplicável. Tarefas canceladas com `line-through` e `text-muted-foreground`.
-- Cada item: botão "Concluir" (status pendente) e botão "Editar" (modal simples: nome, tipo, data).
-- Aba "Histórico/Timeline": adicionar eventos "Automação aplicada" e "Automação encerrada" usando o padrão de `atividadeIcons` existente (novo tipo `automacao` com ícone `Zap`).
+Objetivo: ter o fornecedor logando, fazendo onboarding e gerenciando catálogo/pedidos/compradores ponta a ponta.
 
-## 5. Página de Tarefas (lista global)
+1. **Setup do módulo**
+   - `src/start/contexts/StartAuthContext.tsx` (login mockado, fornecedor "Maria Confecções")
+   - `src/start/contexts/StartDataContext.tsx` (produtos, pedidos, compradores em memória + persistência opcional em localStorage chave `nextil_start_*`)
+   - `src/start/data/mockStart.ts` com os 8 produtos, 5 compradores, 6 pedidos do brief
+   - `src/start/styles/tokens.ts` com as cores e classes utilitárias
 
-Em `src/pages/vendedor/TarefasPage.tsx`:
-- Adicionar coluna/badge "Automação" quando a tarefa veio de uma; chip cinza com o nome.
-- Adicionar filtro "Automação" (select) ao lado dos filtros existentes.
-- Status "cancelada" passa a aparecer no filtro de status; visual riscado igual ao detalhe.
+2. **Layout**
+   - `StartLayout` com sidebar 220px (desktop) e bottom nav 4 itens (mobile)
+   - `StartHeader`, `StartBottomNav`, `StartSidebar`, `StartLogo`
+   - `StartProtectedRoute` redireciona para `/start/login`
 
-## 6. Detalhes técnicos
+3. **Auth e Onboarding**
+   - `/start/login` (split layout desktop, formulário simples, qualquer credencial loga)
+   - `/start/cadastro`
+   - `/start/onboarding` 4 passos com barra de progresso, validação mock de slug, **upload com IA mockada** (loader 2s + preenchimento fixo)
 
-- Estado: como o app é mock, criar `src/hooks/useAutomacoesStore.ts` (Zustand-like via React context simples ou apenas `useState` em nível de página com `useMemo`). Para manter simples sem nova dependência: context provider `AutomacoesProvider` em `App.tsx` expondo `automacoes`, `tarefas`, `historico`, `aplicarAutomacao(opId, automacaoId, dataInicial)`, `cancelarTarefasPendentes(opId)`, `concluirTarefa(id)`, `editarTarefa(id, patch)`.
-- `KanbanBoard` e `OportunidadeDetalhe` consomem esse contexto em vez de `mockTarefas` direto (mantendo o mock como seed inicial).
-- Tipos centralizados em `src/data/mockAutomacoes.ts`.
-- Ícones por tipo: `Phone`, `MessageCircle` (whatsapp), `Mail`, `MapPin` (visita), `FileText` (proposta), `Sparkles` (personalizado).
-- Acessibilidade: todos os modais com `DialogTitle`, foco no primeiro campo, contraste ≥ AA nos badges (usar tokens `muted`, `accent`, `destructive`).
-- Mobile: modais ocupam `w-[95vw]`, lista de prévia com scroll horizontal mínimo; passos do modal empilhados.
+4. **Catálogo**
+   - `/start/catalogo` (grid, busca, chips de categoria, badge de estoque, barra de uso 7/10)
+   - `/start/catalogo/novo` e `/start/catalogo/:id` com **bloco de IA** (upload → loader 2s → autofill + toast verde + scroll), grade de tamanhos (P/M/G, números, infantil, único), excluir produto
 
-## 7. Arquivos criados / alterados
+5. **Pedidos**
+   - `/start/pedidos` com tabs (Novos/Em produção/Prontos/Entregues/Cancelados) e contagem
+   - Card de pedido novo com fundo amarelado e pulsação na borda
+   - Confirmar pedido → modal → muda status no Context → toast
+   - `/start/pedidos/:id` com timeline, ações por status, gerar comprovante, botão WhatsApp (alert)
 
-Criados:
-- `src/data/mockAutomacoes.ts`
-- `src/pages/vendedor/AutomacoesPage.tsx`
-- `src/components/vendedor/AutomacaoFormModal.tsx`
-- `src/components/vendedor/AplicarAutomacaoModal.tsx`
-- `src/contexts/AutomacoesContext.tsx`
+6. **Compradores**
+   - `/start/compradores` com filtros de temperatura
+   - `/start/compradores/:id` com identidade, contato, resumo comercial, pedidos vinculados, observações
+   - `/start/compradores/novo`
 
-Alterados:
-- `src/App.tsx` (rota `/vendedor/configuracoes/automacoes` e provider)
-- `src/pages/vendedor/VendedorConfiguracoes.tsx` (novo card)
-- `src/components/vendedor/KanbanBoard.tsx` (handleDrop dispara automação)
-- `src/pages/vendedor/OportunidadeDetalhe.tsx` (tarefas + timeline)
-- `src/pages/vendedor/TarefasPage.tsx` (filtro + badge automação)
-- `src/data/mockCRM.ts` (campos extras em Tarefa)
+7. **Início (dashboard)**
+   - Saudação, barra de plano, 2 cards do dia, alertas, atalho câmera, pedidos recentes, link da vitrine
+   - Botão discreto "Simular novo pedido chegando"
 
-## Fora de escopo
+**Checkpoint:** preview navegável de toda a área do fornecedor.
 
-- Persistência real / backend.
-- Notificações automáticas por e-mail/WhatsApp das tarefas.
-- Reordenação drag-and-drop dentro do editor de sequência (usar setas ↑↓ por simplicidade).
+---
+
+### ETAPA 2 — Vitrine pública + conexão + polish
+
+Objetivo: comprador consegue navegar a vitrine, montar pedido e o fornecedor recebe em tempo real.
+
+8. **Vitrine config + Configurações + Planos**
+   - `/start/vitrine-config` com preview ao vivo, toggle ativa/inativa, copiar link
+   - `/start/configuracoes` (lista de seções, notificações inline)
+   - `/start/configuracoes/plano` (grátis vs Pro, modal "em breve" com captura de email)
+
+9. **Vitrine pública**
+   - `/start/vitrine/:slug` (header da loja, busca, chips, grid de produtos, botão WhatsApp flutuante, rodapé "Powered by")
+   - Validação de slug inexistente → tela de erro dedicada
+
+10. **Produto individual**
+    - `/start/vitrine/:slug/produto/:id` (galeria, detalhes, chips de tamanho com estoque, "mais produtos")
+
+11. **Formulário de pedido (tela mais complexa)**
+    - `/start/vitrine/:slug/pedido` em 3 seções (dados do comprador, produtos com stepper e validação de mínimo, pagamento/observações)
+    - Modal "+ Adicionar mais produtos" com busca
+    - Resumo sticky no bottom mobile
+    - Submit valida → loader 1.5s → grava no `StartDataContext` (novo pedido status "novo") → redirect
+
+12. **Confirmação**
+    - `/start/vitrine/:slug/pedido/sucesso` com check animado em CSS, resumo, botão WhatsApp (alert)
+
+13. **Conexão Context** — pedido enviado pela vitrine aparece em `/start/pedidos` e no dashboard `/start/inicio` (mesma instância do Context). Persistência opcional via localStorage para sobreviver a reload e simular sincronia entre abas.
+
+14. **Estados vazios + 404 + micro-interações**
+    - Empty states de catálogo, pedidos, compradores
+    - 404 dedicada `/start/*` → tela amigável
+    - Animações: copiar com feedback, pulsação em pedidos novos, check animado, transições de tabs, modal scale-in, stepper
+
+**Checkpoint:** preview do fluxo completo comprador → fornecedor.
+
+---
+
+## Detalhes técnicos
+
+- **Roteamento**: adicionar rotas `/start/*` no `App.tsx` existente, fora dos providers do CRM (não envolver `AutomacoesProvider`, `MetasProvider`, etc.). Wrap apenas com `StartAuthProvider` e `StartDataProvider`.
+- **Cores**: usar Tailwind com classes arbitrárias `bg-[#1D9E75]`, `text-[#0F6E56]`, etc. Centralizar em `src/start/styles/tokens.ts` exportando strings reutilizáveis (`START_COLORS.primary`, etc.) ou via `cva` local, evitando tocar em `tailwind.config.ts` global.
+- **Tipografia Inter**: já é a fonte base do projeto Nextil (Poppins é o atual). Vou adicionar `font-['Inter']` localmente nos containers do `/start` via classe arbitrária + `<link>` Google Fonts no `index.html` (única alteração fora de `src/start/`, restrita a adicionar uma tag `<link>`).
+- **Persistência mock**: `localStorage` com namespace `nextil_start_*` para não colidir com `nextil_user`/`nextil_onboarding` do Nextil principal.
+- **IA mockada**: função `simulateAIPhotoAnalysis()` que retorna uma Promise resolvida em 2000ms com payload fixo do brief.
+- **WhatsApp**: `alert()` formatado como pedido pelo brief.
+- **Sem novas dependências**: tudo já está instalado.
+
+## O que NÃO é alterado
+
+- Nada em `src/components/`, `src/pages/`, `src/contexts/`, `src/data/` do projeto atual
+- Nenhum estilo global em `index.css` ou `tailwind.config.ts`
+- O Nextil principal e a área Vendedor continuam funcionando exatamente como hoje
+
+---
+
+Confirme se posso começar pela **Etapa 1** (Fundação + área autenticada do fornecedor).
