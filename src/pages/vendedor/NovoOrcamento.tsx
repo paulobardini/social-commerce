@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,9 @@ import {
   Diamond,
 } from "lucide-react";
 import { mockCatalogoProdutos, type OrcamentoProduto } from "@/data/mockVendedor";
+import { mockOportunidades } from "@/data/mockCRM";
 import { AddAllProductsModal } from "@/components/vendedor/AddAllProductsModal";
+import { toast } from "sonner";
 
 const filterSections = [
   { key: "desconto", label: "Desconto" },
@@ -44,12 +46,46 @@ const filterSections = [
 
 export default function NovoOrcamento() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("az");
   const [searchTerm, setSearchTerm] = useState("");
   const [openFilters, setOpenFilters] = useState<string[]>([]);
   const [showAddAll, setShowAddAll] = useState(false);
   const [lojista, setLojista] = useState("Lojista genérico");
+
+  // Novos campos obrigatórios / vínculo
+  const [nome, setNome] = useState("");
+  const [oportunidadeId, setOportunidadeId] = useState<string>("");
+  const nomeValido = nome.trim().length > 0;
+
+  // Oportunidades abertas (excluindo ganho/perdido)
+  const oportunidadesAbertas = useMemo(
+    () => mockOportunidades.filter(o => o.etapa !== "ganho" && o.etapa !== "perdido"),
+    []
+  );
+
+  // Pré-preenche a partir da query string vinda da OportunidadeDetalhe
+  useEffect(() => {
+    const opId = searchParams.get("oportunidade");
+    const cliente = searchParams.get("cliente");
+    if (opId) {
+      const op = mockOportunidades.find(o => o.id === opId);
+      if (op) {
+        setOportunidadeId(opId);
+        setNome(op.nome);
+        if (cliente) setLojista(cliente);
+      }
+    }
+  }, [searchParams]);
+
+  const tentarAcao = (label: string, cb: () => void) => {
+    if (!nomeValido) {
+      toast.error("Informe o nome do orçamento antes de continuar.");
+      return;
+    }
+    cb();
+  };
 
   const totalProdutos = mockCatalogoProdutos.length;
 
@@ -89,11 +125,22 @@ export default function NovoOrcamento() {
             ]}
           />
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2 text-sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-sm"
+              disabled={!nomeValido}
+              onClick={() => tentarAcao("visualizar", () => toast.success("Pré-visualização gerada."))}
+            >
               <Eye className="h-4 w-4" />
               Visualizar orçamento
             </Button>
-            <Button size="sm" className="text-sm bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button
+              size="sm"
+              className="text-sm bg-accent hover:bg-accent/90 text-accent-foreground"
+              disabled={!nomeValido}
+              onClick={() => tentarAcao("grade", () => toast.success("Iniciando montagem da grade."))}
+            >
               Montar grade
             </Button>
           </div>
@@ -103,14 +150,38 @@ export default function NovoOrcamento() {
           {/* Left filter sidebar */}
           <aside className="w-[280px] border-r border-border overflow-y-auto shrink-0 bg-card">
             <div className="p-5 space-y-5">
-              {/* Quote name */}
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold text-foreground flex-1">
-                  Orçamento 13/04/2026 09:43
-                </h2>
-                <button className="text-muted-foreground hover:text-foreground">
-                  <Edit3 className="h-4 w-4" />
-                </button>
+              {/* Nome do orçamento (obrigatório) */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">
+                  Nome do orçamento <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  placeholder="Ex: Coleção Inverno 2026 — Boutique da Thay"
+                  className={`h-10 text-sm ${!nomeValido ? "border-destructive/40 focus-visible:ring-destructive/20" : ""}`}
+                />
+                {!nomeValido && (
+                  <p className="text-[11px] text-destructive">
+                    Defina um nome antes de salvar ou montar a grade.
+                  </p>
+                )}
+              </div>
+
+              {/* Oportunidade vinculada */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Oportunidade vinculada</label>
+                <Select value={oportunidadeId || "none"} onValueChange={(v) => setOportunidadeId(v === "none" ? "" : v)}>
+                  <SelectTrigger className="h-10 text-sm">
+                    <SelectValue placeholder="Selecione (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem vínculo</SelectItem>
+                    {oportunidadesAbertas.map((op) => (
+                      <SelectItem key={op.id} value={op.id}>{op.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Lojista select */}

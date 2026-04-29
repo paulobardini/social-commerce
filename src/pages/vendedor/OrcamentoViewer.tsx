@@ -1,18 +1,19 @@
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-  Download,
-  Printer,
-  ZoomIn,
-  ZoomOut,
-  ChevronLeft,
-  ChevronRight,
+  Download, Printer, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Link2,
 } from "lucide-react";
 import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { mockOrcamentos } from "@/data/mockVendedor";
 
 const mockPages = Array.from({ length: 7 }, (_, i) => i + 1);
 
 export default function OrcamentoViewer() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const orc = mockOrcamentos.find((o) => o.id === id) || mockOrcamentos[0];
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(100);
 
@@ -20,9 +21,28 @@ export default function OrcamentoViewer() {
     <>
       <div className="flex flex-col h-full">
         {/* Top bar */}
-        <div className="bg-primary text-primary-foreground px-6 py-2.5 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium">Orçamento 13/04/2026 09:43</span>
+        <div className="bg-primary text-primary-foreground px-6 py-2.5 flex items-center justify-between shrink-0 gap-4">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium truncate">{orc.nomeBase || orc.nome}</span>
+                {orc.versao && (
+                  <Badge variant="secondary" className="text-[10px] bg-primary-foreground/20 text-primary-foreground border-0">
+                    v{orc.versao}
+                  </Badge>
+                )}
+              </div>
+              {orc.oportunidadeId && orc.oportunidadeNome && (
+                <button
+                  onClick={() => navigate(`/vendedor/oportunidades/${orc.oportunidadeId}`)}
+                  className="mt-0.5 inline-flex items-center gap-1 text-[11px] bg-primary-foreground/15 hover:bg-primary-foreground/25 transition-colors rounded-full px-2 py-0.5 self-start"
+                  title="Abrir oportunidade vinculada"
+                >
+                  <Link2 className="h-3 w-3" />
+                  <span className="truncate max-w-[280px]">{orc.oportunidadeNome}</span>
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm">
