@@ -40,20 +40,20 @@ export interface ClienteCarteira {
 }
 
 export const mockOrcamentos: Orcamento[] = [
-  { id: "1", nome: "Orçamento 09/04/2026 15:36", lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
-  { id: "2", nome: "Orçamento 09/04/2026 15:36", lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
-  { id: "3", nome: "Orçamento 09/04/2026 15:17", lojista: "Boutique da Thay", marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
-  { id: "4", nome: "Orçamento 09/04/2026 13:42", lojista: null, marcas: ["BRANDILI", "MUNDI"], dataCriacao: "09/04/2026", valorTotal: 8457.50, status: "ativo" },
-  { id: "5", nome: "Orçamento 09/04/2026 13:38", lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
-  { id: "6", nome: "Orçamento 09/04/2026 10:19", lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
-  { id: "7", nome: "Orçamento 07/04/2026 14:34", lojista: "Boutique da Thay", marcas: ["BRANDILI"], dataCriacao: "07/04/2026", valorTotal: 11610.60, status: "ativo" },
-  { id: "8", nome: "Orçamento 07/04/2026 14:29", lojista: null, marcas: [], dataCriacao: "07/04/2026", valorTotal: null, status: "ativo" },
-  { id: "9", nome: "Orçamento 07/04/2026 13:15", lojista: "Loja - Super preço", marcas: ["BRANDILI", "MUNDI"], dataCriacao: "07/04/2026", valorTotal: 1369.71, status: "ativo" },
-  { id: "10", nome: "Orçamento 02/04/2026 14:06", lojista: null, marcas: [], dataCriacao: "02/04/2026", valorTotal: null, status: "ativo" },
-  { id: "11", nome: "Orçamento 01/04/2026 09:12", lojista: "Milykids", marcas: ["BRANDILI"], dataCriacao: "01/04/2026", valorTotal: 5230.00, status: "revisao_lojista" },
-  { id: "12", nome: "Orçamento 28/03/2026 16:45", lojista: "Alemão Vestuário", marcas: ["BRANDILI", "MUNDI"], dataCriacao: "28/03/2026", valorTotal: 15420.30, status: "revisao_comercial" },
-  { id: "13", nome: "Orçamento 25/03/2026 11:30", lojista: "CJD Pozza", marcas: ["BRANDILI"], dataCriacao: "25/03/2026", valorTotal: 8900.00, status: "aprovado" },
-  { id: "14", nome: "Orçamento 20/03/2026 14:00", lojista: "DBN OUTLET", marcas: ["MUNDI"], dataCriacao: "20/03/2026", valorTotal: 3200.00, status: "recusado" },
+  { id: "1", nome: "Rascunho rápido", nomeBase: "Rascunho rápido", versao: 1, lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
+  { id: "2", nome: "Coleção Inverno 2026 — Boutique da Thay", nomeBase: "Coleção Inverno 2026 — Boutique da Thay", versao: 1, lojista: "Boutique da Thay", marcas: ["BRANDILI"], dataCriacao: "01/04/2026", valorTotal: 9800.00, status: "ativo", oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas" },
+  { id: "3", nome: "Reposição Boutique da Thay", nomeBase: "Reposição Boutique da Thay", versao: 1, lojista: "Boutique da Thay", marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo", oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas" },
+  { id: "4", nome: "Coleção Inverno 2026 — Boutique da Thay — v2", nomeBase: "Coleção Inverno 2026 — Boutique da Thay", versao: 2, lojista: "Boutique da Thay", marcas: ["BRANDILI", "MUNDI"], dataCriacao: "09/04/2026", valorTotal: 8457.50, status: "ativo", oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas" },
+  { id: "5", nome: "Catálogo verão — esboço", nomeBase: "Catálogo verão — esboço", versao: 1, lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
+  { id: "6", nome: "Mix infantil express", nomeBase: "Mix infantil express", versao: 1, lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
+  { id: "7", nome: "Coleção Inverno 2026 — Boutique da Thay — v3", nomeBase: "Coleção Inverno 2026 — Boutique da Thay", versao: 3, lojista: "Boutique da Thay", marcas: ["BRANDILI"], dataCriacao: "07/04/2026", valorTotal: 11610.60, status: "ativo", oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas" },
+  { id: "8", nome: "Teste linha fitness", nomeBase: "Teste linha fitness", versao: 1, lojista: null, marcas: [], dataCriacao: "07/04/2026", valorTotal: null, status: "ativo" },
+  { id: "9", nome: "Promo Super preço — Outono", nomeBase: "Promo Super preço — Outono", versao: 1, lojista: "Loja - Super preço", marcas: ["BRANDILI", "MUNDI"], dataCriacao: "07/04/2026", valorTotal: 1369.71, status: "ativo" },
+  { id: "10", nome: "Apresentação institucional", nomeBase: "Apresentação institucional", versao: 1, lojista: null, marcas: [], dataCriacao: "02/04/2026", valorTotal: null, status: "ativo" },
+  { id: "11", nome: "Pedido especial Milykids", nomeBase: "Pedido especial Milykids", versao: 1, lojista: "Milykids", marcas: ["BRANDILI"], dataCriacao: "01/04/2026", valorTotal: 5230.00, status: "revisao_lojista", oportunidadeId: "op11", oportunidadeNome: "Pedido Especial – Milykids" },
+  { id: "12", nome: "Reposição Verão Alemão Vestuário", nomeBase: "Reposição Verão Alemão Vestuário", versao: 1, lojista: "Alemão Vestuário", marcas: ["BRANDILI", "MUNDI"], dataCriacao: "28/03/2026", valorTotal: 15420.30, status: "revisao_comercial", oportunidadeId: "op3", oportunidadeNome: "Reposição Verão – Alemão Vestuário" },
+  { id: "13", nome: "Pedido Alto Verão CJD Pozza", nomeBase: "Pedido Alto Verão CJD Pozza", versao: 1, lojista: "CJD Pozza", marcas: ["BRANDILI"], dataCriacao: "25/03/2026", valorTotal: 8900.00, status: "aprovado", oportunidadeId: "op5", oportunidadeNome: "Pedido Alto Verão – CJD Pozza" },
+  { id: "14", nome: "Lote Outlet DBN", nomeBase: "Lote Outlet DBN", versao: 1, lojista: "DBN OUTLET", marcas: ["MUNDI"], dataCriacao: "20/03/2026", valorTotal: 3200.00, status: "recusado", oportunidadeId: "op6", oportunidadeNome: "Lote Outlet – DBN OUTLET" },
 ];
 
 export const mockCatalogoProdutos: OrcamentoProduto[] = [
