@@ -48,8 +48,10 @@ import RelatorioViewer from "./pages/vendedor/RelatorioViewer";
 import InsightsPage from "./pages/vendedor/InsightsPage";
 import VisoesSalvasPage from "./pages/vendedor/VisoesSalvasPage";
 import AutomacoesPage from "./pages/vendedor/AutomacoesPage";
+import MessageTemplatesPage from "./pages/vendedor/MessageTemplatesPage";
 import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
 import { MetasProvider } from "@/contexts/MetasContext";
+import { MessageTemplatesProvider } from "@/contexts/MessageTemplatesContext";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -71,6 +73,7 @@ const App = () => (
           <CommentsProvider>
             <AutomacoesProvider>
             <MetasProvider>
+            <MessageTemplatesProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -104,6 +107,7 @@ const App = () => (
                 <Route path="/vendedor/orcamento-viewer" element={<LayoutRoute><OrcamentoViewer /></LayoutRoute>} />
                 <Route path="/vendedor/configuracoes" element={<LayoutRoute><VendedorConfiguracoes /></LayoutRoute>} />
                 <Route path="/vendedor/configuracoes/automacoes" element={<LayoutRoute><AutomacoesPage /></LayoutRoute>} />
+                <Route path="/vendedor/configuracoes/templates" element={<LayoutRoute><MessageTemplatesPage /></LayoutRoute>} />
                 <Route path="/vendedor/clientes" element={<LayoutRoute><ClientesListing /></LayoutRoute>} />
                 <Route path="/vendedor/clientes/kanban" element={<LayoutRoute><KanbanClientesPage /></LayoutRoute>} />
                 <Route path="/vendedor/clientes/kanban/config" element={<LayoutRoute><FunilClientesConfigPage /></LayoutRoute>} />
@@ -126,6 +130,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </MessageTemplatesProvider>
             </MetasProvider>
             </AutomacoesProvider>
           </CommentsProvider>
