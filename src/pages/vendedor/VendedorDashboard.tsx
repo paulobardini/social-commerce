@@ -1,17 +1,25 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { 
   TrendingUp, Target, FileText, CheckSquare, AlertTriangle, Users, 
   Phone, Calendar, ArrowRight, Clock, Flame, Plus, MessageCircle, UserX,
-  MapPin, ShoppingBag,
+  MapPin, ShoppingBag, Pencil,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { dashboardKPIs, mockOportunidades, mockTarefas, compromissos, etapaMap, tagColors, tagLabels, type TagCRM } from "@/data/mockCRM";
 import { mockConversas, mockClientes360, mockCompromissos, tipoCompromissoLabels } from "@/data/mockCRM360";
+import { useMetas } from "@/contexts/MetasContext";
+import { MetasModal } from "@/components/vendedor/MetasModal";
+import { QuickTaskModal } from "@/components/vendedor/QuickTaskModal";
 
 export default function VendedorDashboard() {
   const navigate = useNavigate();
+  const { metaMensal, realizadoMes } = useMetas();
+  const [showMeta, setShowMeta] = useState(false);
+  const [taskModal, setTaskModal] = useState<{ open: boolean; cliente: string }>({ open: false, cliente: "" });
 
   const oportunidadesQuentes = mockOportunidades.filter(o => o.tags.includes("quente") || o.prioridade === "alta").filter(o => o.etapa !== "ganho" && o.etapa !== "perdido").slice(0, 4);
   const tarefasPendentes = mockTarefas.filter(t => t.status !== "concluida").slice(0, 5);
