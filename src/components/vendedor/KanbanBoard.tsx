@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TagBadge } from "./TagBadge";
+import { OportunidadeBadges } from "./OportunidadeBadges";
 import { GripVertical, User, Zap } from "lucide-react";
 import {
   mockOportunidades, etapasFunil, type OportunidadeEtapa,
@@ -145,10 +146,13 @@ export function KanbanBoard({ searchQuery = "", filterTags = [], filterPrioridad
                       <User className="h-3 w-3 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">{op.clienteNome}</span>
                     </div>
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {op.tags.slice(0, 3).map(tag => (
-                        <TagBadge key={tag} tag={tag} size="sm" />
-                      ))}
+                    <div className="mb-2">
+                      <OportunidadeBadges
+                        temperatura={op.temperatura}
+                        segmento={op.segmento}
+                        urgente={op.urgente}
+                        size="sm"
+                      />
                     </div>
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="font-semibold text-foreground">R$ {op.valorEstimado.toLocaleString("pt-BR")}</span>

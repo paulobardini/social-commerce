@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { TagBadge } from "@/components/vendedor/TagBadge";
+import { OportunidadeBadges } from "@/components/vendedor/OportunidadeBadges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,12 +80,22 @@ export default function OportunidadeDetalhe() {
                 {etapaMap[op.etapa]}
               </Badge>
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1"><Building className="h-3.5 w-3.5" /> {op.clienteNome}</span>
               <span className="flex items-center gap-1"><User className="h-3.5 w-3.5" /> {op.representante}</span>
               <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Criada em {op.dataCriacao}</span>
             </div>
-            <div className="flex gap-1.5">{op.tags.map(tag => <TagBadge key={tag} tag={tag} size="md" />)}</div>
+            {op.origem && (
+              <div className="text-xs text-muted-foreground">
+                Canal de origem: <span className="font-medium text-foreground">{op.origem}</span>
+              </div>
+            )}
+            <OportunidadeBadges
+              temperatura={op.temperatura}
+              segmento={op.segmento}
+              urgente={op.urgente}
+              size="md"
+            />
           </div>
 
           <div className="flex flex-wrap gap-2 shrink-0">

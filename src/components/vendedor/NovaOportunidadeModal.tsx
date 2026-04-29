@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { TagBadge } from "./TagBadge";
 import { mockClientes } from "@/data/mockVendedor";
-import { etapasFunil, tagLabels, type TagCRM } from "@/data/mockCRM";
+import { etapasFunil, tagLabels, canaisOrigem, temperaturaLabels, type TagCRM, type Temperatura, type CanalOrigem } from "@/data/mockCRM";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
@@ -24,7 +25,10 @@ export function NovaOportunidadeModal({ open, onOpenChange }: Props) {
   const [valorEstimado, setValorEstimado] = useState("");
   const [etapa, setEtapa] = useState("e1");
   const [prioridade, setPrioridade] = useState("media");
-  const [origem, setOrigem] = useState("");
+  const [origem, setOrigem] = useState<CanalOrigem | "">("");
+  const [temperatura, setTemperatura] = useState<Temperatura>("morno");
+  const [segmento, setSegmento] = useState("");
+  const [urgente, setUrgente] = useState(false);
   const [previsao, setPrevisao] = useState("");
   const [tags, setTags] = useState<TagCRM[]>([]);
   const [observacoes, setObservacoes] = useState("");
@@ -103,33 +107,40 @@ export function NovaOportunidadeModal({ open, onOpenChange }: Props) {
           </div>
 
           <div>
-            <Label className="text-xs font-medium">Origem</Label>
-            <Select value={origem} onValueChange={setOrigem}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <Label className="text-xs font-medium">Canal de origem</Label>
+            <Select value={origem} onValueChange={(v) => setOrigem(v as CanalOrigem)}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecione o canal" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="Carteira ativa">Carteira ativa</SelectItem>
-                <SelectItem value="Prospecção ativa">Prospecção ativa</SelectItem>
-                <SelectItem value="Indicação">Indicação</SelectItem>
-                <SelectItem value="Feira comercial">Feira comercial</SelectItem>
-                <SelectItem value="Site">Site</SelectItem>
-                <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                {canaisOrigem.map(c => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div>
-            <Label className="text-xs font-medium">Tags</Label>
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
-              {allTags.map(tag => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  className={`transition-all ${tags.includes(tag) ? "ring-2 ring-accent/30 rounded-full" : "opacity-60 hover:opacity-100"}`}
-                >
-                  <TagBadge tag={tag} size="md" />
-                </button>
-              ))}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs font-medium">Temperatura</Label>
+              <Select value={temperatura} onValueChange={(v) => setTemperatura(v as Temperatura)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(temperaturaLabels) as Temperatura[]).map(t => (
+                    <SelectItem key={t} value={t}>{temperaturaLabels[t]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+            <div>
+              <Label className="text-xs font-medium">Segmento</Label>
+              <Input placeholder="Ex: Infantil, Fitness" value={segmento} onChange={e => setSegmento(e.target.value)} className="mt-1" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox id="urgente" checked={urgente} onCheckedChange={(v) => setUrgente(!!v)} />
+            <Label htmlFor="urgente" className="text-xs font-medium cursor-pointer">
+              Marcar como urgente
+            </Label>
           </div>
 
           <div>

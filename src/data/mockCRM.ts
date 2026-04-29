@@ -13,6 +13,24 @@ export type OportunidadeEtapa =
 export type Prioridade = "alta" | "media" | "baixa";
 export type TagCRM = "quente" | "recorrente" | "novo_cliente" | "alto_potencial" | "infantil" | "adulto" | "fitness" | "urgente";
 
+// Estrutura nova de classificação de oportunidade (substitui o uso misturado de tags)
+export type Temperatura = "quente" | "morno" | "frio";
+export type CanalOrigem = "Site" | "WhatsApp" | "Feira" | "Indicação" | "Instagram" | "Cold call" | "E-mail" | "Outro";
+
+export const canaisOrigem: CanalOrigem[] = [
+  "Site", "WhatsApp", "Feira", "Indicação", "Instagram", "Cold call", "E-mail", "Outro",
+];
+
+export const temperaturaLabels: Record<Temperatura, string> = {
+  quente: "Quente", morno: "Morno", frio: "Frio",
+};
+
+export const temperaturaColors: Record<Temperatura, string> = {
+  quente: "bg-red-100 text-red-700 border-red-200",
+  morno: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  frio: "bg-blue-100 text-blue-700 border-blue-200",
+};
+
 export interface EtapaFunil {
   id: string;
   nome: string;
@@ -32,7 +50,11 @@ export interface Oportunidade {
   valorEstimado: number;
   prioridade: Prioridade;
   tags: TagCRM[];
-  origem: string;
+  // Classificação estruturada (nova)
+  temperatura?: Temperatura;
+  segmento?: string;
+  urgente?: boolean;
+  origem: CanalOrigem | string;
   probabilidade: number;
   dataCriacao: string;
   previsaoFechamento: string;
@@ -217,6 +239,26 @@ export const mockOportunidades: Oportunidade[] = [
     orcamentoIds: [],
   },
 ];
+
+// Deriva campos estruturados (temperatura/segmento/urgente) a partir das tags legadas
+// para que mocks antigos exibam corretamente os novos badges.
+mockOportunidades.forEach(op => {
+  if (!op.temperatura) {
+    if (op.tags.includes("quente")) op.temperatura = "quente";
+    else if (op.prioridade === "baixa") op.temperatura = "frio";
+    else op.temperatura = "morno";
+  }
+  if (op.segmento === undefined) {
+    const seg: string[] = [];
+    if (op.tags.includes("infantil")) seg.push("Infantil");
+    if (op.tags.includes("adulto")) seg.push("Adulto");
+    if (op.tags.includes("fitness")) seg.push("Fitness");
+    op.segmento = seg.join(" / ") || "";
+  }
+  if (op.urgente === undefined) {
+    op.urgente = op.tags.includes("urgente");
+  }
+});
 
 export const mockAtividades: AtividadeCRM[] = [
   { id: "a1", oportunidadeId: "op1", tipo: "ligacao", descricao: "Ligação com Thay para discutir condições", data: "12/04/2026 14:30", autor: "Paulo Bardini", detalhes: "Cliente pediu revisão de preço em 3 itens." },
