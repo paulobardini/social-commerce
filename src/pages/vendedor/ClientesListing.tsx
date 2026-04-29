@@ -9,7 +9,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Search, Plus, Filter, Download, ChevronLeft, ChevronRight, Eye, Edit3,
   LayoutGrid, List, X, Thermometer, Building, MapPin, Target, Kanban, Shuffle,
+  Info, EyeOff,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { calcularTemperatura, maskCNPJ } from "@/lib/temperaturaCliente";
+import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -32,6 +36,10 @@ export default function ClientesListing() {
   const [filterNicho, setFilterNicho] = useState<string>("");
   const [filterTemperatura, setFilterTemperatura] = useState<string>("");
   const [editCliente, setEditCliente] = useState<Cliente360 | null>(null);
+  const [revealCNPJ, setRevealCNPJ] = useState(false);
+
+  const perfil = useVendedorPerfil();
+  const showRedistribuir = podeRedistribuir(perfil);
 
   const filtered = useMemo(() => {
     return mockClientes360.filter(c => {
@@ -41,7 +49,7 @@ export default function ClientesListing() {
       }
       if (filterStatus && c.status !== filterStatus) return false;
       if (filterNicho && c.nicho !== filterNicho) return false;
-      if (filterTemperatura && c.temperaturaComercial !== filterTemperatura) return false;
+      if (filterTemperatura && calcularTemperatura(c.ultimoContato) !== filterTemperatura) return false;
       return true;
     });
   }, [search, filterStatus, filterNicho, filterTemperatura]);
@@ -50,7 +58,7 @@ export default function ClientesListing() {
   const paged = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
   const activeFilters = [filterStatus, filterNicho, filterTemperatura].filter(Boolean).length;
 
-  const tempIcon = (t: string) => t === "quente" ? "🔥" : t === "morna" ? "🌤" : "❄️";
+  const tempIcon = (t: string) => t === "quente" ? "🔥" : t === "morna" ? "✨" : "❄️";
 
   return (
     <>
@@ -62,8 +70,9 @@ export default function ClientesListing() {
             <p className="text-sm text-muted-foreground">{filtered.length} clientes na carteira</p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/kanban")}><Kanban className="h-4 w-4 mr-1" /> Kanban</Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}><Shuffle className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Redistribuir</span><span className="sm:hidden">Redist.</span></Button>
+            {showRedistribuir && (
+              <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}><Shuffle className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Redistribuir</span><span className="sm:hidden">Redist.</span></Button>
+            )}
             <Button variant="outline" size="sm" className="hidden sm:flex"><Download className="h-4 w-4 mr-1" /> Exportar</Button>
             <Button size="sm"><Plus className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Novo cliente</span><span className="sm:hidden">Novo</span></Button>
           </div>
@@ -111,8 +120,8 @@ export default function ClientesListing() {
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="quente">🔥 Quente</SelectItem>
-                <SelectItem value="morna">🌤 Morna</SelectItem>
-                <SelectItem value="fria">❄️ Fria</SelectItem>
+                <SelectItem value="morna">✨ Morno</SelectItem>
+                <SelectItem value="fria">❄️ Frio</SelectItem>
               </SelectContent>
             </Select>
             {activeFilters > 0 && (
@@ -126,34 +135,66 @@ export default function ClientesListing() {
         {/* Table view */}
         {view === "table" ? (
           <div className="border border-border rounded-lg overflow-hidden">
+            <TooltipProvider delayDuration={150}>
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Cliente</TableHead>
+                  <TableHead className="font-semibold">
+                    <div className="flex items-center gap-1.5">
+                      <span>Cliente</span>
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); setRevealCNPJ(v => !v); }}
+                        title={revealCNPJ ? "Ocultar CNPJs" : "Revelar CNPJs"}
+                        className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      >
+                        {revealCNPJ ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </TableHead>
                   <TableHead className="font-semibold">Cidade/UF</TableHead>
                   <TableHead className="font-semibold">Nicho</TableHead>
                   <TableHead className="font-semibold">Interesse</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold">Temp.</TableHead>
+                  <TableHead className="font-semibold">
+                    <div className="flex items-center gap-1">
+                      <span>Temp.</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button type="button" onClick={e => e.stopPropagation()} className="text-muted-foreground hover:text-foreground">
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs max-w-[240px]">
+                          <p className="font-semibold mb-1">Critério de temperatura</p>
+                          <p>🔥 <b>Quente:</b> contato nos últimos 7 dias</p>
+                          <p>✨ <b>Morno:</b> contato entre 8 e 30 dias</p>
+                          <p>❄️ <b>Frio:</b> sem contato há mais de 30 dias</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TableHead>
                   <TableHead className="font-semibold">Último contato</TableHead>
                   <TableHead className="font-semibold">Oport.</TableHead>
                   <TableHead className="font-semibold w-20">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paged.map(c => (
+                {paged.map(c => {
+                  const temp = calcularTemperatura(c.ultimoContato);
+                  return (
                   <TableRow key={c.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/vendedor/360/${c.id}`)}>
                     <TableCell>
                       <div>
                         <p className="text-sm font-medium">{c.nomeFantasia}</p>
-                        <p className="text-[11px] text-muted-foreground">{c.documento}</p>
+                        <p className="text-[11px] text-muted-foreground font-mono">{revealCNPJ ? c.documento : maskCNPJ(c.documento)}</p>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.cidade}/{c.estado}</TableCell>
                     <TableCell><Badge variant="secondary" className="text-[10px]">{nichoLabels[c.nicho]}</Badge></TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{c.interessePrincipal}</TableCell>
                     <TableCell><span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusColors[c.status]}`}>{statusLabels[c.status]}</span></TableCell>
-                    <TableCell className="text-center">{tempIcon(c.temperaturaComercial)}</TableCell>
+                    <TableCell className="text-center" title={temp === "quente" ? "Quente (≤7d)" : temp === "morna" ? "Morno (8-30d)" : "Frio (>30d)"}>{tempIcon(temp)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.ultimoContato}</TableCell>
                     <TableCell className="text-center text-sm font-medium">{c.oportunidadesAbertas}</TableCell>
                     <TableCell>
@@ -167,12 +208,14 @@ export default function ClientesListing() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
                 {paged.length === 0 && (
                   <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Nenhum cliente encontrado</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
+            </TooltipProvider>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -182,9 +225,9 @@ export default function ClientesListing() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="text-sm font-semibold">{c.nomeFantasia}</p>
-                      <p className="text-[11px] text-muted-foreground">{c.documento}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono">{revealCNPJ ? c.documento : maskCNPJ(c.documento)}</p>
                     </div>
-                    <span className="text-lg">{tempIcon(c.temperaturaComercial)}</span>
+                    <span className="text-lg" title="Calculado a partir do último contato">{tempIcon(calcularTemperatura(c.ultimoContato))}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
                     <MapPin className="h-3 w-3" /> {c.cidade}/{c.estado}

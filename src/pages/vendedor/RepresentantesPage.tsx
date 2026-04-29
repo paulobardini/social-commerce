@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { mockRepresentantes, type Representante } from "@/data/mockRepresentantes";
 import { Progress } from "@/components/ui/progress";
+import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
 
 const statusColors: Record<string, string> = {
   ativo: "bg-green-100 text-green-700 border-green-200",
@@ -30,6 +31,7 @@ export default function RepresentantesPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterRegiao, setFilterRegiao] = useState("");
+  const showRedistribuir = podeRedistribuir(useVendedorPerfil());
 
   const filtered = useMemo(() => {
     return mockRepresentantes.filter(r => {
@@ -52,9 +54,11 @@ export default function RepresentantesPage() {
             <h1 className="text-xl font-heading font-bold text-foreground">Representantes</h1>
             <p className="text-sm text-muted-foreground">{mockRepresentantes.length} representantes • {totalCarteira} clientes na base</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}>
-            <Shuffle className="h-4 w-4 mr-1" /> Redistribuir carteira
-          </Button>
+          {showRedistribuir && (
+            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/clientes/redistribuir")}>
+              <Shuffle className="h-4 w-4 mr-1" /> Redistribuir carteira
+            </Button>
+          )}
         </div>
 
         {/* Summary cards */}
