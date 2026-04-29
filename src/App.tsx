@@ -52,6 +52,7 @@ import MessageTemplatesPage from "./pages/vendedor/MessageTemplatesPage";
 import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
 import { MetasProvider } from "@/contexts/MetasContext";
 import { MessageTemplatesProvider } from "@/contexts/MessageTemplatesContext";
+import { TarefasProvider } from "@/contexts/TarefasContext";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
