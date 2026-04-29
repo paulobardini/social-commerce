@@ -50,7 +50,11 @@ export interface Oportunidade {
   valorEstimado: number;
   prioridade: Prioridade;
   tags: TagCRM[];
-  origem: string;
+  // Classificação estruturada (nova)
+  temperatura?: Temperatura;
+  segmento?: string;
+  urgente?: boolean;
+  origem: CanalOrigem | string;
   probabilidade: number;
   dataCriacao: string;
   previsaoFechamento: string;
