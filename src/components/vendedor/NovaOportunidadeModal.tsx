@@ -25,7 +25,10 @@ export function NovaOportunidadeModal({ open, onOpenChange }: Props) {
   const [valorEstimado, setValorEstimado] = useState("");
   const [etapa, setEtapa] = useState("e1");
   const [prioridade, setPrioridade] = useState("media");
-  const [origem, setOrigem] = useState("");
+  const [origem, setOrigem] = useState<CanalOrigem | "">("");
+  const [temperatura, setTemperatura] = useState<Temperatura>("morno");
+  const [segmento, setSegmento] = useState("");
+  const [urgente, setUrgente] = useState(false);
   const [previsao, setPrevisao] = useState("");
   const [tags, setTags] = useState<TagCRM[]>([]);
   const [observacoes, setObservacoes] = useState("");
