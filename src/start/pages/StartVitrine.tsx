@@ -127,10 +127,10 @@ export default function StartVitrine() {
         </div>
       </section>
 
-      {/* Filtros */}
+      {/* Filtros — mobile: busca + botão; desktop: tudo inline */}
       <section className="sticky top-14 z-20 bg-white border-b border-[rgba(0,0,0,0.08)]">
-        <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[180px] max-w-md">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-2.5 md:py-3 flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A0A0A0]" />
             <input
               value={busca}
@@ -139,25 +139,89 @@ export default function StartVitrine() {
               className={`${startClasses.input} pl-9 py-2`}
             />
           </div>
-          <select value={categoria} onChange={e => setCategoria(e.target.value)} className={`${startClasses.input} w-auto py-2`}>
-            <option>Todas</option>
-            {CATEGORIAS_PRODUTO.map(c => <option key={c}>{c}</option>)}
-          </select>
-          <select value={estacao} onChange={e => setEstacao(e.target.value)} className={`${startClasses.input} w-auto py-2`}>
-            <option>Todas</option>
-            {ESTACOES.map(c => <option key={c}>{c}</option>)}
-          </select>
-          <select value={genero} onChange={e => setGenero(e.target.value)} className={`${startClasses.input} w-auto py-2`}>
-            <option>Todos</option>
-            {GENEROS.map(c => <option key={c}>{c}</option>)}
-          </select>
-          <select value={ordem} onChange={e => setOrdem(e.target.value as any)} className={`${startClasses.input} w-auto py-2`}>
-            <option value="recentes">Mais recentes</option>
-            <option value="menor">Menor preço</option>
-            <option value="maior">Maior preço</option>
-          </select>
+
+          {/* Mobile: botão filtros */}
+          <button
+            onClick={() => setFiltersOpen(true)}
+            className="md:hidden relative shrink-0 inline-flex items-center gap-1.5 border border-[rgba(0,0,0,0.12)] rounded-lg px-3 py-2 text-[13px] bg-white"
+          >
+            <SlidersHorizontal size={15} />
+            {filtrosAtivos > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#1D9E75] text-white rounded-full text-[10px] min-w-[16px] h-4 px-1 flex items-center justify-center font-semibold">
+                {filtrosAtivos}
+              </span>
+            )}
+          </button>
+
+          {/* Desktop: selects inline */}
+          <div className="hidden md:flex items-center gap-2 flex-wrap">
+            <select value={categoria} onChange={e => setCategoria(e.target.value)} className={`${startClasses.input} w-auto py-2`}>
+              <option>Todas</option>
+              {CATEGORIAS_PRODUTO.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <select value={estacao} onChange={e => setEstacao(e.target.value)} className={`${startClasses.input} w-auto py-2`}>
+              <option>Todas</option>
+              {ESTACOES.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <select value={genero} onChange={e => setGenero(e.target.value)} className={`${startClasses.input} w-auto py-2`}>
+              <option>Todos</option>
+              {GENEROS.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <select value={ordem} onChange={e => setOrdem(e.target.value as any)} className={`${startClasses.input} w-auto py-2`}>
+              <option value="recentes">Mais recentes</option>
+              <option value="menor">Menor preço</option>
+              <option value="maior">Maior preço</option>
+            </select>
+          </div>
         </div>
       </section>
+
+      {/* Drawer de filtros (mobile) */}
+      {filtersOpen && (
+        <div className="md:hidden fixed inset-0 z-[200] bg-black/40" onClick={() => setFiltersOpen(false)}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[16px] font-semibold">Filtros</h3>
+              <button onClick={() => setFiltersOpen(false)} className="p-1 text-[#6B6B6B]"><X size={20} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className={startClasses.label}>Categoria</label>
+                <select value={categoria} onChange={e => setCategoria(e.target.value)} className={startClasses.input}>
+                  <option>Todas</option>
+                  {CATEGORIAS_PRODUTO.map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={startClasses.label}>Estação</label>
+                <select value={estacao} onChange={e => setEstacao(e.target.value)} className={startClasses.input}>
+                  <option>Todas</option>
+                  {ESTACOES.map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={startClasses.label}>Gênero</label>
+                <select value={genero} onChange={e => setGenero(e.target.value)} className={startClasses.input}>
+                  <option>Todos</option>
+                  {GENEROS.map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={startClasses.label}>Ordenar por</label>
+                <select value={ordem} onChange={e => setOrdem(e.target.value as any)} className={startClasses.input}>
+                  <option value="recentes">Mais recentes</option>
+                  <option value="menor">Menor preço</option>
+                  <option value="maior">Maior preço</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-5">
+              <button onClick={limparFiltros} className={`${startClasses.btnSecondary} flex-1`}>Limpar</button>
+              <button onClick={() => setFiltersOpen(false)} className={`${startClasses.btnPrimary} flex-1`}>Aplicar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Grid */}
       <section className="max-w-[1200px] mx-auto px-4 md:px-6 py-6 md:py-8 pb-32">
