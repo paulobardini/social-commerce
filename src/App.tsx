@@ -132,6 +132,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </TarefasProvider>
             </MessageTemplatesProvider>
             </MetasProvider>
             </AutomacoesProvider>
