@@ -265,8 +265,13 @@ export default function OportunidadeDetalhe() {
               <div className="space-y-2">
                 {orcamentos.map(orc => (
                   <div key={orc.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors">
-                    <div>
-                      <p className="text-sm font-medium">{orc.nome}</p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium">{orc.nomeBase || orc.nome}</p>
+                        {orc.versao && (
+                          <Badge variant="secondary" className="text-[10px]">v{orc.versao}</Badge>
+                        )}
+                      </div>
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         <span>{orc.dataCriacao}</span>
                         {orc.marcas.length > 0 && <span>{orc.marcas.join(", ")}</span>}
