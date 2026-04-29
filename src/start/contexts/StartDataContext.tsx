@@ -32,7 +32,12 @@ function load<T>(key: string, fallback: T): T {
 }
 
 export function StartDataProvider({ children }: { children: ReactNode }) {
-  const [produtos, setProdutos] = useState<StartProduto[]>(() => load(KEY_PROD, PRODUTOS_INICIAIS));
+  // hidrata fotoUrl a partir do mock atual (assets podem mudar entre builds)
+  const hydrateProdutos = (list: StartProduto[]): StartProduto[] => {
+    const fotoMap = new Map(PRODUTOS_INICIAIS.map(p => [p.id, p.fotoUrl]));
+    return list.map(p => ({ ...p, fotoUrl: p.fotoUrl || fotoMap.get(p.id) }));
+  };
+  const [produtos, setProdutos] = useState<StartProduto[]>(() => hydrateProdutos(load(KEY_PROD, PRODUTOS_INICIAIS)));
   const [compradores, setCompradores] = useState<StartComprador[]>(() => load(KEY_COMP, COMPRADORES_INICIAIS));
   const [pedidos, setPedidos] = useState<StartPedido[]>(() => load(KEY_PED, PEDIDOS_INICIAIS));
 
