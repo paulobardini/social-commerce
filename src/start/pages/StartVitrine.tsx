@@ -235,24 +235,21 @@ export default function StartVitrine() {
           </div>
         ) : (
           <>
-            <p className="text-[13px] text-[#6B6B6B] mb-4">{lista.length} produto{lista.length > 1 ? "s" : ""}</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-5">
+            <p className="text-[12px] md:text-[13px] text-[#6B6B6B] mb-3 md:mb-4">{lista.length} produto{lista.length > 1 ? "s" : ""}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-5">
               {lista.map(p => (
                 <Link
                   to={`/vitrine/${slug}/produto/${p.id}`}
                   key={p.id}
                   className="group block rounded-xl overflow-hidden border border-[rgba(0,0,0,0.08)] bg-white hover:shadow-md transition-all"
                 >
-                  <div
-                    className="aspect-[3/4] w-full"
-                    style={{ background: p.fotoCor || "#F8F8F6" }}
-                  />
-                  <div className="p-3">
-                    <p className="text-[13px] text-[#6B6B6B] uppercase tracking-wide">{p.categoria}</p>
-                    <p className="text-[14px] font-medium leading-snug line-clamp-2 mt-0.5 min-h-[36px]">{p.nome}</p>
-                    <div className="flex items-end justify-between mt-2">
-                      <p className="text-[15px] font-semibold text-[#1D9E75]">{formatBRL(p.preco)}</p>
-                      <span className="text-[10px] text-[#A0A0A0]">mín. {p.pedidoMinimo}</span>
+                  <ProdutoFoto fotoUrl={p.fotoUrl} fotoCor={p.fotoCor} alt={p.nome} />
+                  <div className="p-2.5 md:p-3">
+                    <p className="text-[10px] md:text-[11px] text-[#6B6B6B] uppercase tracking-wide">{p.categoria}</p>
+                    <p className="text-[13px] md:text-[14px] font-medium leading-snug line-clamp-2 mt-0.5 min-h-[34px] md:min-h-[36px]">{p.nome}</p>
+                    <div className="flex items-end justify-between mt-1.5 md:mt-2 gap-1">
+                      <p className="text-[14px] md:text-[15px] font-semibold text-[#1D9E75]">{formatBRL(p.preco)}</p>
+                      <span className="text-[10px] text-[#A0A0A0] whitespace-nowrap">mín. {p.pedidoMinimo}</span>
                     </div>
                   </div>
                 </Link>
