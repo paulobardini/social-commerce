@@ -240,7 +240,26 @@ export const mockOportunidades: Oportunidade[] = [
   },
 ];
 
-export const mockAtividades: AtividadeCRM[] = [
+// Deriva campos estruturados (temperatura/segmento/urgente) a partir das tags legadas
+// para que mocks antigos exibam corretamente os novos badges.
+mockOportunidades.forEach(op => {
+  if (!op.temperatura) {
+    if (op.tags.includes("quente")) op.temperatura = "quente";
+    else if (op.prioridade === "baixa") op.temperatura = "frio";
+    else op.temperatura = "morno";
+  }
+  if (op.segmento === undefined) {
+    const seg: string[] = [];
+    if (op.tags.includes("infantil")) seg.push("Infantil");
+    if (op.tags.includes("adulto")) seg.push("Adulto");
+    if (op.tags.includes("fitness")) seg.push("Fitness");
+    op.segmento = seg.join(" / ") || "";
+  }
+  if (op.urgente === undefined) {
+    op.urgente = op.tags.includes("urgente");
+  }
+});
+
   { id: "a1", oportunidadeId: "op1", tipo: "ligacao", descricao: "Ligação com Thay para discutir condições", data: "12/04/2026 14:30", autor: "Paulo Bardini", detalhes: "Cliente pediu revisão de preço em 3 itens." },
   { id: "a2", oportunidadeId: "op1", tipo: "email", descricao: "Envio de tabela de preços atualizada", data: "10/04/2026 09:15", autor: "Paulo Bardini" },
   { id: "a3", oportunidadeId: "op1", tipo: "mudanca_etapa", descricao: "Movido de 'Orçamento enviado' para 'Em negociação'", data: "09/04/2026 16:00", autor: "Sistema" },
