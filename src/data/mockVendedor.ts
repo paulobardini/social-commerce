@@ -3,11 +3,16 @@
 export interface Orcamento {
   id: string;
   nome: string;
+  // Nome base (sem o sufixo " — vN") usado para agrupar versões
+  nomeBase?: string;
+  versao?: number;
   lojista: string | null;
   marcas: string[];
   dataCriacao: string;
   valorTotal: number | null;
   status: "ativo" | "revisao_lojista" | "revisao_comercial" | "aprovado_parcial" | "aprovado" | "recusado";
+  oportunidadeId?: string;
+  oportunidadeNome?: string;
 }
 
 export interface OrcamentoProduto {
