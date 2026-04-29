@@ -113,12 +113,12 @@ export default function AgendaPage() {
                         return (
                           <div key={d.full + h} className="min-h-[56px] p-1 border-l border-border/20">
                             {events.map(ev => {
-                              const Icon = tipoIcons[ev.tipo] || CalendarIcon;
+                              const Icon = tipoIcons[ev.displayTipo] || CalendarIcon;
                               return (
                                 <button
                                   key={ev.id}
                                   onClick={() => ev.clienteId && navigate(`/vendedor/360/${ev.clienteId}`)}
-                                  className={`w-full text-left p-1.5 rounded-md text-[10px] mb-0.5 ${tipoColors[ev.tipo]} hover:opacity-80 transition-opacity`}
+                                  className={`w-full text-left p-1.5 rounded-md text-[10px] mb-0.5 ${tipoColors[ev.displayTipo]} hover:opacity-80 transition-opacity`}
                                 >
                                   <div className="flex items-center gap-1">
                                     <Icon className="h-3 w-3 shrink-0" />
@@ -148,9 +148,9 @@ export default function AgendaPage() {
                         <div className="w-16 p-2 text-xs text-muted-foreground shrink-0 border-r border-border/30 text-right pr-3">{h}</div>
                         <div className="flex-1 p-1">
                           {events.map(ev => {
-                            const Icon = tipoIcons[ev.tipo] || CalendarIcon;
+                            const Icon = tipoIcons[ev.displayTipo] || CalendarIcon;
                             return (
-                              <button key={ev.id} onClick={() => ev.clienteId && navigate(`/vendedor/360/${ev.clienteId}`)} className={`w-full text-left p-2.5 rounded-md mb-1 ${tipoColors[ev.tipo]} hover:opacity-80 transition-opacity`}>
+                              <button key={ev.id} onClick={() => ev.clienteId && navigate(`/vendedor/360/${ev.clienteId}`)} className={`w-full text-left p-2.5 rounded-md mb-1 ${tipoColors[ev.displayTipo]} hover:opacity-80 transition-opacity`}>
                                 <div className="flex items-center gap-2">
                                   <Icon className="h-4 w-4 shrink-0" />
                                   <div>
@@ -184,7 +184,7 @@ export default function AgendaPage() {
                         {events.length > 0 && (
                           <div className="mt-0.5">
                             {events.slice(0, 2).map(ev => (
-                              <div key={ev.id} className={`text-[8px] px-1 py-0.5 rounded mb-0.5 truncate ${tipoColors[ev.tipo]}`}>{ev.titulo.substring(0, 15)}</div>
+                              <div key={ev.id} className={`text-[8px] px-1 py-0.5 rounded mb-0.5 truncate ${tipoColors[ev.displayTipo]}`}>{ev.titulo.substring(0, 15)}</div>
                             ))}
                             {events.length > 2 && <p className="text-[8px] text-muted-foreground">+{events.length - 2}</p>}
                           </div>
@@ -204,18 +204,18 @@ export default function AgendaPage() {
               <p className="text-xs text-muted-foreground mb-3">{selectedDay} · {todayEvents.length} evento{todayEvents.length !== 1 ? "s" : ""}</p>
               <div className="space-y-2">
                 {todayEvents.map(c => {
-                  const Icon = tipoIcons[c.tipo] || CalendarIcon;
+                  const Icon = tipoIcons[c.displayTipo] || CalendarIcon;
                   return (
                     <Card key={c.id} className="border border-border cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all" onClick={() => c.clienteId && navigate(`/vendedor/360/${c.clienteId}`)}>
                       <CardContent className="p-3">
                         <div className="flex items-center gap-2 mb-1.5">
-                          <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${tipoColors[c.tipo]}`}>
+                          <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${tipoColors[c.displayTipo]}`}>
                             <Icon className="h-3.5 w-3.5" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <span className="text-[10px] text-muted-foreground">{c.hora} · {c.duracao}</span>
                           </div>
-                          <Badge variant="secondary" className="text-[9px]">{tipoCompromissoLabels[c.tipo]}</Badge>
+                          <Badge variant="secondary" className="text-[9px]">{tipoLabelsExtended[c.displayTipo]}</Badge>
                         </div>
                         <p className="text-sm font-medium">{c.titulo}</p>
                         {c.clienteNome && <p className="text-xs text-accent mt-0.5">{c.clienteNome}</p>}
