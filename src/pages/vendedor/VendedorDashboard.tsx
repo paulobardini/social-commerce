@@ -308,22 +308,35 @@ export default function VendedorDashboard() {
             </CardHeader>
             <CardContent className="space-y-2">
               {clientesSemContato.map(c => (
-                <button
+                <div
                   key={c.id}
-                  onClick={() => navigate(`/vendedor/360/${c.id}`)}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
+                  className="w-full flex items-center gap-2 p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-red-600">{c.nomeFantasia[0]}</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{c.nomeFantasia}</p>
-                    <p className="text-[10px] text-muted-foreground">Último: {c.ultimoContato}</p>
-                  </div>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${c.status === "em_risco" ? "bg-red-100 text-red-700 border-red-200" : c.status === "reativacao" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-slate-100 text-slate-500 border-slate-200"}`}>
+                  <button
+                    onClick={() => navigate(`/vendedor/360/${c.id}`)}
+                    className="flex items-center gap-3 min-w-0 flex-1 text-left"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-red-600">{c.nomeFantasia[0]}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{c.nomeFantasia}</p>
+                      <p className="text-[10px] text-muted-foreground">Último: {c.ultimoContato}</p>
+                    </div>
+                  </button>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${c.status === "em_risco" ? "bg-red-100 text-red-700 border-red-200" : c.status === "reativacao" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-slate-100 text-slate-500 border-slate-200"}`}>
                     {c.status === "em_risco" ? "Em risco" : c.status === "reativacao" ? "Reativação" : "Inativo"}
                   </span>
-                </button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-[10px] shrink-0"
+                    onClick={(e) => { e.stopPropagation(); setTaskModal({ open: true, cliente: c.nomeFantasia }); }}
+                    title="Criar tarefa de reativação"
+                  >
+                    <Plus className="h-3 w-3 mr-0.5" /> Tarefa
+                  </Button>
+                </div>
               ))}
               {clientesSemContato.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-4">Nenhum alerta</p>
