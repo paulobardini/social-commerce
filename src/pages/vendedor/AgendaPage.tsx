@@ -205,8 +205,9 @@ export default function AgendaPage() {
               <div className="space-y-2">
                 {todayEvents.map(c => {
                   const Icon = tipoIcons[c.displayTipo] || CalendarIcon;
+                  const isConcluido = c.status === "concluido";
                   return (
-                    <Card key={c.id} className="border border-border cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all" onClick={() => c.clienteId && navigate(`/vendedor/360/${c.clienteId}`)}>
+                    <Card key={c.id} className={`border border-border hover:border-accent/40 hover:shadow-sm transition-all ${isConcluido ? "opacity-60" : ""}`}>
                       <CardContent className="p-3">
                         <div className="flex items-center gap-2 mb-1.5">
                           <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${tipoColors[c.displayTipo]}`}>
@@ -217,9 +218,20 @@ export default function AgendaPage() {
                           </div>
                           <Badge variant="secondary" className="text-[9px]">{tipoLabelsExtended[c.displayTipo]}</Badge>
                         </div>
-                        <p className="text-sm font-medium">{c.titulo}</p>
-                        {c.clienteNome && <p className="text-xs text-accent mt-0.5">{c.clienteNome}</p>}
-                        <p className="text-[10px] text-muted-foreground mt-1">{c.descricao}</p>
+                        <button onClick={() => c.clienteId && navigate(`/vendedor/360/${c.clienteId}`)} className="text-left w-full">
+                          <p className={`text-sm font-medium ${isConcluido ? "line-through" : ""}`}>{c.titulo}</p>
+                          {c.clienteNome && <p className="text-xs text-accent mt-0.5">{c.clienteNome}</p>}
+                          <p className="text-[10px] text-muted-foreground mt-1">{c.descricao}</p>
+                        </button>
+                        {c.origem === "tarefa" && (
+                          <button
+                            onClick={() => updateCompromisso(c.id, { status: isConcluido ? "agendado" : "concluido" })}
+                            className="mt-2 text-[10px] text-accent hover:underline flex items-center gap-1"
+                          >
+                            <CheckSquare className="h-3 w-3" />
+                            {isConcluido ? "Reabrir tarefa" : "Concluir tarefa"}
+                          </button>
+                        )}
                       </CardContent>
                     </Card>
                   );
