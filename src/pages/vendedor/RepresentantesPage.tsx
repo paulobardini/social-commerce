@@ -31,6 +31,7 @@ export default function RepresentantesPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterRegiao, setFilterRegiao] = useState("");
+  const showRedistribuir = podeRedistribuir(useVendedorPerfil());
 
   const filtered = useMemo(() => {
     return mockRepresentantes.filter(r => {
