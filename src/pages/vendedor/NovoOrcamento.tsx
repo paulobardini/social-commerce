@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Breadcrumbs } from "@/components/vendedor/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,9 @@ import {
   Diamond,
 } from "lucide-react";
 import { mockCatalogoProdutos, type OrcamentoProduto } from "@/data/mockVendedor";
+import { mockOportunidades } from "@/data/mockCRM";
 import { AddAllProductsModal } from "@/components/vendedor/AddAllProductsModal";
+import { toast } from "sonner";
 
 const filterSections = [
   { key: "desconto", label: "Desconto" },
