@@ -159,6 +159,12 @@ const App = () => (
                 <Route path="/vendedor/insights" element={<LayoutRoute><InsightsPage /></LayoutRoute>} />
                 <Route path="/vendedor/visoes-salvas" element={<LayoutRoute><VisoesSalvasPage /></LayoutRoute>} />
 
+                {/* Nextil Start - Vitrine pública (não autenticada) */}
+                <Route path="/vitrine/:slug" element={<StartVitrine />} />
+                <Route path="/vitrine/:slug/produto/:id" element={<StartVitrineProduto />} />
+                <Route path="/vitrine/:slug/pedido" element={<StartVitrinePedido />} />
+                <Route path="/vitrine/:slug/pedido/sucesso" element={<StartVitrineSucesso />} />
+
                 {/* Nextil Start - área pública */}
                 <Route path="/start" element={<Navigate to="/start/inicio" replace />} />
                 <Route path="/start/login" element={<StartLayout bare><StartLogin /></StartLayout>} />
@@ -175,10 +181,17 @@ const App = () => (
                 <Route path="/start/compradores" element={<StartProtectedRoute><StartLayout><StartCompradores /></StartLayout></StartProtectedRoute>} />
                 <Route path="/start/compradores/novo" element={<StartProtectedRoute><StartLayout><StartCompradorNovo /></StartLayout></StartProtectedRoute>} />
                 <Route path="/start/compradores/:id" element={<StartProtectedRoute><StartLayout><StartCompradorDetalhe /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/vitrine-config" element={<StartProtectedRoute><StartLayout><StartVitrineConfig /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/configuracoes" element={<StartProtectedRoute><StartLayout><StartConfiguracoes /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/planos" element={<StartProtectedRoute><StartLayout><StartPlanos /></StartLayout></StartProtectedRoute>} />
+
+                {/* Catch-all específico do Start */}
+                <Route path="/start/*" element={<StartNotFound />} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </StartCartProvider>
               </StartDataProvider>
               </StartAuthProvider>
             </BrowserRouter>
