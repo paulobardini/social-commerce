@@ -120,8 +120,8 @@ export default function ClientesListing() {
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="quente">🔥 Quente</SelectItem>
-                <SelectItem value="morna">🌤 Morna</SelectItem>
-                <SelectItem value="fria">❄️ Fria</SelectItem>
+                <SelectItem value="morna">✨ Morno</SelectItem>
+                <SelectItem value="fria">❄️ Frio</SelectItem>
               </SelectContent>
             </Select>
             {activeFilters > 0 && (
