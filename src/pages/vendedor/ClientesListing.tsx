@@ -9,7 +9,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Search, Plus, Filter, Download, ChevronLeft, ChevronRight, Eye, Edit3,
   LayoutGrid, List, X, Thermometer, Building, MapPin, Target, Kanban, Shuffle,
+  Info, EyeOff,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { calcularTemperatura, maskCNPJ } from "@/lib/temperaturaCliente";
+import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
