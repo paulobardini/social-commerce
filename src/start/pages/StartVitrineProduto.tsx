@@ -79,14 +79,13 @@ export default function StartVitrineProduto() {
         </div>
       </header>
 
-      <div className="max-w-[1100px] mx-auto px-4 md:px-6 py-6 md:py-10 grid md:grid-cols-2 gap-8 md:gap-12">
-        {/* Imagem */}
-        <div className="rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.08)]">
-          <div className="aspect-[3/4] w-full" style={{ background: produto.fotoCor || "#F8F8F6" }} />
+      <div className="max-w-[1100px] mx-auto px-0 md:px-6 py-0 md:py-10 grid md:grid-cols-2 gap-0 md:gap-12">
+        {/* Imagem — full-bleed em mobile */}
+        <div className="md:rounded-2xl overflow-hidden md:border md:border-[rgba(0,0,0,0.08)]">
+          <ProdutoFoto fotoUrl={produto.fotoUrl} fotoCor={produto.fotoCor} alt={produto.nome} priority aspect="aspect-[3/4]" />
         </div>
 
-        {/* Info */}
-        <div>
+        <div className="px-4 md:px-0 py-5 md:py-0">
           <p className="text-[12px] text-[#6B6B6B] uppercase tracking-wider">{produto.categoria}</p>
           <h1 className="text-[24px] md:text-[28px] font-semibold leading-tight mt-1">{produto.nome}</h1>
           <p className="text-[26px] font-semibold text-[#1D9E75] mt-3">{formatBRL(produto.preco)}<span className="text-[12px] text-[#6B6B6B] font-normal ml-1">por peça</span></p>
