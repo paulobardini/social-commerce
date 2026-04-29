@@ -36,6 +36,10 @@ export default function ClientesListing() {
   const [filterNicho, setFilterNicho] = useState<string>("");
   const [filterTemperatura, setFilterTemperatura] = useState<string>("");
   const [editCliente, setEditCliente] = useState<Cliente360 | null>(null);
+  const [revealCNPJ, setRevealCNPJ] = useState(false);
+
+  const perfil = useVendedorPerfil();
+  const showRedistribuir = podeRedistribuir(perfil);
 
   const filtered = useMemo(() => {
     return mockClientes360.filter(c => {
@@ -45,7 +49,7 @@ export default function ClientesListing() {
       }
       if (filterStatus && c.status !== filterStatus) return false;
       if (filterNicho && c.nicho !== filterNicho) return false;
-      if (filterTemperatura && c.temperaturaComercial !== filterTemperatura) return false;
+      if (filterTemperatura && calcularTemperatura(c.ultimoContato) !== filterTemperatura) return false;
       return true;
     });
   }, [search, filterStatus, filterNicho, filterTemperatura]);
@@ -54,7 +58,7 @@ export default function ClientesListing() {
   const paged = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
   const activeFilters = [filterStatus, filterNicho, filterTemperatura].filter(Boolean).length;
 
-  const tempIcon = (t: string) => t === "quente" ? "🔥" : t === "morna" ? "🌤" : "❄️";
+  const tempIcon = (t: string) => t === "quente" ? "🔥" : t === "morna" ? "✨" : "❄️";
 
   return (
     <>
