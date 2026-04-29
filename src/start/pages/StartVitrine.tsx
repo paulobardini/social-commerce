@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Search, ShoppingBag, MapPin, MessageCircle } from "lucide-react";
+import { Search, ShoppingBag, MapPin, MessageCircle, SlidersHorizontal, X } from "lucide-react";
 import { useStartData } from "../contexts/StartDataContext";
 import { useStartAuth } from "../contexts/StartAuthContext";
 import { useStartCart } from "../contexts/StartCartContext";
 import { StartLogo } from "../components/StartLogo";
+import { ProdutoFoto } from "../components/ProdutoFoto";
 import { CATEGORIAS_PRODUTO, ESTACOES, GENEROS } from "../data/mockStart";
 import { formatBRL, startClasses } from "../styles/tokens";
 
