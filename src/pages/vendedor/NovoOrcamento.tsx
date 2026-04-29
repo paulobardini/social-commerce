@@ -150,14 +150,38 @@ export default function NovoOrcamento() {
           {/* Left filter sidebar */}
           <aside className="w-[280px] border-r border-border overflow-y-auto shrink-0 bg-card">
             <div className="p-5 space-y-5">
-              {/* Quote name */}
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold text-foreground flex-1">
-                  Orçamento 13/04/2026 09:43
-                </h2>
-                <button className="text-muted-foreground hover:text-foreground">
-                  <Edit3 className="h-4 w-4" />
-                </button>
+              {/* Nome do orçamento (obrigatório) */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">
+                  Nome do orçamento <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  placeholder="Ex: Coleção Inverno 2026 — Boutique da Thay"
+                  className={`h-10 text-sm ${!nomeValido ? "border-destructive/40 focus-visible:ring-destructive/20" : ""}`}
+                />
+                {!nomeValido && (
+                  <p className="text-[11px] text-destructive">
+                    Defina um nome antes de salvar ou montar a grade.
+                  </p>
+                )}
+              </div>
+
+              {/* Oportunidade vinculada */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Oportunidade vinculada</label>
+                <Select value={oportunidadeId || "none"} onValueChange={(v) => setOportunidadeId(v === "none" ? "" : v)}>
+                  <SelectTrigger className="h-10 text-sm">
+                    <SelectValue placeholder="Selecione (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem vínculo</SelectItem>
+                    {oportunidadesAbertas.map((op) => (
+                      <SelectItem key={op.id} value={op.id}>{op.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Lojista select */}
