@@ -56,6 +56,7 @@ import { TarefasProvider } from "@/contexts/TarefasContext";
 import { RemindersProvider } from "@/contexts/RemindersContext";
 import { StartAuthProvider } from "@/start/contexts/StartAuthContext";
 import { StartDataProvider } from "@/start/contexts/StartDataContext";
+import { StartCartProvider } from "@/start/contexts/StartCartContext";
 import { StartProtectedRoute } from "@/start/components/StartProtectedRoute";
 import { StartLayout } from "@/start/components/StartLayout";
 import StartLogin from "@/start/pages/StartLogin";
@@ -69,6 +70,14 @@ import StartPedidoDetalhe from "@/start/pages/StartPedidoDetalhe";
 import StartCompradores from "@/start/pages/StartCompradores";
 import StartCompradorDetalhe from "@/start/pages/StartCompradorDetalhe";
 import StartCompradorNovo from "@/start/pages/StartCompradorNovo";
+import StartVitrine from "@/start/pages/StartVitrine";
+import StartVitrineProduto from "@/start/pages/StartVitrineProduto";
+import StartVitrinePedido from "@/start/pages/StartVitrinePedido";
+import StartVitrineSucesso from "@/start/pages/StartVitrineSucesso";
+import StartVitrineConfig from "@/start/pages/StartVitrineConfig";
+import StartConfiguracoes from "@/start/pages/StartConfiguracoes";
+import StartPlanos from "@/start/pages/StartPlanos";
+import StartNotFound from "@/start/pages/StartNotFound";
 import { Navigate } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 
@@ -100,6 +109,7 @@ const App = () => (
               <CartDrawer />
               <StartAuthProvider>
               <StartDataProvider>
+              <StartCartProvider>
               <Routes>
                 {/* Bare pages (no sidebar/topbar) */}
                 <Route path="/login" element={<Login />} />
@@ -149,6 +159,12 @@ const App = () => (
                 <Route path="/vendedor/insights" element={<LayoutRoute><InsightsPage /></LayoutRoute>} />
                 <Route path="/vendedor/visoes-salvas" element={<LayoutRoute><VisoesSalvasPage /></LayoutRoute>} />
 
+                {/* Nextil Start - Vitrine pública (não autenticada) */}
+                <Route path="/vitrine/:slug" element={<StartVitrine />} />
+                <Route path="/vitrine/:slug/produto/:id" element={<StartVitrineProduto />} />
+                <Route path="/vitrine/:slug/pedido" element={<StartVitrinePedido />} />
+                <Route path="/vitrine/:slug/pedido/sucesso" element={<StartVitrineSucesso />} />
+
                 {/* Nextil Start - área pública */}
                 <Route path="/start" element={<Navigate to="/start/inicio" replace />} />
                 <Route path="/start/login" element={<StartLayout bare><StartLogin /></StartLayout>} />
@@ -165,10 +181,17 @@ const App = () => (
                 <Route path="/start/compradores" element={<StartProtectedRoute><StartLayout><StartCompradores /></StartLayout></StartProtectedRoute>} />
                 <Route path="/start/compradores/novo" element={<StartProtectedRoute><StartLayout><StartCompradorNovo /></StartLayout></StartProtectedRoute>} />
                 <Route path="/start/compradores/:id" element={<StartProtectedRoute><StartLayout><StartCompradorDetalhe /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/vitrine-config" element={<StartProtectedRoute><StartLayout><StartVitrineConfig /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/configuracoes" element={<StartProtectedRoute><StartLayout><StartConfiguracoes /></StartLayout></StartProtectedRoute>} />
+                <Route path="/start/planos" element={<StartProtectedRoute><StartLayout><StartPlanos /></StartLayout></StartProtectedRoute>} />
+
+                {/* Catch-all específico do Start */}
+                <Route path="/start/*" element={<StartNotFound />} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </StartCartProvider>
               </StartDataProvider>
               </StartAuthProvider>
             </BrowserRouter>
