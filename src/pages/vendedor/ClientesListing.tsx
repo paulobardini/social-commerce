@@ -135,34 +135,66 @@ export default function ClientesListing() {
         {/* Table view */}
         {view === "table" ? (
           <div className="border border-border rounded-lg overflow-hidden">
+            <TooltipProvider delayDuration={150}>
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Cliente</TableHead>
+                  <TableHead className="font-semibold">
+                    <div className="flex items-center gap-1.5">
+                      <span>Cliente</span>
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); setRevealCNPJ(v => !v); }}
+                        title={revealCNPJ ? "Ocultar CNPJs" : "Revelar CNPJs"}
+                        className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      >
+                        {revealCNPJ ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </TableHead>
                   <TableHead className="font-semibold">Cidade/UF</TableHead>
                   <TableHead className="font-semibold">Nicho</TableHead>
                   <TableHead className="font-semibold">Interesse</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold">Temp.</TableHead>
+                  <TableHead className="font-semibold">
+                    <div className="flex items-center gap-1">
+                      <span>Temp.</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button type="button" onClick={e => e.stopPropagation()} className="text-muted-foreground hover:text-foreground">
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs max-w-[240px]">
+                          <p className="font-semibold mb-1">Critério de temperatura</p>
+                          <p>🔥 <b>Quente:</b> contato nos últimos 7 dias</p>
+                          <p>✨ <b>Morno:</b> contato entre 8 e 30 dias</p>
+                          <p>❄️ <b>Frio:</b> sem contato há mais de 30 dias</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TableHead>
                   <TableHead className="font-semibold">Último contato</TableHead>
                   <TableHead className="font-semibold">Oport.</TableHead>
                   <TableHead className="font-semibold w-20">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paged.map(c => (
+                {paged.map(c => {
+                  const temp = calcularTemperatura(c.ultimoContato);
+                  return (
                   <TableRow key={c.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/vendedor/360/${c.id}`)}>
                     <TableCell>
                       <div>
                         <p className="text-sm font-medium">{c.nomeFantasia}</p>
-                        <p className="text-[11px] text-muted-foreground">{c.documento}</p>
+                        <p className="text-[11px] text-muted-foreground font-mono">{revealCNPJ ? c.documento : maskCNPJ(c.documento)}</p>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.cidade}/{c.estado}</TableCell>
                     <TableCell><Badge variant="secondary" className="text-[10px]">{nichoLabels[c.nicho]}</Badge></TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{c.interessePrincipal}</TableCell>
                     <TableCell><span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusColors[c.status]}`}>{statusLabels[c.status]}</span></TableCell>
-                    <TableCell className="text-center">{tempIcon(c.temperaturaComercial)}</TableCell>
+                    <TableCell className="text-center" title={temp === "quente" ? "Quente (≤7d)" : temp === "morna" ? "Morno (8-30d)" : "Frio (>30d)"}>{tempIcon(temp)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.ultimoContato}</TableCell>
                     <TableCell className="text-center text-sm font-medium">{c.oportunidadesAbertas}</TableCell>
                     <TableCell>
