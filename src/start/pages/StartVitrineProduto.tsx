@@ -4,6 +4,7 @@ import { ArrowLeft, ShoppingBag, MessageCircle, Plus, Minus, Check } from "lucid
 import { useStartData } from "../contexts/StartDataContext";
 import { useStartAuth } from "../contexts/StartAuthContext";
 import { useStartCart } from "../contexts/StartCartContext";
+import { ProdutoFoto } from "../components/ProdutoFoto";
 import { TAMANHOS_POR_TIPO } from "../data/mockStart";
 import { formatBRL, startClasses } from "../styles/tokens";
 
