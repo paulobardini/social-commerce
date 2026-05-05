@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMarketing } from "../contexts/MarketingDataContext";
-import { Audiencia, RegraAudiencia, RegraCampo, RegraOperador, campoLabels, campoOpcoes, operadorLabels } from "../data/mockAudiencias";
+import { Audiencia, RegraAudiencia, RegraCampo, RegraOperador, campoLabels, campoOpcoes, operadorLabels, avaliarRegras } from "../data/mockAudiencias";
 import { mockClientes360 } from "@/data/mockCRM360";
 import { formatBRLCompact, formatNum } from "../styles/tokens";
 import { Users, Star, Flame, AlertTriangle, Sparkles, RotateCw, Plus, Search, RefreshCw, Trash2, Copy, Send, ArrowRight, X, ChevronDown, Database, Facebook, Pencil } from "lucide-react";
@@ -267,10 +267,7 @@ function AudienciaEditor({ audiencia, onClose }: { audiencia: Audiencia | null; 
   const [cor, setCor] = useState(audiencia?.cor || "#363BB4");
   const [icone, setIcone] = useState<Audiencia["icone"]>(audiencia?.icone || "Users");
 
-  const preview = useMemo(() => {
-    const ids = require("../data/mockAudiencias").avaliarRegras(regras, matchAll);
-    return ids.length;
-  }, [regras, matchAll]);
+  const preview = useMemo(() => avaliarRegras(regras, matchAll).length, [regras, matchAll]);
 
   const addRegra = () => setRegras(prev => [...prev, { id: `r${Date.now()}`, campo: "tag", operador: "in", valor: [] }]);
   const updRegra = (id: string, patch: Partial<RegraAudiencia>) => setRegras(prev => prev.map(r => r.id === id ? { ...r, ...patch } as RegraAudiencia : r));
