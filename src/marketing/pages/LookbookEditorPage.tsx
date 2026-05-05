@@ -76,65 +76,49 @@ export default function LookbookEditorPage() {
       </div>
 
       {tab === "editor" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_280px] gap-3">
-          {/* Páginas */}
-          <aside className="bg-card border border-border rounded-xl p-2 space-y-1 max-h-[600px] overflow-y-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_320px] gap-3">
+          {/* Páginas + templates */}
+          <aside className="bg-card border border-border rounded-xl p-2 space-y-1 max-h-[680px] overflow-y-auto">
             <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold px-2 py-1">Páginas</p>
             {draft.paginas.map((p, i) => (
               <button key={p.id} onClick={() => setSelectedPage(i)} className={`w-full text-left px-2 py-1.5 rounded text-[11px] flex items-center gap-2 ${selectedPage === i ? "bg-primary/10 text-primary" : "hover:bg-muted text-foreground"}`}>
                 <span className="text-muted-foreground tabular-nums w-4">{i + 1}</span>
                 <span className="truncate flex-1">{p.titulo || `(${p.tipo})`}</span>
+                <span className="text-[8px] uppercase text-muted-foreground/70">{p.layout || p.tipo}</span>
               </button>
             ))}
             <div className="pt-2 border-t border-border space-y-1 mt-1">
-              <p className="text-[9px] uppercase text-muted-foreground font-bold px-2">Adicionar</p>
-              <button onClick={() => addPage("capa")} className="w-full text-left px-2 py-1 text-[11px] hover:bg-muted rounded inline-flex items-center gap-1.5"><BookOpen className="h-3 w-3" /> Capa</button>
-              <button onClick={() => addPage("produtos")} className="w-full text-left px-2 py-1 text-[11px] hover:bg-muted rounded inline-flex items-center gap-1.5"><ShoppingBag className="h-3 w-3" /> Produtos</button>
-              <button onClick={() => addPage("imagem")} className="w-full text-left px-2 py-1 text-[11px] hover:bg-muted rounded inline-flex items-center gap-1.5"><ImageIcon className="h-3 w-3" /> Imagem</button>
-              <button onClick={() => addPage("texto")} className="w-full text-left px-2 py-1 text-[11px] hover:bg-muted rounded inline-flex items-center gap-1.5"><Type className="h-3 w-3" /> Texto</button>
+              <p className="text-[9px] uppercase text-muted-foreground font-bold px-2">+ Adicionar página</p>
+              <p className="text-[9px] text-muted-foreground px-2 mb-1">Modelos prontos:</p>
+              {lookbookTemplates.map(tpl => {
+                const Icon = tpl.icon === "capa" ? BookOpen
+                  : tpl.icon === "grid-2" ? LayoutGrid
+                  : tpl.icon === "grid-3" ? Square
+                  : tpl.icon === "lista" ? Rows3
+                  : tpl.icon === "split" ? Columns2
+                  : tpl.icon === "texto" ? Type
+                  : ImageIconLucide;
+                return (
+                  <button key={tpl.id} onClick={() => addPageFromTemplate(tpl.id)} className="w-full text-left px-2 py-1.5 hover:bg-muted rounded">
+                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
+                      <Icon className="h-3 w-3 shrink-0" /> {tpl.label}
+                    </div>
+                    <p className="text-[9px] text-muted-foreground pl-4.5 ml-3">{tpl.descricao}</p>
+                  </button>
+                );
+              })}
             </div>
           </aside>
 
           {/* Preview */}
           <div className="bg-muted/30 border border-border rounded-xl p-4 flex items-center justify-center min-h-[600px]">
-            <div className="w-full max-w-[360px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl flex flex-col" style={{ backgroundColor: draft.paleta.fundo, color: draft.paleta.texto }}>
-              {page?.tipo === "capa" && (
-                <div className="relative flex-1">
-                  {page.imagemUrl && <img src={page.imagemUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                  <div className="absolute bottom-6 left-6 right-6 text-white">
-                    <p className="text-[11px] uppercase tracking-widest opacity-80">{page.subtitulo}</p>
-                    <h2 className="text-2xl font-bold mt-1">{page.titulo}</h2>
-                  </div>
-                </div>
-              )}
-              {page?.tipo === "produtos" && (
-                <div className="p-4 flex-1 overflow-y-auto">
-                  <h3 className="text-sm font-bold mb-3">{page.titulo}</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(page.produtoIds || ["a", "b", "c", "d"]).slice(0, 6).map((pid, idx) => (
-                      <div key={pid + idx} className="aspect-[3/4] rounded-lg bg-white/10 flex items-center justify-center text-[10px] opacity-70">Produto</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {page?.tipo === "imagem" && (
-                <div className="relative flex-1">
-                  {page.imagemUrl && <img src={page.imagemUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-                  {page.titulo && <p className="absolute bottom-4 left-4 right-4 text-white text-[12px] font-medium">{page.titulo}</p>}
-                </div>
-              )}
-              {page?.tipo === "texto" && (
-                <div className="p-6 flex-1 flex flex-col justify-center">
-                  <h3 className="text-lg font-bold mb-2">{page.titulo}</h3>
-                  <p className="text-[13px] leading-relaxed opacity-90 whitespace-pre-line">{page.texto}</p>
-                </div>
-              )}
+            <div className="w-full max-w-[360px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl flex flex-col font-['Poppins']" style={{ backgroundColor: draft.paleta.fundo, color: draft.paleta.texto }}>
+              {page && <LookbookPageRender page={page} paletaPrimaria={draft.paleta.primaria} scale="preview" />}
             </div>
           </div>
 
           {/* Inspector */}
-          <aside className="bg-card border border-border rounded-xl p-3 max-h-[600px] overflow-y-auto">
+          <aside className="bg-card border border-border rounded-xl p-3 max-h-[680px] overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
               <p className="text-[11px] uppercase font-bold text-muted-foreground">Página {selectedPage + 1} · {page?.tipo}</p>
               {draft.paginas.length > 1 && <button onClick={() => removePage(selectedPage)} className="h-6 w-6 rounded text-rose-600 hover:bg-rose-500/10 flex items-center justify-center"><Trash2 className="h-3.5 w-3.5" /></button>}
@@ -142,9 +126,30 @@ export default function LookbookEditorPage() {
             {page && <>
               <Field label="Título"><input value={page.titulo || ""} onChange={e => updatePage(selectedPage, { titulo: e.target.value })} className="w-full bg-card border border-border rounded-lg px-2 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-ring" /></Field>
               {page.tipo === "capa" && <Field label="Subtítulo"><input value={page.subtitulo || ""} onChange={e => updatePage(selectedPage, { subtitulo: e.target.value })} className="w-full bg-card border border-border rounded-lg px-2 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-ring" /></Field>}
-              {(page.tipo === "capa" || page.tipo === "imagem") && <Field label="URL da imagem"><input value={page.imagemUrl || ""} onChange={e => updatePage(selectedPage, { imagemUrl: e.target.value })} className="w-full bg-card border border-border rounded-lg px-2 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring" /></Field>}
+              {(page.tipo === "capa" || page.tipo === "imagem" || (page.tipo === "produtos" && page.layout === "split-imagem")) && <Field label="URL da imagem"><input value={page.imagemUrl || ""} onChange={e => updatePage(selectedPage, { imagemUrl: e.target.value })} className="w-full bg-card border border-border rounded-lg px-2 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-ring" /></Field>}
               {page.tipo === "texto" && <Field label="Conteúdo"><textarea value={page.texto || ""} onChange={e => updatePage(selectedPage, { texto: e.target.value })} rows={6} className="w-full bg-card border border-border rounded-lg px-2 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-ring" /></Field>}
-              {page.tipo === "produtos" && <Field label="Produtos vinculados"><p className="text-[11px] text-muted-foreground">{(page.produtoIds || []).length} produtos · use o seletor para adicionar do catálogo (em breve)</p></Field>}
+              {page.tipo === "produtos" && <>
+                <Field label="Layout">
+                  <select
+                    value={page.layout || "grid-2"}
+                    onChange={e => updatePage(selectedPage, { layout: e.target.value as LookbookLayout })}
+                    className="w-full bg-card border border-border rounded-lg px-2 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="grid-2">Grade 2x2 (4 produtos)</option>
+                    <option value="grid-3">Grade 3x3 (9 produtos)</option>
+                    <option value="lista">Vitrine vertical</option>
+                    <option value="split-imagem">Editorial + 2 produtos</option>
+                    <option value="destaque-1">Produto em destaque</option>
+                  </select>
+                </Field>
+                <Field label={`Produtos do catálogo`}>
+                  <LookbookProductPicker
+                    selectedIds={page.produtoIds || []}
+                    onChange={ids => updatePage(selectedPage, { produtoIds: ids })}
+                    max={page.layout === "grid-3" ? 9 : page.layout === "lista" ? 12 : page.layout === "destaque-1" ? 1 : page.layout === "split-imagem" ? 2 : 4}
+                  />
+                </Field>
+              </>}
             </>}
             <div className="mt-4 pt-3 border-t border-border space-y-2">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">Paleta de cores</p>
