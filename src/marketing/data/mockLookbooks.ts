@@ -3,15 +3,87 @@ import { brands } from "@/data/mockProducts";
 
 export type StatusLookbook = "publicado" | "rascunho" | "arquivado";
 
+/** Layouts visuais para páginas de produtos. */
+export type LookbookLayout = "grid-2" | "grid-3" | "lista" | "split-imagem" | "destaque-1";
+
 export interface LookbookPagina {
   id: string;
   tipo: "capa" | "produtos" | "imagem" | "texto";
   titulo?: string;
   subtitulo?: string;
   imagemUrl?: string;
-  produtoIds?: string[];   // referências a mockProducts
+  produtoIds?: string[];   // referências a mockProducts no formato "brandSlug/productId"
   texto?: string;
+  layout?: LookbookLayout; // usado quando tipo = "produtos" ou "split-imagem"
 }
+
+/** Catálogo de templates pré-prontos para acelerar a criação de páginas. */
+export interface LookbookTemplate {
+  id: string;
+  label: string;
+  descricao: string;
+  icon: "capa" | "grid-2" | "grid-3" | "lista" | "split" | "texto" | "imagem";
+  build: () => Omit<LookbookPagina, "id">;
+}
+
+export const lookbookTemplates: LookbookTemplate[] = [
+  {
+    id: "tpl-capa",
+    label: "Capa hero",
+    descricao: "Imagem fullbleed com título e subtítulo",
+    icon: "capa",
+    build: () => ({ tipo: "capa", titulo: "Nova coleção", subtitulo: "Edição limitada", imagemUrl: "/src/assets/concept-1.jpg" }),
+  },
+  {
+    id: "tpl-grid-2",
+    label: "Destaques 2x2",
+    descricao: "4 produtos em grade grande",
+    icon: "grid-2",
+    build: () => ({ tipo: "produtos", titulo: "Destaques da coleção", layout: "grid-2", produtoIds: [] }),
+  },
+  {
+    id: "tpl-grid-3",
+    label: "Catálogo 3x3",
+    descricao: "9 produtos em grade compacta",
+    icon: "grid-3",
+    build: () => ({ tipo: "produtos", titulo: "Catálogo completo", layout: "grid-3", produtoIds: [] }),
+  },
+  {
+    id: "tpl-lista",
+    label: "Vitrine vertical",
+    descricao: "Lista 1 produto por linha",
+    icon: "lista",
+    build: () => ({ tipo: "produtos", titulo: "Top picks", layout: "lista", produtoIds: [] }),
+  },
+  {
+    id: "tpl-split",
+    label: "Editorial + 2 produtos",
+    descricao: "Imagem grande + 2 produtos abaixo",
+    icon: "split",
+    build: () => ({ tipo: "produtos", titulo: "Editorial", layout: "split-imagem", imagemUrl: "/src/assets/concept-2.jpg", produtoIds: [] }),
+  },
+  {
+    id: "tpl-destaque",
+    label: "Produto em destaque",
+    descricao: "1 produto hero com descrição",
+    icon: "imagem",
+    build: () => ({ tipo: "produtos", titulo: "Peça-chave", layout: "destaque-1", produtoIds: [] }),
+  },
+  {
+    id: "tpl-texto",
+    label: "Manifesto / Texto",
+    descricao: "Página de texto livre",
+    icon: "texto",
+    build: () => ({ tipo: "texto", titulo: "Sobre a coleção", texto: "Conte aqui o conceito da coleção..." }),
+  },
+  {
+    id: "tpl-imagem",
+    label: "Editorial puro",
+    descricao: "Apenas imagem fullbleed",
+    icon: "imagem",
+    build: () => ({ tipo: "imagem", titulo: "", imagemUrl: "/src/assets/concept-3.jpg" }),
+  },
+];
 
 export interface LookbookViewLog {
   id: string;
