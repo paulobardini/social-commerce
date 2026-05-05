@@ -52,6 +52,19 @@ interface Ctx {
   excluirLookbook: (id: string) => void;
   duplicarLookbook: (id: string) => void;
   registrarLookbookView: (slug: string, origem: "whatsapp" | "email" | "direto" | "qr_code") => void;
+  // audiências
+  audiencias: Audiencia[];
+  criarAudiencia: (a: Omit<Audiencia, "id" | "criadaEm" | "ultimaAtualizacao" | "membrosClienteIds" | "totalMembros">) => string;
+  atualizarAudiencia: (a: Audiencia) => void;
+  excluirAudiencia: (id: string) => void;
+  duplicarAudiencia: (id: string) => void;
+  setStatusAudiencia: (id: string, status: AudienciaStatus) => void;
+  recalcAudiencia: (id: string) => void;
+  syncAudienciaMeta: (id: string) => void;
+  // handoff Marketing -> CRM
+  handoff: HandoffRecord[];
+  setHandoff: (leadId: string, payload: Partial<HandoffRecord>) => void;
+  converterLeadEmCliente: (leadId: string, opts: { criarOportunidade?: boolean; representante?: string }) => { clienteId: string; oportunidadeId?: string };
   // helpers
   filteredCampanhas: MetaCampaign[];
 }
