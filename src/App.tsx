@@ -89,7 +89,9 @@ import MetaAdsHub from "@/marketing/pages/MetaAdsHub";
 import MetaCampaignDetail from "@/marketing/pages/MetaCampaignDetail";
 import AtribuicaoPage from "@/marketing/pages/AtribuicaoPage";
 import IntegracoesPage from "@/marketing/pages/IntegracoesPage";
-import { CampanhasPage, JornadasPage, LookbooksPage, AudienciasPage, ConfiguracoesPage } from "@/marketing/pages/PlaceholderPages";
+import CampanhasPage from "@/marketing/pages/CampanhasPage";
+import CampanhaDetalhePage from "@/marketing/pages/CampanhaDetalhePage";
+import { JornadasPage, LookbooksPage, AudienciasPage, ConfiguracoesPage } from "@/marketing/pages/PlaceholderPages";
 
 const queryClient = new QueryClient();
 
