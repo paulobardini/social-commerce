@@ -22,6 +22,8 @@ const bottomItems = [
 
 export function MarketingLayout({ children }: { children: ReactNode }) {
   const { periodo, setPeriodo, contaId, setContaId, contas } = useMarketing();
+  const { filaNaoVisualizada } = useNotifications();
+  const filaCount = filaNaoVisualizada.size;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex font-['Poppins']">
