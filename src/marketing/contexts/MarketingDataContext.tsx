@@ -189,6 +189,56 @@ export function MarketingDataProvider({ children }: { children: ReactNode }) {
     } : l));
   };
 
+  // ===== Audiências =====
+  const [audiencias, setAudiencias] = useState<Audiencia[]>(() => {
+    try { const raw = localStorage.getItem(KEY + "_aud"); if (raw) return JSON.parse(raw); } catch { /* */ }
+    return mockAudiencias;
+  });
+  useEffect(() => { localStorage.setItem(KEY + "_aud", JSON.stringify(audiencias)); }, [audiencias]);
+  const recalcMembers = (a: Audiencia): Audiencia => {
+    if (a.origem === "regra_crm" && a.regras) {
+      const ids = avaliarRegras(a.regras, a.matchAll ?? true);
+      return { ...a, membrosClienteIds: ids, totalMembros: ids.length, ultimaAtualizacao: today() };
+    }
+    return a;
+  };
+  const criarAudiencia: Ctx["criarAudiencia"] = (data) => {
+    const id = `aud_${Date.now()}`;
+    const base: Audiencia = { ...(data as Audiencia), id, criadaEm: today(), ultimaAtualizacao: today(), membrosClienteIds: [], totalMembros: 0 };
+    setAudiencias(prev => [recalcMembers(base), ...prev]);
+    return id;
+  };
+  const atualizarAudiencia = (a: Audiencia) => setAudiencias(prev => prev.map(x => x.id === a.id ? recalcMembers({ ...a, ultimaAtualizacao: today() }) : x));
+  const excluirAudiencia = (id: string) => setAudiencias(prev => prev.filter(a => a.id !== id));
+  const duplicarAudiencia = (id: string) => setAudiencias(prev => {
+    const o = prev.find(a => a.id === id); if (!o) return prev;
+    return [recalcMembers({ ...o, id: `aud_${Date.now()}`, nome: `${o.nome} (cópia)`, status: "rascunho", criadaEm: today(), ultimaAtualizacao: today(), historicoUso: [], conversoes: 0, receitaAtribuida: 0 }), ...prev];
+  });
+  const setStatusAudiencia = (id: string, status: AudienciaStatus) => setAudiencias(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+  const recalcAudiencia = (id: string) => setAudiencias(prev => prev.map(a => a.id === id ? recalcMembers(a) : a));
+  const syncAudienciaMeta = (id: string) => setAudiencias(prev => prev.map(a => a.id === id ? { ...a, syncMeta: { ...(a.syncMeta || {}), ultimoSync: "Agora há pouco", status: "ok" } } : a));
+
+  // ===== Handoff Marketing -> CRM =====
+  const [handoff, setHandoffState] = useState<HandoffRecord[]>(() => {
+    try { const raw = localStorage.getItem(KEY + "_handoff"); if (raw) return JSON.parse(raw); } catch { /* */ }
+    return mockHandoffSeed;
+  });
+  useEffect(() => { localStorage.setItem(KEY + "_handoff", JSON.stringify(handoff)); }, [handoff]);
+  const setHandoff: Ctx["setHandoff"] = (leadId, payload) => {
+    setHandoffState(prev => {
+      const idx = prev.findIndex(h => h.leadId === leadId);
+      if (idx === -1) return [{ leadId, status: "pendente", ...payload } as HandoffRecord, ...prev];
+      const next = [...prev]; next[idx] = { ...next[idx], ...payload }; return next;
+    });
+  };
+  const converterLeadEmCliente: Ctx["converterLeadEmCliente"] = (leadId, opts) => {
+    const lead = leads.find(l => l.id === leadId);
+    const clienteId = lead?.clienteId || `c_new_${Date.now()}`;
+    const oportunidadeId = opts.criarOportunidade ? `op_new_${Date.now()}` : undefined;
+    setHandoff(leadId, { status: "convertido", clienteId, oportunidadeId, convertidoEm: new Date().toLocaleString("pt-BR"), convertidoPor: opts.representante || "Time Marketing" });
+    return { clienteId, oportunidadeId };
+  };
+
   const filteredCampanhas = useMemo(() => {
     return campanhas.filter(c => contaId === "all" || c.accountId === contaId);
   }, [campanhas, contaId]);
@@ -202,6 +252,8 @@ export function MarketingDataProvider({ children }: { children: ReactNode }) {
       criarCampanha, atualizarStatusCampanha, duplicarCampanha, excluirCampanha,
       jornadas, atualizarJornada, criarJornada, setStatusJornada, excluirJornada, duplicarJornada,
       lookbooks, atualizarLookbook, criarLookbook, setStatusLookbook, excluirLookbook, duplicarLookbook, registrarLookbookView,
+      audiencias, criarAudiencia, atualizarAudiencia, excluirAudiencia, duplicarAudiencia, setStatusAudiencia, recalcAudiencia, syncAudienciaMeta,
+      handoff, setHandoff, converterLeadEmCliente,
       filteredCampanhas,
     }}>
       {children}
