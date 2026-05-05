@@ -3,15 +3,87 @@ import { brands } from "@/data/mockProducts";
 
 export type StatusLookbook = "publicado" | "rascunho" | "arquivado";
 
+/** Layouts visuais para páginas de produtos. */
+export type LookbookLayout = "grid-2" | "grid-3" | "lista" | "split-imagem" | "destaque-1";
+
 export interface LookbookPagina {
   id: string;
   tipo: "capa" | "produtos" | "imagem" | "texto";
   titulo?: string;
   subtitulo?: string;
   imagemUrl?: string;
-  produtoIds?: string[];   // referências a mockProducts
+  produtoIds?: string[];   // referências a mockProducts no formato "brandSlug/productId"
   texto?: string;
+  layout?: LookbookLayout; // usado quando tipo = "produtos" ou "split-imagem"
 }
+
+/** Catálogo de templates pré-prontos para acelerar a criação de páginas. */
+export interface LookbookTemplate {
+  id: string;
+  label: string;
+  descricao: string;
+  icon: "capa" | "grid-2" | "grid-3" | "lista" | "split" | "texto" | "imagem";
+  build: () => Omit<LookbookPagina, "id">;
+}
+
+export const lookbookTemplates: LookbookTemplate[] = [
+  {
+    id: "tpl-capa",
+    label: "Capa hero",
+    descricao: "Imagem fullbleed com título e subtítulo",
+    icon: "capa",
+    build: () => ({ tipo: "capa", titulo: "Nova coleção", subtitulo: "Edição limitada", imagemUrl: "/src/assets/concept-1.jpg" }),
+  },
+  {
+    id: "tpl-grid-2",
+    label: "Destaques 2x2",
+    descricao: "4 produtos em grade grande",
+    icon: "grid-2",
+    build: () => ({ tipo: "produtos", titulo: "Destaques da coleção", layout: "grid-2", produtoIds: [] }),
+  },
+  {
+    id: "tpl-grid-3",
+    label: "Catálogo 3x3",
+    descricao: "9 produtos em grade compacta",
+    icon: "grid-3",
+    build: () => ({ tipo: "produtos", titulo: "Catálogo completo", layout: "grid-3", produtoIds: [] }),
+  },
+  {
+    id: "tpl-lista",
+    label: "Vitrine vertical",
+    descricao: "Lista 1 produto por linha",
+    icon: "lista",
+    build: () => ({ tipo: "produtos", titulo: "Top picks", layout: "lista", produtoIds: [] }),
+  },
+  {
+    id: "tpl-split",
+    label: "Editorial + 2 produtos",
+    descricao: "Imagem grande + 2 produtos abaixo",
+    icon: "split",
+    build: () => ({ tipo: "produtos", titulo: "Editorial", layout: "split-imagem", imagemUrl: "/src/assets/concept-2.jpg", produtoIds: [] }),
+  },
+  {
+    id: "tpl-destaque",
+    label: "Produto em destaque",
+    descricao: "1 produto hero com descrição",
+    icon: "imagem",
+    build: () => ({ tipo: "produtos", titulo: "Peça-chave", layout: "destaque-1", produtoIds: [] }),
+  },
+  {
+    id: "tpl-texto",
+    label: "Manifesto / Texto",
+    descricao: "Página de texto livre",
+    icon: "texto",
+    build: () => ({ tipo: "texto", titulo: "Sobre a coleção", texto: "Conte aqui o conceito da coleção..." }),
+  },
+  {
+    id: "tpl-imagem",
+    label: "Editorial puro",
+    descricao: "Apenas imagem fullbleed",
+    icon: "imagem",
+    build: () => ({ tipo: "imagem", titulo: "", imagemUrl: "/src/assets/concept-3.jpg" }),
+  },
+];
 
 export interface LookbookViewLog {
   id: string;
@@ -82,11 +154,11 @@ export const mockLookbooks: Lookbook[] = [
     paginas: [
       { id: "p1", tipo: "capa", titulo: "Outono Inverno 2026", subtitulo: "Brandili — coleção exclusiva", imagemUrl: "/src/assets/concept-1.jpg" },
       { id: "p2", tipo: "texto", titulo: "Sobre a coleção", texto: "Inspirada nas paisagens do sul do Brasil, a OI26 une alfaiataria leve, tricôs estruturados e tons terrosos. Curadoria com 42 peças em 18 modelos." },
-      { id: "p3", tipo: "produtos", titulo: "Destaques alfaiataria", produtoIds: productIds.slice(0, 4) },
+      { id: "p3", tipo: "produtos", titulo: "Destaques alfaiataria", layout: "grid-2", produtoIds: productIds.slice(0, 4) },
       { id: "p4", tipo: "imagem", imagemUrl: "/src/assets/concept-2.jpg", titulo: "Editorial — Praia de Garopaba" },
-      { id: "p5", tipo: "produtos", titulo: "Tricôs e malhas pesadas", produtoIds: productIds.slice(4, 8) },
+      { id: "p5", tipo: "produtos", titulo: "Tricôs e malhas pesadas", layout: "grid-3", produtoIds: productIds.slice(0, 9) },
       { id: "p6", tipo: "imagem", imagemUrl: "/src/assets/concept-3.jpg", titulo: "Editorial — Serra Catarinense" },
-      { id: "p7", tipo: "produtos", titulo: "Acessórios e complementos", produtoIds: productIds.slice(8, 12) },
+      { id: "p7", tipo: "produtos", titulo: "Acessórios e complementos", layout: "lista", produtoIds: productIds.slice(0, 4) },
     ],
     criadoEm: "01/03/2026",
     publicadoEm: "12/03/2026",
@@ -111,8 +183,8 @@ export const mockLookbooks: Lookbook[] = [
     paleta: { primaria: "#00CFFF", fundo: "#FFFFFF", texto: "#080846" },
     paginas: [
       { id: "p1", tipo: "capa", titulo: "Linha Infantil 2026", subtitulo: "Especial Dia das Mães", imagemUrl: "/src/assets/concept-4.jpg" },
-      { id: "p2", tipo: "produtos", titulo: "Vestidos festa", produtoIds: productIds.slice(0, 6) },
-      { id: "p3", tipo: "produtos", titulo: "Conjuntos casuais", produtoIds: productIds.slice(6, 12) },
+      { id: "p2", tipo: "produtos", titulo: "Vestidos festa", layout: "grid-2", produtoIds: productIds.slice(0, 4) },
+      { id: "p3", tipo: "produtos", titulo: "Conjuntos casuais", layout: "grid-3", produtoIds: productIds.slice(0, 9) },
     ],
     criadoEm: "20/03/2026",
     publicadoEm: "28/03/2026",
@@ -138,8 +210,8 @@ export const mockLookbooks: Lookbook[] = [
     paginas: [
       { id: "p1", tipo: "capa", titulo: "Fashion Week 2026", subtitulo: "Acesso exclusivo VIP", imagemUrl: "/src/assets/concept-5.jpg" },
       { id: "p2", tipo: "texto", titulo: "Convite", texto: "Você está entre os primeiros a conhecer nossa nova coleção. Clique nos produtos para reservar sua grade antes do lançamento oficial." },
-      { id: "p3", tipo: "produtos", titulo: "Hero pieces", produtoIds: productIds.slice(0, 4) },
-      { id: "p4", tipo: "produtos", titulo: "Limited edition", produtoIds: productIds.slice(4, 8) },
+      { id: "p3", tipo: "produtos", titulo: "Hero pieces", layout: "destaque-1", produtoIds: productIds.slice(0, 1) },
+      { id: "p4", tipo: "produtos", titulo: "Limited edition", layout: "split-imagem", imagemUrl: "/src/assets/concept-6.jpg", produtoIds: productIds.slice(1, 3) },
     ],
     criadoEm: "08/04/2026",
     publicadoEm: "10/04/2026",
