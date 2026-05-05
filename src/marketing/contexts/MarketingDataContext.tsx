@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, ReactNode, useMemo } fr
 import { mockMetaAccounts, mockMetaCampaigns, mockMetaAdSets, mockMetaAds, MetaAccount, MetaCampaign, MetaAdSet, MetaAd } from "../data/mockMeta";
 import { mockLeadsAtribuidos, mockAlertasMkt, mockIntegracoes, mockMonthlyTrend, LeadAtribuido, AlertaMkt, Integracao, MonthlyKpi } from "../data/mockMarketing";
 import { mockCampanhas, mockSegmentos, Campanha, SegmentoAudiencia, StatusCampanha } from "../data/mockCampanhas";
+import { mockJornadas, Jornada, StatusJornada } from "../data/mockJornadas";
+import { mockLookbooks, Lookbook, StatusLookbook } from "../data/mockLookbooks";
 
 type Periodo = "7d" | "30d" | "90d" | "ytd";
 
