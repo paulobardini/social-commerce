@@ -22,7 +22,8 @@ export interface LeadAtribuido {
   primeiroToque: string; // ISO
   ultimoToque: string;   // ISO
   status: "novo" | "qualificado" | "oportunidade" | "ganho" | "perdido";
-  receita: number;        // se ganho
+  receita: number;        // estimada (atribuição)
+  receitaCrmConfirmada: number; // pedidos efetivamente fechados no CRM (subset de receita)
   custoAtribuido: number; // share do gasto da campanha
   touchpoints: Touchpoint[];
 }
