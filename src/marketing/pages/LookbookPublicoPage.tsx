@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useMarketing } from "../contexts/MarketingDataContext";
-import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { LookbookPageRender } from "../components/LookbookPageRender";
 
 export default function LookbookPublicoPage() {
   const { slug } = useParams();
