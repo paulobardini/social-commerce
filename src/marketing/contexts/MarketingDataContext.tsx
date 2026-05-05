@@ -254,6 +254,73 @@ export function MarketingDataProvider({ children }: { children: ReactNode }) {
     return campanhas.filter(c => contaId === "all" || c.accountId === contaId);
   }, [campanhas, contaId]);
 
+  // ===== Pedidos CRM =====
+  const [pedidosCrm, setPedidosCrm] = useState<Record<string, { valor: number; data: string; obs?: string }>>(() => {
+    try { const raw = localStorage.getItem(KEY + "_crm_orders"); if (raw) return JSON.parse(raw); } catch { /* */ }
+    return {};
+  });
+  useEffect(() => { localStorage.setItem(KEY + "_crm_orders", JSON.stringify(pedidosCrm)); }, [pedidosCrm]);
+  const registrarPedidoCrm = (leadId: string, valor: number, data: string, obs?: string) => {
+    setPedidosCrm(prev => ({ ...prev, [leadId]: { valor, data, obs } }));
+  };
+
+  // ===== Lead scores =====
+  const lookbooksRefs = useMemo(() => lookbooks.map(l => ({ slug: l.slug, nome: l.nome })), [lookbooks]);
+  const leadScores = useMemo(() => {
+    const m = new Map<string, LeadScore>();
+    leads.forEach(l => m.set(l.id, calcularLeadScore(l, lookbooksRefs)));
+    return m;
+  }, [leads, lookbooksRefs]);
+
+  const leadsQuentes = useMemo(() => leads.filter(l => (leadScores.get(l.id)?.score ?? 0) >= 70), [leads, leadScores]);
+  const leadsAquecendo = useMemo(() => {
+    const tresDias = Date.now() - 3 * 86400000;
+    return leads.filter(l => {
+      const s = leadScores.get(l.id);
+      if (!s) return false;
+      const recentes = s.sinais.filter(x => +new Date(x.data) >= tresDias && x.pts > 0);
+      return recentes.length >= 2 && s.score < 70;
+    });
+  }, [leads, leadScores]);
+  const leadsEmRiscoEsfriar = useMemo(() => {
+    const seteDias = Date.now() - 7 * 86400000;
+    return leads.filter(l => {
+      if (l.status !== "qualificado" && l.status !== "oportunidade") return false;
+      const s = leadScores.get(l.id);
+      if (!s || s.sinais.length === 0) return true;
+      return +new Date(s.sinais[0].data) < seteDias;
+    });
+  }, [leads, leadScores]);
+
+  const receitaCrmTotal = useMemo(() => {
+    const fromMock = leads.reduce((s, l) => s + (l.receitaCrmConfirmada || 0), 0);
+    const extra = Object.values(pedidosCrm).reduce((s, p) => s + p.valor, 0);
+    return fromMock + extra;
+  }, [leads, pedidosCrm]);
+
+  const receitaCrmPorCampanha = useMemo(() => {
+    const map: Record<string, number> = {};
+    leads.forEach(l => {
+      const cid = l.touchpoints.find(t => t.campaignId)?.campaignId || "_outros";
+      map[cid] = (map[cid] || 0) + (l.receitaCrmConfirmada || 0);
+    });
+    Object.entries(pedidosCrm).forEach(([leadId, p]) => {
+      const lead = leads.find(l => l.id === leadId);
+      const cid = lead?.touchpoints.find(t => t.campaignId)?.campaignId || "_outros";
+      map[cid] = (map[cid] || 0) + p.valor;
+    });
+    return map;
+  }, [leads, pedidosCrm]);
+
+  const campanhasEnriquecidas = useMemo(() => {
+    return campanhas.map(c => {
+      const ofCamp = leads.filter(l => l.touchpoints.some(t => t.campaignId === c.id));
+      const quentes = ofCamp.filter(l => (leadScores.get(l.id)?.score ?? 0) >= 70).length;
+      const conversoesCrm = ofCamp.filter(l => (l.receitaCrmConfirmada || 0) > 0 || pedidosCrm[l.id]).length;
+      return { ...c, leadsQuentes: quentes, receitaCrmConfirmada: receitaCrmPorCampanha[c.id] || 0, conversoesCrm };
+    });
+  }, [campanhas, leads, leadScores, receitaCrmPorCampanha, pedidosCrm]);
+
   return (
     <MarketingCtx.Provider value={{
       contas, campanhas, adSets, ads, leads, alertas, integracoes, trend,
@@ -265,7 +332,9 @@ export function MarketingDataProvider({ children }: { children: ReactNode }) {
       lookbooks, atualizarLookbook, criarLookbook, setStatusLookbook, excluirLookbook, duplicarLookbook, registrarLookbookView,
       audiencias, criarAudiencia, atualizarAudiencia, excluirAudiencia, duplicarAudiencia, setStatusAudiencia, recalcAudiencia, syncAudienciaMeta,
       handoff, setHandoff, converterLeadEmCliente,
-      filteredCampanhas,
+      leadScores, leadsQuentes, leadsAquecendo, leadsEmRiscoEsfriar,
+      pedidosCrm, registrarPedidoCrm, receitaCrmTotal, receitaCrmPorCampanha,
+      filteredCampanhas, campanhasEnriquecidas,
     }}>
       {children}
     </MarketingCtx.Provider>
