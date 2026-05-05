@@ -100,7 +100,7 @@ function genLeads(): LeadAtribuido[] {
   mockOportunidades.forEach((op, idx) => {
     // Encontrar uma campanha Meta vinculada se existir
     const cmp = mockMetaCampaigns.find(c => c.oportunidadeIds.includes(op.id));
-    const channel: MktChannel = cmp ? "meta_ads" : (idx % 3 === 0 ? "whatsapp" : idx % 3 === 1 ? "indicacao" : "organic");
+    const channel: MktChannel = cmp ? "meta_ads" : ((idx % 3 === 0 ? "whatsapp" : idx % 3 === 1 ? "indicacao" : "organic") as MktChannel);
     const isGanho = op.etapa === "ganho";
     const isPerdido = op.etapa === "perdido";
     const status: LeadAtribuido["status"] = isGanho ? "ganho" : isPerdido ? "perdido" : "oportunidade";
