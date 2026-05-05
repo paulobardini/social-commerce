@@ -127,8 +127,16 @@ function genLeads(): LeadAtribuido[] {
     });
   });
 
-  // Adicionar 200 leads sintéticos (sem oportunidade ainda) para volume
+  // Adicionar 200 leads sintéticos com progressão simulada (CRM "puxa" o status do Marketing)
   const baseDate = new Date("2026-04-01");
+  // Distribuição alvo: 55% novo, 22% qualificado, 13% oportunidade, 7% ganho, 3% perdido
+  const distribuicao: LeadAtribuido["status"][] = [
+    ...Array(110).fill("novo"),
+    ...Array(44).fill("qualificado"),
+    ...Array(26).fill("oportunidade"),
+    ...Array(14).fill("ganho"),
+    ...Array(6).fill("perdido"),
+  ];
   for (let i = 0; i < 200; i++) {
     const channel = pickWeighted();
     const cmp = channel === "meta_ads"
@@ -136,10 +144,16 @@ function genLeads(): LeadAtribuido[] {
       : undefined;
     const d = new Date(baseDate);
     d.setDate(d.getDate() - (i % 30));
-    const status: LeadAtribuido["status"] = i % 7 === 0 ? "qualificado" : "novo";
+    const status = distribuicao[i] || "novo";
+    const isGanho = status === "ganho";
+    const receita = isGanho ? 4500 + (i % 12) * 1200 : 0;
+    // Cliente vinculado se já avançou no CRM (qualificado em diante)
+    const temCliente = status !== "novo";
     out.push({
       id: `lead_synth_${i}`,
+      clienteId: temCliente ? `c_synth_${i}` : undefined,
       clienteNome: `Lead ${1000 + i}`,
+      oportunidadeId: status === "oportunidade" || isGanho || status === "perdido" ? `op_synth_${i}` : undefined,
       utm: {
         source: channel === "meta_ads" ? "facebook" : channel === "google_ads" ? "google" : channel,
         medium: channel === "meta_ads" || channel === "google_ads" ? "cpc" : channel === "organic" ? "organic" : "referral",
@@ -150,9 +164,9 @@ function genLeads(): LeadAtribuido[] {
       primeiroToque: d.toISOString(),
       ultimoToque: d.toISOString(),
       status,
-      receita: 0,
-      custoAtribuido: cmp ? Math.round(cmp.cpl) : 0,
-      touchpoints: genTouchpoints(channel, d.toISOString(), cmp?.id, cmp?.name, 0),
+      receita,
+      custoAtribuido: cmp ? Math.round(cmp.cpl) : Math.round(20 + Math.random() * 60),
+      touchpoints: genTouchpoints(channel, d.toISOString(), cmp?.id, cmp?.name, receita),
     });
   }
   return out;
