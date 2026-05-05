@@ -212,3 +212,22 @@ export default function MarketingDashboard() {
     </div>
   );
 }
+
+function TempCard({ label, value, hint, color, icon, isCurrency }: { label: string; value: number | string; hint?: string; color: "orange" | "amber" | "rose" | "emerald"; icon: React.ReactNode; isCurrency?: boolean }) {
+  const cls = {
+    orange: "bg-orange-500/10 text-orange-600",
+    amber: "bg-amber-500/10 text-amber-600",
+    rose: "bg-rose-500/10 text-rose-600",
+    emerald: "bg-emerald-500/10 text-emerald-600",
+  }[color];
+  return (
+    <div className="bg-card border border-border rounded-lg p-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">{label}</span>
+        <div className={`h-6 w-6 rounded flex items-center justify-center ${cls}`}>{icon}</div>
+      </div>
+      <p className="text-lg font-bold tabular-nums leading-tight">{isCurrency ? value : formatNum(typeof value === "number" ? value : 0)}</p>
+      {hint && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{hint}</p>}
+    </div>
+  );
+}
