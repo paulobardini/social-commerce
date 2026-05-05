@@ -127,6 +127,53 @@ export function MarketingDataProvider({ children }: { children: ReactNode }) {
     setProprias(prev => prev.filter(c => c.id !== id));
   };
 
+  // ===== Jornadas =====
+  const [jornadas, setJornadas] = useState<Jornada[]>(() => {
+    try { const raw = localStorage.getItem(KEY + "_jor"); if (raw) return JSON.parse(raw); } catch { /* */ }
+    return mockJornadas;
+  });
+  useEffect(() => { localStorage.setItem(KEY + "_jor", JSON.stringify(jornadas)); }, [jornadas]);
+  const today = () => new Date().toLocaleDateString("pt-BR");
+  const atualizarJornada = (j: Jornada) => setJornadas(prev => prev.map(x => x.id === j.id ? { ...j, ultimaEdicao: today() } : x));
+  const criarJornada: Ctx["criarJornada"] = (data) => {
+    const id = `jor_${Date.now()}`;
+    setJornadas(prev => [{ ...data, id, criadaEm: today(), ultimaEdicao: today() }, ...prev]);
+    return id;
+  };
+  const setStatusJornada = (id: string, status: StatusJornada) => setJornadas(prev => prev.map(j => j.id === id ? { ...j, status, ultimaEdicao: today() } : j));
+  const excluirJornada = (id: string) => setJornadas(prev => prev.filter(j => j.id !== id));
+  const duplicarJornada = (id: string) => setJornadas(prev => {
+    const o = prev.find(j => j.id === id); if (!o) return prev;
+    return [{ ...o, id: `jor_${Date.now()}`, nome: `${o.nome} (cópia)`, status: "rascunho", criadaEm: today(), ultimaEdicao: today(), totalEntraram: 0, ativos: 0, concluiram: 0, conversoes: 0, receitaAtribuida: 0 }, ...prev];
+  });
+
+  // ===== Lookbooks =====
+  const [lookbooks, setLookbooks] = useState<Lookbook[]>(() => {
+    try { const raw = localStorage.getItem(KEY + "_lkb"); if (raw) return JSON.parse(raw); } catch { /* */ }
+    return mockLookbooks;
+  });
+  useEffect(() => { localStorage.setItem(KEY + "_lkb", JSON.stringify(lookbooks)); }, [lookbooks]);
+  const atualizarLookbook = (l: Lookbook) => setLookbooks(prev => prev.map(x => x.id === l.id ? l : x));
+  const criarLookbook: Ctx["criarLookbook"] = (data) => {
+    const id = `lkb_${Date.now()}`;
+    setLookbooks(prev => [{ ...data, id, criadoEm: today() }, ...prev]);
+    return id;
+  };
+  const setStatusLookbook = (id: string, status: StatusLookbook) => setLookbooks(prev => prev.map(l => l.id === id ? { ...l, status, publicadoEm: status === "publicado" ? today() : l.publicadoEm } : l));
+  const excluirLookbook = (id: string) => setLookbooks(prev => prev.filter(l => l.id !== id));
+  const duplicarLookbook = (id: string) => setLookbooks(prev => {
+    const o = prev.find(l => l.id === id); if (!o) return prev;
+    return [{ ...o, id: `lkb_${Date.now()}`, nome: `${o.nome} (cópia)`, slug: `${o.slug}-${Date.now().toString().slice(-4)}`, status: "rascunho", criadoEm: today(), publicadoEm: undefined, views: 0, visualizadoresUnicos: 0, cliquesProduto: 0, conversoes: 0, receitaAtribuida: 0, logs: [] }, ...prev];
+  });
+  const registrarLookbookView = (slug: string, origem: "whatsapp" | "email" | "direto" | "qr_code") => {
+    setLookbooks(prev => prev.map(l => l.slug === slug ? {
+      ...l,
+      views: l.views + 1,
+      visualizadoresUnicos: l.visualizadoresUnicos + 1,
+      logs: [{ id: `log_${Date.now()}`, data: new Date().toLocaleString("pt-BR"), origem, duracaoSeg: 0, paginasVistas: 1, cliquesProduto: 0, converteu: false }, ...l.logs].slice(0, 50),
+    } : l));
+  };
+
   const filteredCampanhas = useMemo(() => {
     return campanhas.filter(c => contaId === "all" || c.accountId === contaId);
   }, [campanhas, contaId]);
@@ -138,6 +185,8 @@ export function MarketingDataProvider({ children }: { children: ReactNode }) {
       periodo, setPeriodo, contaId, setContaId,
       toggleCampanhaStatus, conectarIntegracao, desconectarIntegracao, syncIntegracao,
       criarCampanha, atualizarStatusCampanha, duplicarCampanha, excluirCampanha,
+      jornadas, atualizarJornada, criarJornada, setStatusJornada, excluirJornada, duplicarJornada,
+      lookbooks, atualizarLookbook, criarLookbook, setStatusLookbook, excluirLookbook, duplicarLookbook, registrarLookbookView,
       filteredCampanhas,
     }}>
       {children}
