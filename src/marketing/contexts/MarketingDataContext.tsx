@@ -35,6 +35,21 @@ interface Ctx {
   atualizarStatusCampanha: (id: string, status: StatusCampanha) => void;
   duplicarCampanha: (id: string) => void;
   excluirCampanha: (id: string) => void;
+  // jornadas
+  jornadas: Jornada[];
+  atualizarJornada: (j: Jornada) => void;
+  criarJornada: (j: Omit<Jornada, "id" | "criadaEm" | "ultimaEdicao">) => string;
+  setStatusJornada: (id: string, status: StatusJornada) => void;
+  excluirJornada: (id: string) => void;
+  duplicarJornada: (id: string) => void;
+  // lookbooks
+  lookbooks: Lookbook[];
+  atualizarLookbook: (l: Lookbook) => void;
+  criarLookbook: (l: Omit<Lookbook, "id" | "criadoEm">) => string;
+  setStatusLookbook: (id: string, status: StatusLookbook) => void;
+  excluirLookbook: (id: string) => void;
+  duplicarLookbook: (id: string) => void;
+  registrarLookbookView: (slug: string, origem: "whatsapp" | "email" | "direto" | "qr_code") => void;
   // helpers
   filteredCampanhas: MetaCampaign[];
 }
