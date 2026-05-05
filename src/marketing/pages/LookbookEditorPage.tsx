@@ -31,8 +31,11 @@ export default function LookbookEditorPage() {
   const updatePage = (idx: number, patch: Partial<LookbookPagina>) => {
     setDraft(d => d ? { ...d, paginas: d.paginas.map((p, i) => i === idx ? { ...p, ...patch } : p) } : d);
   };
-  const addPage = (tipo: LookbookPagina["tipo"]) => {
-    const novaPag: LookbookPagina = { id: `p_${Date.now()}`, tipo, titulo: tipo === "capa" ? "Nova capa" : tipo === "produtos" ? "Nova grade" : tipo === "imagem" ? "Editorial" : "Texto", produtoIds: tipo === "produtos" ? [] : undefined, imagemUrl: tipo === "imagem" || tipo === "capa" ? "/src/assets/concept-2.jpg" : undefined, texto: tipo === "texto" ? "Conteúdo..." : undefined };
+  const addPageFromTemplate = (templateId: string) => {
+    const tpl = lookbookTemplates.find(t => t.id === templateId);
+    if (!tpl) return;
+    const built = tpl.build();
+    const novaPag: LookbookPagina = { id: `p_${Date.now()}`, ...built };
     setDraft(d => d ? { ...d, paginas: [...d.paginas, novaPag] } : d);
     setSelectedPage(draft.paginas.length);
   };
