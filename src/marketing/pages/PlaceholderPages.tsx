@@ -21,7 +21,7 @@ export function ComingSoonPage({ title, description, etapa }: Props) {
   );
 }
 
-export function CampanhasPage() { return <ComingSoonPage title="Campanhas" description="Crie e gerencie disparos de WhatsApp Cloud API e Mailchimp." etapa="Etapa 2" />; }
+
 export function JornadasPage() { return <ComingSoonPage title="Jornadas automatizadas" description="Fluxos com gatilhos baseados em comportamento e atribuição Meta." etapa="Etapa 3" />; }
 export function LookbooksPage() { return <ComingSoonPage title="Lookbooks digitais" description="Catálogos enviáveis com tracking, Pixel e ROI." etapa="Etapa 3" />; }
 export function AudienciasPage() { return <ComingSoonPage title="Audiências" description="Sincronização com Meta Custom Audiences e Lookalike." etapa="Etapa 4" />; }
