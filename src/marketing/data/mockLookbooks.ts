@@ -117,6 +117,9 @@ export interface Lookbook {
   receitaAtribuida: number;
   tempoMedioSeg: number;
   shareLinks: { canal: "whatsapp" | "email" | "qr"; copiados: number }[];
+  // bidirecional CRM (opcional, computado no contexto)
+  lojistasIdentificadosLeadIds?: string[];
+  oportunidadesAbertas?: number;
   // tracking detalhado
   logs: LookbookViewLog[];
 }
