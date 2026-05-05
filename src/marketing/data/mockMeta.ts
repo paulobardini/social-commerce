@@ -33,6 +33,9 @@ export interface MetaCampaign {
   oportunidadeIds: string[]; // referencia mockCRM.mockOportunidades
   receitaAtribuida: number;
   roas: number;
+  // Métricas bidirecionais (calculadas no contexto a partir de leads)
+  leadsQuentes?: number;
+  receitaCrmConfirmada?: number;
 }
 
 export interface MetaAdSet {

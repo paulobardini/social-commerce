@@ -22,7 +22,8 @@ export interface LeadAtribuido {
   primeiroToque: string; // ISO
   ultimoToque: string;   // ISO
   status: "novo" | "qualificado" | "oportunidade" | "ganho" | "perdido";
-  receita: number;        // se ganho
+  receita: number;        // estimada (atribuição)
+  receitaCrmConfirmada: number; // pedidos efetivamente fechados no CRM (subset de receita)
   custoAtribuido: number; // share do gasto da campanha
   touchpoints: Touchpoint[];
 }
@@ -122,6 +123,7 @@ function genLeads(): LeadAtribuido[] {
       ultimoToque: op.ultimaInteracao.split("/").reverse().join("-") + "T15:30:00Z",
       status,
       receita,
+      receitaCrmConfirmada: isGanho ? Math.round(receita * 0.7) : 0,
       custoAtribuido,
       touchpoints: genTouchpoints(channel, op.ultimaInteracao.split("/").reverse().join("-"), cmp?.id, cmp?.name, receita),
     });
@@ -165,6 +167,7 @@ function genLeads(): LeadAtribuido[] {
       ultimoToque: d.toISOString(),
       status,
       receita,
+      receitaCrmConfirmada: isGanho ? Math.round(receita * 0.7) : 0,
       custoAtribuido: cmp ? Math.round(cmp.cpl) : Math.round(20 + Math.random() * 60),
       touchpoints: genTouchpoints(channel, d.toISOString(), cmp?.id, cmp?.name, receita),
     });

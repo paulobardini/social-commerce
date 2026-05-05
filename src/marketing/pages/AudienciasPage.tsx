@@ -9,12 +9,13 @@ import { Link } from "react-router-dom";
 const iconMap = { Users, Star, Flame, AlertTriangle, Sparkles, RotateCw } as const;
 
 const origemLabels: Record<Audiencia["origem"], string> = {
-  manual: "Manual", regra_crm: "Regra CRM", importada_meta: "Meta Ads", lookalike: "Lookalike", lookbook: "Lookbook", campanha: "Campanha",
+  manual: "Manual", regra_crm: "Regra CRM", importada_meta: "Meta Ads", lookalike: "Lookalike", lookbook: "Lookbook", campanha: "Campanha", score_based: "Score-based",
 };
 const origemColors: Record<Audiencia["origem"], string> = {
   manual: "bg-slate-100 text-slate-700", regra_crm: "bg-emerald-100 text-emerald-700",
   importada_meta: "bg-blue-100 text-blue-700", lookalike: "bg-indigo-100 text-indigo-700",
   lookbook: "bg-purple-100 text-purple-700", campanha: "bg-amber-100 text-amber-700",
+  score_based: "bg-orange-100 text-orange-700",
 };
 
 export function AudienciasPage() {
