@@ -82,7 +82,7 @@ import { Navigate } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 
 // Marketing module
-import { MarketingDataProvider } from "@/marketing/contexts/MarketingDataContext";
+import { MarketingProviders } from "@/marketing/contexts/MarketingDataContext";
 import { MarketingLayout } from "@/marketing/components/MarketingLayout";
 import MarketingDashboard from "@/marketing/pages/MarketingDashboard";
 import MetaAdsHub from "@/marketing/pages/MetaAdsHub";
@@ -209,21 +209,21 @@ const App = () => (
 
                 {/* Módulo Marketing */}
                 <Route path="/marketing" element={<Navigate to="/marketing/dashboard" replace />} />
-                <Route path="/marketing/dashboard" element={<MarketingDataProvider><MarketingLayout><MarketingDashboard /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/meta-ads" element={<MarketingDataProvider><MarketingLayout><MetaAdsHub /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/meta-ads/:id" element={<MarketingDataProvider><MarketingLayout><MetaCampaignDetail /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/atribuicao" element={<MarketingDataProvider><MarketingLayout><AtribuicaoPage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/campanhas" element={<MarketingDataProvider><MarketingLayout><CampanhasPage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/campanhas/:id" element={<MarketingDataProvider><MarketingLayout><CampanhaDetalhePage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/jornadas" element={<MarketingDataProvider><MarketingLayout><JornadasPage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/jornadas/:id" element={<MarketingDataProvider><MarketingLayout><JornadaEditorPage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/lookbooks" element={<MarketingDataProvider><MarketingLayout><LookbooksPage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/lookbooks/:id" element={<MarketingDataProvider><MarketingLayout><LookbookEditorPage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/publico/lookbook/:slug" element={<MarketingDataProvider><LookbookPublicoPage /></MarketingDataProvider>} />
-                <Route path="/marketing/audiencias" element={<MarketingDataProvider><MarketingLayout><AudienciasPage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/handoff" element={<MarketingDataProvider><MarketingLayout><HandoffPage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/integracoes" element={<MarketingDataProvider><MarketingLayout><IntegracoesPage /></MarketingLayout></MarketingDataProvider>} />
-                <Route path="/marketing/configuracoes" element={<MarketingDataProvider><MarketingLayout><ConfiguracoesPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/dashboard" element={<MarketingProviders><MarketingLayout><MarketingDashboard /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/meta-ads" element={<MarketingProviders><MarketingLayout><MetaAdsHub /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/meta-ads/:id" element={<MarketingProviders><MarketingLayout><MetaCampaignDetail /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/atribuicao" element={<MarketingProviders><MarketingLayout><AtribuicaoPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/campanhas" element={<MarketingProviders><MarketingLayout><CampanhasPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/campanhas/:id" element={<MarketingProviders><MarketingLayout><CampanhaDetalhePage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/jornadas" element={<MarketingProviders><MarketingLayout><JornadasPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/jornadas/:id" element={<MarketingProviders><MarketingLayout><JornadaEditorPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/lookbooks" element={<MarketingProviders><MarketingLayout><LookbooksPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/lookbooks/:id" element={<MarketingProviders><MarketingLayout><LookbookEditorPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/publico/lookbook/:slug" element={<MarketingProviders><LookbookPublicoPage /></MarketingProviders>} />
+                <Route path="/marketing/audiencias" element={<MarketingProviders><MarketingLayout><AudienciasPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/handoff" element={<MarketingProviders><MarketingLayout><HandoffPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/integracoes" element={<MarketingProviders><MarketingLayout><IntegracoesPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/configuracoes" element={<MarketingProviders><MarketingLayout><ConfiguracoesPage /></MarketingLayout></MarketingProviders>} />
 
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
