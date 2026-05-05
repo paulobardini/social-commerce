@@ -82,7 +82,8 @@ import { Navigate } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 
 // Marketing module
-import { MarketingProviders } from "@/marketing/contexts/MarketingDataContext";
+import { MarketingProviders } from "@/marketing/contexts/MarketingProviders";
+import CentralVendasPage from "@/marketing/pages/CentralVendasPage";
 import { MarketingLayout } from "@/marketing/components/MarketingLayout";
 import MarketingDashboard from "@/marketing/pages/MarketingDashboard";
 import MetaAdsHub from "@/marketing/pages/MetaAdsHub";
