@@ -91,7 +91,12 @@ import AtribuicaoPage from "@/marketing/pages/AtribuicaoPage";
 import IntegracoesPage from "@/marketing/pages/IntegracoesPage";
 import CampanhasPage from "@/marketing/pages/CampanhasPage";
 import CampanhaDetalhePage from "@/marketing/pages/CampanhaDetalhePage";
-import { JornadasPage, LookbooksPage, AudienciasPage, ConfiguracoesPage } from "@/marketing/pages/PlaceholderPages";
+import { AudienciasPage, ConfiguracoesPage } from "@/marketing/pages/PlaceholderPages";
+import JornadasPage from "@/marketing/pages/JornadasPage";
+import JornadaEditorPage from "@/marketing/pages/JornadaEditorPage";
+import LookbooksPage from "@/marketing/pages/LookbooksPage";
+import LookbookEditorPage from "@/marketing/pages/LookbookEditorPage";
+import LookbookPublicoPage from "@/marketing/pages/LookbookPublicoPage";
 
 const queryClient = new QueryClient();
 
@@ -209,7 +214,10 @@ const App = () => (
                 <Route path="/marketing/campanhas" element={<MarketingDataProvider><MarketingLayout><CampanhasPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/campanhas/:id" element={<MarketingDataProvider><MarketingLayout><CampanhaDetalhePage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/jornadas" element={<MarketingDataProvider><MarketingLayout><JornadasPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/jornadas/:id" element={<MarketingDataProvider><MarketingLayout><JornadaEditorPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/lookbooks" element={<MarketingDataProvider><MarketingLayout><LookbooksPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/lookbooks/:id" element={<MarketingDataProvider><MarketingLayout><LookbookEditorPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/publico/lookbook/:slug" element={<MarketingDataProvider><LookbookPublicoPage /></MarketingDataProvider>} />
                 <Route path="/marketing/audiencias" element={<MarketingDataProvider><MarketingLayout><AudienciasPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/integracoes" element={<MarketingDataProvider><MarketingLayout><IntegracoesPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/configuracoes" element={<MarketingDataProvider><MarketingLayout><ConfiguracoesPage /></MarketingLayout></MarketingDataProvider>} />
