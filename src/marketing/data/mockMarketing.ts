@@ -112,8 +112,8 @@ function genLeads(): LeadAtribuido[] {
       clienteNome: op.clienteNome,
       oportunidadeId: op.id,
       utm: {
-        source: channel === "meta_ads" ? "facebook" : channel === "google_ads" ? "google" : channel,
-        medium: channel === "meta_ads" || channel === "google_ads" ? "cpc" : channel === "organic" ? "organic" : "referral",
+        source: (channel as string) === "meta_ads" ? "facebook" : (channel as string) === "google_ads" ? "google" : (channel as string),
+        medium: (channel as string) === "meta_ads" || (channel as string) === "google_ads" ? "cpc" : (channel as string) === "organic" ? "organic" : "referral",
         campaign: cmp ? utmCampaigns[idx % utmCampaigns.length] : "direto",
       },
       fbclid: cmp ? `fb.1.${Date.now()}.${idx}` : undefined,
