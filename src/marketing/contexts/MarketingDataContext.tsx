@@ -4,6 +4,8 @@ import { mockLeadsAtribuidos, mockAlertasMkt, mockIntegracoes, mockMonthlyTrend,
 import { mockCampanhas, mockSegmentos, Campanha, SegmentoAudiencia, StatusCampanha } from "../data/mockCampanhas";
 import { mockJornadas, Jornada, StatusJornada } from "../data/mockJornadas";
 import { mockLookbooks, Lookbook, StatusLookbook } from "../data/mockLookbooks";
+import { mockAudiencias, avaliarRegras, Audiencia, RegraAudiencia, AudienciaStatus } from "../data/mockAudiencias";
+import { HandoffRecord, HandoffStatus, mockHandoffSeed } from "../data/mockHandoff";
 
 type Periodo = "7d" | "30d" | "90d" | "ytd";
 
