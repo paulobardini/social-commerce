@@ -49,7 +49,7 @@ export interface Lookbook {
   logs: LookbookViewLog[];
 }
 
-const productIds = mockProducts.slice(0, 12).map(p => p.id);
+const productIds = brands.flatMap(b => (b.products || []).map(p => `${b.slug}/${p.id}`)).slice(0, 12);
 
 function genLogs(views: number): LookbookViewLog[] {
   const out: LookbookViewLog[] = [];
