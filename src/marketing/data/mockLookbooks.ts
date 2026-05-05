@@ -210,8 +210,8 @@ export const mockLookbooks: Lookbook[] = [
     paginas: [
       { id: "p1", tipo: "capa", titulo: "Fashion Week 2026", subtitulo: "Acesso exclusivo VIP", imagemUrl: "/src/assets/concept-5.jpg" },
       { id: "p2", tipo: "texto", titulo: "Convite", texto: "Você está entre os primeiros a conhecer nossa nova coleção. Clique nos produtos para reservar sua grade antes do lançamento oficial." },
-      { id: "p3", tipo: "produtos", titulo: "Hero pieces", produtoIds: productIds.slice(0, 4) },
-      { id: "p4", tipo: "produtos", titulo: "Limited edition", produtoIds: productIds.slice(4, 8) },
+      { id: "p3", tipo: "produtos", titulo: "Hero pieces", layout: "destaque-1", produtoIds: productIds.slice(0, 1) },
+      { id: "p4", tipo: "produtos", titulo: "Limited edition", layout: "split-imagem", imagemUrl: "/src/assets/concept-6.jpg", produtoIds: productIds.slice(1, 3) },
     ],
     criadoEm: "08/04/2026",
     publicadoEm: "10/04/2026",
