@@ -6,6 +6,7 @@ import { mockJornadas, Jornada, StatusJornada } from "../data/mockJornadas";
 import { mockLookbooks, Lookbook, StatusLookbook } from "../data/mockLookbooks";
 import { mockAudiencias, avaliarRegras, Audiencia, RegraAudiencia, AudienciaStatus } from "../data/mockAudiencias";
 import { HandoffRecord, HandoffStatus, mockHandoffSeed } from "../data/mockHandoff";
+import { calcularLeadScore, type LeadScore } from "../data/leadScoring";
 
 type Periodo = "7d" | "30d" | "90d" | "ytd";
 
