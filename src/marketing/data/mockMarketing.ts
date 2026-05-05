@@ -123,6 +123,7 @@ function genLeads(): LeadAtribuido[] {
       ultimoToque: op.ultimaInteracao.split("/").reverse().join("-") + "T15:30:00Z",
       status,
       receita,
+      receitaCrmConfirmada: isGanho ? Math.round(receita * 0.7) : 0,
       custoAtribuido,
       touchpoints: genTouchpoints(channel, op.ultimaInteracao.split("/").reverse().join("-"), cmp?.id, cmp?.name, receita),
     });
