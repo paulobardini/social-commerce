@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMarketing } from "../contexts/MarketingDataContext";
-import { Lookbook, LookbookPagina, statusLookbookCfg } from "../data/mockLookbooks";
-import { ArrowLeft, Save, Plus, Trash2, ExternalLink, Share2, Globe, Eye, BookOpen, Image as ImageIcon, Type, ShoppingBag } from "lucide-react";
+import { Lookbook, LookbookPagina, statusLookbookCfg, lookbookTemplates, LookbookLayout } from "../data/mockLookbooks";
+import { ArrowLeft, Save, Trash2, ExternalLink, Share2, Globe, Eye, BookOpen, ShoppingBag, LayoutGrid, Rows3, Image as ImageIconLucide, Type, Square, Columns2 } from "lucide-react";
 import { formatNum, formatBRLCompact, formatPct } from "../styles/tokens";
+import { LookbookPageRender } from "../components/LookbookPageRender";
+import { LookbookProductPicker } from "../components/LookbookProductPicker";
 
 export default function LookbookEditorPage() {
   const { id } = useParams();
