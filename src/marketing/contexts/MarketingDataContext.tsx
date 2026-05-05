@@ -65,8 +65,18 @@ interface Ctx {
   handoff: HandoffRecord[];
   setHandoff: (leadId: string, payload: Partial<HandoffRecord>) => void;
   converterLeadEmCliente: (leadId: string, opts: { criarOportunidade?: boolean; representante?: string }) => { clienteId: string; oportunidadeId?: string };
+  // === Lead score & motor comercial bidirecional ===
+  leadScores: Map<string, LeadScore>;
+  leadsQuentes: LeadAtribuido[];
+  leadsAquecendo: LeadAtribuido[];
+  leadsEmRiscoEsfriar: LeadAtribuido[];
+  pedidosCrm: Record<string, { valor: number; data: string; obs?: string }>;
+  registrarPedidoCrm: (leadId: string, valor: number, data: string, obs?: string) => void;
+  receitaCrmTotal: number;
+  receitaCrmPorCampanha: Record<string, number>;
   // helpers
   filteredCampanhas: MetaCampaign[];
+  campanhasEnriquecidas: (MetaCampaign & { leadsQuentes: number; receitaCrmConfirmada: number; conversoesCrm: number })[];
 }
 
 const MarketingCtx = createContext<Ctx | null>(null);
