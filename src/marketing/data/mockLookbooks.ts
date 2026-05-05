@@ -1,5 +1,5 @@
 // Mock de Lookbooks digitais — catálogos enviáveis com tracking público.
-import { mockProducts } from "@/data/mockProducts";
+import { brands } from "@/data/mockProducts";
 
 export type StatusLookbook = "publicado" | "rascunho" | "arquivado";
 
