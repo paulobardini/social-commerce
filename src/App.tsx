@@ -207,6 +207,7 @@ const App = () => (
                 <Route path="/marketing/meta-ads/:id" element={<MarketingDataProvider><MarketingLayout><MetaCampaignDetail /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/atribuicao" element={<MarketingDataProvider><MarketingLayout><AtribuicaoPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/campanhas" element={<MarketingDataProvider><MarketingLayout><CampanhasPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/campanhas/:id" element={<MarketingDataProvider><MarketingLayout><CampanhaDetalhePage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/jornadas" element={<MarketingDataProvider><MarketingLayout><JornadasPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/lookbooks" element={<MarketingDataProvider><MarketingLayout><LookbooksPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/audiencias" element={<MarketingDataProvider><MarketingLayout><AudienciasPage /></MarketingLayout></MarketingDataProvider>} />
