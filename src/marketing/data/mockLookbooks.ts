@@ -183,8 +183,8 @@ export const mockLookbooks: Lookbook[] = [
     paleta: { primaria: "#00CFFF", fundo: "#FFFFFF", texto: "#080846" },
     paginas: [
       { id: "p1", tipo: "capa", titulo: "Linha Infantil 2026", subtitulo: "Especial Dia das Mães", imagemUrl: "/src/assets/concept-4.jpg" },
-      { id: "p2", tipo: "produtos", titulo: "Vestidos festa", produtoIds: productIds.slice(0, 6) },
-      { id: "p3", tipo: "produtos", titulo: "Conjuntos casuais", produtoIds: productIds.slice(6, 12) },
+      { id: "p2", tipo: "produtos", titulo: "Vestidos festa", layout: "grid-2", produtoIds: productIds.slice(0, 4) },
+      { id: "p3", tipo: "produtos", titulo: "Conjuntos casuais", layout: "grid-3", produtoIds: productIds.slice(0, 9) },
     ],
     criadoEm: "20/03/2026",
     publicadoEm: "28/03/2026",
