@@ -82,7 +82,22 @@ export default function MarketingDashboard() {
         <KpiCard label="Ticket médio" value={formatBRLCompact(kpis.ticketMedio)} icon={<DollarSign className="h-4 w-4" />} accent="primary" />
       </div>
 
-      {/* Alertas */}
+      {/* Temperatura comercial */}
+      <div className="bg-gradient-to-r from-orange-500/5 via-amber-500/5 to-emerald-500/5 border border-border rounded-xl p-4">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h2 className="text-sm font-semibold flex items-center gap-2"><Flame className="h-4 w-4 text-orange-500" /> Temperatura comercial</h2>
+          <Link to="/marketing/central-vendas" className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+            Abrir Central de Vendas <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <TempCard label="Quentes" value={leadsQuentes.length} hint="score ≥ 70 · prontos para abordagem" color="orange" icon={<Flame className="h-4 w-4" />} />
+          <TempCard label="Aquecendo" value={leadsAquecendo.length} hint="2+ sinais nos últimos 3d" color="amber" icon={<Sparkles className="h-4 w-4" />} />
+          <TempCard label="Em risco de esfriar" value={leadsEmRiscoEsfriar.length} hint="sem sinal há 7d+" color="rose" icon={<Snowflake className="h-4 w-4" />} />
+          <TempCard label="Receita real CRM" value={formatBRLCompact(receitaCrmTotal)} hint={`${formatPct((receitaCrmTotal / Math.max(1, kpis.receita)) * 100)} da estimada`} color="emerald" icon={<TrendingUp className="h-4 w-4" />} isCurrency />
+        </div>
+      </div>
+
       {alertas.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
