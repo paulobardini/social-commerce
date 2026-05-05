@@ -167,6 +167,7 @@ function genLeads(): LeadAtribuido[] {
       ultimoToque: d.toISOString(),
       status,
       receita,
+      receitaCrmConfirmada: isGanho ? Math.round(receita * 0.7) : 0,
       custoAtribuido: cmp ? Math.round(cmp.cpl) : Math.round(20 + Math.random() * 60),
       touchpoints: genTouchpoints(channel, d.toISOString(), cmp?.id, cmp?.name, receita),
     });
