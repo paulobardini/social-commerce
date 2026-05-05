@@ -59,9 +59,21 @@ export function MarketingDataProvider({ children }: { children: ReactNode }) {
   const [periodo, setPeriodo] = useState<Periodo>("30d");
   const [contaId, setContaId] = useState<string | "all">("all");
 
+  const [proprias, setProprias] = useState<Campanha[]>(() => {
+    try {
+      const raw = localStorage.getItem(KEY + "_camps");
+      if (raw) return JSON.parse(raw);
+    } catch { /* noop */ }
+    return mockCampanhas;
+  });
+  const [segmentos] = useState<SegmentoAudiencia[]>(mockSegmentos);
+
   useEffect(() => {
     localStorage.setItem(KEY + "_integ", JSON.stringify(integracoes));
   }, [integracoes]);
+  useEffect(() => {
+    localStorage.setItem(KEY + "_camps", JSON.stringify(proprias));
+  }, [proprias]);
 
   const toggleCampanhaStatus = (id: string) => {
     setCampanhas(prev => prev.map(c => c.id === id ? { ...c, status: c.status === "active" ? "paused" : "active" } : c));
@@ -77,6 +89,27 @@ export function MarketingDataProvider({ children }: { children: ReactNode }) {
     setIntegracoes(prev => prev.map(i => i.id === id ? { ...i, ultimoSync: "Agora há pouco" } : i));
   };
 
+  const criarCampanha: Ctx["criarCampanha"] = (data) => {
+    const id = `camp_${Date.now()}`;
+    const today = new Date().toLocaleDateString("pt-BR");
+    setProprias(prev => [{ ...data, id, criadaEm: today }, ...prev]);
+    return id;
+  };
+  const atualizarStatusCampanha = (id: string, status: StatusCampanha) => {
+    setProprias(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+  };
+  const duplicarCampanha = (id: string) => {
+    setProprias(prev => {
+      const orig = prev.find(c => c.id === id);
+      if (!orig) return prev;
+      const copy: Campanha = { ...orig, id: `camp_${Date.now()}`, nome: `${orig.nome} (cópia)`, status: "rascunho", criadaEm: new Date().toLocaleDateString("pt-BR"), enviadaEm: undefined, agendadaPara: undefined };
+      return [copy, ...prev];
+    });
+  };
+  const excluirCampanha = (id: string) => {
+    setProprias(prev => prev.filter(c => c.id !== id));
+  };
+
   const filteredCampanhas = useMemo(() => {
     return campanhas.filter(c => contaId === "all" || c.accountId === contaId);
   }, [campanhas, contaId]);
@@ -84,8 +117,10 @@ export function MarketingDataProvider({ children }: { children: ReactNode }) {
   return (
     <MarketingCtx.Provider value={{
       contas, campanhas, adSets, ads, leads, alertas, integracoes, trend,
+      proprias, segmentos,
       periodo, setPeriodo, contaId, setContaId,
       toggleCampanhaStatus, conectarIntegracao, desconectarIntegracao, syncIntegracao,
+      criarCampanha, atualizarStatusCampanha, duplicarCampanha, excluirCampanha,
       filteredCampanhas,
     }}>
       {children}
