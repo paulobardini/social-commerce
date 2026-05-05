@@ -5,10 +5,10 @@ import { KpiCard } from "../components/KpiCard";
 import { FunnelChart } from "../components/FunnelChart";
 import { DonutChart } from "../components/DonutChart";
 import { formatBRL, formatBRLCompact, formatPct, formatRoas, formatNum, channelColors, channelLabels, MktChannel } from "../styles/tokens";
-import { DollarSign, TrendingUp, Users, Target, AlertTriangle, ArrowRight, Sparkles, Activity } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, AlertTriangle, ArrowRight, Sparkles, Activity, Flame, Snowflake } from "lucide-react";
 
 export default function MarketingDashboard() {
-  const { filteredCampanhas, leads, alertas, trend } = useMarketing();
+  const { filteredCampanhas, leads, alertas, trend, leadsQuentes, leadsAquecendo, leadsEmRiscoEsfriar, receitaCrmTotal } = useMarketing();
 
   const kpis = useMemo(() => {
     const investimento = filteredCampanhas.reduce((s, c) => s + c.spent, 0);
