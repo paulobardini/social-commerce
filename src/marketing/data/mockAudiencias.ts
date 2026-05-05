@@ -40,9 +40,13 @@ export interface Audiencia {
   // se origem = regra_crm, regras são processadas para gerar membros dinâmicos
   regras?: RegraAudiencia[];
   matchAll?: boolean; // AND vs OR
+  // score-based
+  scoreFaixa?: ScoreFaixa;
+  bidirecional?: boolean; // recebe updates do CRM em tempo real
   // membros explícitos (importados/manual) ou cache
   membrosClienteIds: string[];
   totalMembros: number;
+  scoreMedio?: number;
   // sync com Meta
   syncMeta?: { contaId?: string; audienceMetaId?: string; ultimoSync?: string; status?: "ok" | "pendente" | "erro" };
   // métricas
