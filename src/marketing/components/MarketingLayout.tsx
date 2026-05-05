@@ -54,7 +54,12 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
               }
             >
               <item.icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{item.label}</span>
+              <span className="truncate flex-1">{item.label}</span>
+              {item.badge === "fila" && filaCount > 0 && (
+                <span className="ml-auto h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {filaCount > 99 ? "99+" : filaCount}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
