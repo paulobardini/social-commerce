@@ -43,39 +43,7 @@ export default function LookbookPublicoPage() {
 
         {/* Content */}
         <div className="flex-1 relative overflow-hidden">
-          {p?.tipo === "capa" && (<>
-            {p.imagemUrl && <img src={p.imagemUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-            <div className="absolute bottom-10 left-6 right-6 text-white">
-              {p.subtitulo && <p className="text-[12px] uppercase tracking-widest opacity-80">{p.subtitulo}</p>}
-              <h1 className="text-3xl md:text-4xl font-bold mt-2">{p.titulo}</h1>
-            </div>
-          </>)}
-          {p?.tipo === "imagem" && (<>
-            {p.imagemUrl && <img src={p.imagemUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-            {p.titulo && <p className="absolute bottom-12 left-6 right-6 text-white text-[14px] font-medium drop-shadow-lg">{p.titulo}</p>}
-          </>)}
-          {p?.tipo === "texto" && (
-            <div className="p-8 flex-1 flex flex-col justify-center h-full">
-              {p.titulo && <h2 className="text-xl font-bold mb-3">{p.titulo}</h2>}
-              <p className="text-[14px] leading-relaxed opacity-90 whitespace-pre-line">{p.texto}</p>
-            </div>
-          )}
-          {p?.tipo === "produtos" && (
-            <div className="p-5 h-full overflow-y-auto pb-16">
-              <h2 className="text-lg font-bold mb-3">{p.titulo}</h2>
-              <div className="grid grid-cols-2 gap-2">
-                {(p.produtoIds || []).map((pid, idx) => (
-                  <a key={pid + idx} href="#" className="aspect-[3/4] rounded-lg bg-white/10 hover:bg-white/20 transition-colors flex flex-col items-center justify-center text-center p-3">
-                    <ShoppingBag className="h-6 w-6 opacity-50 mb-1" />
-                    <p className="text-[10px] opacity-80">Produto</p>
-                    <p className="text-[10px] font-bold mt-1 underline">Ver detalhes</p>
-                  </a>
-                ))}
-                {(p.produtoIds || []).length === 0 && <p className="col-span-2 text-center text-[12px] opacity-60 py-8">Nenhum produto vinculado</p>}
-              </div>
-            </div>
-          )}
+          {p && <LookbookPageRender page={p} paletaPrimaria={lookbook.paleta.primaria} scale="publico" />}
         </div>
 
         {/* Nav */}
