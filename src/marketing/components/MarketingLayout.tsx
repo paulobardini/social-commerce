@@ -1,10 +1,12 @@
 import { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Megaphone, GitBranch, BookOpen, Users2, Target, Plug, Settings, Sparkles, ArrowRightLeft } from "lucide-react";
+import { LayoutDashboard, Megaphone, GitBranch, BookOpen, Users2, Target, Plug, Settings, Sparkles, ArrowRightLeft, Flame } from "lucide-react";
 import { useMarketing } from "../contexts/MarketingDataContext";
+import { useNotifications } from "../contexts/MarketingNotificationsContext";
 
 const navItems = [
   { to: "/marketing/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/marketing/central-vendas", icon: Flame, label: "Central de Vendas", badge: "fila" as const },
   { to: "/marketing/meta-ads", icon: Sparkles, label: "Meta Ads", highlight: true },
   { to: "/marketing/atribuicao", icon: Target, label: "Atribuição" },
   { to: "/marketing/campanhas", icon: Megaphone, label: "Campanhas" },
@@ -20,6 +22,8 @@ const bottomItems = [
 
 export function MarketingLayout({ children }: { children: ReactNode }) {
   const { periodo, setPeriodo, contaId, setContaId, contas } = useMarketing();
+  const { filaNaoVisualizada } = useNotifications();
+  const filaCount = filaNaoVisualizada.size;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex font-['Poppins']">
@@ -50,7 +54,12 @@ export function MarketingLayout({ children }: { children: ReactNode }) {
               }
             >
               <item.icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{item.label}</span>
+              <span className="truncate flex-1">{item.label}</span>
+              {item.badge === "fila" && filaCount > 0 && (
+                <span className="ml-auto h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {filaCount > 99 ? "99+" : filaCount}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

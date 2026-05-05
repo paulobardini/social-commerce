@@ -5,10 +5,10 @@ import { KpiCard } from "../components/KpiCard";
 import { FunnelChart } from "../components/FunnelChart";
 import { DonutChart } from "../components/DonutChart";
 import { formatBRL, formatBRLCompact, formatPct, formatRoas, formatNum, channelColors, channelLabels, MktChannel } from "../styles/tokens";
-import { DollarSign, TrendingUp, Users, Target, AlertTriangle, ArrowRight, Sparkles, Activity } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, AlertTriangle, ArrowRight, Sparkles, Activity, Flame, Snowflake } from "lucide-react";
 
 export default function MarketingDashboard() {
-  const { filteredCampanhas, leads, alertas, trend } = useMarketing();
+  const { filteredCampanhas, leads, alertas, trend, leadsQuentes, leadsAquecendo, leadsEmRiscoEsfriar, receitaCrmTotal } = useMarketing();
 
   const kpis = useMemo(() => {
     const investimento = filteredCampanhas.reduce((s, c) => s + c.spent, 0);
@@ -82,7 +82,22 @@ export default function MarketingDashboard() {
         <KpiCard label="Ticket médio" value={formatBRLCompact(kpis.ticketMedio)} icon={<DollarSign className="h-4 w-4" />} accent="primary" />
       </div>
 
-      {/* Alertas */}
+      {/* Temperatura comercial */}
+      <div className="bg-gradient-to-r from-orange-500/5 via-amber-500/5 to-emerald-500/5 border border-border rounded-xl p-4">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h2 className="text-sm font-semibold flex items-center gap-2"><Flame className="h-4 w-4 text-orange-500" /> Temperatura comercial</h2>
+          <Link to="/marketing/central-vendas" className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+            Abrir Central de Vendas <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <TempCard label="Quentes" value={leadsQuentes.length} hint="score ≥ 70 · prontos para abordagem" color="orange" icon={<Flame className="h-4 w-4" />} />
+          <TempCard label="Aquecendo" value={leadsAquecendo.length} hint="2+ sinais nos últimos 3d" color="amber" icon={<Sparkles className="h-4 w-4" />} />
+          <TempCard label="Em risco de esfriar" value={leadsEmRiscoEsfriar.length} hint="sem sinal há 7d+" color="rose" icon={<Snowflake className="h-4 w-4" />} />
+          <TempCard label="Receita real CRM" value={formatBRLCompact(receitaCrmTotal)} hint={`${formatPct((receitaCrmTotal / Math.max(1, kpis.receita)) * 100)} da estimada`} color="emerald" icon={<TrendingUp className="h-4 w-4" />} isCurrency />
+        </div>
+      </div>
+
       {alertas.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -194,6 +209,25 @@ export default function MarketingDashboard() {
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 bg-emerald-500/70 rounded-sm" /> Receita atribuída</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TempCard({ label, value, hint, color, icon, isCurrency }: { label: string; value: number | string; hint?: string; color: "orange" | "amber" | "rose" | "emerald"; icon: React.ReactNode; isCurrency?: boolean }) {
+  const cls = {
+    orange: "bg-orange-500/10 text-orange-600",
+    amber: "bg-amber-500/10 text-amber-600",
+    rose: "bg-rose-500/10 text-rose-600",
+    emerald: "bg-emerald-500/10 text-emerald-600",
+  }[color];
+  return (
+    <div className="bg-card border border-border rounded-lg p-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">{label}</span>
+        <div className={`h-6 w-6 rounded flex items-center justify-center ${cls}`}>{icon}</div>
+      </div>
+      <p className="text-lg font-bold tabular-nums leading-tight">{isCurrency ? value : formatNum(typeof value === "number" ? value : 0)}</p>
+      {hint && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{hint}</p>}
     </div>
   );
 }
