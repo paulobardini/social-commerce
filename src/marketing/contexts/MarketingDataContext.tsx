@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from "react";
 import { mockMetaAccounts, mockMetaCampaigns, mockMetaAdSets, mockMetaAds, MetaAccount, MetaCampaign, MetaAdSet, MetaAd } from "../data/mockMeta";
 import { mockLeadsAtribuidos, mockAlertasMkt, mockIntegracoes, mockMonthlyTrend, LeadAtribuido, AlertaMkt, Integracao, MonthlyKpi } from "../data/mockMarketing";
+import { mockCampanhas, mockSegmentos, Campanha, SegmentoAudiencia, StatusCampanha } from "../data/mockCampanhas";
 
 type Periodo = "7d" | "30d" | "90d" | "ytd";
 
