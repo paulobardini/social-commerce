@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Megaphone, GitBranch, BookOpen, Users2, Target, Plug, Settings, Sparkles } from "lucide-react";
+import { LayoutDashboard, Megaphone, GitBranch, BookOpen, Users2, Target, Plug, Settings, Sparkles, ArrowRightLeft } from "lucide-react";
 import { useMarketing } from "../contexts/MarketingDataContext";
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { to: "/marketing/jornadas", icon: GitBranch, label: "Jornadas" },
   { to: "/marketing/lookbooks", icon: BookOpen, label: "Lookbooks" },
   { to: "/marketing/audiencias", icon: Users2, label: "Audiências" },
+  { to: "/marketing/handoff", icon: ArrowRightLeft, label: "Handoff CRM" },
 ];
 const bottomItems = [
   { to: "/marketing/integracoes", icon: Plug, label: "Integrações" },

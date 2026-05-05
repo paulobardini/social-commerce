@@ -91,7 +91,9 @@ import AtribuicaoPage from "@/marketing/pages/AtribuicaoPage";
 import IntegracoesPage from "@/marketing/pages/IntegracoesPage";
 import CampanhasPage from "@/marketing/pages/CampanhasPage";
 import CampanhaDetalhePage from "@/marketing/pages/CampanhaDetalhePage";
-import { AudienciasPage, ConfiguracoesPage } from "@/marketing/pages/PlaceholderPages";
+import { ConfiguracoesPage } from "@/marketing/pages/PlaceholderPages";
+import { AudienciasPage } from "@/marketing/pages/AudienciasPage";
+import HandoffPage from "@/marketing/pages/HandoffPage";
 import JornadasPage from "@/marketing/pages/JornadasPage";
 import JornadaEditorPage from "@/marketing/pages/JornadaEditorPage";
 import LookbooksPage from "@/marketing/pages/LookbooksPage";
@@ -219,6 +221,7 @@ const App = () => (
                 <Route path="/marketing/lookbooks/:id" element={<MarketingDataProvider><MarketingLayout><LookbookEditorPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/publico/lookbook/:slug" element={<MarketingDataProvider><LookbookPublicoPage /></MarketingDataProvider>} />
                 <Route path="/marketing/audiencias" element={<MarketingDataProvider><MarketingLayout><AudienciasPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/handoff" element={<MarketingDataProvider><MarketingLayout><HandoffPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/integracoes" element={<MarketingDataProvider><MarketingLayout><IntegracoesPage /></MarketingLayout></MarketingDataProvider>} />
                 <Route path="/marketing/configuracoes" element={<MarketingDataProvider><MarketingLayout><ConfiguracoesPage /></MarketingLayout></MarketingDataProvider>} />
 
