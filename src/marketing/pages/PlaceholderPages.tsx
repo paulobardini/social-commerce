@@ -22,7 +22,4 @@ export function ComingSoonPage({ title, description, etapa }: Props) {
 }
 
 
-export function JornadasPage() { return <ComingSoonPage title="Jornadas automatizadas" description="Fluxos com gatilhos baseados em comportamento e atribuição Meta." etapa="Etapa 3" />; }
-export function LookbooksPage() { return <ComingSoonPage title="Lookbooks digitais" description="Catálogos enviáveis com tracking, Pixel e ROI." etapa="Etapa 3" />; }
-export function AudienciasPage() { return <ComingSoonPage title="Audiências" description="Sincronização com Meta Custom Audiences e Lookalike." etapa="Etapa 4" />; }
 export function ConfiguracoesPage() { return <ComingSoonPage title="Configurações" description="Time, UTMs padrão, regras de atribuição e domínios." etapa="Etapa 4" />; }
