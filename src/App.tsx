@@ -81,6 +81,16 @@ import StartNotFound from "@/start/pages/StartNotFound";
 import { Navigate } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 
+// Marketing module
+import { MarketingDataProvider } from "@/marketing/contexts/MarketingDataContext";
+import { MarketingLayout } from "@/marketing/components/MarketingLayout";
+import MarketingDashboard from "@/marketing/pages/MarketingDashboard";
+import MetaAdsHub from "@/marketing/pages/MetaAdsHub";
+import MetaCampaignDetail from "@/marketing/pages/MetaCampaignDetail";
+import AtribuicaoPage from "@/marketing/pages/AtribuicaoPage";
+import IntegracoesPage from "@/marketing/pages/IntegracoesPage";
+import { CampanhasPage, JornadasPage, LookbooksPage, AudienciasPage, ConfiguracoesPage } from "@/marketing/pages/PlaceholderPages";
+
 const queryClient = new QueryClient();
 
 function LayoutRoute({ children }: { children: React.ReactNode }) {
@@ -187,6 +197,20 @@ const App = () => (
 
                 {/* Catch-all específico do Start */}
                 <Route path="/start/*" element={<StartNotFound />} />
+
+                {/* Módulo Marketing */}
+                <Route path="/marketing" element={<Navigate to="/marketing/dashboard" replace />} />
+                <Route path="/marketing/dashboard" element={<MarketingDataProvider><MarketingLayout><MarketingDashboard /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/meta-ads" element={<MarketingDataProvider><MarketingLayout><MetaAdsHub /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/meta-ads/:id" element={<MarketingDataProvider><MarketingLayout><MetaCampaignDetail /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/atribuicao" element={<MarketingDataProvider><MarketingLayout><AtribuicaoPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/campanhas" element={<MarketingDataProvider><MarketingLayout><CampanhasPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/jornadas" element={<MarketingDataProvider><MarketingLayout><JornadasPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/lookbooks" element={<MarketingDataProvider><MarketingLayout><LookbooksPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/audiencias" element={<MarketingDataProvider><MarketingLayout><AudienciasPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/integracoes" element={<MarketingDataProvider><MarketingLayout><IntegracoesPage /></MarketingLayout></MarketingDataProvider>} />
+                <Route path="/marketing/configuracoes" element={<MarketingDataProvider><MarketingLayout><ConfiguracoesPage /></MarketingLayout></MarketingDataProvider>} />
+
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
