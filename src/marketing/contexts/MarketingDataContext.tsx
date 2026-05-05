@@ -15,6 +15,9 @@ interface Ctx {
   alertas: AlertaMkt[];
   integracoes: Integracao[];
   trend: MonthlyKpi[];
+  // campanhas próprias
+  proprias: Campanha[];
+  segmentos: SegmentoAudiencia[];
   // filtros globais
   periodo: Periodo;
   setPeriodo: (p: Periodo) => void;
@@ -25,6 +28,11 @@ interface Ctx {
   conectarIntegracao: (id: string, conta: string) => void;
   desconectarIntegracao: (id: string) => void;
   syncIntegracao: (id: string) => void;
+  // mutations de campanhas próprias
+  criarCampanha: (c: Omit<Campanha, "id" | "criadaEm">) => string;
+  atualizarStatusCampanha: (id: string, status: StatusCampanha) => void;
+  duplicarCampanha: (id: string) => void;
+  excluirCampanha: (id: string) => void;
   // helpers
   filteredCampanhas: MetaCampaign[];
 }
