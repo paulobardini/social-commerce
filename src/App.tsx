@@ -86,6 +86,15 @@ import NotFound from "./pages/NotFound";
 
 // Marketing module
 import { MarketingProviders } from "@/marketing/contexts/MarketingProviders";
+import { RecomendacoesProvider } from "@/contexts/RecomendacoesContext";
+import VisaoGeralIM from "./pages/inteligencia/VisaoGeral";
+import RadarProdutosIM from "./pages/inteligencia/RadarProdutos";
+import ProdutoDetalheIM from "./pages/inteligencia/ProdutoDetalhe";
+import RecomendacoesIM from "./pages/inteligencia/Recomendacoes";
+import ComparativosIM from "./pages/inteligencia/Comparativos";
+import FornecedoresIM from "./pages/inteligencia/Fornecedores";
+import ColecoesIM from "./pages/inteligencia/Colecoes";
+import RelatoriosIM from "./pages/inteligencia/Relatorios";
 import CentralVendasPage from "@/marketing/pages/CentralVendasPage";
 import { MarketingLayout } from "@/marketing/components/MarketingLayout";
 import MarketingDashboard from "@/marketing/pages/MarketingDashboard";
@@ -127,6 +136,7 @@ const App = () => (
             <TarefasProvider>
             <RemindersProvider>
             <PedidosProvider>
+            <RecomendacoesProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -241,6 +251,7 @@ const App = () => (
               </StartDataProvider>
               </StartAuthProvider>
             </BrowserRouter>
+            </RecomendacoesProvider>
             </PedidosProvider>
             </RemindersProvider>
             </TarefasProvider>
