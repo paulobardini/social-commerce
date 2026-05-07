@@ -168,7 +168,7 @@ export function InsightCard({ rec }: { rec: Recomendacao }) {
         </div>
       </div>
       <CriarTarefaModal open={tarefaOpen} onOpenChange={setTarefaOpen} produto={rec.produto} />
-      <SimularPrecoModal open={precoOpen} onOpenChange={setPrecoOpen} produto={rec.produto} />
+      <SimularPrecoModal open={precoOpen} onOpenChange={setPrecoOpen} />
       <CriarCampanhaModal open={campanhaOpen} onOpenChange={setCampanhaOpen} produto={rec.produto} />
       <RecompraModal open={recompraOpen} onOpenChange={setRecompraOpen} produto={rec.produto} estoque={0} />
     </>
