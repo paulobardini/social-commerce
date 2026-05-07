@@ -61,11 +61,12 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
           const Icon = item.icon;
           const active = isActive(item.path);
           const highlight = (item as any).highlight;
+          const indent = (item as any).indent;
           return (
             <button
               key={item.label}
               onClick={() => navigate(item.path)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+              className={`flex items-center gap-3 ${indent ? "pl-7" : "px-3"} ${!indent ? "" : "pr-3"} py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
                 active
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : highlight
@@ -73,8 +74,8 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
                   : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
               }`}
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{item.label}</span>
+              <Icon className={`${indent ? "h-3.5 w-3.5" : "h-4 w-4"} shrink-0`} />
+              <span className={`truncate ${indent ? "text-[12px]" : ""}`}>{item.label}</span>
             </button>
           );
         })}
