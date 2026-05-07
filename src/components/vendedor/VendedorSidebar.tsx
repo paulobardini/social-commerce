@@ -33,7 +33,8 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
     if (path === "/vendedor") return location.pathname === "/vendedor" || location.pathname.startsWith("/vendedor/novo-orcamento") || location.pathname.startsWith("/vendedor/orcamento") || location.pathname === "/vendedor/grade" || location.pathname === "/vendedor/orcamento-viewer";
     if (path === "/vendedor/oportunidades") return location.pathname.startsWith("/vendedor/oportunidades");
     if (path === "/vendedor/clientes") return location.pathname === "/vendedor/clientes" || location.pathname.startsWith("/vendedor/clientes/");
-    if (path === "/vendedor/360") return location.pathname.startsWith("/vendedor/360");
+    if (path === "/vendedor/360") return location.pathname === "/vendedor/360" || (location.pathname.startsWith("/vendedor/360/") && !location.pathname.startsWith("/vendedor/360/pedidos"));
+    if (path === "/vendedor/360/pedidos") return location.pathname.startsWith("/vendedor/360/pedidos");
     if (path === "/vendedor/carteira") return location.pathname === "/vendedor/carteira";
     if (path === "/vendedor/representantes") return location.pathname.startsWith("/vendedor/representantes");
     if (path === "/vendedor/whatsapp") return location.pathname.startsWith("/vendedor/whatsapp");
