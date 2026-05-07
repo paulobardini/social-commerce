@@ -7,6 +7,7 @@ const menuItems = [
   { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
   { icon: Users, label: "Clientes", path: "/vendedor/clientes" },
   { icon: Target, label: "Nextil 360", path: "/vendedor/360", highlight: true },
+  { icon: ShoppingCart, label: "Pedidos", path: "/vendedor/360/pedidos", indent: true },
   { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
   { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
   { icon: MessageCircle, label: "WhatsApp", path: "/vendedor/whatsapp" },
