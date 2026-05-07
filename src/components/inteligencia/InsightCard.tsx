@@ -3,9 +3,12 @@ import { Recomendacao } from "@/data/mockInteligencia";
 import { useRecomendacoes } from "@/contexts/RecomendacoesContext";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, RotateCcw, UserPlus, Eye, ListPlus, Database } from "lucide-react";
+import { CheckCircle2, XCircle, RotateCcw, UserPlus, Eye, ListPlus, Database, DollarSign, Megaphone, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CriarTarefaModal } from "./modals/CriarTarefaModal";
+import { SimularPrecoModal } from "./modals/SimularPrecoModal";
+import { CriarCampanhaModal } from "./modals/CriarCampanhaModal";
+import { RecompraModal } from "./modals/RecompraModal";
 
 const tipoLabel: Record<string, string> = {
   recompra: "Recompra",
