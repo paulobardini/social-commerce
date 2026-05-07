@@ -241,6 +241,7 @@ const App = () => (
               </StartDataProvider>
               </StartAuthProvider>
             </BrowserRouter>
+            </PedidosProvider>
             </RemindersProvider>
             </TarefasProvider>
             </MessageTemplatesProvider>
