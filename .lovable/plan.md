@@ -1,105 +1,144 @@
-## Hub de Pedidos no Nextil 360
+# Plano Final: Módulo "Nextil Inteligência de Mercado"
 
-Criar uma nova área `/vendedor/360/pedidos` (e tornar `/vendedor/360` um hub navegável) que consolida **todos os pedidos** da carteira do vendedor — vindos de orçamentos aprovados, do marketplace direto e de lançamentos manuais — com visualização dual (lista/kanban), ações de status, edição de grade e ações financeiras (nota, boleto, link de pagamento).
+Camada estratégica de decisão comercial com 8 telas clicáveis. Foco: responder "o que exige atenção agora?", não apenas exibir relatórios.
 
-### 1. Navegação
+## 1. Navegação e rotas
 
-- **Sidebar do Vendedor** (`VendedorSidebar.tsx`): item "Nextil 360" hoje aponta para `/vendedor/360` mas não há rota raiz. Criar rota `/vendedor/360` com um **hub** que lista os módulos do 360 (Cliente 360, Pedidos, futuros). 
-- Adicionar sub-item visual "Pedidos" abaixo de Nextil 360 (pequena indentação) apontando para `/vendedor/360/pedidos`.
-- Atualizar o `isActive` para o caso `/vendedor/360/pedidos`.
+`src/components/AppSidebar.tsx` — nova seção **"Inteligência"** (collapsible) com ícone `Radar` ou `Brain`:
+- Inteligência de Mercado (`/inteligencia-mercado`)
+- Radar de Produtos (`/inteligencia-mercado/radar-produtos`)
+- Recomendações (`/inteligencia-mercado/recomendacoes`)
+- Comparativos (`/inteligencia-mercado/comparativos`)
+- Fornecedores (`/inteligencia-mercado/fornecedores`)
+- Coleções (`/inteligencia-mercado/colecoes`)
+- Relatórios (`/inteligencia-mercado/relatorios`)
 
-### 2. Modelo de dados
+`src/App.tsx` — registrar 8 rotas dentro de `LayoutRoute`, incluindo `/inteligencia-mercado/produto/:sku`.
 
-Estender `src/data/mockCRM360.ts`:
+## 2. Estrutura de arquivos
 
-- Adicionar a `Pedido`:
-  - `origem: "orcamento" | "marketplace" | "manual"`
-  - `orcamentoId?: string` (quando origem = orcamento)
-  - `marca: string`, `pecas: number`
-  - `previsaoEntrega?: string`
-  - `pagamento: { status: "pendente" | "pago" | "parcial" | "atrasado"; metodo?: string; linkBoleto?: string; linkPagamento?: string; notaFiscal?: string }`
-  - `itens: Array<{ produtoId: string; nome: string; sku: string; cor: string; tamanho: string; qtd: number; precoUnit: number }>` (para edição de grade)
-  - `historico: Array<{ status: PedidoStatus; data: string; autor: string }>`
-- Status novos: incluir `"faturado"` e `"em_transporte"` entre `confirmado` e `entregue`. Status final: `confirmado → em_producao → faturado → em_transporte → entregue` + `cancelado`.
-- Mock: gerar ~25 pedidos cobrindo todas as origens, status e clientes da carteira (`MOCK_CLIENTES_360`). Manter coerência com `pedidosRealizados` por cliente.
+```text
+src/
+├── pages/inteligencia/
+│   ├── VisaoGeral.tsx
+│   ├── RadarProdutos.tsx
+│   ├── ProdutoDetalhe.tsx
+│   ├── Recomendacoes.tsx
+│   ├── Comparativos.tsx
+│   ├── Fornecedores.tsx
+│   ├── Colecoes.tsx
+│   └── Relatorios.tsx
+├── components/inteligencia/
+│   ├── IMHeader.tsx          (título, subtítulo, microcopy de fonte de dados)
+│   ├── IMFilters.tsx         (filtros globais)
+│   ├── KpiCard.tsx
+│   ├── DecisionCard.tsx      (card grande do Painel de Decisão)
+│   ├── InsightCard.tsx       (estrutura completa obrigatória)
+│   ├── StatusBadge.tsx       (13 status inteligentes)
+│   ├── ConfidenceBadge.tsx   (Alta/Média/Baixa)
+│   ├── ScoreBreakdown.tsx    (6 critérios em barras)
+│   ├── ColumnsCustomizer.tsx (modal "Personalizar colunas")
+│   ├── CriarTarefaModal.tsx
+│   ├── RecompraModal.tsx
+│   ├── SimularPrecoModal.tsx
+│   ├── CriarCampanhaModal.tsx
+│   ├── ExportarAnaliseModal.tsx
+│   └── RelatorioPreviewModal.tsx
+├── contexts/
+│   └── RecomendacoesContext.tsx  (estado aceita/ignorada/pendente + localStorage)
+└── data/
+    └── mockInteligencia.ts
+```
 
-### 3. Página `Nextil360HubPage` (`/vendedor/360`)
+## 3. Microcopy de cabeçalho (em todas as telas do módulo)
 
-`src/pages/vendedor/Nextil360Hub.tsx`:
+`IMHeader` exibe abaixo do título uma linha discreta:
 
-- Header "Nextil 360 — Visão consolidada da operação".
-- Grid de 2-3 cards-módulo:
-  - **Pedidos** (KPI: total ativo, total em produção, faturamento mês) → `/vendedor/360/pedidos`
-  - **Cliente 360** (KPI: nº de clientes na carteira) → atalho que sugere selecionar cliente
-  - Espaço reservado para futuros módulos
-- Estilo: padrão dashboard vendedor (`bg-card`, `border`, ícones lucide).
+> "Análises baseadas nos dados internos de compra, venda, estoque, pedidos, reservas e comportamento comercial da operação."
 
-### 4. Página `PedidosHubPage` (`/vendedor/360/pedidos`)
+## 4. Tela Visão Geral — hierarquia visual
 
-`src/pages/vendedor/PedidosHub.tsx`:
+Ordem rígida, com peso visual decrescente para gráficos:
 
-**Topo**
-- Breadcrumb: Nextil 360 / Pedidos
-- 4 KPIs: Em produção, Faturados, Em transporte, Entregues no mês
-- Toggle de visualização: **Lista** | **Kanban** (default Lista)
+1. **Filtros globais** (barra horizontal sticky abaixo do header): Período, Coleção, Marca, Categoria, Canal, Região, Fornecedor.
+2. **KPIs executivos** — 8 `KpiCard` em grid `grid-cols-2 md:grid-cols-4 xl:grid-cols-8`, altura compacta.
+3. **Painel de Decisão** — destaque máximo: 4 `DecisionCard` grandes (`grid-cols-1 md:grid-cols-2 xl:grid-cols-4`), com sombra acentuada, ícone colorido, indicador grande, mensagem e CTA navegável (Recompra → `/recomendacoes?tipo=recompra`; Ruptura → `/recomendacoes?tipo=ruptura`; Estoque parado → `/radar-produtos?status=parado`; Margem → `/recomendacoes?tipo=margem`).
+4. **Insights Estratégicos Prioritários** — 4 `InsightCard` em destaque (uso de `border-l-4` colorida por prioridade).
+5. **Análise Visual** (recolhível ou em accordion "Ver análise visual"): linha receita×margem, barras estoque parado, donut canal, barras horizontais sell-through, colunas margem.
+6. **Rankings Estratégicos** — 2 colunas: Top 10 mais rentáveis | Top 10 maior risco comercial.
 
-**Filtros (barra)**
-- Busca (cliente / nº pedido)
-- Origem (todos | Orçamento | Marketplace | Manual) — chips
-- Status (multi-select)
-- Período (este mês / últimos 30d / customizado)
-- Marca, Cliente
+Decisão e Insights ocupam aproximadamente 60% da dobra inicial; gráficos ficam abaixo.
 
-**Visão Lista (tabela)**
-Colunas: Nº | Cliente | Marca | Origem (badge colorido) | Peças | Valor | Status (badge) | Pagamento | Previsão entrega | Ações (⋯)
-- Click na linha → abre `PedidoDetalheModal`
+## 5. InsightCard — estrutura obrigatória
 
-**Visão Kanban**
-- 5 colunas: Confirmado · Em produção · Faturado · Em transporte · Entregue
-- Cards arrastáveis (drag & drop simples — `@dnd-kit` já presumido ausente; usar HTML5 DnD nativo ou apenas botões de avanço de status para MVP)
-- Cada card mostra: cliente, marca, valor, peças, badge origem, badge pagamento
+Cada card renderiza, na ordem:
 
-### 5. `PedidoDetalheModal`
+1. **Tipo de insight** (chip): Recompra / Liquidação / Revisão de preço / Atenção à margem / Renegociação / Campanha.
+2. **Produto ou grupo analisado** (título + SKU/marca).
+3. **Prioridade** (badge Alta/Média/Baixa, cor semântica).
+4. **Motivo** (frase descritiva orientada a dados).
+5. **Evidências numéricas** (lista de 2–4 métricas: sell-through, dias em estoque, margem, estoque atual).
+6. **Impacto estimado** (linha destacada com valor em R$ ou %).
+7. **Ação sugerida** (frase imperativa).
+8. **Confiança da recomendação** — `ConfidenceBadge` (Alta/Média/Baixa) com tooltip explicando base.
+9. **Base analisada** — texto secundário, ex.: "820 unidades compradas, 672 vendidas, 21 dias de histórico".
+10. **Botões**: Ver detalhe, Criar tarefa, Aceitar, Ignorar, Atribuir responsável.
+11. **Estado visual**: pendente (default), aceita (`border-emerald-500`, badge "Aceita"), ignorada (`opacity-60`, badge "Ignorada", ação "Reabrir").
 
-`src/components/vendedor/PedidoDetalheModal.tsx` — modal técnico (max-h 90vh, flex-col, header/footer shrink-0, scroll central, z-[200]).
+Regra: nenhum texto genérico; o motivo sempre cita o dado que justifica.
 
-**Header**: nº pedido + cliente + badge origem + badge status + botão "Avançar status →"
+## 6. Persistência de estado das recomendações
 
-**Tabs internas**:
-1. **Resumo**: dados gerais, observações, totais, previsão entrega, link orçamento (se origem = orcamento)
-2. **Grade / Itens**: tabela editável (qtd, preço unitário, remover linha, adicionar item). Salvar recalcula total. Bloqueado quando status ≥ faturado.
-3. **Pagamento**: status, método, gerar boleto (mock toast), gerar link de pagamento (mock toast com link copiável), anexar nota fiscal (mock).
-4. **Histórico**: timeline de mudanças de status com data/autor.
+`RecomendacoesContext` mantém `Record<recId, { status: 'pendente'|'aceita'|'ignorada', responsavel?, aceitaEm? }>` em `localStorage` (`im:recomendacoes:v1`). Ações `aceitar(id)`, `ignorar(id)`, `reabrir(id)`, `atribuir(id, user)`. Filtros de Recomendações respeitam status.
 
-**Footer**: Cancelar pedido (destructive) | Salvar alterações.
+## 7. Radar de Produtos
 
-### 6. Integração com Cliente 360
+- Busca grande no topo + filtros avançados em painel collapsible (não exibidos por default).
+- Botões: Aplicar, Limpar, Salvar visão, Exportar, Comparar selecionados, **Personalizar colunas** (abre `ColumnsCustomizer` — checklist simulado das 20 colunas, persistido em `localStorage`).
+- Tabela densa: `text-xs`, `py-2`, zebra sutil, **scroll horizontal** (`overflow-x-auto`) com **primeira coluna (Produto+miniatura) sticky** (`sticky left-0 bg-card z-10 shadow-[2px_0_4px_rgba(0,0,0,0.04)]`).
+- Status e Ação como badges compactos. Linha clicável → Detalhe.
+- Suporta querystring `?status=parado|ruptura|...`.
 
-Na `Cliente360Page`, na aba Pedidos do cliente, adicionar link "Ver no Hub de Pedidos →" que leva ao hub filtrado por `?cliente=<id>`. Cards de pedido no 360 também abrem o `PedidoDetalheModal`.
+## 8. Detalhe do Produto — Score de Performance composto
 
-### 7. Detalhes técnicos
+Card "Score de Performance: 91/100" com componente `ScoreBreakdown` exibindo 6 critérios em barras horizontais:
 
-- **Estado**: criar `PedidosContext` (`src/contexts/PedidosContext.tsx`) com `pedidos`, `updatePedidoStatus`, `updatePedidoItens`, `cancelarPedido`, `gerarBoleto/gerarLinkPagamento` (mock). Persistir em `localStorage` (`nextil_vendedor_pedidos`).
-- Provider montado no `App.tsx` ao redor das rotas `/vendedor/*`.
-- Cores de badge:
-  - Origem: orçamento `bg-blue-500/15 text-blue-600`, marketplace `bg-purple-500/15 text-purple-600`, manual `bg-amber-500/15 text-amber-600`.
-  - Status: confirmado azul, em_producao âmbar, faturado roxo, em_transporte ciano, entregue verde, cancelado vermelho.
-  - Pagamento: pago verde, pendente cinza, parcial âmbar, atrasado vermelho.
-- Toasts via `sonner` para todas as ações (status alterado, boleto gerado, link copiado).
-- Mobile: lista vira cards stackados; kanban vira tabs por status.
+```text
+Giro            ████████░░ 88
+Margem          █████████░ 92
+Sell-through    █████████░ 90
+Estoque         ███████░░░ 75
+Recorrência     ████████░░ 84
+Risco (inv.)    █████████░ 95
+```
 
-### 8. Arquivos
+Cada barra tem cor por faixa (verde ≥80, âmbar 60–79, rose <60) e tooltip com leitura curta. Score global = média ponderada visível em "Como calculamos" (popover).
 
-**Criar**
-- `src/pages/vendedor/Nextil360Hub.tsx`
-- `src/pages/vendedor/PedidosHub.tsx`
-- `src/components/vendedor/PedidoDetalheModal.tsx`
-- `src/contexts/PedidosContext.tsx`
+Restante da tela conforme briefing: 12 KPIs, bloco Markup, 8 visualizações, Histórico de Compras/Vendas, 4 InsightCards específicos.
 
-**Editar**
-- `src/data/mockCRM360.ts` (interface `Pedido` + mock estendido)
-- `src/components/vendedor/VendedorSidebar.tsx` (sub-item Pedidos + isActive)
-- `src/App.tsx` (rotas `/vendedor/360` e `/vendedor/360/pedidos`, provider)
-- `src/pages/vendedor/Cliente360Page.tsx` (link para hub + abrir modal)
+## 9. Telas restantes
 
-Posso seguir com a implementação?
+- **Recomendações**: filtros + 7 abas + lista de InsightCards (estrutura completa). Filtro extra por Status (Pendente/Aceita/Ignorada) e por Confiança.
+- **Comparativos**: seletor 6 modos + layout 3 colunas (A | Δ% | B) + conclusão automática textual.
+- **Fornecedores**: 6 KPIs + tabela 12 colunas + 4 gráficos.
+- **Coleções**: 8 cards + tabela 13 colunas + áreas de cores/tamanhos/categorias/recomendação para próxima coleção.
+- **Relatórios**: grid 8 cards → `RelatorioPreviewModal` com resumo executivo, KPIs, insights, tabela e próximas ações.
+
+## 10. Modais (técnicos, `max-h-[90vh]` flex-col)
+
+Criar tarefa, Marcar para recompra, Simular preço, Criar campanha, Exportar análise, Preview de relatório. Todos os botões relevantes abrem modal ou navegam — nada inerte. Ações disparam `toast` e atualizam contexto quando aplicável.
+
+## 11. Dados mock (`mockInteligencia.ts`)
+
+8 produtos completos do briefing, 8 fornecedores, 4 coleções, 5+ recomendações tipadas (cada uma com `confianca`, `baseAnalisada`, `evidencias[]`, `impactoEstimado`, `acaoSugerida`), séries temporais (receita+margem mensal, vendas semanais, estoque/tempo, vendas por canal/região/grade/cor), top clientes, top vendedores. Helpers: `computeStatus`, `computeScoreBreakdown`, `formatBRL`, `formatPct`.
+
+## 12. Padrão visual
+
+- Sidebar dark navy existente; cards `bg-card border-border rounded-xl shadow-sm hover:shadow-md transition-all`.
+- Poppins, hierarquia: títulos `text-2xl font-bold`, KPI `text-2xl tabular-nums`, auxiliar `text-xs text-muted-foreground uppercase tracking-wide`.
+- Cores semânticas: emerald (positivo), amber (atenção), rose (crítico), persian-blue/sky-blue (neutro/info).
+- Microinterações: `transition-all`, hover sutil em cards e linhas.
+
+## 13. Sem backend
+
+Tudo client-side. Persistência via `localStorage` para: status de recomendações, colunas personalizadas do Radar, visões salvas.

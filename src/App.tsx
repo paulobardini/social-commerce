@@ -86,6 +86,15 @@ import NotFound from "./pages/NotFound";
 
 // Marketing module
 import { MarketingProviders } from "@/marketing/contexts/MarketingProviders";
+import { RecomendacoesProvider } from "@/contexts/RecomendacoesContext";
+import VisaoGeralIM from "./pages/inteligencia/VisaoGeral";
+import RadarProdutosIM from "./pages/inteligencia/RadarProdutos";
+import ProdutoDetalheIM from "./pages/inteligencia/ProdutoDetalhe";
+import RecomendacoesIM from "./pages/inteligencia/Recomendacoes";
+import ComparativosIM from "./pages/inteligencia/Comparativos";
+import FornecedoresIM from "./pages/inteligencia/Fornecedores";
+import ColecoesIM from "./pages/inteligencia/Colecoes";
+import RelatoriosIM from "./pages/inteligencia/Relatorios";
 import CentralVendasPage from "@/marketing/pages/CentralVendasPage";
 import { MarketingLayout } from "@/marketing/components/MarketingLayout";
 import MarketingDashboard from "@/marketing/pages/MarketingDashboard";
@@ -127,6 +136,7 @@ const App = () => (
             <TarefasProvider>
             <RemindersProvider>
             <PedidosProvider>
+            <RecomendacoesProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -185,6 +195,16 @@ const App = () => (
                 <Route path="/vendedor/insights" element={<LayoutRoute><InsightsPage /></LayoutRoute>} />
                 <Route path="/vendedor/visoes-salvas" element={<LayoutRoute><VisoesSalvasPage /></LayoutRoute>} />
 
+                {/* Nextil Inteligência de Mercado */}
+                <Route path="/inteligencia-mercado" element={<LayoutRoute><VisaoGeralIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/radar-produtos" element={<LayoutRoute><RadarProdutosIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/produto/:sku" element={<LayoutRoute><ProdutoDetalheIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/recomendacoes" element={<LayoutRoute><RecomendacoesIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/comparativos" element={<LayoutRoute><ComparativosIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/fornecedores" element={<LayoutRoute><FornecedoresIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/colecoes" element={<LayoutRoute><ColecoesIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/relatorios" element={<LayoutRoute><RelatoriosIM /></LayoutRoute>} />
+
                 {/* Nextil Start - Vitrine pública (não autenticada) */}
                 <Route path="/vitrine/:slug" element={<StartVitrine />} />
                 <Route path="/vitrine/:slug/produto/:id" element={<StartVitrineProduto />} />
@@ -241,6 +261,7 @@ const App = () => (
               </StartDataProvider>
               </StartAuthProvider>
             </BrowserRouter>
+            </RecomendacoesProvider>
             </PedidosProvider>
             </RemindersProvider>
             </TarefasProvider>

@@ -3,7 +3,7 @@ import {
   LayoutDashboard, BarChart3, Kanban, Users, Target, Briefcase,
   UserCog, MessageCircle, ClipboardList, CheckSquare, Calendar,
   Settings, Lightbulb, Tag, ChevronLeft, ChevronRight,
-  FileText, ChevronDown, Sparkles, ShoppingCart,
+  FileText, ChevronDown, Sparkles, ShoppingCart, Radar, Brain, GitCompare, Truck, Layers,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -57,6 +57,19 @@ const sections: MenuSection[] = [
       { icon: FileText, label: "Relatórios", path: "/vendedor/relatorios" },
       { icon: Lightbulb, label: "Insights", path: "/vendedor/insights" },
       { icon: Tag, label: "Segmentações", path: "/vendedor/segmentacoes" },
+    ],
+  },
+  {
+    title: "Inteligência",
+    collapsible: true,
+    items: [
+      { icon: Brain, label: "Inteligência de Mercado", path: "/inteligencia-mercado", highlight: true },
+      { icon: Radar, label: "Radar de Produtos", path: "/inteligencia-mercado/radar-produtos" },
+      { icon: Lightbulb, label: "Recomendações", path: "/inteligencia-mercado/recomendacoes" },
+      { icon: GitCompare, label: "Comparativos", path: "/inteligencia-mercado/comparativos" },
+      { icon: Truck, label: "Fornecedores", path: "/inteligencia-mercado/fornecedores" },
+      { icon: Layers, label: "Coleções", path: "/inteligencia-mercado/colecoes" },
+      { icon: FileText, label: "Relatórios IM", path: "/inteligencia-mercado/relatorios" },
     ],
   },
   {
