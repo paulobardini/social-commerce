@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { ShoppingCart, Users, ArrowRight, Sparkles } from "lucide-react";
+import { ShoppingCart, Users, ArrowRight, Sparkles, LayoutDashboard, BarChart3 } from "lucide-react";
 import { mockClientes360 } from "@/data/mockCRM360";
+import { dashboardKPIs } from "@/data/mockCRM";
+import { dashboardGerencialKPIs } from "@/data/mockAnalytics";
 import { usePedidos } from "@/contexts/PedidosContext";
 
 export default function Nextil360Hub() {
@@ -23,35 +25,67 @@ export default function Nextil360Hub() {
         </div>
         <h1 className="text-2xl font-semibold">Visão consolidada da operação</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Hub central com pedidos, relacionamento e inteligência da carteira.
+          Hub central com painéis, pedidos, relacionamento e inteligência da carteira.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ModuleCard
-          icon={<ShoppingCart className="h-5 w-5" />}
-          title="Pedidos"
-          subtitle="Acompanhe todos os pedidos por status, origem e cliente"
-          onClick={() => navigate("/vendedor/360/pedidos")}
-          stats={[
-            { label: "Ativos", value: ativos.toString() },
-            { label: "Em produção", value: emProducao.toString() },
-            { label: "Faturamento (mês)", value: `R$ ${(faturamentoMes / 1000).toFixed(1)}k` },
-          ]}
-        />
+      <section className="space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Painéis</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ModuleCard
+            icon={<LayoutDashboard className="h-5 w-5" />}
+            title="Painel do Vendedor"
+            subtitle="Sua operação diária: oportunidades quentes, tarefas e agenda"
+            onClick={() => navigate("/vendedor/dashboard")}
+            stats={[
+              { label: "Oport. abertas", value: String(dashboardKPIs.oportunidadesAbertas) },
+              { label: "Tarefas pend.", value: String(dashboardKPIs.tarefasPendentes) },
+              { label: "Pipeline", value: `R$ ${(dashboardKPIs.valorPipeline / 1000).toFixed(0)}k` },
+            ]}
+          />
 
-        <ModuleCard
-          icon={<Users className="h-5 w-5" />}
-          title="Cliente 360"
-          subtitle="Ficha completa de cada cliente da carteira"
-          onClick={() => navigate("/vendedor/clientes")}
-          stats={[
-            { label: "Clientes", value: mockClientes360.length.toString() },
-            { label: "Ativos", value: mockClientes360.filter((c) => c.status === "ativo").length.toString() },
-            { label: "Quentes", value: mockClientes360.filter((c) => c.temperaturaComercial === "quente").length.toString() },
-          ]}
-        />
-      </div>
+          <ModuleCard
+            icon={<BarChart3 className="h-5 w-5" />}
+            title="Painel da Gestão"
+            subtitle="Visão gerencial: funil, performance da equipe e metas"
+            onClick={() => navigate("/vendedor/dashboard-gerencial")}
+            stats={[
+              { label: "Conversão", value: `${dashboardGerencialKPIs.taxaConversao}%` },
+              { label: "Ticket médio", value: `R$ ${(dashboardGerencialKPIs.ticketMedio / 1000).toFixed(1)}k` },
+              { label: "Faturamento", value: `R$ ${(dashboardGerencialKPIs.faturamentoPeriodo / 1000).toFixed(0)}k` },
+            ]}
+          />
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Operação</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ModuleCard
+            icon={<ShoppingCart className="h-5 w-5" />}
+            title="Pedidos"
+            subtitle="Acompanhe todos os pedidos por status, origem e cliente"
+            onClick={() => navigate("/vendedor/360/pedidos")}
+            stats={[
+              { label: "Ativos", value: ativos.toString() },
+              { label: "Em produção", value: emProducao.toString() },
+              { label: "Faturamento (mês)", value: `R$ ${(faturamentoMes / 1000).toFixed(1)}k` },
+            ]}
+          />
+
+          <ModuleCard
+            icon={<Users className="h-5 w-5" />}
+            title="Cliente 360"
+            subtitle="Ficha completa de cada cliente da carteira"
+            onClick={() => navigate("/vendedor/clientes")}
+            stats={[
+              { label: "Clientes", value: mockClientes360.length.toString() },
+              { label: "Ativos", value: mockClientes360.filter((c) => c.status === "ativo").length.toString() },
+              { label: "Quentes", value: mockClientes360.filter((c) => c.temperaturaComercial === "quente").length.toString() },
+            ]}
+          />
+        </div>
+      </section>
     </div>
   );
 }
