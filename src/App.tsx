@@ -126,6 +126,7 @@ const App = () => (
             <MessageTemplatesProvider>
             <TarefasProvider>
             <RemindersProvider>
+            <PedidosProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
