@@ -46,6 +46,9 @@ export function InsightCard({ rec }: { rec: Recomendacao }) {
   const navigate = useNavigate();
   const { getStatus, aceitar, ignorar, reabrir, atribuir } = useRecomendacoes();
   const [tarefaOpen, setTarefaOpen] = useState(false);
+  const [precoOpen, setPrecoOpen] = useState(false);
+  const [campanhaOpen, setCampanhaOpen] = useState(false);
+  const [recompraOpen, setRecompraOpen] = useState(false);
   const status = getStatus(rec.id);
 
   const stateClasses =
@@ -123,6 +126,21 @@ export function InsightCard({ rec }: { rec: Recomendacao }) {
               <Eye className="h-3.5 w-3.5 mr-1" /> Ver detalhe
             </Button>
           )}
+          {(rec.tipo === "recompra" || rec.tipo === "ruptura") && (
+            <Button size="sm" variant="outline" onClick={() => setRecompraOpen(true)}>
+              <ShoppingCart className="h-3.5 w-3.5 mr-1" /> Sugerir recompra
+            </Button>
+          )}
+          {(rec.tipo === "revisar-preco" || rec.tipo === "atencao-margem") && (
+            <Button size="sm" variant="outline" onClick={() => setPrecoOpen(true)}>
+              <DollarSign className="h-3.5 w-3.5 mr-1" /> Simular preço
+            </Button>
+          )}
+          {(rec.tipo === "liquidar" || rec.tipo === "campanha") && (
+            <Button size="sm" variant="outline" onClick={() => setCampanhaOpen(true)}>
+              <Megaphone className="h-3.5 w-3.5 mr-1" /> Criar campanha
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => setTarefaOpen(true)}>
             <ListPlus className="h-3.5 w-3.5 mr-1" /> Criar tarefa
           </Button>
@@ -150,6 +168,9 @@ export function InsightCard({ rec }: { rec: Recomendacao }) {
         </div>
       </div>
       <CriarTarefaModal open={tarefaOpen} onOpenChange={setTarefaOpen} produto={rec.produto} />
+      <SimularPrecoModal open={precoOpen} onOpenChange={setPrecoOpen} produto={rec.produto} />
+      <CriarCampanhaModal open={campanhaOpen} onOpenChange={setCampanhaOpen} produto={rec.produto} />
+      <RecompraModal open={recompraOpen} onOpenChange={setRecompraOpen} produto={rec.produto} estoque={0} />
     </>
   );
 }
