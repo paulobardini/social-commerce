@@ -2,11 +2,11 @@ import { LayoutDashboard, Kanban, ClipboardList, Users, MessageCircle, CheckSqua
 import { useLocation, useNavigate } from "react-router-dom";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/vendedor/dashboard" },
-  { icon: BarChart3, label: "Dashboard Gerencial", path: "/vendedor/dashboard-gerencial" },
   { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
   { icon: Users, label: "Clientes", path: "/vendedor/clientes" },
   { icon: Target, label: "Nextil 360", path: "/vendedor/360", highlight: true },
+  { icon: LayoutDashboard, label: "Painel Vendedor", path: "/vendedor/dashboard", indent: true },
+  { icon: BarChart3, label: "Painel Gestão", path: "/vendedor/dashboard-gerencial", indent: true },
   { icon: ShoppingCart, label: "Pedidos", path: "/vendedor/360/pedidos", indent: true },
   { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
   { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
