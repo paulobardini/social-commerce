@@ -58,15 +58,52 @@ export interface Conversa {
   online?: boolean;
 }
 
+export type PedidoStatus = "confirmado" | "em_producao" | "faturado" | "em_transporte" | "entregue" | "cancelado" | "enviado";
+export type PedidoOrigem = "orcamento" | "marketplace" | "manual";
+export type PagamentoStatus = "pendente" | "pago" | "parcial" | "atrasado";
+
+export interface PedidoItem {
+  produtoId: string;
+  nome: string;
+  sku: string;
+  cor: string;
+  tamanho: string;
+  qtd: number;
+  precoUnit: number;
+}
+
+export interface PedidoPagamento {
+  status: PagamentoStatus;
+  metodo?: string;
+  linkBoleto?: string;
+  linkPagamento?: string;
+  notaFiscal?: string;
+}
+
+export interface PedidoHistorico {
+  status: PedidoStatus;
+  data: string;
+  autor: string;
+}
+
 export interface Pedido {
   id: string;
   clienteId: string;
   numero: string;
   data: string;
   valor: number;
-  status: "confirmado" | "em_producao" | "enviado" | "entregue" | "cancelado";
+  status: PedidoStatus;
   origem: string;
   observacoes: string;
+  // novos campos (opcionais para retrocompat)
+  origemTipo?: PedidoOrigem;
+  orcamentoId?: string;
+  marca?: string;
+  pecas?: number;
+  previsaoEntrega?: string;
+  pagamento?: PedidoPagamento;
+  itens?: PedidoItem[];
+  historico?: PedidoHistorico[];
 }
 
 export interface Nota {
