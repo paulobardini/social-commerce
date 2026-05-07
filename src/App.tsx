@@ -195,6 +195,16 @@ const App = () => (
                 <Route path="/vendedor/insights" element={<LayoutRoute><InsightsPage /></LayoutRoute>} />
                 <Route path="/vendedor/visoes-salvas" element={<LayoutRoute><VisoesSalvasPage /></LayoutRoute>} />
 
+                {/* Nextil Inteligência de Mercado */}
+                <Route path="/inteligencia-mercado" element={<LayoutRoute><VisaoGeralIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/radar-produtos" element={<LayoutRoute><RadarProdutosIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/produto/:sku" element={<LayoutRoute><ProdutoDetalheIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/recomendacoes" element={<LayoutRoute><RecomendacoesIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/comparativos" element={<LayoutRoute><ComparativosIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/fornecedores" element={<LayoutRoute><FornecedoresIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/colecoes" element={<LayoutRoute><ColecoesIM /></LayoutRoute>} />
+                <Route path="/inteligencia-mercado/relatorios" element={<LayoutRoute><RelatoriosIM /></LayoutRoute>} />
+
                 {/* Nextil Start - Vitrine pública (não autenticada) */}
                 <Route path="/vitrine/:slug" element={<StartVitrine />} />
                 <Route path="/vitrine/:slug/produto/:id" element={<StartVitrineProduto />} />
