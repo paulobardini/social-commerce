@@ -94,23 +94,36 @@ export default function PedidosHub() {
   }, [pedidos]);
 
   const clienteNome = clienteFiltro ? clientesById[clienteFiltro]?.nomeFantasia : null;
+  const escopo = params.get("escopo") === "empresa" ? "empresa" : "vendedor";
 
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-[1400px] mx-auto">
       <div className="flex items-center text-xs text-muted-foreground gap-1.5">
-        <button onClick={() => navigate("/vendedor/360")} className="hover:text-foreground">Nextil 360</button>
-        <ChevronRight className="h-3 w-3" />
-        <span className="text-foreground font-medium">Pedidos</span>
+        {escopo === "empresa" ? (
+          <>
+            <button onClick={() => navigate("/vendedor/dashboard-gerencial")} className="hover:text-foreground">Gestão</button>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-foreground font-medium">Pedidos da Empresa</span>
+          </>
+        ) : (
+          <>
+            <button onClick={() => navigate("/vendedor/360")} className="hover:text-foreground">Nextil 360</button>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-foreground font-medium">Meus Pedidos</span>
+          </>
+        )}
       </div>
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2">
             <ShoppingCart className="h-6 w-6 text-[hsl(191,100%,50%)]" />
-            Pedidos
+            {escopo === "empresa" ? "Pedidos da Empresa" : "Meus Pedidos"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Todos os pedidos da carteira, vindos de orçamentos, marketplace ou lançados manualmente.
+            {escopo === "empresa"
+              ? "Visão consolidada de todos os pedidos da empresa, por vendedor, marca e origem."
+              : "Seus pedidos da carteira, vindos de orçamentos, marketplace ou lançados manualmente."}
           </p>
           {clienteFiltro && (
             <div className="mt-2 inline-flex items-center gap-2 text-xs bg-muted px-2 py-1 rounded">
