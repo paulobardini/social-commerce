@@ -38,7 +38,7 @@ const sections: MenuSection[] = [
     items: [
       { icon: LayoutDashboard, label: "Painel", path: "/vendedor/dashboard" },
       { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
-      { icon: ShoppingCart, label: "Pedidos", path: "/vendedor/360/pedidos" },
+      { icon: ShoppingCart, label: "Meus Pedidos", path: "/vendedor/360/pedidos" },
       { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
       { icon: Users, label: "Clientes", path: "/vendedor/clientes" },
       { icon: MessageCircle, label: "WhatsApp", path: "/vendedor/whatsapp" },
@@ -51,6 +51,7 @@ const sections: MenuSection[] = [
     collapsible: true,
     items: [
       { icon: BarChart3, label: "Gerencial", path: "/vendedor/dashboard-gerencial" },
+      { icon: ShoppingCart, label: "Pedidos (Empresa)", path: "/vendedor/360/pedidos?escopo=empresa" },
       { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
       { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
       { icon: FileText, label: "Relatórios", path: "/vendedor/relatorios" },
