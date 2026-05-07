@@ -58,15 +58,52 @@ export interface Conversa {
   online?: boolean;
 }
 
+export type PedidoStatus = "confirmado" | "em_producao" | "faturado" | "em_transporte" | "entregue" | "cancelado" | "enviado";
+export type PedidoOrigem = "orcamento" | "marketplace" | "manual";
+export type PagamentoStatus = "pendente" | "pago" | "parcial" | "atrasado";
+
+export interface PedidoItem {
+  produtoId: string;
+  nome: string;
+  sku: string;
+  cor: string;
+  tamanho: string;
+  qtd: number;
+  precoUnit: number;
+}
+
+export interface PedidoPagamento {
+  status: PagamentoStatus;
+  metodo?: string;
+  linkBoleto?: string;
+  linkPagamento?: string;
+  notaFiscal?: string;
+}
+
+export interface PedidoHistorico {
+  status: PedidoStatus;
+  data: string;
+  autor: string;
+}
+
 export interface Pedido {
   id: string;
   clienteId: string;
   numero: string;
   data: string;
   valor: number;
-  status: "confirmado" | "em_producao" | "enviado" | "entregue" | "cancelado";
+  status: PedidoStatus;
   origem: string;
   observacoes: string;
+  // novos campos (opcionais para retrocompat)
+  origemTipo?: PedidoOrigem;
+  orcamentoId?: string;
+  marca?: string;
+  pecas?: number;
+  previsaoEntrega?: string;
+  pagamento?: PedidoPagamento;
+  itens?: PedidoItem[];
+  historico?: PedidoHistorico[];
 }
 
 export interface Nota {
@@ -170,15 +207,42 @@ export const mockMensagens: Record<string, Mensagem[]> = {
 };
 
 // ---- PEDIDOS ----
+const _baseItens = (qtdLinhas = 3, precoBase = 89): PedidoItem[] =>
+  Array.from({ length: qtdLinhas }).map((_, i) => ({
+    produtoId: `prd-${i + 1}`,
+    nome: ["Vestido Floral Verão", "Camisa Polo Listrada", "Calça Cargo Infantil", "Body Manga Longa", "Conjunto Moletom Kids"][i % 5],
+    sku: `SKU-${1000 + i}`,
+    cor: ["Rosa", "Azul Marinho", "Bege", "Verde Militar"][i % 4],
+    tamanho: ["P", "M", "G", "GG"][i % 4],
+    qtd: 12 + i * 6,
+    precoUnit: precoBase + i * 12,
+  }));
+
+const _hist = (status: PedidoStatus, data: string): PedidoHistorico[] => {
+  const seq: PedidoStatus[] = ["confirmado", "em_producao", "faturado", "em_transporte", "entregue"];
+  const idx = seq.indexOf(status);
+  if (status === "cancelado") return [{ status: "confirmado", data, autor: "Paulo Bardini" }, { status: "cancelado", data, autor: "Paulo Bardini" }];
+  return seq.slice(0, idx + 1).map((s) => ({ status: s, data, autor: "Paulo Bardini" }));
+};
+
 export const mockPedidos: Pedido[] = [
-  { id: "ped1", clienteId: "c1", numero: "PED-2026-0087", data: "10/04/2026", valor: 8900, status: "confirmado", origem: "Oportunidade #op5", observacoes: "Pedido aprovado sem ajustes" },
-  { id: "ped2", clienteId: "c1", numero: "PED-2025-0312", data: "15/11/2025", valor: 12400, status: "entregue", origem: "Carteira ativa", observacoes: "Entrega em 2 lotes" },
-  { id: "ped3", clienteId: "c1", numero: "PED-2025-0198", data: "20/07/2025", valor: 6750, status: "entregue", origem: "Carteira ativa", observacoes: "" },
-  { id: "ped4", clienteId: "c5", numero: "PED-2026-0092", data: "10/04/2026", valor: 8900, status: "em_producao", origem: "Oportunidade #op5", observacoes: "Aprovado" },
-  { id: "ped5", clienteId: "c3", numero: "PED-2025-0255", data: "10/09/2025", valor: 9300, status: "entregue", origem: "Carteira ativa", observacoes: "" },
-  { id: "ped6", clienteId: "c7", numero: "PED-2025-0301", data: "05/11/2025", valor: 4100, status: "entregue", origem: "Carteira ativa", observacoes: "" },
-  { id: "ped7", clienteId: "c4", numero: "PED-2025-0320", data: "01/12/2025", valor: 18500, status: "entregue", origem: "Feira comercial", observacoes: "Primeiro pedido fitness" },
-  { id: "ped8", clienteId: "c11", numero: "PED-2025-0340", data: "20/12/2025", valor: 7200, status: "entregue", origem: "Carteira ativa", observacoes: "" },
+  { id: "ped1", clienteId: "c1", numero: "PED-2026-0087", data: "10/04/2026", valor: 8900, status: "confirmado", origem: "Oportunidade #op5", observacoes: "Pedido aprovado sem ajustes", origemTipo: "orcamento", orcamentoId: "orc-087", marca: "Brandili", pecas: 124, previsaoEntrega: "30/04/2026", pagamento: { status: "pendente", metodo: "Boleto 30/60/90" }, itens: _baseItens(3, 72), historico: _hist("confirmado", "10/04/2026") },
+  { id: "ped9", clienteId: "c2", numero: "PED-2026-0091", data: "11/04/2026", valor: 14250, status: "confirmado", origem: "Carrinho marketplace", observacoes: "Compra direta pelo lojista", origemTipo: "marketplace", marca: "Hering Kids", pecas: 180, previsaoEntrega: "02/05/2026", pagamento: { status: "pago", metodo: "Pix" }, itens: _baseItens(4, 79), historico: _hist("confirmado", "11/04/2026") },
+  { id: "ped10", clienteId: "c9", numero: "PED-2026-0093", data: "12/04/2026", valor: 22100, status: "confirmado", origem: "Lançamento manual", observacoes: "Vendedor lançou via WhatsApp", origemTipo: "manual", marca: "Mundi", pecas: 240, previsaoEntrega: "05/05/2026", pagamento: { status: "pendente", metodo: "Boleto" }, itens: _baseItens(5, 92), historico: _hist("confirmado", "12/04/2026") },
+  { id: "ped4", clienteId: "c5", numero: "PED-2026-0092", data: "10/04/2026", valor: 8900, status: "em_producao", origem: "Oportunidade #op5", observacoes: "Aprovado", origemTipo: "orcamento", orcamentoId: "orc-092", marca: "Brandili", pecas: 110, previsaoEntrega: "28/04/2026", pagamento: { status: "parcial", metodo: "Boleto 30/60/90" }, itens: _baseItens(3, 81), historico: _hist("em_producao", "10/04/2026") },
+  { id: "ped11", clienteId: "c4", numero: "PED-2026-0094", data: "08/04/2026", valor: 31500, status: "em_producao", origem: "Carrinho marketplace", observacoes: "", origemTipo: "marketplace", marca: "Malwee", pecas: 360, previsaoEntrega: "29/04/2026", pagamento: { status: "pago" }, itens: _baseItens(4, 88), historico: _hist("em_producao", "08/04/2026") },
+  { id: "ped12", clienteId: "c7", numero: "PED-2026-0095", data: "07/04/2026", valor: 6400, status: "em_producao", origem: "Lançamento manual", observacoes: "Pedido especial cores exclusivas", origemTipo: "manual", marca: "Brandili", pecas: 80, previsaoEntrega: "01/05/2026", pagamento: { status: "pendente" }, itens: _baseItens(2, 80), historico: _hist("em_producao", "07/04/2026") },
+  { id: "ped13", clienteId: "c1", numero: "PED-2026-0080", data: "02/04/2026", valor: 18900, status: "faturado", origem: "Oportunidade #op1", observacoes: "NF emitida 09/04", origemTipo: "orcamento", orcamentoId: "orc-080", marca: "Kyly", pecas: 220, previsaoEntrega: "22/04/2026", pagamento: { status: "pago", metodo: "Boleto", notaFiscal: "NF-2026-1124" }, itens: _baseItens(4, 85), historico: _hist("faturado", "02/04/2026") },
+  { id: "ped14", clienteId: "c11", numero: "PED-2026-0081", data: "03/04/2026", valor: 9650, status: "faturado", origem: "Carrinho marketplace", observacoes: "", origemTipo: "marketplace", marca: "Brandili", pecas: 110, previsaoEntrega: "23/04/2026", pagamento: { status: "pago", notaFiscal: "NF-2026-1125" }, itens: _baseItens(3, 87), historico: _hist("faturado", "03/04/2026") },
+  { id: "ped15", clienteId: "c3", numero: "PED-2026-0075", data: "28/03/2026", valor: 12300, status: "em_transporte", origem: "Carteira ativa", observacoes: "Transp. Jamef · CT-99812", origemTipo: "manual", marca: "Mundi", pecas: 150, previsaoEntrega: "18/04/2026", pagamento: { status: "pago", notaFiscal: "NF-2026-1102" }, itens: _baseItens(4, 78), historico: _hist("em_transporte", "28/03/2026") },
+  { id: "ped16", clienteId: "c12", numero: "PED-2026-0076", data: "29/03/2026", valor: 5400, status: "em_transporte", origem: "Carrinho marketplace", observacoes: "", origemTipo: "marketplace", marca: "Brandili", pecas: 60, previsaoEntrega: "17/04/2026", pagamento: { status: "pago", notaFiscal: "NF-2026-1103" }, itens: _baseItens(2, 88), historico: _hist("em_transporte", "29/03/2026") },
+  { id: "ped2", clienteId: "c1", numero: "PED-2025-0312", data: "15/11/2025", valor: 12400, status: "entregue", origem: "Carteira ativa", observacoes: "Entrega em 2 lotes", origemTipo: "orcamento", marca: "Brandili", pecas: 145, pagamento: { status: "pago", notaFiscal: "NF-2025-0987" }, itens: _baseItens(3, 85), historico: _hist("entregue", "15/11/2025") },
+  { id: "ped3", clienteId: "c1", numero: "PED-2025-0198", data: "20/07/2025", valor: 6750, status: "entregue", origem: "Carteira ativa", observacoes: "", origemTipo: "marketplace", marca: "Kyly", pecas: 80, pagamento: { status: "pago" }, itens: _baseItens(2, 84), historico: _hist("entregue", "20/07/2025") },
+  { id: "ped5", clienteId: "c3", numero: "PED-2025-0255", data: "10/09/2025", valor: 9300, status: "entregue", origem: "Carteira ativa", observacoes: "", origemTipo: "manual", marca: "Hering", pecas: 110, pagamento: { status: "pago" }, itens: _baseItens(3, 84), historico: _hist("entregue", "10/09/2025") },
+  { id: "ped6", clienteId: "c7", numero: "PED-2025-0301", data: "05/11/2025", valor: 4100, status: "entregue", origem: "Carteira ativa", observacoes: "", origemTipo: "marketplace", marca: "Brandili", pecas: 50, pagamento: { status: "pago" }, itens: _baseItens(2, 82), historico: _hist("entregue", "05/11/2025") },
+  { id: "ped7", clienteId: "c4", numero: "PED-2025-0320", data: "01/12/2025", valor: 18500, status: "entregue", origem: "Feira comercial", observacoes: "Primeiro pedido fitness", origemTipo: "manual", marca: "Malwee", pecas: 220, pagamento: { status: "pago" }, itens: _baseItens(4, 84), historico: _hist("entregue", "01/12/2025") },
+  { id: "ped8", clienteId: "c11", numero: "PED-2025-0340", data: "20/12/2025", valor: 7200, status: "entregue", origem: "Carteira ativa", observacoes: "", origemTipo: "orcamento", marca: "Kyly", pecas: 90, pagamento: { status: "pago" }, itens: _baseItens(3, 80), historico: _hist("entregue", "20/12/2025") },
+  { id: "ped17", clienteId: "c6", numero: "PED-2026-0070", data: "20/03/2026", valor: 4200, status: "cancelado", origem: "Carrinho marketplace", observacoes: "Cliente cancelou — sem pagamento", origemTipo: "marketplace", marca: "Mundi", pecas: 50, pagamento: { status: "pendente" }, itens: _baseItens(2, 84), historico: _hist("cancelado", "20/03/2026") },
 ];
 
 // ---- NOTAS ----

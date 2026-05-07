@@ -1,118 +1,105 @@
+## Hub de Pedidos no Nextil 360
 
-# Marketing → Motor Comercial Bidirecional (v2)
+Criar uma nova área `/vendedor/360/pedidos` (e tornar `/vendedor/360` um hub navegável) que consolida **todos os pedidos** da carteira do vendedor — vindos de orçamentos aprovados, do marketplace direto e de lançamentos manuais — com visualização dual (lista/kanban), ações de status, edição de grade e ações financeiras (nota, boleto, link de pagamento).
 
-Objetivo: introduzir **Lead Score** como espinha dorsal entre todas as telas, separar **receita estimada vs receita CRM real**, e renomear Handoff em **Central de Vendas** com fila inteligente, sugestões automáticas e notificações em tempo real.
+### 1. Navegação
 
-## 1. Fundação de dados
+- **Sidebar do Vendedor** (`VendedorSidebar.tsx`): item "Nextil 360" hoje aponta para `/vendedor/360` mas não há rota raiz. Criar rota `/vendedor/360` com um **hub** que lista os módulos do 360 (Cliente 360, Pedidos, futuros). 
+- Adicionar sub-item visual "Pedidos" abaixo de Nextil 360 (pequena indentação) apontando para `/vendedor/360/pedidos`.
+- Atualizar o `isActive` para o caso `/vendedor/360/pedidos`.
 
-**`src/marketing/data/leadScoring.ts`** (novo)
-- Tipos: `SinalLead` (`tipo`, `pts`, `data`, `meta?`), `LeadScore` (`leadId`, `score`, `tendencia: "subindo"|"estavel"|"caindo"`, `sinais[]`, `breakdown`, `ultimoSinal: {label, dataRelativa}`, `sugestaoAbordagem: string`).
-- Pontos: email aberto +5, email click +10, lookbook view +15, click produto +20, click ad Meta +10, 2 visitas semana +15, resposta WhatsApp +25, abriu proposta +30, inativo 7d −10, inativo 15d −20. Cap 0–100.
-- `classificar(score)` → `quente ≥70 | morno 40-69 | frio <40`.
-- **`gerarSugestaoAbordagem(lead, sinais, lookbooksVistos)`** com regras determinísticas (ordem de prioridade):
-  1. Visitou lookbook nas últimas 48h → `"Mencione "${nomeLookbook}" — lojista visualizou ${n} vezes"`.
-  2. Abriu email sem clicar → `"Reforce o assunto "${assuntoEmail}" com abordagem direta"`.
-  3. Tendência subindo + sem contato registrado → `"Momento ideal: entre em contato hoje"`.
-  4. Tendência caindo + última compra >90 dias → `"Ofereça condição especial de reativação"`.
-  5. Fallback → `"Iniciar abordagem comercial padrão"`.
+### 2. Modelo de dados
 
-**`mockMarketing.ts`**: gerar `sinais[]` por lead a partir dos touchpoints + interações fictícias com lookbooks/jornadas; `score`, `tendencia`, `ultimoSinalLabel` ("Abriu email há 2h"); novo campo `receitaCrmConfirmada` (≈70% da `receita` em ganhos).
+Estender `src/data/mockCRM360.ts`:
 
-**`mockMeta.ts`**: derivar `leadsQuentes` e `receitaCrmConfirmada` por campanha.
+- Adicionar a `Pedido`:
+  - `origem: "orcamento" | "marketplace" | "manual"`
+  - `orcamentoId?: string` (quando origem = orcamento)
+  - `marca: string`, `pecas: number`
+  - `previsaoEntrega?: string`
+  - `pagamento: { status: "pendente" | "pago" | "parcial" | "atrasado"; metodo?: string; linkBoleto?: string; linkPagamento?: string; notaFiscal?: string }`
+  - `itens: Array<{ produtoId: string; nome: string; sku: string; cor: string; tamanho: string; qtd: number; precoUnit: number }>` (para edição de grade)
+  - `historico: Array<{ status: PedidoStatus; data: string; autor: string }>`
+- Status novos: incluir `"faturado"` e `"em_transporte"` entre `confirmado` e `entregue`. Status final: `confirmado → em_producao → faturado → em_transporte → entregue` + `cancelado`.
+- Mock: gerar ~25 pedidos cobrindo todas as origens, status e clientes da carteira (`MOCK_CLIENTES_360`). Manter coerência com `pedidosRealizados` por cliente.
 
-**`mockLookbooks.ts`**: `lojistasIdentificados[]` (leadIds, 30-40% dos leads das campanhas vinculadas), `oportunidadesAbertas`.
+### 3. Página `Nextil360HubPage` (`/vendedor/360`)
 
-**`mockAudiencias.ts`**: `scoreMedio`, novo tipo `score_based` (faixa quente/morno/frio), flag `bidirecional`.
+`src/pages/vendedor/Nextil360Hub.tsx`:
 
-## 2. Context (`MarketingDataContext.tsx`)
+- Header "Nextil 360 — Visão consolidada da operação".
+- Grid de 2-3 cards-módulo:
+  - **Pedidos** (KPI: total ativo, total em produção, faturamento mês) → `/vendedor/360/pedidos`
+  - **Cliente 360** (KPI: nº de clientes na carteira) → atalho que sugere selecionar cliente
+  - Espaço reservado para futuros módulos
+- Estilo: padrão dashboard vendedor (`bg-card`, `border`, ícones lucide).
 
-- `leadScores` (Map por leadId, `useMemo`).
-- Derivados: `leadsQuentes`, `leadsAquecendo` (2+ sinais nos últimos 3d), `leadsEmRiscoEsfriar` (qualificados sem atividade ≥7d).
-- `registrarPedidoCrm(leadId, valor, data, obs)` → atualiza `receitaCrmConfirmada` no lead e propaga para campanha; persiste em `localStorage`.
-- `marcarLeadVisualizado(leadId)` → remove badge da sidebar.
-- 3 audiências score-based seedadas.
+### 4. Página `PedidosHubPage` (`/vendedor/360/pedidos`)
 
-## 3. Notificações em tempo real (novo)
+`src/pages/vendedor/PedidosHub.tsx`:
 
-**`src/marketing/contexts/MarketingNotificationsContext.tsx`** (novo)
-- Estado: `filaNaoVisualizada: Set<leadId>` persistido.
-- Detecção: ao montar, simular leads que "acabaram de atingir score ≥70" (3 leads aleatórios da fila, com setTimeout escalonado de 5s/15s/30s) → dispara `toast` sonner: `🔥 ${nome} acabou de atingir score quente` com action `"Ver lead →"` que navega para Central de Vendas + abre o sheet do lead.
-- Provider envolve `MarketingLayout`.
-- Hook `useFilaNaoVisualizada()` retorna o count para badge.
+**Topo**
+- Breadcrumb: Nextil 360 / Pedidos
+- 4 KPIs: Em produção, Faturados, Em transporte, Entregues no mês
+- Toggle de visualização: **Lista** | **Kanban** (default Lista)
 
-**`MarketingLayout.tsx`**: item "Central de Vendas" exibe badge numérico vermelho (`bg-rose-500 text-white text-[10px]`) com `filaNaoVisualizada.size`. Ao abrir sheet de um lead → `marcarLeadVisualizado(leadId)` zera-o desse lead.
+**Filtros (barra)**
+- Busca (cliente / nº pedido)
+- Origem (todos | Orçamento | Marketplace | Manual) — chips
+- Status (multi-select)
+- Período (este mês / últimos 30d / customizado)
+- Marca, Cliente
 
-## 4. Telas
+**Visão Lista (tabela)**
+Colunas: Nº | Cliente | Marca | Origem (badge colorido) | Peças | Valor | Status (badge) | Pagamento | Previsão entrega | Ações (⋯)
+- Click na linha → abre `PedidoDetalheModal`
 
-### Dashboard
-- **Faixa "Temperatura comercial agora"** (acima dos KPIs): 3 cards (Quentes 🔥 / Aquecendo ✨ / Em risco ❄️) com número grande, mini-trend, botão "Ver fila" → `/marketing/central-vendas?filtro=quente`.
-- KPI "Receita atribuída" → 2 KPIs: "Estimada" (cinza) + "Confirmada CRM" (verde, badge "Real").
-- Funil: estágio final "Pedidos fechados CRM" com R$ confirmado e taxa desde 1º clique.
+**Visão Kanban**
+- 5 colunas: Confirmado · Em produção · Faturado · Em transporte · Entregue
+- Cards arrastáveis (drag & drop simples — `@dnd-kit` já presumido ausente; usar HTML5 DnD nativo ou apenas botões de avanço de status para MVP)
+- Cada card mostra: cliente, marca, valor, peças, badge origem, badge pagamento
 
-### Meta Ads Hub
-- Badge ao lado dos 4 KPIs: `"X leads desta conta estão quentes agora"` → link Central de Vendas.
-- Tabela: colunas "Leads quentes" (badge laranja) e "Receita CRM" (verde + %vs estimada).
+### 5. `PedidoDetalheModal`
 
-### Atribuição
-- Toggle "Estimada / Real" controlando os números.
-- Tabela "Jornada dos leads": coluna "Score atual" (badge verde/amarelo/cinza); leads ganhos exibem valor do pedido.
+`src/components/vendedor/PedidoDetalheModal.tsx` — modal técnico (max-h 90vh, flex-col, header/footer shrink-0, scroll central, z-[200]).
 
-### Campanhas próprias
-- Coluna "Conversões CRM".
-- Card expandido: "Leads → Oportunidade CRM" com nº e %.
-- **Alerta automático** quando CTR ≥ 2% e 0 conversões CRM em 7d, texto exato: 
-  `"Esta campanha tem CTR de ${ctr}% mas nenhum lead converteu no CRM em 7 dias. Possíveis causas: público amplo demais, página de destino desalinhada com o anúncio, ou leads não qualificados chegando ao vendedor sem contexto."`
+**Header**: nº pedido + cliente + badge origem + badge status + botão "Avançar status →"
 
-### Jornadas
-- Novo gatilho "Mudança de estágio CRM" com 4 sub-opções (Qualificado / Sem movimento X dias / Pedido fechado / Perdido).
-- Card: "Conv. jornada" + "Conv. CRM".
+**Tabs internas**:
+1. **Resumo**: dados gerais, observações, totais, previsão entrega, link orçamento (se origem = orcamento)
+2. **Grade / Itens**: tabela editável (qtd, preço unitário, remover linha, adicionar item). Salvar recalcula total. Bloqueado quando status ≥ faturado.
+3. **Pagamento**: status, método, gerar boleto (mock toast), gerar link de pagamento (mock toast com link copiável), anexar nota fiscal (mock).
+4. **Histórico**: timeline de mudanças de status com data/autor.
 
-### Lookbooks
-- Cards: "Lojistas identificados" e "Oportunidades abertas".
-- Click → `LookbookViewersSheet` (lista por score, botão "Notificar vendedor" para ≥70 com `toast.success`).
+**Footer**: Cancelar pedido (destructive) | Salvar alterações.
 
-### Audiências
-- Coluna "Score médio".
-- Botão "Criar audiências por score" → cria as 3 (Quentes/Mornos/Frios) com sync Meta correspondente.
-- Badge "Sync bidirecional ativo".
+### 6. Integração com Cliente 360
 
-### Central de Vendas (`CentralVendasPage.tsx`, substitui `HandoffPage.tsx`)
-Rota `/marketing/central-vendas` (alias `/marketing/handoff`). Item da sidebar renomeado, ícone `Flame`.
+Na `Cliente360Page`, na aba Pedidos do cliente, adicionar link "Ver no Hub de Pedidos →" que leva ao hub filtrado por `?cliente=<id>`. Cards de pedido no 360 também abrem o `PedidoDetalheModal`.
 
-- **Topo**: 4 KPIs (Fila agora / Abordados hoje / Convertidos semana / Receita CRM).
-- **Filtros (chips)**: score, canal, jornada, vendedor.
-- **Fila** (`LeadFilaCard`): nome + canal, barra de score colorida, último sinal, sugestão automática, botões WhatsApp / E-mail / Marcar contatado / Mover pipeline.
-- **Estado vazio**: ilustração (ícone `Flame` cinza grande) + 
-  `"Nenhum lead quente no momento. Os próximos leads serão notificados conforme atingirem score ≥ 70."` + botão `"Ver leads mornos"` (aplica filtro morno).
-- **`LeadDetailSheet`** ao clicar em um card:
-  - Timeline cronológica de sinais (ícone por tipo + data relativa).
-  - Breakdown do score (lista de sinais com pts).
-  - Histórico de contatos do vendedor.
-  - **Form "Registrar resultado"**:
-    - Select `Status da abordagem`: Contatado / Sem resposta / Qualificado / Perdido / Pedido fechado.
-    - Se "Pedido fechado": inputs `valor R$`, `data`, `textarea observação`.
-    - Botão `Confirmar` → chama `registrarPedidoCrm(leadId, valor, data, obs)` + `toast.success("Pedido vinculado a ${campanhaOrigem}")` + fecha sheet.
+### 7. Detalhes técnicos
 
-## 5. Roteamento e navegação
-- `App.tsx`: nova rota `/marketing/central-vendas`, alias redireciona `/marketing/handoff`.
-- `MarketingLayout.tsx`: rename item + badge de notificações.
+- **Estado**: criar `PedidosContext` (`src/contexts/PedidosContext.tsx`) com `pedidos`, `updatePedidoStatus`, `updatePedidoItens`, `cancelarPedido`, `gerarBoleto/gerarLinkPagamento` (mock). Persistir em `localStorage` (`nextil_vendedor_pedidos`).
+- Provider montado no `App.tsx` ao redor das rotas `/vendedor/*`.
+- Cores de badge:
+  - Origem: orçamento `bg-blue-500/15 text-blue-600`, marketplace `bg-purple-500/15 text-purple-600`, manual `bg-amber-500/15 text-amber-600`.
+  - Status: confirmado azul, em_producao âmbar, faturado roxo, em_transporte ciano, entregue verde, cancelado vermelho.
+  - Pagamento: pago verde, pendente cinza, parcial âmbar, atrasado vermelho.
+- Toasts via `sonner` para todas as ações (status alterado, boleto gerado, link copiado).
+- Mobile: lista vira cards stackados; kanban vira tabs por status.
 
-## 6. Detalhes técnicos
-- Cores: quente `text-orange-600 bg-orange-500/10`, morno `text-amber-600 bg-amber-500/10`, frio `text-slate-500 bg-slate-500/10`.
-- Persistência: pedidos CRM em `nextil_mkt_state_v1_crm_orders`; fila visualizada em `nextil_mkt_state_v1_fila_visualizada`.
-- Coerência: `receitaCrmConfirmada` total ≈ 70% da estimada; quentes 8-12% do total; lookbooks com 30-40% dos leads das campanhas vinculadas.
-- Reaproveita `KpiCard`, `Badge`, `Sheet`, sonner `toast`, tokens existentes.
+### 8. Arquivos
 
-## Arquivos novos
-- `src/marketing/data/leadScoring.ts`
-- `src/marketing/contexts/MarketingNotificationsContext.tsx`
-- `src/marketing/components/ScoreBadge.tsx`
-- `src/marketing/components/LeadFilaCard.tsx`
-- `src/marketing/components/LeadDetailSheet.tsx`
-- `src/marketing/components/LookbookViewersSheet.tsx`
-- `src/marketing/pages/CentralVendasPage.tsx`
+**Criar**
+- `src/pages/vendedor/Nextil360Hub.tsx`
+- `src/pages/vendedor/PedidosHub.tsx`
+- `src/components/vendedor/PedidoDetalheModal.tsx`
+- `src/contexts/PedidosContext.tsx`
 
-## Arquivos editados
-- `mockMarketing.ts`, `mockMeta.ts`, `mockLookbooks.ts`, `mockAudiencias.ts`
-- `MarketingDataContext.tsx`, `MarketingLayout.tsx`, `App.tsx`
-- `MarketingDashboard.tsx`, `MetaAdsHub.tsx`, `AtribuicaoPage.tsx`, `CampanhasPage.tsx`, `JornadasPage.tsx`, `JornadaEditorPage.tsx`, `LookbooksPage.tsx`, `AudienciasPage.tsx`
+**Editar**
+- `src/data/mockCRM360.ts` (interface `Pedido` + mock estendido)
+- `src/components/vendedor/VendedorSidebar.tsx` (sub-item Pedidos + isActive)
+- `src/App.tsx` (rotas `/vendedor/360` e `/vendedor/360/pedidos`, provider)
+- `src/pages/vendedor/Cliente360Page.tsx` (link para hub + abrir modal)
+
+Posso seguir com a implementação?

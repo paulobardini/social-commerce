@@ -31,6 +31,9 @@ import OportunidadeDetalhe from "./pages/vendedor/OportunidadeDetalhe";
 import VendedorConfiguracoes from "./pages/vendedor/VendedorConfiguracoes";
 import ClientesListing from "./pages/vendedor/ClientesListing";
 import Cliente360Page from "./pages/vendedor/Cliente360Page";
+import Nextil360Hub from "./pages/vendedor/Nextil360Hub";
+import PedidosHub from "./pages/vendedor/PedidosHub";
+import { PedidosProvider } from "./contexts/PedidosContext";
 import WhatsAppInbox from "./pages/vendedor/WhatsAppInbox";
 import TarefasPage from "./pages/vendedor/TarefasPage";
 import AgendaPage from "./pages/vendedor/AgendaPage";
@@ -123,6 +126,7 @@ const App = () => (
             <MessageTemplatesProvider>
             <TarefasProvider>
             <RemindersProvider>
+            <PedidosProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -164,6 +168,8 @@ const App = () => (
                 <Route path="/vendedor/clientes/kanban" element={<LayoutRoute><KanbanClientesPage /></LayoutRoute>} />
                 <Route path="/vendedor/clientes/kanban/config" element={<LayoutRoute><FunilClientesConfigPage /></LayoutRoute>} />
                 <Route path="/vendedor/clientes/redistribuir" element={<LayoutRoute><RedistribuicaoPage /></LayoutRoute>} />
+                <Route path="/vendedor/360" element={<LayoutRoute><Nextil360Hub /></LayoutRoute>} />
+                <Route path="/vendedor/360/pedidos" element={<LayoutRoute><PedidosHub /></LayoutRoute>} />
                 <Route path="/vendedor/360/:id" element={<LayoutRoute><Cliente360Page /></LayoutRoute>} />
                 <Route path="/vendedor/whatsapp" element={<FullHeightRoute><WhatsAppInbox /></FullHeightRoute>} />
                 <Route path="/vendedor/tarefas" element={<LayoutRoute><TarefasPage /></LayoutRoute>} />
@@ -235,6 +241,7 @@ const App = () => (
               </StartDataProvider>
               </StartAuthProvider>
             </BrowserRouter>
+            </PedidosProvider>
             </RemindersProvider>
             </TarefasProvider>
             </MessageTemplatesProvider>

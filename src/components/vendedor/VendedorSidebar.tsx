@@ -1,4 +1,4 @@
-import { LayoutDashboard, Kanban, ClipboardList, Users, MessageCircle, CheckSquare, Calendar, Settings, UserCircle, X, Target, Briefcase, UserCog, Tag, BarChart3, Lightbulb } from "lucide-react";
+import { LayoutDashboard, Kanban, ClipboardList, Users, MessageCircle, CheckSquare, Calendar, Settings, UserCircle, X, Target, Briefcase, UserCog, Tag, BarChart3, Lightbulb, ShoppingCart } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const menuItems = [
@@ -7,6 +7,7 @@ const menuItems = [
   { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
   { icon: Users, label: "Clientes", path: "/vendedor/clientes" },
   { icon: Target, label: "Nextil 360", path: "/vendedor/360", highlight: true },
+  { icon: ShoppingCart, label: "Pedidos", path: "/vendedor/360/pedidos", indent: true },
   { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
   { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
   { icon: MessageCircle, label: "WhatsApp", path: "/vendedor/whatsapp" },
@@ -32,7 +33,8 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
     if (path === "/vendedor") return location.pathname === "/vendedor" || location.pathname.startsWith("/vendedor/novo-orcamento") || location.pathname.startsWith("/vendedor/orcamento") || location.pathname === "/vendedor/grade" || location.pathname === "/vendedor/orcamento-viewer";
     if (path === "/vendedor/oportunidades") return location.pathname.startsWith("/vendedor/oportunidades");
     if (path === "/vendedor/clientes") return location.pathname === "/vendedor/clientes" || location.pathname.startsWith("/vendedor/clientes/");
-    if (path === "/vendedor/360") return location.pathname.startsWith("/vendedor/360");
+    if (path === "/vendedor/360") return location.pathname === "/vendedor/360" || (location.pathname.startsWith("/vendedor/360/") && !location.pathname.startsWith("/vendedor/360/pedidos"));
+    if (path === "/vendedor/360/pedidos") return location.pathname.startsWith("/vendedor/360/pedidos");
     if (path === "/vendedor/carteira") return location.pathname === "/vendedor/carteira";
     if (path === "/vendedor/representantes") return location.pathname.startsWith("/vendedor/representantes");
     if (path === "/vendedor/whatsapp") return location.pathname.startsWith("/vendedor/whatsapp");
@@ -59,11 +61,12 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
           const Icon = item.icon;
           const active = isActive(item.path);
           const highlight = (item as any).highlight;
+          const indent = (item as any).indent;
           return (
             <button
               key={item.label}
               onClick={() => navigate(item.path)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+              className={`flex items-center gap-3 ${indent ? "pl-7" : "px-3"} ${!indent ? "" : "pr-3"} py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
                 active
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : highlight
@@ -71,8 +74,8 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
                   : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
               }`}
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{item.label}</span>
+              <Icon className={`${indent ? "h-3.5 w-3.5" : "h-4 w-4"} shrink-0`} />
+              <span className={`truncate ${indent ? "text-[12px]" : ""}`}>{item.label}</span>
             </button>
           );
         })}

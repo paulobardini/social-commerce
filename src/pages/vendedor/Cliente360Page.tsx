@@ -407,8 +407,11 @@ export default function Cliente360Page() {
 
           {/* PEDIDOS */}
           <TabsContent value="pedidos" className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <p className="text-sm text-muted-foreground">{pedidos.length} pedidos · Faturamento total: <span className="font-semibold text-foreground">R$ {totalPedidosValor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></p>
+              <button onClick={() => navigate(`/vendedor/360/pedidos?cliente=${cliente.id}`)} className="text-xs text-[hsl(191,100%,40%)] hover:underline font-medium shrink-0">
+                Ver no Hub de Pedidos →
+              </button>
             </div>
             {pedidos.length > 0 ? (
               <div className="space-y-2">
