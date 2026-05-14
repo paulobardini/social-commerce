@@ -65,7 +65,7 @@ export function MasonryFeed() {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
 
-  const canCreate = isAuthenticated && (user?.role === "fabrica" || user?.role === "criador");
+  const canCreate = isAuthenticated;
 
   const userPins: Pin[] = userPosts.map((p) => ({
     id: p.id,
