@@ -128,7 +128,7 @@ export function StoriesBar() {
     return [...userBrandStories, ...staticBrands];
   }, [userStories]);
 
-  const canCreate = isAuthenticated && (user?.role === "fabrica" || user?.role === "criador");
+  const canCreate = isAuthenticated;
 
   const brandIndex = navigableBrands.findIndex((b) => b.id === activeBrandId);
   const activeBrand = brandIndex >= 0 ? navigableBrands[brandIndex] : null;
