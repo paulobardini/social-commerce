@@ -106,6 +106,9 @@ export default function AtendimentoPage() {
             <p className="text-sm text-muted-foreground">Gerencie os tickets de atendimento dos seus clientes</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/atendimento/whatsapp")}>
+              <MessageCircle className="h-4 w-4 mr-1 text-green-600" /> <span className="hidden sm:inline">WhatsApp</span>
+            </Button>
             {me.role === "supervisor" && (
               <Button variant="outline" size="sm" onClick={() => setFunilConfigOpen(true)}>
                 <Settings2 className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Configurar funis</span>
