@@ -111,27 +111,27 @@ export default function WhatsAppInbox({
   // Mock: persistido só em memória.
   const [extraMessages, setExtraMessages] = useState<Record<string, Mensagem[]>>({});
 
-  const filtered = useMemo(() => mockConversas.filter(c => {
+  const filtered = useMemo(() => conversasBase.filter(c => {
     if (search && !c.clienteNome.toLowerCase().includes(search.toLowerCase())) return false;
     if (tab === "nao_lida" && c.naoLidas === 0) return false;
     if (tab === "aguardando" && c.status !== "aguardando_resposta") return false;
     if (tab === "sem_resposta" && !semRespostaInfo(c.id)) return false;
     return true;
-  }), [search, tab]);
+  }), [search, tab, conversasBase]);
 
   const semRespostaCount = useMemo(
-    () => mockConversas.filter(c => semRespostaInfo(c.id)).length,
-    []
+    () => conversasBase.filter(c => semRespostaInfo(c.id)).length,
+    [conversasBase]
   );
 
-  const selected = mockConversas.find(c => c.id === selectedId);
+  const selected = conversasBase.find(c => c.id === selectedId);
   const baseMensagens = selected ? mockMensagens[selected.id] || [] : [];
   const mensagens = selected
     ? [...baseMensagens, ...(extraMessages[selected.id] || [])]
     : [];
   const cliente = selected ? mockClientes360.find(c => c.id === selected.clienteId) : null;
 
-  const totalNaoLidas = mockConversas.reduce((s, c) => s + c.naoLidas, 0);
+  const totalNaoLidas = conversasBase.reduce((s, c) => s + c.naoLidas, 0);
 
   // Variáveis disponíveis para templates a partir do cliente selecionado
   const templateVars = {
