@@ -20,6 +20,7 @@ import {
   temperaturaColors, tipoTarefaLabels, tipoCompromissoLabels, type Cliente360,
 } from "@/data/mockCRM360";
 import { mockOportunidades, etapaMap, etapaCorMap } from "@/data/mockCRM";
+import { ClienteAtendimentoTab } from "@/components/atendimento/ClienteAtendimentoTab";
 import { mockOrcamentos } from "@/data/mockVendedor";
 
 export default function Cliente360Page() {
