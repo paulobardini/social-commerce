@@ -52,6 +52,7 @@ import InsightsPage from "./pages/vendedor/InsightsPage";
 import VisoesSalvasPage from "./pages/vendedor/VisoesSalvasPage";
 import AutomacoesPage from "./pages/vendedor/AutomacoesPage";
 import AtendimentoPage from "./pages/vendedor/AtendimentoPage";
+import AtendimentoWhatsApp from "./pages/vendedor/AtendimentoWhatsApp";
 import MessageTemplatesPage from "./pages/vendedor/MessageTemplatesPage";
 import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
 import { MetasProvider } from "@/contexts/MetasContext";
