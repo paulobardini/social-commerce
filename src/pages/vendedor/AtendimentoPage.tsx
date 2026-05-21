@@ -23,6 +23,7 @@ import {
 type View = "kanban" | "lista" | "timeline";
 
 export default function AtendimentoPage() {
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [funis, setFunis] = useState(loadFunis());
