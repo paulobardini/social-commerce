@@ -240,7 +240,15 @@ export default function WhatsAppInbox({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <p className={`text-sm truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {mostrarSetor && (
+                          <span
+                            title={setorLabels[getConversaSetor(conv.id)]}
+                            className={`h-2 w-2 rounded-full shrink-0 ${setorDot[getConversaSetor(conv.id)]}`}
+                          />
+                        )}
+                        <p className={`text-sm truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
+                      </div>
                       {semResp ? (
                         <span className="text-[10px] text-orange-600 font-medium shrink-0 flex items-center gap-0.5">
                           <Clock className="h-2.5 w-2.5" /> {semResp.tempo}
