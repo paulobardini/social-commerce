@@ -10,11 +10,13 @@ import {
   Zap, Check, CheckCheck,
 } from "lucide-react";
 import {
-  mockConversas, mockMensagens, mockClientes360, type Mensagem,
+  mockConversas, mockMensagens, mockClientes360, type Mensagem, type Conversa,
 } from "@/data/mockCRM360";
 import { useMessageTemplates, fillTemplate } from "@/contexts/MessageTemplatesContext";
 import { SendOrcamentoModal } from "@/components/vendedor/SendOrcamentoModal";
 import { useToast } from "@/hooks/use-toast";
+import { getConversaSetor, setorDot, setorLabels } from "@/data/mockAtendimento";
+import type { ReactNode } from "react";
 
 type TabKey = "" | "nao_lida" | "aguardando" | "sem_resposta";
 
