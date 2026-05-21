@@ -686,3 +686,28 @@ export function visibleSetores(atendente: Atendente): Setor[] {
   if (atendente.role === "supervisor") return ["sac", "cobranca", "financeiro", "logistica"];
   return atendente.setores;
 }
+
+// ===== Mapeamento de conversas WhatsApp -> setor =====
+// Cada conversa do mockConversas (src/data/mockCRM360.ts) pertence a um setor.
+// Supervisor vê todas; atendente só vê as do(s) seu(s) setor(es).
+export const conversaSetor: Record<string, Setor> = {
+  conv1: "sac",
+  conv2: "sac",
+  conv3: "financeiro",
+  conv4: "sac",
+  conv5: "financeiro",
+  conv6: "sac",
+  conv7: "sac",
+  conv8: "logistica",
+  conv9: "cobranca",
+};
+
+export function getConversaSetor(conversaId: string): Setor {
+  return conversaSetor[conversaId] || "sac";
+}
+
+export function canSeeConversa(atendente: Atendente, conversaId: string): boolean {
+  const s = getConversaSetor(conversaId);
+  return visibleSetores(atendente).includes(s);
+}
+
