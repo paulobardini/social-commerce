@@ -3,7 +3,7 @@ import {
   LayoutDashboard, BarChart3, Kanban, Users, Target, Briefcase,
   UserCog, MessageCircle, ClipboardList, CheckSquare, Calendar,
   Settings, Lightbulb, Tag, ChevronLeft, ChevronRight,
-  FileText, ChevronDown, Sparkles, ShoppingCart, Radar, Brain, GitCompare, Truck, Layers,
+  FileText, ChevronDown, Sparkles, ShoppingCart, Radar, Brain, GitCompare, Truck, Layers, Headphones,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -54,6 +54,7 @@ const sections: MenuSection[] = [
       { icon: ShoppingCart, label: "Pedidos (Empresa)", path: "/vendedor/360/pedidos?escopo=empresa" },
       { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
       { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
+      { icon: Headphones, label: "Atendimento", path: "/vendedor/atendimento" },
       { icon: FileText, label: "Relatórios", path: "/vendedor/relatorios" },
       { icon: Lightbulb, label: "Insights", path: "/vendedor/insights" },
       { icon: Tag, label: "Segmentações", path: "/vendedor/segmentacoes" },

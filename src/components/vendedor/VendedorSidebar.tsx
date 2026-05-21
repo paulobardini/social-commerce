@@ -1,4 +1,4 @@
-import { LayoutDashboard, Kanban, ClipboardList, Users, MessageCircle, CheckSquare, Calendar, Settings, UserCircle, X, Target, Briefcase, UserCog, Tag, BarChart3, Lightbulb, ShoppingCart } from "lucide-react";
+import { LayoutDashboard, Kanban, ClipboardList, Users, MessageCircle, CheckSquare, Calendar, Settings, UserCircle, X, Target, Briefcase, UserCog, Tag, BarChart3, Lightbulb, ShoppingCart, Headphones } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const menuItems = [
@@ -13,6 +13,7 @@ const menuItems = [
   { icon: MessageCircle, label: "WhatsApp", path: "/vendedor/whatsapp" },
   { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
   { icon: CheckSquare, label: "Tarefas", path: "/vendedor/tarefas" },
+  { icon: Headphones, label: "Atendimento", path: "/vendedor/atendimento" },
   { icon: Calendar, label: "Agenda", path: "/vendedor/agenda" },
   { icon: BarChart3, label: "Relatórios", path: "/vendedor/relatorios" },
   { icon: Lightbulb, label: "Insights", path: "/vendedor/insights" },
