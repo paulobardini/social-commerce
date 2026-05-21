@@ -10,11 +10,13 @@ import {
   Zap, Check, CheckCheck,
 } from "lucide-react";
 import {
-  mockConversas, mockMensagens, mockClientes360, type Mensagem,
+  mockConversas, mockMensagens, mockClientes360, type Mensagem, type Conversa,
 } from "@/data/mockCRM360";
 import { useMessageTemplates, fillTemplate } from "@/contexts/MessageTemplatesContext";
 import { SendOrcamentoModal } from "@/components/vendedor/SendOrcamentoModal";
 import { useToast } from "@/hooks/use-toast";
+import { getConversaSetor, setorDot, setorLabels } from "@/data/mockAtendimento";
+import type { ReactNode } from "react";
 
 type TabKey = "" | "nao_lida" | "aguardando" | "sem_resposta";
 
@@ -72,12 +74,33 @@ function StatusIcon({ status }: { status?: Mensagem["status"] }) {
   return <CheckCheck className="h-3 w-3 inline-block text-blue-400" />;
 }
 
-export default function WhatsAppInbox() {
+interface WhatsAppInboxProps {
+  /** Filtro extra aplicado ANTES da busca/tabs (ex.: por setor do atendente) */
+  conversasFiltro?: (c: Conversa) => boolean;
+  /** Conteúdo extra renderizado acima da lista de conversas (perfil bar, chips de setor, etc.) */
+  topSlot?: ReactNode;
+  /** Título exibido no header da lista (default: "WhatsApp") */
+  titulo?: string;
+  /** Mostrar o dot colorido do setor em cada conversa */
+  mostrarSetor?: boolean;
+}
+
+export default function WhatsAppInbox({
+  conversasFiltro,
+  topSlot,
+  titulo = "WhatsApp",
+  mostrarSetor = false,
+}: WhatsAppInboxProps = {}) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { templates } = useMessageTemplates();
 
-  const [selectedId, setSelectedId] = useState<string>(mockConversas[0]?.id || "");
+  const conversasBase = useMemo(
+    () => (conversasFiltro ? mockConversas.filter(conversasFiltro) : mockConversas),
+    [conversasFiltro]
+  );
+
+  const [selectedId, setSelectedId] = useState<string>(conversasBase[0]?.id || "");
   const [search, setSearch] = useState("");
   const [msgInput, setMsgInput] = useState("");
   const [tab, setTab] = useState<TabKey>("");
@@ -88,27 +111,27 @@ export default function WhatsAppInbox() {
   // Mock: persistido só em memória.
   const [extraMessages, setExtraMessages] = useState<Record<string, Mensagem[]>>({});
 
-  const filtered = useMemo(() => mockConversas.filter(c => {
+  const filtered = useMemo(() => conversasBase.filter(c => {
     if (search && !c.clienteNome.toLowerCase().includes(search.toLowerCase())) return false;
     if (tab === "nao_lida" && c.naoLidas === 0) return false;
     if (tab === "aguardando" && c.status !== "aguardando_resposta") return false;
     if (tab === "sem_resposta" && !semRespostaInfo(c.id)) return false;
     return true;
-  }), [search, tab]);
+  }), [search, tab, conversasBase]);
 
   const semRespostaCount = useMemo(
-    () => mockConversas.filter(c => semRespostaInfo(c.id)).length,
-    []
+    () => conversasBase.filter(c => semRespostaInfo(c.id)).length,
+    [conversasBase]
   );
 
-  const selected = mockConversas.find(c => c.id === selectedId);
+  const selected = conversasBase.find(c => c.id === selectedId);
   const baseMensagens = selected ? mockMensagens[selected.id] || [] : [];
   const mensagens = selected
     ? [...baseMensagens, ...(extraMessages[selected.id] || [])]
     : [];
   const cliente = selected ? mockClientes360.find(c => c.id === selected.clienteId) : null;
 
-  const totalNaoLidas = mockConversas.reduce((s, c) => s + c.naoLidas, 0);
+  const totalNaoLidas = conversasBase.reduce((s, c) => s + c.naoLidas, 0);
 
   // Variáveis disponíveis para templates a partir do cliente selecionado
   const templateVars = {
@@ -163,10 +186,11 @@ export default function WhatsAppInbox() {
       <div className="flex h-[calc(100vh-56px)] overflow-hidden">
         {/* Left - Conversations list */}
         <div className={`${selectedId && selected ? "hidden md:flex" : "flex"} w-full md:w-[320px] border-r border-border flex-col bg-card shrink-0`}>
+          {topSlot && <div className="border-b border-border">{topSlot}</div>}
           <div className="p-3 border-b border-border space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-heading font-bold flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-green-600" /> WhatsApp
+                <MessageCircle className="h-4 w-4 text-green-600" /> {titulo}
                 {totalNaoLidas > 0 && <Badge className="h-5 text-[10px]">{totalNaoLidas}</Badge>}
               </h2>
             </div>
@@ -216,7 +240,15 @@ export default function WhatsAppInbox() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <p className={`text-sm truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {mostrarSetor && (
+                          <span
+                            title={setorLabels[getConversaSetor(conv.id)]}
+                            className={`h-2 w-2 rounded-full shrink-0 ${setorDot[getConversaSetor(conv.id)]}`}
+                          />
+                        )}
+                        <p className={`text-sm truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
+                      </div>
                       {semResp ? (
                         <span className="text-[10px] text-orange-600 font-medium shrink-0 flex items-center gap-0.5">
                           <Clock className="h-2.5 w-2.5" /> {semResp.tempo}

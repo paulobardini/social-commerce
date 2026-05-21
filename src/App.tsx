@@ -52,6 +52,7 @@ import InsightsPage from "./pages/vendedor/InsightsPage";
 import VisoesSalvasPage from "./pages/vendedor/VisoesSalvasPage";
 import AutomacoesPage from "./pages/vendedor/AutomacoesPage";
 import AtendimentoPage from "./pages/vendedor/AtendimentoPage";
+import AtendimentoWhatsApp from "./pages/vendedor/AtendimentoWhatsApp";
 import MessageTemplatesPage from "./pages/vendedor/MessageTemplatesPage";
 import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
 import { MetasProvider } from "@/contexts/MetasContext";
@@ -185,6 +186,7 @@ const App = () => (
                 <Route path="/vendedor/whatsapp" element={<FullHeightRoute><WhatsAppInbox /></FullHeightRoute>} />
                 <Route path="/vendedor/tarefas" element={<LayoutRoute><TarefasPage /></LayoutRoute>} />
                 <Route path="/vendedor/atendimento" element={<LayoutRoute><AtendimentoPage /></LayoutRoute>} />
+                <Route path="/vendedor/atendimento/whatsapp" element={<FullHeightRoute><AtendimentoWhatsApp /></FullHeightRoute>} />
                 <Route path="/vendedor/agenda" element={<LayoutRoute><AgendaPage /></LayoutRoute>} />
                 <Route path="/vendedor/carteira" element={<LayoutRoute><CarteiraPage /></LayoutRoute>} />
                 <Route path="/vendedor/representantes" element={<LayoutRoute><RepresentantesPage /></LayoutRoute>} />

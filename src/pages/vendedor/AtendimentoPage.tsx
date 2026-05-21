@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Plus, Search, Filter, Kanban, List, Clock, Settings2, X, ShieldCheck, User as UserIcon,
+  Plus, Search, Filter, Kanban, List, Clock, Settings2, X, ShieldCheck, User as UserIcon, MessageCircle,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -22,6 +23,7 @@ import {
 type View = "kanban" | "lista" | "timeline";
 
 export default function AtendimentoPage() {
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [funis, setFunis] = useState(loadFunis());
@@ -104,6 +106,9 @@ export default function AtendimentoPage() {
             <p className="text-sm text-muted-foreground">Gerencie os tickets de atendimento dos seus clientes</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/atendimento/whatsapp")}>
+              <MessageCircle className="h-4 w-4 mr-1 text-green-600" /> <span className="hidden sm:inline">WhatsApp</span>
+            </Button>
             {me.role === "supervisor" && (
               <Button variant="outline" size="sm" onClick={() => setFunilConfigOpen(true)}>
                 <Settings2 className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Configurar funis</span>
