@@ -74,12 +74,33 @@ function StatusIcon({ status }: { status?: Mensagem["status"] }) {
   return <CheckCheck className="h-3 w-3 inline-block text-blue-400" />;
 }
 
-export default function WhatsAppInbox() {
+interface WhatsAppInboxProps {
+  /** Filtro extra aplicado ANTES da busca/tabs (ex.: por setor do atendente) */
+  conversasFiltro?: (c: Conversa) => boolean;
+  /** Conteúdo extra renderizado acima da lista de conversas (perfil bar, chips de setor, etc.) */
+  topSlot?: ReactNode;
+  /** Título exibido no header da lista (default: "WhatsApp") */
+  titulo?: string;
+  /** Mostrar o dot colorido do setor em cada conversa */
+  mostrarSetor?: boolean;
+}
+
+export default function WhatsAppInbox({
+  conversasFiltro,
+  topSlot,
+  titulo = "WhatsApp",
+  mostrarSetor = false,
+}: WhatsAppInboxProps = {}) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { templates } = useMessageTemplates();
 
-  const [selectedId, setSelectedId] = useState<string>(mockConversas[0]?.id || "");
+  const conversasBase = useMemo(
+    () => (conversasFiltro ? mockConversas.filter(conversasFiltro) : mockConversas),
+    [conversasFiltro]
+  );
+
+  const [selectedId, setSelectedId] = useState<string>(conversasBase[0]?.id || "");
   const [search, setSearch] = useState("");
   const [msgInput, setMsgInput] = useState("");
   const [tab, setTab] = useState<TabKey>("");
