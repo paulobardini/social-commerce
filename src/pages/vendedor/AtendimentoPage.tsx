@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Plus, Search, Filter, Kanban, List, Clock, Settings2, X, ShieldCheck, User as UserIcon,
+  Plus, Search, Filter, Kanban, List, Clock, Settings2, X, ShieldCheck, User as UserIcon, MessageCircle,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
