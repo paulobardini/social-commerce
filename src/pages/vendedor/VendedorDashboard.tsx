@@ -98,6 +98,7 @@ export default function VendedorDashboard() {
               <SectionCard title="Distribuição por status"><StatusDonut data={donutData} /></SectionCard>
               <SectionCard title="Aging da carteira"><AgingBars data={aging} /></SectionCard>
             </div>
+            <TempoSemAtendimento repId={repIdEfetivo} />
             <ListaClientes classificadas={kpiC.classificadas} />
           </TabsContent>
 
@@ -406,6 +407,114 @@ function ListaClientes({ classificadas }: { classificadas: ReturnType<typeof cla
             ))}
           </tbody>
         </table>
+      </div>
+    </SectionCard>
+  );
+}
+
+// ============ TEMPO SEM ATENDIMENTO ============
+function TempoSemAtendimento({ repId }: { repId: string }) {
+  const { seed } = useCockpit();
+  const hoje = seed.hoje;
+
+  const dados = useMemo(() => {
+    const contas = seed.contas.filter(c => c.repId === repId);
+    // último atendimento por conta
+    const ultimoMap = new Map<string, Date>();
+    for (const a of seed.atendimentos) {
+      if (a.repId !== repId) continue;
+      const cur = ultimoMap.get(a.contaId);
+      if (!cur || a.data > cur) ultimoMap.set(a.contaId, a.data);
+    }
+    return contas.map(c => {
+      const ult = ultimoMap.get(c.id);
+      const dias = ult ? Math.floor((hoje.getTime() - ult.getTime()) / 86400000) : Infinity;
+      return { conta: c, dias };
+    });
+  }, [seed, repId, hoje]);
+
+  const buckets = useMemo(() => {
+    const b = [
+      { faixa: "0-7d",   min: 0,   max: 7,   cor: "#10B981", count: 0 },
+      { faixa: "8-15d",  min: 8,   max: 15,  cor: "#3B82F6", count: 0 },
+      { faixa: "16-30d", min: 16,  max: 30,  cor: "#F59E0B", count: 0 },
+      { faixa: "31-60d", min: 31,  max: 60,  cor: "#EF4444", count: 0 },
+      { faixa: "60d+",   min: 61,  max: 9998,cor: "#991B1B", count: 0 },
+      { faixa: "Nunca",  min: 9999,max: Infinity, cor: "#64748B", count: 0 },
+    ];
+    for (const d of dados) {
+      const dias = d.dias === Infinity ? Infinity : d.dias;
+      const bucket = b.find(x => dias >= x.min && dias <= x.max);
+      if (bucket) bucket.count++;
+    }
+    return b;
+  }, [dados]);
+
+  const criticos = useMemo(() => {
+    return [...dados]
+      .filter(d => d.dias === Infinity || d.dias > 30)
+      .sort((a, b) => (b.dias === Infinity ? 99999 : b.dias) - (a.dias === Infinity ? 99999 : a.dias))
+      .slice(0, 12);
+  }, [dados]);
+
+  const total = dados.length;
+  const semCobertura = buckets.slice(2).reduce((s, b) => s + b.count, 0); // 16d+
+
+  return (
+    <SectionCard
+      title="Tempo sem atendimento"
+      subtitle={`${semCobertura} de ${total} clientes sem contato há mais de 15 dias`}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={buckets} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="#F1F3F8" vertical={false} />
+              <XAxis dataKey="faixa" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+              <Tooltip
+                formatter={(v: number) => [`${v} clientes`, "Quantidade"]}
+                contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }}
+              />
+              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                {buckets.map((b, i) => <Cell key={i} fill={b.cor} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="flex flex-wrap gap-3 mt-2 justify-center">
+            {buckets.map(b => (
+              <div key={b.faixa} className="flex items-center gap-1.5 text-[11px] nx-muted">
+                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: b.cor }} />
+                {b.faixa} <span className="nx-num nx-text font-semibold">{b.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="lg:col-span-2">
+          <p className="text-[11px] uppercase tracking-wide nx-muted font-medium mb-2">Clientes mais esquecidos</p>
+          {criticos.length === 0 ? (
+            <EmptyState message="Todos os clientes foram atendidos recentemente." icon={<CheckCircle2 className="h-5 w-5" />} />
+          ) : (
+            <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+              {criticos.map(c => {
+                const dias = c.dias;
+                const label = dias === Infinity ? "Nunca atendido" : `${dias}d sem atendimento`;
+                const cor = dias === Infinity || dias > 60 ? "bg-red-100 text-red-700"
+                          : dias > 30 ? "bg-rose-100 text-rose-700"
+                          : "bg-amber-100 text-amber-700";
+                return (
+                  <div key={c.conta.id} className="flex items-center justify-between gap-2 bg-[#F6F7F9] rounded-md px-2.5 py-1.5">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium nx-text truncate">{c.conta.razao}</p>
+                      <p className="text-[10px] nx-muted">{c.conta.cidade}/{c.conta.uf}</p>
+                    </div>
+                    <Badge className={`${cor} border-0 text-[10px] shrink-0`}>{label}</Badge>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </SectionCard>
   );
