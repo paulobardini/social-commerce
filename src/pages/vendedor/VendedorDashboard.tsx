@@ -176,7 +176,7 @@ function FilaAcao({ fila }: { fila: ReturnType<typeof filaAcaoVendedor> }) {
 
   return (
     <div className="space-y-4">
-      <div className="nx-card p-5 bg-gradient-to-br from-[#2D3A8C] to-[#363BB4] text-white">
+      <div className="rounded-xl p-5 text-white shadow-sm" style={{ background: "linear-gradient(135deg, #2D3A8C 0%, #363BB4 100%)" }}>
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             <h2 className="text-lg font-semibold">Você tem {fila.total} clientes para atender hoje</h2>
