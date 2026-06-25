@@ -1,358 +1,412 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { useCockpit } from "@/cockpit/contexts/CockpitContext";
+import { CockpitTopbar } from "@/cockpit/components/CockpitTopbar";
+import { SaudeCarteiraBar } from "@/cockpit/components/SaudeCarteiraBar";
+import { SectionCard } from "@/cockpit/components/SectionCard";
+import { KpiCard } from "@/cockpit/components/KpiCard";
+import { StatusDonut } from "@/cockpit/components/StatusDonut";
+import { AgingBars } from "@/cockpit/components/AgingBars";
+import { Gauge } from "@/cockpit/components/Gauge";
+import { ProgressBar } from "@/cockpit/components/ProgressBar";
+import { FunnelChart } from "@/cockpit/components/FunnelChart";
+import { EmptyState } from "@/cockpit/components/EmptyState";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { 
-  TrendingUp, Target, FileText, CheckSquare, AlertTriangle, Users, 
-  Phone, Calendar, ArrowRight, Clock, Flame, Plus, MessageCircle, UserX,
-  MapPin, ShoppingBag, Pencil,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { dashboardKPIs, mockOportunidades, mockTarefas, compromissos, etapaMap, tagColors, tagLabels, type TagCRM } from "@/data/mockCRM";
-import { mockConversas, mockClientes360, mockCompromissos, tipoCompromissoLabels } from "@/data/mockCRM360";
-import { useMetas } from "@/contexts/MetasContext";
-import { MetasModal } from "@/components/vendedor/MetasModal";
-import { QuickTaskModal } from "@/components/vendedor/QuickTaskModal";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { kpisCarteira, kpisMetas } from "@/cockpit/lib/kpis";
+import { classificarTudo } from "@/cockpit/lib/classificar";
+import { agingCarteira } from "@/cockpit/lib/aging";
+import { filaAcaoVendedor, type FilaItem } from "@/cockpit/lib/fila";
+import { funilOportunidades, oportunidadesEstagnadas, ETAPAS_FUNIL, ETAPA_LABEL, cicloDiasMedio, winRateGlobal } from "@/cockpit/lib/funis";
+import { serieMensal } from "@/cockpit/lib/series";
+import { STATUS_COLORS, fmtBRL, fmtBRLc, fmtNum, fmtPct, fmtDias, NX } from "@/cockpit/styles/tokens";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Cell } from "recharts";
+import { AlertTriangle, Flame, MessageCircle, ChevronDown, ChevronRight, Phone, MapPin, ArrowRight, Search, CheckCircle2, Target, TrendingUp, Activity } from "lucide-react";
+import { toast } from "sonner";
 
 export default function VendedorDashboard() {
-  const navigate = useNavigate();
-  const { metaMensal, realizadoMes } = useMetas();
-  const [showMeta, setShowMeta] = useState(false);
-  const [taskModal, setTaskModal] = useState<{ open: boolean; cliente: string }>({ open: false, cliente: "" });
+  const ctx = useCockpit();
+  const { seed, range, previousRange, diasAtivo, diasPerdido, repId, comparar } = ctx;
 
-  const oportunidadesQuentes = mockOportunidades.filter(o => o.tags.includes("quente") || o.prioridade === "alta").filter(o => o.etapa !== "ganho" && o.etapa !== "perdido").slice(0, 4);
-  const tarefasPendentes = mockTarefas.filter(t => t.status !== "concluida").slice(0, 5);
-  const tarefasAtrasadas = mockTarefas.filter(t => t.status === "atrasada");
-  const totalNaoLidas = mockConversas.reduce((s, c) => s + c.naoLidas, 0);
-  const clientesSemContato = mockClientes360.filter(c => c.temperaturaComercial === "fria" && (c.status === "em_risco" || c.status === "reativacao" || c.status === "inativo"));
-  const proximosCompromissos = mockCompromissos.filter(c => c.status === "agendado").slice(0, 4);
+  // Garantir um rep selecionado válido
+  const repIdEfetivo = repId === "todos" ? seed.representantes[0].id : repId;
+  const cfg = { diasAtivo, diasPerdido, repId: repIdEfetivo };
 
-  // negative=true => métrica de "alerta" (atrasadas, não lidas). Recebe border-left vermelho se valor>0; opacidade reduzida se valor=0.
-  const kpiCards = [
-    { label: "Oportunidades abertas", value: dashboardKPIs.oportunidadesAbertas, icon: Target, color: "text-blue-600", bg: "bg-blue-50", negative: false },
-    { label: "Em negociação", value: dashboardKPIs.emNegociacao, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50", negative: false },
-    { label: "Orçamentos enviados", value: dashboardKPIs.orcamentosEnviados, icon: FileText, color: "text-purple-600", bg: "bg-purple-50", negative: false },
-    { label: "Tarefas pendentes", value: dashboardKPIs.tarefasPendentes, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-50", negative: false },
-    { label: "Tarefas atrasadas", value: dashboardKPIs.tarefasAtrasadas, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", negative: true },
-    { label: "Mensagens não lidas", value: totalNaoLidas, icon: MessageCircle, color: "text-green-600", bg: "bg-green-50", negative: true },
+  const kpiC = useMemo(() => kpisCarteira(seed, range, previousRange, cfg), [seed, range, previousRange, cfg]);
+  const kpiM = useMemo(() => kpisMetas(seed, range, previousRange, cfg), [seed, range, previousRange, cfg]);
+
+  // FILA DE AÇÃO
+  const fila = useMemo(() => filaAcaoVendedor(seed, repIdEfetivo, diasAtivo, diasPerdido), [seed, repIdEfetivo, diasAtivo, diasPerdido]);
+
+  // Donut + aging
+  const donutData = [
+    { status: "ativo" as const, valor: kpiC.ativos.atual },
+    { status: "inativo" as const, valor: kpiC.inativos.atual },
+    { status: "perdido" as const, valor: kpiC.perdidos.atual },
   ];
+  const aging = useMemo(() => agingCarteira(kpiC.classificadas), [kpiC]);
 
-  // Meta do mês
-  const pctMeta = metaMensal > 0 ? Math.min(100, Math.round((realizadoMes / metaMensal) * 100)) : 0;
-  const metaBarColor = pctMeta >= 80 ? "bg-emerald-500" : pctMeta >= 50 ? "bg-yellow-500" : "bg-red-500";
-  const metaTextColor = pctMeta >= 80 ? "text-emerald-600" : pctMeta >= 50 ? "text-yellow-600" : "text-red-600";
+  // Funil de oportunidades do rep
+  const opsRep = useMemo(() => seed.oportunidades.filter(o => o.repId === repIdEfetivo), [seed, repIdEfetivo]);
+  const funOp = useMemo(() => funilOportunidades(opsRep), [opsRep]);
+  const opsEst = useMemo(() => oportunidadesEstagnadas(opsRep, 7, seed.hoje), [opsRep, seed]);
+  const cicloRep = cicloDiasMedio(opsRep, seed.hoje);
+  const winRep = winRateGlobal(opsRep);
+  const pipelineRep = opsRep.filter(o => ETAPAS_FUNIL.includes(o.etapa)).reduce((s, o) => s + o.valor, 0);
 
-  const activeOps = mockOportunidades.filter(o => o.etapa !== "ganho" && o.etapa !== "perdido");
-  const etapaOrder = ["novo_lead", "contato_iniciado", "em_qualificacao", "proposta_construcao", "orcamento_enviado", "em_negociacao"] as const;
-  const etapas = etapaOrder.map(e => {
-    const ops = activeOps.filter(o => o.etapa === e);
-    return { etapa: etapaMap[e], count: ops.length, valor: ops.reduce((s, o) => s + o.valorEstimado, 0) };
-  }).filter(e => e.count > 0);
-
-  const tipoIcons: Record<string, any> = {
-    ligacao: Phone, reuniao: Calendar, visita: MapPin, follow_up: ArrowRight,
-    retorno_orcamento: Clock, apresentacao: FileText,
-  };
-  const tipoColors: Record<string, string> = {
-    ligacao: "bg-green-100 text-green-600", reuniao: "bg-blue-100 text-blue-600",
-    visita: "bg-purple-100 text-purple-600", follow_up: "bg-orange-100 text-orange-600",
-    retorno_orcamento: "bg-yellow-100 text-yellow-600", apresentacao: "bg-indigo-100 text-indigo-600",
-  };
+  // Histórico 6m do rep
+  const hist6m = useMemo(() => {
+    const pedidos = seed.pedidos.filter(p => p.repId === repIdEfetivo);
+    return serieMensal(6, pedidos, seed.hoje);
+  }, [seed, repIdEfetivo]);
 
   return (
-    <>
-      <div className="p-4 md:p-6 space-y-5 max-w-[1400px] mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="nx-shell min-h-screen">
+      <CockpitTopbar title="Painel comercial · Vendedor" showRep />
+      <div className="px-4 md:px-6 py-4 space-y-4">
+
+        <Tabs defaultValue="hoje" className="space-y-4">
+          <TabsList className="bg-white border border-[#E7E9EE] p-1 h-auto">
+            <TabsTrigger value="hoje" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Hoje · Fila de ação</TabsTrigger>
+            <TabsTrigger value="carteira" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Minha carteira</TabsTrigger>
+            <TabsTrigger value="metas" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Minhas metas</TabsTrigger>
+            <TabsTrigger value="funil" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Meu funil</TabsTrigger>
+          </TabsList>
+
+          {/* HOJE */}
+          <TabsContent value="hoje" className="mt-0">
+            <FilaAcao fila={fila} />
+          </TabsContent>
+
+          {/* MINHA CARTEIRA */}
+          <TabsContent value="carteira" className="space-y-4 mt-0">
+            <SaudeCarteiraBar filtroRepId={repIdEfetivo} />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <KpiCard label="Ativos" value={fmtNum(kpiC.ativos.atual)} delta={comparar ? { pct: kpiC.ativos.delta } : undefined} />
+              <KpiCard label="Inativos" value={fmtNum(kpiC.inativos.atual)} delta={comparar ? { pct: kpiC.inativos.delta, invert: true } : undefined} />
+              <KpiCard label="Perdidos" value={fmtNum(kpiC.perdidos.atual)} delta={comparar ? { pct: kpiC.perdidos.delta, invert: true } : undefined} />
+              <KpiCard label="Positivados" value={fmtNum(kpiC.positivados.atual)} delta={comparar ? { pct: kpiC.positivados.delta } : undefined} />
+              <KpiCard label="Novos" value={fmtNum(kpiC.novos.atual)} delta={comparar ? { pct: kpiC.novos.delta } : undefined} />
+              <KpiCard label="Reativados" value={fmtNum(kpiC.reativados.atual)} delta={comparar ? { pct: kpiC.reativados.delta } : undefined} />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Distribuição por status"><StatusDonut data={donutData} /></SectionCard>
+              <SectionCard title="Aging da carteira"><AgingBars data={aging} /></SectionCard>
+            </div>
+            <ListaClientes classificadas={kpiC.classificadas} />
+          </TabsContent>
+
+          {/* METAS */}
+          <TabsContent value="metas" className="space-y-4 mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <SectionCard className="lg:col-span-1" title="Minha meta de faturamento" subtitle={`Meta ${fmtBRL(kpiM.metaFaturamento)}`}>
+                <Gauge value={kpiM.atingimento} label="Atingimento" size={220} />
+                <p className="text-center text-[11px] nx-muted mt-2">Realizado <span className="font-semibold nx-num nx-text">{fmtBRL(kpiM.realizado)}</span></p>
+              </SectionCard>
+              <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-3 content-start">
+                <KpiCard label="Pace projetado" value={fmtPct(kpiM.paceAtingimento, 0)} hint={fmtBRLc(kpiM.projecao)} />
+                <KpiCard label="Quanto falta" value={fmtBRLc(kpiM.gap)} hint="para meta" />
+                <KpiCard label="Dias restantes" value={fmtNum(kpiM.diasRestantes)} hint="no mês" />
+                <KpiCard label="R$/dia necessário" value={fmtBRLc(kpiM.rsPorDia)} />
+                <KpiCard label="Meta positivação" value="72%" hint="atingido" />
+                <KpiCard label="Meta cobertura" value="68%" hint="atingido" />
+                <KpiCard label="Meta novos" value="85%" hint="atingido" />
+                <KpiCard label="Meta reativação" value="44%" hint="atingido" />
+              </div>
+            </div>
+            <SectionCard title="Meu histórico" subtitle="Faturamento últimos 6 meses">
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={hist6m}>
+                  <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                  <XAxis dataKey="data" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={fmtBRLc} />
+                  <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                  <Bar dataKey="valor" fill={NX.primary} radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </SectionCard>
+          </TabsContent>
+
+          {/* FUNIL */}
+          <TabsContent value="funil" className="space-y-4 mt-0">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <KpiCard label="Pipeline R$" value={fmtBRLc(pipelineRep)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+              <KpiCard label="Ciclo médio" value={fmtDias(cicloRep)} icon={<Activity className="h-3.5 w-3.5" />} />
+              <KpiCard label="Win rate" value={fmtPct(winRep)} icon={<Target className="h-3.5 w-3.5" />} />
+            </div>
+            <SectionCard title="Meu funil de oportunidades">
+              <FunnelChart etapas={funOp.counts.map(c => ({ etapa: c.etapa, valor: c.valor, receita: c.receita }))} taxas={funOp.taxas} money />
+            </SectionCard>
+            <SectionCard title="Minhas oportunidades estagnadas" subtitle="Sem movimento há 7+ dias">
+              {opsEst.length === 0 ? <EmptyState message="Nenhuma oportunidade estagnada — bom trabalho!" /> :
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {opsEst.map(o => {
+                    const cliente = seed.contas.find(c => c.id === o.contaId);
+                    return (
+                      <div key={o.id} className="flex items-center justify-between bg-[#F6F7F9] rounded-lg p-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold nx-text truncate">{cliente?.razao}</p>
+                          <p className="text-[11px] nx-muted">{ETAPA_LABEL[o.etapa]} · {fmtBRLc(o.valor)}</p>
+                        </div>
+                        <Badge className="bg-rose-100 text-rose-700 mr-2">{o.diasParada}d parada</Badge>
+                        <Button size="sm" variant="outline" className="text-[11px] h-7" onClick={() => toast.success("Etapa avançada (mock)")}>
+                          Avançar etapa <ArrowRight className="h-3 w-3 ml-1" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              }
+            </SectionCard>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+
+// ============ FILA DE AÇÃO ============
+function FilaAcao({ fila }: { fila: ReturnType<typeof filaAcaoVendedor> }) {
+  const [openModal, setOpenModal] = useState<{ item: FilaItem } | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <div className="nx-card p-5 bg-gradient-to-br from-[#2D3A8C] to-[#363BB4] text-white">
+        <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground">Bom dia, Paulo 👋</h1>
-            <p className="text-sm text-muted-foreground mt-1">Aqui está o resumo do seu dia — 13 de abril de 2026</p>
+            <h2 className="text-lg font-semibold">Você tem {fila.total} clientes para atender hoje</h2>
+            <p className="text-xs opacity-80 mt-1">Priorizado por urgência. Comece pelo bloco vermelho.</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/vendedor/oportunidades")}>
-              <Flame className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">Ver pipeline</span><span className="sm:hidden">Pipeline</span>
-            </Button>
-            <Button size="sm" onClick={() => navigate("/vendedor/oportunidades/nova")}>
-              <Plus className="h-4 w-4 mr-1" /> Nova
-            </Button>
+            <Chip color="rose"   label={`${fila.inativosEmRisco.length} em risco`} />
+            <Chip color="amber"  label={`${fila.leadsQuentesParados.length} oport. paradas`} />
+            <Chip color="slate"  label={`${fila.ativosSemCobertura.length} sem cobertura`} />
           </div>
-        </div>
-
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {kpiCards.map(kpi => {
-            const isAlert = kpi.negative && kpi.value > 0;
-            const isMutedZero = kpi.negative && kpi.value === 0;
-            return (
-              <Card
-                key={kpi.label}
-                className={`border border-border hover:border-accent/30 transition-colors cursor-pointer ${
-                  isAlert ? "border-l-[3px] border-l-destructive" : ""
-                } ${isMutedZero ? "opacity-60" : ""}`}
-                onClick={() => {
-                  if (kpi.label.includes("Mensagens")) navigate("/vendedor/whatsapp");
-                  else if (kpi.label.includes("Tarefa")) navigate("/vendedor/tarefas");
-                  else if (kpi.label.includes("Oportunidades") || kpi.label.includes("negociação")) navigate("/vendedor/oportunidades");
-                }}
-              >
-                <CardContent className="p-4">
-                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${kpi.bg}`}>
-                    <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
-                  </div>
-                  <p className="text-2xl font-bold font-heading text-foreground">{kpi.value}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">{kpi.label}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Meta do mês */}
-        <Card className="border border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-accent" />
-                <span className="text-sm font-semibold text-foreground">Meta do mês</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">R$ {realizadoMes.toLocaleString("pt-BR")}</span>
-                  <span className="mx-1">/</span>
-                  <span>R$ {metaMensal.toLocaleString("pt-BR")}</span>
-                </p>
-                <span className={`text-base font-bold font-heading ${metaTextColor}`}>{pctMeta}%</span>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowMeta(true)} title="Configurar meta">
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-            <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
-              <div className={`h-full transition-all ${metaBarColor}`} style={{ width: `${pctMeta}%` }} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pipeline value */}
-        <Card className="border border-border">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-heading">Valor do pipeline ativo</CardTitle>
-              <p className="text-xs text-muted-foreground">Taxa de conversão: <span className="font-semibold text-foreground">{dashboardKPIs.taxaConversao}%</span></p>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-end gap-6 mb-4">
-              <div>
-                <p className="text-3xl font-bold font-heading text-foreground">
-                  R$ {dashboardKPIs.valorPipeline.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Total em oportunidades ativas</p>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-semibold text-foreground">
-                  R$ {dashboardKPIs.ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </p>
-                <p className="text-xs text-muted-foreground">Ticket médio</p>
-              </div>
-            </div>
-            <div className="flex h-3 rounded-full overflow-hidden bg-muted">
-              {etapas.map((e, i) => {
-                const colors = ["bg-slate-400", "bg-blue-400", "bg-purple-400", "bg-yellow-400", "bg-orange-400", "bg-orange-500"];
-                const width = (e.count / activeOps.length) * 100;
-                return <div key={i} className={`${colors[i]} h-full`} style={{ width: `${width}%` }} title={`${e.etapa}: ${e.count}`} />;
-              })}
-            </div>
-            <div className="flex flex-wrap gap-4 mt-3">
-              {etapas.map((e, i) => {
-                const colors = ["bg-slate-400", "bg-blue-400", "bg-purple-400", "bg-yellow-400", "bg-orange-400", "bg-orange-500"];
-                return (
-                  <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <div className={`w-2.5 h-2.5 rounded-full ${colors[i]}`} />
-                    {e.etapa} ({e.count}) — R$ {e.valor.toLocaleString("pt-BR")}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Hot opportunities */}
-          <Card className="border border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-heading flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-orange-500" /> Oportunidades prioritárias
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/vendedor/oportunidades")} className="text-xs">
-                  Ver todas <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {oportunidadesQuentes.map(op => (
-                <button
-                  key={op.id}
-                  onClick={() => navigate(`/vendedor/oportunidades/${op.id}`)}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 hover:border-accent/30 transition-all text-left"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground truncate">{op.nome}</p>
-                    <p className="text-xs text-muted-foreground">{op.clienteNome} · {etapaMap[op.etapa]}</p>
-                    <div className="flex gap-1 mt-1">
-                      {op.tags.slice(0, 3).map(tag => (
-                        <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${tagColors[tag]}`}>
-                          {tagLabels[tag]}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-right ml-3 shrink-0">
-                    <p className="text-sm font-semibold text-foreground">R$ {op.valorEstimado.toLocaleString("pt-BR")}</p>
-                    <p className="text-[10px] text-muted-foreground">{op.probabilidade}% prob.</p>
-                  </div>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Tasks */}
-          <Card className="border border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-heading flex items-center gap-2">
-                  <CheckSquare className="h-4 w-4 text-emerald-500" /> Tarefas do dia
-                  {tarefasAtrasadas.length > 0 && (
-                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{tarefasAtrasadas.length} atrasadas</Badge>
-                  )}
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/vendedor/tarefas")} className="text-xs">
-                  Ver todas <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {tarefasPendentes.map(t => (
-                <div
-                  key={t.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                    t.status === "atrasada" ? "border-red-200 bg-red-50/50" : "border-border hover:bg-muted/50"
-                  }`}
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-foreground truncate">{t.titulo}</p>
-                      {t.status === "atrasada" && <AlertTriangle className="h-3 w-3 text-red-500 shrink-0" />}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{t.descricao}</p>
-                  </div>
-                  <div className="text-right ml-3 shrink-0">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" /> {t.vencimento}
-                    </div>
-                    <Badge variant={t.prioridade === "alta" ? "destructive" : "secondary"} className="text-[10px] mt-1">{t.prioridade}</Badge>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Upcoming appointments */}
-          <Card className="border border-border lg:col-span-2">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-heading flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-blue-500" /> Próximos compromissos
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/vendedor/agenda")} className="text-xs">
-                  Ver agenda <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {proximosCompromissos.map(c => {
-                  const Icon = tipoIcons[c.tipo] || Calendar;
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => c.clienteId && navigate(`/vendedor/360/${c.clienteId}`)}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 hover:border-accent/30 transition-all text-left"
-                    >
-                      <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${tipoColors[c.tipo]}`}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-foreground truncate">{c.titulo}</p>
-                        <p className="text-xs text-muted-foreground">{c.data} · {c.hora} · {c.duracao}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Clients without contact */}
-          <Card className="border border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-heading flex items-center gap-2">
-                  <UserX className="h-4 w-4 text-red-500" /> Atenção
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {clientesSemContato.map(c => (
-                <div
-                  key={c.id}
-                  className="w-full flex items-center gap-2 p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                >
-                  <button
-                    onClick={() => navigate(`/vendedor/360/${c.id}`)}
-                    className="flex items-center gap-3 min-w-0 flex-1 text-left"
-                  >
-                    <div className="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-red-600">{c.nomeFantasia[0]}</span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{c.nomeFantasia}</p>
-                      <p className="text-[10px] text-muted-foreground">Último: {c.ultimoContato}</p>
-                    </div>
-                  </button>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${c.status === "em_risco" ? "bg-red-100 text-red-700 border-red-200" : c.status === "reativacao" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-slate-100 text-slate-500 border-slate-200"}`}>
-                    {c.status === "em_risco" ? "Em risco" : c.status === "reativacao" ? "Reativação" : "Inativo"}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 text-[10px] shrink-0"
-                    onClick={(e) => { e.stopPropagation(); setTaskModal({ open: true, cliente: c.nomeFantasia }); }}
-                    title="Criar tarefa de reativação"
-                  >
-                    <Plus className="h-3 w-3 mr-0.5" /> Tarefa
-                  </Button>
-                </div>
-              ))}
-              {clientesSemContato.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-4">Nenhum alerta</p>
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
 
-      <MetasModal open={showMeta} onOpenChange={setShowMeta} />
-      <QuickTaskModal
-        open={taskModal.open}
-        onOpenChange={(o) => setTaskModal({ open: o, cliente: o ? taskModal.cliente : "" })}
-        defaultClienteNome={taskModal.cliente}
-        defaultTipo="reativacao"
+      <BlocoFila
+        titulo="Inativos prestes a virar perdidos"
+        descricao="Faltam ≤15 dias para virar Perdido — prioridade máxima"
+        accent="rose"
+        icon={<AlertTriangle className="h-4 w-4" />}
+        itens={fila.inativosEmRisco}
+        defaultOpen
+        onAcao={(item) => setOpenModal({ item })}
       />
-    </>
+      <BlocoFila
+        titulo="Leads / oportunidades quentes paradas"
+        descricao="Sem movimento recente — perdendo temperatura"
+        accent="amber"
+        icon={<Flame className="h-4 w-4" />}
+        itens={fila.leadsQuentesParados}
+        defaultOpen
+        onAcao={(item) => setOpenModal({ item })}
+      />
+      <BlocoFila
+        titulo="Ativos sem cobertura no período"
+        descricao="Ativos que ainda não recebeu atendimento neste período"
+        accent="slate"
+        icon={<MessageCircle className="h-4 w-4" />}
+        itens={fila.ativosSemCobertura}
+        defaultOpen={false}
+        onAcao={(item) => setOpenModal({ item })}
+      />
+
+      {/* Rodapé sticky */}
+      <div className="nx-card sticky bottom-2 p-3 grid grid-cols-3 gap-3">
+        <KpiCard label="Atendimentos feitos hoje" value="4" hint="meta diária: 8" />
+        <KpiCard label="Positivados hoje" value="2" hint="meta diária: 5" />
+        <div className="nx-card-soft p-3">
+          <p className="text-[10px] uppercase tracking-wide nx-muted font-medium mb-1.5">Meta do dia</p>
+          <ProgressBar value={50} color="#2D3A8C" suffix="50%" />
+          <p className="text-[10px] nx-muted mt-1.5 nx-num">R$ 8.500 / R$ 17.000</p>
+        </div>
+      </div>
+
+      <RegistrarAtendimentoModal open={!!openModal} item={openModal?.item} onClose={() => setOpenModal(null)} />
+    </div>
+  );
+}
+
+function Chip({ color, label }: { color: "rose" | "amber" | "slate"; label: string }) {
+  const cls = {
+    rose: "bg-rose-500/20 text-rose-50 border-rose-300/30",
+    amber: "bg-amber-500/20 text-amber-50 border-amber-300/30",
+    slate: "bg-white/15 text-white border-white/20",
+  }[color];
+  return <span className={`text-[11px] px-2.5 py-1 rounded-full border ${cls}`}>{label}</span>;
+}
+
+function BlocoFila({ titulo, descricao, accent, icon, itens, defaultOpen, onAcao }: {
+  titulo: string; descricao: string; accent: "rose" | "amber" | "slate"; icon: React.ReactNode;
+  itens: FilaItem[]; defaultOpen: boolean; onAcao: (item: FilaItem) => void;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const accentMap = {
+    rose:  { bar: "bg-rose-500",  bg: "bg-rose-50",  text: "text-rose-700",  border: "border-rose-200" },
+    amber: { bar: "bg-amber-500", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+    slate: { bar: "bg-slate-400", bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200" },
+  }[accent];
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className="nx-card overflow-hidden">
+        <CollapsibleTrigger className="w-full">
+          <div className={`flex items-center gap-3 px-4 py-3 ${accentMap.bg} border-b ${accentMap.border}`}>
+            <div className={`h-1 w-1 rounded-full ${accentMap.bar}`} />
+            <div className={`h-7 w-7 rounded-md ${accentMap.bar} text-white flex items-center justify-center`}>{icon}</div>
+            <div className="flex-1 text-left">
+              <p className={`text-sm font-semibold ${accentMap.text}`}>{titulo}</p>
+              <p className="text-[11px] nx-muted">{descricao}</p>
+            </div>
+            <Badge className={`${accentMap.bar} text-white`}>{itens.length}</Badge>
+            {open ? <ChevronDown className="h-4 w-4 nx-muted" /> : <ChevronRight className="h-4 w-4 nx-muted" />}
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          {itens.length === 0 ? (
+            <EmptyState message="Tudo em dia neste bloco." icon={<CheckCircle2 className="h-5 w-5" />} />
+          ) : (
+            <div className="divide-y divide-[#F1F3F8] max-h-[480px] overflow-y-auto">
+              {itens.map(item => (
+                <FilaItemRow key={item.contaId + item.motivo} item={item} accent={accent} onAcao={onAcao} />
+              ))}
+            </div>
+          )}
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+}
+
+function FilaItemRow({ item, accent, onAcao }: { item: FilaItem; accent: "rose" | "amber" | "slate"; onAcao: (item: FilaItem) => void }) {
+  const inicial = item.razao.slice(0, 1).toUpperCase();
+  const urgente = item.diasRestantes !== undefined && item.diasRestantes <= 5;
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-[#F6F7F9]">
+      <div className="h-9 w-9 rounded-full bg-[#E8EAF6] text-[#2D3A8C] flex items-center justify-center text-sm font-semibold shrink-0">{inicial}</div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-medium nx-text truncate">{item.razao}</p>
+          <Badge variant="outline" className="text-[10px]">{item.status}</Badge>
+          {item.diasRestantes !== undefined && (
+            <Badge className={urgente ? "bg-rose-500 text-white" : "bg-amber-500 text-white"}>
+              Faltam {item.diasRestantes}d
+            </Badge>
+          )}
+        </div>
+        <p className="text-[11px] nx-muted mt-0.5">
+          {item.motivo}{item.valor ? ` · ${fmtBRLc(item.valor)} (12m)` : ""}
+        </p>
+      </div>
+      <div className="flex gap-1.5 shrink-0">
+        <Button size="sm" variant="outline" className="h-8 px-2.5 text-[11px]" onClick={() => onAcao(item)}>
+          <Phone className="h-3 w-3 mr-1" /> Registrar atendimento
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function RegistrarAtendimentoModal({ open, item, onClose }: { open: boolean; item?: FilaItem; onClose: () => void }) {
+  const [tipo, setTipo] = useState("whatsapp");
+  const [nota, setNota] = useState("");
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Registrar atendimento</DialogTitle>
+          {item && <p className="text-xs nx-muted">{item.razao}</p>}
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-[11px] nx-muted mb-1 block">Tipo</label>
+            <Select value={tipo} onValueChange={setTipo}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="visita">Visita</SelectItem>
+                <SelectItem value="ligacao">Ligação</SelectItem>
+                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-[11px] nx-muted mb-1 block">Nota</label>
+            <Textarea value={nota} onChange={(e) => setNota(e.target.value)} rows={3} placeholder="O que foi conversado, próximos passos..." />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => { toast.success("Atendimento registrado"); onClose(); setNota(""); }} style={{ background: "#2D3A8C" }}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============ LISTA DE CLIENTES ============
+function ListaClientes({ classificadas }: { classificadas: ReturnType<typeof classificarTudo> }) {
+  const [busca, setBusca] = useState("");
+  const [statusF, setStatusF] = useState<string>("todos");
+
+  const filtradas = useMemo(() => {
+    return classificadas.filter(c => {
+      if (busca && !c.conta.razao.toLowerCase().includes(busca.toLowerCase())) return false;
+      if (statusF !== "todos" && c.status !== statusF) return false;
+      return true;
+    }).sort((a, b) => b.valor12m - a.valor12m);
+  }, [classificadas, busca, statusF]);
+
+  return (
+    <SectionCard title="Meus clientes" subtitle={`${filtradas.length} resultados`}>
+      <div className="flex gap-2 mb-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 nx-muted" />
+          <Input placeholder="Buscar cliente..." value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-8 h-9 text-xs" />
+        </div>
+        <Select value={statusF} onValueChange={setStatusF}>
+          <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos</SelectItem>
+            <SelectItem value="ativo">Ativos</SelectItem>
+            <SelectItem value="inativo">Inativos</SelectItem>
+            <SelectItem value="perdido">Perdidos</SelectItem>
+            <SelectItem value="lead">Leads</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+        <table className="w-full text-xs">
+          <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE] sticky top-0 bg-white">
+            <tr><th className="text-left py-2">Cliente</th><th className="text-left">Status</th><th className="text-right">Recência</th><th className="text-right">Valor 12m</th><th className="text-right">Pedidos 12m</th></tr>
+          </thead>
+          <tbody>
+            {filtradas.length === 0 && <tr><td colSpan={5} className="py-6 text-center nx-muted">Nenhum cliente encontrado para os filtros.</td></tr>}
+            {filtradas.slice(0, 100).map(c => (
+              <tr key={c.conta.id} className="border-b border-[#F1F3F8] hover:bg-[#F6F7F9]">
+                <td className="py-2 nx-text font-medium">
+                  {c.conta.razao}
+                  <span className="ml-1.5 text-[10px] nx-muted">· {c.conta.cidade}/{c.conta.uf}</span>
+                </td>
+                <td>
+                  <Badge style={{ background: STATUS_COLORS[c.status] + "22", color: STATUS_COLORS[c.status] }} className="border-0 text-[10px]">
+                    {c.status}
+                  </Badge>
+                </td>
+                <td className="text-right nx-num nx-muted">{c.recencia === Infinity ? "—" : `${c.recencia}d`}</td>
+                <td className="text-right nx-num">{fmtBRLc(c.valor12m)}</td>
+                <td className="text-right nx-num">{c.freq12m}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </SectionCard>
   );
 }
