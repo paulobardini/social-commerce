@@ -86,7 +86,7 @@ export function buildSeed(): Seed {
 
   // Contas (120) — distribuição forçada por faixa de recência
   const contas: Conta[] = [];
-  const NUM = 280;
+  const NUM = 900;
   for (let i = 0; i < NUM; i++) {
     const fantasia = pick(NOMES_FANTASIA);
     const sobre = pick(SOBRENOMES);
