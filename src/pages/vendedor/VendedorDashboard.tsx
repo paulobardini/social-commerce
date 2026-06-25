@@ -98,6 +98,7 @@ export default function VendedorDashboard() {
               <SectionCard title="Distribuição por status"><StatusDonut data={donutData} /></SectionCard>
               <SectionCard title="Aging da carteira"><AgingBars data={aging} /></SectionCard>
             </div>
+            <TempoSemAtendimento repId={repIdEfetivo} />
             <ListaClientes classificadas={kpiC.classificadas} />
           </TabsContent>
 
