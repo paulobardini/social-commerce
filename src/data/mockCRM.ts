@@ -444,16 +444,16 @@ export const mockTarefas: TarefaCRM[] = [
 
 // Dashboard KPIs
 export const dashboardKPIs = {
-  oportunidadesAbertas: 10,
-  emNegociacao: 1,
-  orcamentosEnviados: 2,
-  tarefasPendentes: 6,
-  tarefasAtrasadas: 2,
-  clientesSemRetorno: 3,
-  taxaConversao: 14.3,
-  valorPipeline: 252350,
-  valorMesAtual: 45000,
-  ticketMedio: 25235,
+  oportunidadesAbertas: 28,
+  emNegociacao: 4,
+  orcamentosEnviados: 5,
+  tarefasPendentes: 11,
+  tarefasAtrasadas: 3,
+  clientesSemRetorno: 6,
+  taxaConversao: 18.2,
+  valorPipeline: 862450,
+  valorMesAtual: 52800,
+  ticketMedio: 30802,
 };
 
 export const compromissos = [
