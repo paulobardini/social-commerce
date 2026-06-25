@@ -412,14 +412,14 @@ function ListaClientes({ classificadas }: { classificadas: ReturnType<typeof cla
   );
 }
 
-// ============ TEMPO SEM ATENDIMENTO ============
-function TempoSemAtendimento({ repId }: { repId: string }) {
+// ============ ALERTA: TEMPO SEM ATENDIMENTO ============
+function AlertaSemAtendimento({ repId }: { repId: string }) {
   const { seed } = useCockpit();
+  const [expand, setExpand] = useState(false);
   const hoje = seed.hoje;
 
   const dados = useMemo(() => {
     const contas = seed.contas.filter(c => c.repId === repId);
-    // último atendimento por conta
     const ultimoMap = new Map<string, Date>();
     for (const a of seed.atendimentos) {
       if (a.repId !== repId) continue;
@@ -433,89 +433,85 @@ function TempoSemAtendimento({ repId }: { repId: string }) {
     });
   }, [seed, repId, hoje]);
 
-  const buckets = useMemo(() => {
-    const b = [
-      { faixa: "0-7d",   min: 0,   max: 7,   cor: "#10B981", count: 0 },
-      { faixa: "8-15d",  min: 8,   max: 15,  cor: "#3B82F6", count: 0 },
-      { faixa: "16-30d", min: 16,  max: 30,  cor: "#F59E0B", count: 0 },
-      { faixa: "31-60d", min: 31,  max: 60,  cor: "#EF4444", count: 0 },
-      { faixa: "60d+",   min: 61,  max: 9998,cor: "#991B1B", count: 0 },
-      { faixa: "Nunca",  min: 9999,max: Infinity, cor: "#64748B", count: 0 },
-    ];
-    for (const d of dados) {
-      const dias = d.dias === Infinity ? Infinity : d.dias;
-      const bucket = b.find(x => dias >= x.min && dias <= x.max);
-      if (bucket) bucket.count++;
-    }
-    return b;
-  }, [dados]);
+  const criticos = useMemo(
+    () => dados
+      .filter(d => d.dias === Infinity || d.dias > 60)
+      .sort((a, b) => (b.dias === Infinity ? 99999 : b.dias) - (a.dias === Infinity ? 99999 : a.dias)),
+    [dados]
+  );
+  const atencao = useMemo(() => dados.filter(d => d.dias !== Infinity && d.dias > 30 && d.dias <= 60).length, [dados]);
+  const morno = useMemo(() => dados.filter(d => d.dias !== Infinity && d.dias > 15 && d.dias <= 30).length, [dados]);
 
-  const criticos = useMemo(() => {
-    return [...dados]
-      .filter(d => d.dias === Infinity || d.dias > 30)
-      .sort((a, b) => (b.dias === Infinity ? 99999 : b.dias) - (a.dias === Infinity ? 99999 : a.dias))
-      .slice(0, 12);
-  }, [dados]);
+  if (criticos.length === 0 && atencao === 0) return null;
 
-  const total = dados.length;
-  const semCobertura = buckets.slice(2).reduce((s, b) => s + b.count, 0); // 16d+
+  const severidade = criticos.length > 0 ? "critico" : "atencao";
+  const cores = severidade === "critico"
+    ? { bg: "bg-rose-50",   border: "border-rose-300",   barra: "bg-rose-600",   icon: "text-rose-600",   text: "text-rose-900",   badge: "bg-rose-600" }
+    : { bg: "bg-amber-50",  border: "border-amber-300",  barra: "bg-amber-500",  icon: "text-amber-600",  text: "text-amber-900",  badge: "bg-amber-500" };
 
   return (
-    <SectionCard
-      title="Tempo sem atendimento"
-      subtitle={`${semCobertura} de ${total} clientes sem contato há mais de 15 dias`}
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3">
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={buckets} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="#F1F3F8" vertical={false} />
-              <XAxis dataKey="faixa" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-              <Tooltip
-                formatter={(v: number) => [`${v} clientes`, "Quantidade"]}
-                contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }}
-              />
-              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                {buckets.map((b, i) => <Cell key={i} fill={b.cor} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="flex flex-wrap gap-3 mt-2 justify-center">
-            {buckets.map(b => (
-              <div key={b.faixa} className="flex items-center gap-1.5 text-[11px] nx-muted">
-                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: b.cor }} />
-                {b.faixa} <span className="nx-num nx-text font-semibold">{b.count}</span>
-              </div>
-            ))}
+    <div className={`relative overflow-hidden rounded-xl border ${cores.border} ${cores.bg} shadow-sm`}>
+      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${cores.barra}`} />
+      <div className="p-4 pl-5">
+        <div className="flex items-start gap-3 flex-wrap">
+          <div className={`h-10 w-10 rounded-full ${cores.bg} border ${cores.border} flex items-center justify-center shrink-0`}>
+            <AlertTriangle className={`h-5 w-5 ${cores.icon} ${severidade === "critico" ? "animate-pulse" : ""}`} />
+          </div>
+          <div className="flex-1 min-w-[260px]">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-[10px] uppercase tracking-wider font-bold ${cores.text} px-1.5 py-0.5 rounded ${cores.badge} text-white`}>
+                {severidade === "critico" ? "Alerta crítico" : "Atenção"}
+              </span>
+              <p className={`text-base md:text-lg font-bold ${cores.text}`}>
+                {criticos.length > 0 ? (
+                  <><span className="nx-num">{criticos.length}</span> {criticos.length === 1 ? "cliente" : "clientes"} há mais de <span className="nx-num">60</span> dias sem atendimento</>
+                ) : (
+                  <><span className="nx-num">{atencao}</span> {atencao === 1 ? "cliente" : "clientes"} entre 31 e 60 dias sem contato</>
+                )}
+              </p>
+            </div>
+            <p className={`text-xs ${cores.text} opacity-80 mt-1`}>
+              {criticos.length > 0
+                ? "Esses clientes correm risco real de churn. Priorize um contato hoje."
+                : "Janela curta antes de virar crítico. Programe um follow-up nesta semana."}
+              {atencao > 0 && criticos.length > 0 && <> · <span className="nx-num">{atencao}</span> entre 31-60d</>}
+              {morno > 0 && <> · <span className="nx-num">{morno}</span> entre 16-30d</>}
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            {criticos.length > 0 && (
+              <Button
+                size="sm"
+                onClick={() => setExpand(v => !v)}
+                className={`${cores.badge} hover:opacity-90 text-white h-9 px-3 text-xs`}
+              >
+                {expand ? "Ocultar lista" : `Ver ${criticos.length} clientes`} <ChevronRight className={`h-3.5 w-3.5 ml-1 transition-transform ${expand ? "rotate-90" : ""}`} />
+              </Button>
+            )}
           </div>
         </div>
-        <div className="lg:col-span-2">
-          <p className="text-[11px] uppercase tracking-wide nx-muted font-medium mb-2">Clientes mais esquecidos</p>
-          {criticos.length === 0 ? (
-            <EmptyState message="Todos os clientes foram atendidos recentemente." icon={<CheckCircle2 className="h-5 w-5" />} />
-          ) : (
-            <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+
+        {expand && criticos.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-rose-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[320px] overflow-y-auto pr-1">
               {criticos.map(c => {
                 const dias = c.dias;
                 const label = dias === Infinity ? "Nunca atendido" : `${dias}d sem atendimento`;
-                const cor = dias === Infinity || dias > 60 ? "bg-red-100 text-red-700"
-                          : dias > 30 ? "bg-rose-100 text-rose-700"
-                          : "bg-amber-100 text-amber-700";
                 return (
-                  <div key={c.conta.id} className="flex items-center justify-between gap-2 bg-[#F6F7F9] rounded-md px-2.5 py-1.5">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium nx-text truncate">{c.conta.razao}</p>
-                      <p className="text-[10px] nx-muted">{c.conta.cidade}/{c.conta.uf}</p>
+                  <div key={c.conta.id} className="flex items-center justify-between gap-2 bg-white rounded-md px-3 py-2 border border-rose-200">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold nx-text truncate">{c.conta.razao}</p>
+                      <p className="text-[10px] nx-muted truncate">{c.conta.cidade}/{c.conta.uf} · {c.conta.nicho}</p>
                     </div>
-                    <Badge className={`${cor} border-0 text-[10px] shrink-0`}>{label}</Badge>
+                    <Badge className="bg-rose-600 text-white border-0 text-[10px] shrink-0 nx-num">{label}</Badge>
                   </div>
                 );
               })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-    </SectionCard>
+    </div>
   );
 }
+
