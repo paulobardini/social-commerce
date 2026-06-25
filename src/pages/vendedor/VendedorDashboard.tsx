@@ -85,6 +85,7 @@ export default function VendedorDashboard() {
 
           {/* MINHA CARTEIRA */}
           <TabsContent value="carteira" className="space-y-4 mt-0">
+            <AlertaSemAtendimento repId={repIdEfetivo} />
             <SaudeCarteiraBar filtroRepId={repIdEfetivo} />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <KpiCard label="Ativos" value={fmtNum(kpiC.ativos.atual)} delta={comparar ? { pct: kpiC.ativos.delta } : undefined} />
@@ -98,7 +99,6 @@ export default function VendedorDashboard() {
               <SectionCard title="Distribuição por status"><StatusDonut data={donutData} /></SectionCard>
               <SectionCard title="Aging da carteira"><AgingBars data={aging} /></SectionCard>
             </div>
-            <TempoSemAtendimento repId={repIdEfetivo} />
             <ListaClientes classificadas={kpiC.classificadas} />
           </TabsContent>
 
