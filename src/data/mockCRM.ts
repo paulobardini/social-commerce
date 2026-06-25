@@ -11,7 +11,7 @@ export type OportunidadeEtapa =
   | "perdido";
 
 export type Prioridade = "alta" | "media" | "baixa";
-export type TagCRM = "quente" | "recorrente" | "novo_cliente" | "alto_potencial" | "infantil" | "adulto" | "fitness" | "urgente";
+export type TagCRM = "quente" | "morna" | "fria" | "recorrente" | "novo_cliente" | "alto_potencial" | "infantil" | "adulto" | "fitness" | "urgente";
 
 // Estrutura nova de classificação de oportunidade (substitui o uso misturado de tags)
 export type Temperatura = "quente" | "morno" | "frio";
@@ -121,6 +121,8 @@ export const etapaCorMap: Record<OportunidadeEtapa, string> = {
 
 export const tagLabels: Record<TagCRM, string> = {
   quente: "Quente",
+  morna: "Morna",
+  fria: "Fria",
   recorrente: "Recorrente",
   novo_cliente: "Novo cliente",
   alto_potencial: "Alto potencial",
@@ -132,6 +134,8 @@ export const tagLabels: Record<TagCRM, string> = {
 
 export const tagColors: Record<TagCRM, string> = {
   quente: "bg-red-100 text-red-700 border-red-200",
+  morna: "bg-amber-100 text-amber-700 border-amber-200",
+  fria: "bg-sky-100 text-sky-700 border-sky-200",
   recorrente: "bg-blue-100 text-blue-700 border-blue-200",
   novo_cliente: "bg-green-100 text-green-700 border-green-200",
   alto_potencial: "bg-purple-100 text-purple-700 border-purple-200",

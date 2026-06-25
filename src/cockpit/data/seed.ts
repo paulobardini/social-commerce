@@ -86,7 +86,7 @@ export function buildSeed(): Seed {
 
   // Contas (120) — distribuição forçada por faixa de recência
   const contas: Conta[] = [];
-  const NUM = 120;
+  const NUM = 280;
   for (let i = 0; i < NUM; i++) {
     const fantasia = pick(NOMES_FANTASIA);
     const sobre = pick(SOBRENOMES);
@@ -118,7 +118,7 @@ export function buildSeed(): Seed {
       if (!conta) break;
       // Gera 1 pedido "âncora" dentro da faixa + 3-15 anteriores ao longo do ano
       const ancora = rand(b.min, b.max);
-      const nPedidos = rand(3, 14);
+      const nPedidos = rand(4, 22);
       for (let p = 0; p < nPedidos; p++) {
         const dias = p === 0 ? ancora : ancora + rand(15, 350);
         if (dias > 730) continue;
@@ -142,7 +142,7 @@ export function buildSeed(): Seed {
 
   // Atendimentos (~600)
   const atendimentos: Atendimento[] = [];
-  for (let i = 0; i < 600; i++) {
+  for (let i = 0; i < 1600; i++) {
     const conta = contas[rand(0, NUM - 1)];
     const temPedido = pedidos.some(p => p.contaId === conta.id);
     atendimentos.push({
@@ -159,7 +159,7 @@ export function buildSeed(): Seed {
   // Oportunidades (~80)
   const oportunidades: Oportunidade[] = [];
   const etapas: Etapa[] = ["novo_lead", "em_negociacao", "proposta_enviada", "orcamento_aprovado", "ganha", "perdida"];
-  const distEtapas = [20, 18, 14, 10, 12, 10]; // total 84
+  const distEtapas = [48, 42, 34, 26, 30, 24]; // total ~204
   let oid = 0;
   etapas.forEach((etapa, idx) => {
     for (let i = 0; i < distEtapas[idx]; i++) {
