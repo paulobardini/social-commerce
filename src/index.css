@@ -181,3 +181,11 @@
   stroke-dashoffset: 48;
   animation: start-check-draw 0.4s 0.5s ease-out forwards;
 }
+
+/* Cockpit Comercial Nextil — utilitárias isoladas */
+.nx-shell { background: #F6F7F9; }
+.nx-card  { background: #FFFFFF; border: 1px solid #E7E9EE; border-radius: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.nx-card-soft { background: #FFFFFF; border: 1px solid #E7E9EE; border-radius: 10px; }
+.nx-num   { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+.nx-text  { color: #0F172A; }
+.nx-muted { color: #64748B; }

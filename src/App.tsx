@@ -114,6 +114,7 @@ import JornadaEditorPage from "@/marketing/pages/JornadaEditorPage";
 import LookbooksPage from "@/marketing/pages/LookbooksPage";
 import LookbookEditorPage from "@/marketing/pages/LookbookEditorPage";
 import LookbookPublicoPage from "@/marketing/pages/LookbookPublicoPage";
+import { CockpitProvider } from "@/cockpit/contexts/CockpitContext";
 
 const queryClient = new QueryClient();
 
@@ -146,6 +147,7 @@ const App = () => (
               <StartAuthProvider>
               <StartDataProvider>
               <StartCartProvider>
+              <CockpitProvider>
               <Routes>
                 {/* Bare pages (no sidebar/topbar) */}
                 <Route path="/login" element={<Login />} />
@@ -261,6 +263,7 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </CockpitProvider>
               </StartCartProvider>
               </StartDataProvider>
               </StartAuthProvider>
