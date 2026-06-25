@@ -389,7 +389,7 @@ function ListaClientes({ classificadas }: { classificadas: ReturnType<typeof cla
           </thead>
           <tbody>
             {filtradas.length === 0 && <tr><td colSpan={5} className="py-6 text-center nx-muted">Nenhum cliente encontrado para os filtros.</td></tr>}
-            {filtradas.slice(0, 100).map(c => (
+            {filtradas.slice(0, 150).map(c => (
               <tr key={c.conta.id} className="border-b border-[#F1F3F8] hover:bg-[#F6F7F9]">
                 <td className="py-2 nx-text font-medium">
                   {c.conta.razao}
