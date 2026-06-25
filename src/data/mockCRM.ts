@@ -11,7 +11,7 @@ export type OportunidadeEtapa =
   | "perdido";
 
 export type Prioridade = "alta" | "media" | "baixa";
-export type TagCRM = "quente" | "recorrente" | "novo_cliente" | "alto_potencial" | "infantil" | "adulto" | "fitness" | "urgente";
+export type TagCRM = "quente" | "morna" | "fria" | "recorrente" | "novo_cliente" | "alto_potencial" | "infantil" | "adulto" | "fitness" | "urgente";
 
 // Estrutura nova de classificação de oportunidade (substitui o uso misturado de tags)
 export type Temperatura = "quente" | "morno" | "frio";
