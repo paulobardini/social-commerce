@@ -1,423 +1,979 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo } from "react";
+import { useCockpit } from "@/cockpit/contexts/CockpitContext";
+import { CockpitTopbar } from "@/cockpit/components/CockpitTopbar";
+import { SaudeCarteiraBar } from "@/cockpit/components/SaudeCarteiraBar";
+import { SectionCard } from "@/cockpit/components/SectionCard";
+import { KpiCard } from "@/cockpit/components/KpiCard";
+import { StatusDonut } from "@/cockpit/components/StatusDonut";
+import { AgingBars } from "@/cockpit/components/AgingBars";
+import { RfvHeatmap } from "@/cockpit/components/RfvHeatmap";
+import { AbcCurve } from "@/cockpit/components/AbcCurve";
+import { TreemapClientes } from "@/cockpit/components/TreemapClientes";
+import { Waterfall } from "@/cockpit/components/Waterfall";
+import { FunnelChart } from "@/cockpit/components/FunnelChart";
+import { Gauge } from "@/cockpit/components/Gauge";
+import { ProgressBar } from "@/cockpit/components/ProgressBar";
+import { HeatmapMesRep } from "@/cockpit/components/HeatmapMesRep";
+import { StackedBarRep } from "@/cockpit/components/StackedBarRep";
+import { MultiLineSerie } from "@/cockpit/components/MultiLineSerie";
+import { Sparkline } from "@/cockpit/components/Sparkline";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Users, Target, FileText, CheckSquare, AlertTriangle, TrendingUp,
-  ShoppingBag, MessageCircle, ArrowRight, Clock, Download, Save, BarChart3,
-  Flame, UserX, Filter, ChevronRight, Eye, Award, PieChart, TrendingDown,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import {
-  dashboardGerencialKPIs, funnelData, carteiraEstagioData,
-  performanceRepresentantes, distribuicaoNicho, evolucaoPeriodo, alertasGerenciais,
-} from "@/data/mockAnalytics";
-import { mockClientes360 } from "@/data/mockCRM360";
-import { useState } from "react";
+import { kpisCarteira, kpisAtendimento, kpisProduto, kpisMetas } from "@/cockpit/lib/kpis";
+import { classificarTudo } from "@/cockpit/lib/classificar";
+import { classificarRfv } from "@/cockpit/lib/rfv";
+import { agingCarteira, agingOportunidades } from "@/cockpit/lib/aging";
+import { curvaAbc } from "@/cockpit/lib/abc";
+import { waterfallMovimento, funilRetencao } from "@/cockpit/lib/movimento";
+import { funilOportunidades, pipelinePorEtapa, oportunidadesEstagnadas, motivosPerda, ETAPAS_FUNIL, ETAPA_LABEL } from "@/cockpit/lib/funis";
+import { serieDiaria, serieMensal, heatmapMesRep } from "@/cockpit/lib/series";
+import { CHART_PALETTE, STATUS_COLORS, fmtBRL, fmtBRLc, fmtNum, fmtPct, fmtDias, deltaArrow, deltaColor, NX } from "@/cockpit/styles/tokens";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend as RLegend } from "recharts";
+import { AlertTriangle, Users, UserPlus, UserMinus, RefreshCw, TrendingUp, Activity, Phone, MessageCircle, MapPin, Target, Package, DollarSign, Layers } from "lucide-react";
+import { differenceInDays } from "date-fns";
 
 export default function DashboardGerencial() {
-  const navigate = useNavigate();
-  const [periodo, setPeriodo] = useState("abril_2026");
-  const kpis = dashboardGerencialKPIs;
+  const ctx = useCockpit();
+  const { seed, range, previousRange, diasAtivo, diasPerdido, comparar } = ctx;
 
-  // MOCK: deltas vs período anterior. null = sem dados anteriores
-  const kpiCards: Array<{
-    label: string; value: string | number; icon: any; color: string; bg: string;
-    link?: string; delta: number | null;
-  }> = [
-    { label: "Clientes totais", value: kpis.clientesTotais, icon: Users, color: "text-blue-600", bg: "bg-blue-50", link: "/vendedor/clientes", delta: 8 },
-    { label: "Clientes ativos", value: kpis.clientesAtivos, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", link: "/vendedor/clientes", delta: 12 },
-    { label: "Clientes em risco", value: kpis.clientesEmRisco, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", link: "/vendedor/clientes", delta: -25 },
-    { label: "Oportunidades abertas", value: kpis.oportunidadesAbertas, icon: Target, color: "text-purple-600", bg: "bg-purple-50", link: "/vendedor/oportunidades", delta: 15 },
-    { label: "Em negociação", value: kpis.oportunidadesNegociacao, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50", link: "/vendedor/oportunidades", delta: 33 },
-    { label: "Taxa de conversão", value: `${kpis.taxaConversao}%`, icon: Award, color: "text-indigo-600", bg: "bg-indigo-50", delta: 4 },
-    { label: "Orçamentos abertos", value: kpis.orcamentosAbertos, icon: FileText, color: "text-cyan-600", bg: "bg-cyan-50", delta: -10 },
-    { label: "Tarefas vencidas", value: kpis.tarefasVencidas, icon: CheckSquare, color: "text-red-600", bg: "bg-red-50", link: "/vendedor/tarefas", delta: -50 },
-    { label: "Msgs sem resposta", value: kpis.mensagensSemResposta, icon: MessageCircle, color: "text-green-600", bg: "bg-green-50", link: "/vendedor/whatsapp", delta: -18 },
-    { label: "Pedidos do período", value: kpis.pedidosPeriodo, icon: ShoppingBag, color: "text-amber-600", bg: "bg-amber-50", delta: 20 },
-    { label: "Ticket médio", value: `R$ ${kpis.ticketMedio.toLocaleString("pt-BR")}`, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", delta: 6 },
-    { label: "Sem contato recente", value: kpis.clientesSemContato, icon: UserX, color: "text-rose-600", bg: "bg-rose-50", link: "/vendedor/clientes", delta: null },
-  ];
+  const cfg = { diasAtivo, diasPerdido, repId: "todos" as const };
+  const kpiC = useMemo(() => kpisCarteira(seed, range, previousRange, cfg), [seed, range, previousRange, cfg]);
+  const kpiA = useMemo(() => kpisAtendimento(seed, range, previousRange, cfg), [seed, range, previousRange, cfg]);
+  const kpiP = useMemo(() => kpisProduto(seed, range, previousRange, cfg), [seed, range, previousRange, cfg]);
+  const kpiM = useMemo(() => kpisMetas(seed, range, previousRange, cfg), [seed, range, previousRange, cfg]);
 
-  const periodoLabel = periodo === "abril_2026" || periodo === "marco_2026" ? "vs. mês anterior" : "vs. período anterior";
+  const classificadas = kpiC.classificadas;
+  const dCompara = comparar;
 
-  // MOCK: tempo médio (em dias) que oportunidades ficam em cada etapa do funil
-  const funnelTempoMedio: Record<string, number> = {
-    "Novo Lead": 2,
-    "Contato Iniciado": 4,
-    "Em Qualificação": 5,
-    "Proposta/Construção": 7,
-    "Orçamento Enviado": 6,
-    "Em Negociação": 9,
-    "Ganho": 0,
-  };
+  // Carteira: dados derivados
+  const donutData = useMemo(() => ([
+    { status: "ativo" as const, valor: kpiC.ativos.atual },
+    { status: "inativo" as const, valor: kpiC.inativos.atual },
+    { status: "perdido" as const, valor: kpiC.perdidos.atual },
+  ]), [kpiC]);
 
-  const maxFunnel = Math.max(...funnelData.map(f => f.volume));
-  const topClientes = [...mockClientes360].filter(c => c.status === "ativo" && c.temperaturaComercial !== "fria").slice(0, 5);
-  const clientesEmRisco = mockClientes360.filter(c => c.status === "em_risco" || c.status === "reativacao");
+  const agingData = useMemo(() => agingCarteira(classificadas), [classificadas]);
+
+  const nichoData = useMemo(() => {
+    const map = new Map<string, number>();
+    classificadas.forEach(c => map.set(c.conta.nicho, (map.get(c.conta.nicho) ?? 0) + 1));
+    return [...map.entries()].map(([nome, valor]) => ({ nome, valor }));
+  }, [classificadas]);
+
+  const treemapClientes = useMemo(() =>
+    classificadas
+      .filter(c => c.valor12m > 0)
+      .sort((a, b) => b.valor12m - a.valor12m)
+      .slice(0, 30)
+      .map(c => ({ name: c.conta.razao, size: c.valor12m })),
+    [classificadas]
+  );
+
+  const abcClientes = useMemo(() =>
+    curvaAbc(classificadas.filter(c => c.valor12m > 0).map(c => ({ item: c.conta, valor: c.valor12m }))),
+    [classificadas]
+  );
+
+  const rfv = useMemo(() => classificarRfv(classificadas), [classificadas]);
+
+  const waterfall = useMemo(() => waterfallMovimento(classificadas, range), [classificadas, range]);
+
+  const movimentoMarca = useMemo(() => {
+    const map = new Map<string, { marca: string; novos: number; perdidos: number }>();
+    seed.marcas.forEach(m => map.set(m.id, { marca: m.nome, novos: 0, perdidos: 0 }));
+    classificadas.forEach(c => {
+      const ultMarca = seed.pedidos.filter(p => p.contaId === c.conta.id).slice(-1)[0]?.marcaId;
+      if (!ultMarca) return;
+      const rec = map.get(ultMarca);
+      if (!rec) return;
+      if (c.novoNoPeriodo) rec.novos++;
+      if (c.status === "perdido") rec.perdidos++;
+    });
+    return [...map.values()];
+  }, [classificadas, seed]);
+
+  const funRet = useMemo(() => funilRetencao(classificadas), [classificadas]);
+
+  const serieStatus = useMemo(() => {
+    const meses = serieMensal(6, seed.pedidos, seed.hoje);
+    return meses.map(m => {
+      const recAtivo = seed.contas.filter(c => {
+        const ps = seed.pedidos.filter(p => p.contaId === c.id && p.data <= new Date(m.data)).sort((a,b)=>+b.data-+a.data);
+        if (!ps.length) return false;
+        return differenceInDays(seed.hoje, ps[0].data) <= diasAtivo;
+      }).length;
+      return { data: m.data, ativos: recAtivo, faturamento: m.valor };
+    });
+  }, [seed, diasAtivo]);
+
+  const crescAcum = useMemo(() => {
+    const meses = serieMensal(6, seed.pedidos, seed.hoje);
+    let acc = 0;
+    return meses.map(m => {
+      const novos = Math.floor(m.valor / 50000); // proxy mock para visual
+      const perd = Math.floor(m.valor / 80000);
+      acc += novos - perd;
+      return { data: m.data, valor: acc };
+    });
+  }, [seed]);
+
+  // Por representante
+  const carteiraRep = useMemo(() => {
+    return seed.representantes.map(r => {
+      const arr = classificadas.filter(c => c.conta.repId === r.id);
+      const ativos = arr.filter(c => c.status === "ativo").length;
+      const inativos = arr.filter(c => c.status === "inativo").length;
+      const perdidos = arr.filter(c => c.status === "perdido").length;
+      const positivados = arr.filter(c => c.positivadoNoPeriodo).length;
+      const total = ativos + inativos + perdidos || 1;
+      return {
+        rep: r.nome, ativo: ativos, inativo: inativos, perdido: perdidos,
+        positivados, pctInativos: (inativos / total) * 100,
+        spark: Array.from({ length: 12 }, () => Math.floor(Math.random() * 30) + 10),
+      };
+    });
+  }, [seed, classificadas]);
+
+  // Em risco ≤15 dias de virar perdidos
+  const emRisco = useMemo(() => {
+    return classificadas
+      .filter(c => c.status === "inativo")
+      .map(c => ({ ...c, diasRestantes: diasPerdido - c.recencia }))
+      .filter(c => c.diasRestantes <= 15)
+      .sort((a, b) => a.diasRestantes - b.diasRestantes)
+      .slice(0, 20);
+  }, [classificadas, diasPerdido]);
+
+  // Alertas
+  const alertas = useMemo(() => {
+    const out: { titulo: string; descricao: string; severity: "danger" | "warn" }[] = [];
+    carteiraRep.forEach(r => {
+      if (r.pctInativos > 30) out.push({ titulo: `${r.rep} com ${r.pctInativos.toFixed(0)}% da carteira inativa`, descricao: "Acionar plano de cobertura imediato.", severity: "danger" });
+    });
+    if (kpiC.churn.atual > 15) out.push({ titulo: "Churn acima de 15%", descricao: `Taxa atual de ${fmtPct(kpiC.churn.atual)}. Investigar concentração de perdas.`, severity: "warn" });
+    if (kpiC.txReativacao.atual < 5 && (kpiC.inativos.atual + kpiC.perdidos.atual) > 20) out.push({ titulo: "Reativação fraca", descricao: "Menos de 5% da base inativa voltou no período.", severity: "warn" });
+    return out;
+  }, [carteiraRep, kpiC]);
+
+  // ATENDIMENTO
+  const funOp = useMemo(() => funilOportunidades(seed.oportunidades), [seed]);
+  const pipeEt = useMemo(() => pipelinePorEtapa(seed.oportunidades), [seed]);
+  const opsEst = useMemo(() => oportunidadesEstagnadas(seed.oportunidades, 14, seed.hoje), [seed]);
+  const agingOp = useMemo(() => agingOportunidades(seed.oportunidades.filter(o => ETAPAS_FUNIL.includes(o.etapa)), seed.hoje), [seed]);
+
+  const atPorRep = useMemo(() => seed.representantes.map(r => ({
+    rep: r.nome,
+    atendimentos: seed.atendimentos.filter(a => a.repId === r.id && a.data >= range.from && a.data <= range.to).length,
+    leads: seed.atendimentos.filter(a => a.repId === r.id && a.leadOuCliente === "lead" && a.data >= range.from && a.data <= range.to).length,
+    clientes: seed.atendimentos.filter(a => a.repId === r.id && a.leadOuCliente === "cliente" && a.data >= range.from && a.data <= range.to).length,
+  })), [seed, range]);
+
+  const atPorTipo = useMemo(() => {
+    const tipos = ["visita", "ligacao", "whatsapp"] as const;
+    return tipos.map(t => ({
+      nome: t === "visita" ? "Visita" : t === "ligacao" ? "Ligação" : "WhatsApp",
+      valor: seed.atendimentos.filter(a => a.tipo === t && a.data >= range.from && a.data <= range.to).length,
+    }));
+  }, [seed, range]);
+
+  const coberturaRep = useMemo(() => seed.representantes.map(r => {
+    const contasR = seed.contas.filter(c => c.repId === r.id);
+    const atendidas = new Set(seed.atendimentos.filter(a => a.repId === r.id && a.data >= range.from && a.data <= range.to).map(a => a.contaId)).size;
+    return { rep: r.nome, cobertura: contasR.length > 0 ? (atendidas / contasR.length) * 100 : 0 };
+  }), [seed, range]);
+
+  const motivos = useMemo(() => motivosPerda(seed.oportunidades), [seed]);
+  const winPorRep = useMemo(() => seed.representantes.map(r => {
+    const fechadas = seed.oportunidades.filter(o => o.repId === r.id && (o.etapa === "ganha" || o.etapa === "perdida"));
+    const ganhas = fechadas.filter(o => o.etapa === "ganha").length;
+    return { rep: r.nome, win: fechadas.length > 0 ? (ganhas / fechadas.length) * 100 : 0 };
+  }), [seed]);
+
+  const serieAtend = useMemo(() => {
+    const s = serieDiaria(range, seed.atendimentos.map(a => ({ ...a, valor: 1 } as any)), "count");
+    return s.map(p => ({ data: p.data, valor: p.valor }));
+  }, [range, seed]);
+
+  // PRODUTO
+  const faturPorMarca = useMemo(() => {
+    return seed.marcas.map(m => ({
+      nome: m.nome,
+      valor: kpiP.pedidosPeriodo.filter(p => p.marcaId === m.id).reduce((s, p) => s + p.valor, 0),
+    })).sort((a, b) => b.valor - a.valor);
+  }, [kpiP, seed]);
+
+  const faturPorCategoria = useMemo(() => {
+    const map = new Map<string, number>();
+    kpiP.pedidosPeriodo.forEach(p => map.set(p.categoria, (map.get(p.categoria) ?? 0) + p.valor));
+    return [...map.entries()].map(([nome, valor]) => ({ nome, valor })).sort((a, b) => b.valor - a.valor).slice(0, 12);
+  }, [kpiP]);
+
+  const topProdutos = useMemo(() => {
+    const map = new Map<string, number>();
+    kpiP.pedidosPeriodo.forEach(p => map.set(p.produtoId, (map.get(p.produtoId) ?? 0) + p.valor));
+    const arr = [...map.entries()].map(([id, valor]) => ({ nome: id.toUpperCase(), valor })).sort((a, b) => b.valor - a.valor);
+    return { top: arr.slice(0, 10), bottom: arr.slice(-10).reverse() };
+  }, [kpiP]);
+
+  const abcProduto = useMemo(() => {
+    const map = new Map<string, number>();
+    kpiP.pedidosPeriodo.forEach(p => map.set(p.produtoId, (map.get(p.produtoId) ?? 0) + p.valor));
+    return curvaAbc([...map.entries()].map(([id, valor]) => ({ item: { id }, valor })));
+  }, [kpiP]);
+
+  const penetracaoMarca = useMemo(() => {
+    const totalBase = classificadas.filter(c => c.status !== "lead").length || 1;
+    return seed.marcas.map(m => {
+      const contasComMarca = new Set(seed.pedidos.filter(p => p.marcaId === m.id).map(p => p.contaId)).size;
+      return { nome: m.nome, pct: (contasComMarca / totalBase) * 100 };
+    }).sort((a, b) => b.pct - a.pct);
+  }, [seed, classificadas]);
+
+  const heatMarcaNicho = useMemo(() => {
+    const nichos = ["Boutique", "Multimarca", "Atacadista", "E-commerce", "Rede", "Franquia"];
+    return seed.marcas.map(m => ({
+      rep: m.nome,
+      cells: nichos.map(n => {
+        const contasNicho = new Set(seed.contas.filter(c => c.nicho === n).map(c => c.id));
+        const v = seed.pedidos.filter(p => p.marcaId === m.id && contasNicho.has(p.contaId)).reduce((s, p) => s + p.valor, 0);
+        return { mes: n.slice(0, 3), valor: v };
+      }),
+    }));
+  }, [seed]);
+
+  const marcasSemGiro = useMemo(() => {
+    return seed.representantes.map(r => {
+      const semGiro = seed.marcas.filter(m =>
+        !kpiP.pedidosPeriodo.some(p => p.repId === r.id && p.marcaId === m.id)
+      );
+      return { rep: r.nome, marcas: semGiro.map(m => m.nome) };
+    });
+  }, [seed, kpiP]);
+
+  const sazoMarca = useMemo(() => {
+    const meses = serieMensal(6, seed.pedidos, seed.hoje);
+    return meses.map(m => {
+      const row: Record<string, number | string> = { data: m.data };
+      seed.marcas.slice(0, 4).forEach(mk => {
+        row[mk.nome] = seed.pedidos.filter(p => p.marcaId === mk.id && p.data.toISOString().startsWith(m.data.split(" ")[0])).reduce((s, p) => s + p.valor, 0);
+      });
+      return row;
+    });
+  }, [seed]);
+
+  const recompraColecao = useMemo(() => {
+    const cols = ["Verão 25", "Inverno 25", "Resort 25", "Básicos"];
+    return cols.map(c => ({
+      nome: c,
+      valor: new Set(seed.pedidos.filter(p => p.colecao === c).map(p => p.contaId)).size,
+    }));
+  }, [seed]);
+
+  const ticketCategoria = useMemo(() => {
+    const map = new Map<string, { soma: number; n: number }>();
+    kpiP.pedidosPeriodo.forEach(p => {
+      const r = map.get(p.categoria) ?? { soma: 0, n: 0 };
+      r.soma += p.valor; r.n++;
+      map.set(p.categoria, r);
+    });
+    return [...map.entries()].map(([nome, v]) => ({ nome, valor: v.soma / v.n })).sort((a, b) => b.valor - a.valor).slice(0, 10);
+  }, [kpiP]);
+
+  // METAS
+  const histAting = useMemo(() => {
+    const meses = serieMensal(6, seed.pedidos, seed.hoje);
+    return meses.map(m => {
+      const meta = 900000;
+      return { mes: m.data, ating: (m.valor / meta) * 100 };
+    });
+  }, [seed]);
+
+  const projecaoMes = useMemo(() => {
+    const diaAtual = seed.hoje.getDate();
+    const diasNoMes = new Date(seed.hoje.getFullYear(), seed.hoje.getMonth() + 1, 0).getDate();
+    const real = kpiM.realizado;
+    const meta = kpiM.metaFaturamento || 1;
+    const arr = [];
+    for (let d = 1; d <= diasNoMes; d++) {
+      const realAtual = d <= diaAtual ? (real / diaAtual) * d : null;
+      const proj = d > diaAtual ? (real / diaAtual) * d : null;
+      arr.push({ dia: `${d}`, realizado: realAtual, projetado: proj, meta: (meta / diasNoMes) * d });
+    }
+    return arr;
+  }, [seed, kpiM]);
+
+  const rankingMetas = useMemo(() => {
+    return seed.representantes.map(r => {
+      const meta = seed.metas.find(m => m.repId === r.id && m.tipo === "faturamento" && m.mes === `${seed.hoje.getFullYear()}-${String(seed.hoje.getMonth() + 1).padStart(2, "0")}`)?.valor ?? 1;
+      const inicioMes = new Date(seed.hoje.getFullYear(), seed.hoje.getMonth(), 1);
+      const real = seed.pedidos.filter(p => p.repId === r.id && p.data >= inicioMes).reduce((s, p) => s + p.valor, 0);
+      return { rep: r.nome, meta, real, pct: (real / meta) * 100 };
+    }).sort((a, b) => b.pct - a.pct);
+  }, [seed]);
+
+  const atingPorTipo = useMemo(() => {
+    return seed.representantes.map(r => ({
+      rep: r.nome,
+      faturamento: Math.floor(Math.random() * 50) + 60,
+      positivacao: Math.floor(Math.random() * 40) + 70,
+      cobertura: Math.floor(Math.random() * 35) + 65,
+    }));
+  }, [seed]);
+
+  // PROGRESSÕES
+  const tendFaturamento = useMemo(() => serieMensal(6, seed.pedidos, seed.hoje).map(p => ({ data: p.data, valor: p.valor })), [seed]);
+
+  const yoyMoM = useMemo(() => {
+    const meses = serieMensal(6, seed.pedidos, seed.hoje);
+    return meses.map((m, i) => ({
+      data: m.data,
+      atual: m.valor,
+      anterior: i > 0 ? meses[i - 1].valor : m.valor * 0.9,
+    }));
+  }, [seed]);
+
+  const comparativoRep = useMemo(() => {
+    const meses = serieMensal(6, seed.pedidos, seed.hoje);
+    return meses.map(m => {
+      const row: Record<string, number | string> = { data: m.data };
+      seed.representantes.forEach(r => {
+        row[r.nome] = seed.pedidos.filter(p => p.repId === r.id && p.data.toLocaleString("default", { month: "short", year: "2-digit" }).includes(m.data.split("/")[0])).reduce((s, p) => s + p.valor, 0);
+      });
+      return row;
+    });
+  }, [seed]);
+
+  const heatRep = useMemo(() => heatmapMesRep(6, seed.pedidos, seed.representantes, seed.hoje), [seed]);
+
+  const rankingEvolucao = useMemo(() => {
+    return seed.representantes.map(r => ({
+      rep: r.nome,
+      crescimento: Math.floor(Math.random() * 40) - 10,
+    })).sort((a, b) => b.crescimento - a.crescimento);
+  }, [seed]);
 
   return (
-    <>
-      <div className="p-4 md:p-6 space-y-5 max-w-[1500px] mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-heading font-bold text-foreground">Dashboard Gerencial</h1>
-            <p className="text-sm text-muted-foreground mt-1">Visão executiva consolidada da operação comercial</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={periodo} onValueChange={setPeriodo}>
-              <SelectTrigger className="w-[160px] h-9 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="abril_2026">Abril 2026</SelectItem>
-                <SelectItem value="marco_2026">Março 2026</SelectItem>
-                <SelectItem value="q1_2026">Q1 2026</SelectItem>
-                <SelectItem value="2026">Ano 2026</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" className="text-xs"><Filter className="h-3.5 w-3.5 mr-1" /> Filtros</Button>
-            <Button variant="outline" size="sm" className="text-xs"><Save className="h-3.5 w-3.5 mr-1" /> Salvar visão</Button>
-            <Button variant="outline" size="sm" className="text-xs"><Download className="h-3.5 w-3.5 mr-1" /> Exportar</Button>
-            <Button size="sm" className="text-xs" onClick={() => navigate("/vendedor/relatorios")}>
-              <BarChart3 className="h-3.5 w-3.5 mr-1" /> Relatórios
-            </Button>
-          </div>
-        </div>
+    <div className="nx-shell min-h-screen">
+      <CockpitTopbar title="Painel comercial · Gestor" />
+      <div className="px-4 md:px-6 py-4 space-y-4">
+        <SaudeCarteiraBar />
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {kpiCards.map(kpi => (
-            <Card
-              key={kpi.label}
-              className="border border-border hover:border-accent/30 transition-colors cursor-pointer"
-              onClick={() => kpi.link && navigate(kpi.link)}
-            >
-              <CardContent className="p-3.5">
-                <div className={`h-7 w-7 rounded-lg flex items-center justify-center mb-2 ${kpi.bg}`}>
-                  <kpi.icon className={`h-3.5 w-3.5 ${kpi.color}`} />
-                </div>
-                <p className="text-xl font-bold font-heading text-foreground">{kpi.value}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{kpi.label}</p>
-                {kpi.delta === null ? (
-                  <p className="text-[9px] text-muted-foreground/70 mt-1">Sem dados anteriores</p>
-                ) : (
-                  <div className={`flex items-center gap-0.5 mt-1 text-[10px] font-medium ${kpi.delta >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                    {kpi.delta >= 0 ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                    <span>{kpi.delta >= 0 ? "+" : ""}{kpi.delta}%</span>
-                    <span className="text-muted-foreground font-normal ml-1">{periodoLabel}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Tabs defaultValue="carteira" className="space-y-4">
+          <TabsList className="bg-white border border-[#E7E9EE] p-1 h-auto">
+            <TabsTrigger value="carteira"     className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Carteira</TabsTrigger>
+            <TabsTrigger value="atendimento"  className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Atendimento</TabsTrigger>
+            <TabsTrigger value="produto"      className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Produto</TabsTrigger>
+            <TabsTrigger value="metas"        className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Metas</TabsTrigger>
+            <TabsTrigger value="progressoes"  className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Progressões</TabsTrigger>
+          </TabsList>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Funnel */}
-          <Card className="border border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-heading">Funil de Oportunidades</CardTitle>
-                <div className="flex gap-3 text-xs text-muted-foreground">
-                  <span>Taxa de ganho: <span className="font-semibold text-emerald-600">25%</span></span>
-                  <span>Taxa de perda: <span className="font-semibold text-red-500">8%</span></span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-center gap-3 pb-1 border-b border-border/40">
-                <span className="text-[10px] font-medium text-muted-foreground w-[120px] text-right">Etapa</span>
-                <span className="text-[10px] font-medium text-muted-foreground flex-1">Volume</span>
-                <span className="text-[10px] font-medium text-muted-foreground w-[80px] text-right">Valor</span>
-                <span className="text-[10px] font-medium text-muted-foreground w-[50px] text-right" title="Taxa de avanço entre etapas">% avanço</span>
-                <span className="text-[10px] font-medium text-muted-foreground w-[60px] text-right" title="Tempo médio em dias que oportunidades ficam neste estágio antes de avançar">Tempo médio</span>
-              </div>
-              {funnelData.map((f, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="text-[11px] text-muted-foreground w-[120px] truncate text-right">{f.etapa}</span>
-                  <div className="flex-1 h-7 bg-muted rounded overflow-hidden relative">
-                    <div
-                      className="h-full rounded flex items-center px-2 transition-all"
-                      style={{ width: `${(f.volume / maxFunnel) * 100}%`, backgroundColor: f.cor }}
-                    >
-                      <span className="text-[10px] font-semibold text-white whitespace-nowrap">{f.volume}</span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground w-[80px] text-right">
-                    R$ {(f.valor / 1000).toFixed(0)}k
-                  </span>
-                  <span className="text-[10px] text-muted-foreground w-[50px] text-right">{f.taxaAvanco}%</span>
-                  <span className="text-[10px] text-foreground font-medium w-[60px] text-right">
-                    {funnelTempoMedio[f.etapa] ? `${funnelTempoMedio[f.etapa]}d` : "—"}
-                  </span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Carteira por estágio */}
-          <Card className="border border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-heading">Carteira por Estágio</CardTitle>
-                <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/vendedor/carteira")}>
-                  Ver carteira <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-2">
-                {carteiraEstagioData.map((e, i) => (
-                  <button
-                    key={i}
-                    onClick={() => navigate("/vendedor/clientes/kanban")}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
-                  >
-                    <div className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${e.cor}15` }}>
-                      <span className="text-sm font-bold" style={{ color: e.cor }}>{e.quantidade}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">{e.estagio}</p>
-                      <div className="h-1.5 w-16 bg-muted rounded-full mt-1 overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${(e.quantidade / 14) * 100}%`, backgroundColor: e.cor }} />
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Performance por representante */}
-        <Card className="border border-border">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-heading flex items-center gap-2">
-                <Award className="h-4 w-4 text-amber-500" /> Performance por Representante
-              </CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/vendedor/representantes")}>
-                Ver todos <ArrowRight className="h-3 w-3 ml-1" />
-              </Button>
+          {/* CARTEIRA */}
+          <TabsContent value="carteira" className="space-y-4 mt-0">
+            <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
+              <KpiCard label="Total clientes"     value={fmtNum(kpiC.totalClientes.atual)} delta={dCompara ? { pct: kpiC.totalClientes.delta } : undefined} icon={<Users className="h-3.5 w-3.5" />} />
+              <KpiCard label="Leads na base"      value={fmtNum(kpiC.leads.atual)}         delta={dCompara ? { pct: kpiC.leads.delta } : undefined} icon={<UserPlus className="h-3.5 w-3.5" />} />
+              <KpiCard label="Ativos"             value={fmtNum(kpiC.ativos.atual)}        delta={dCompara ? { pct: kpiC.ativos.delta } : undefined} />
+              <KpiCard label="Inativos"           value={fmtNum(kpiC.inativos.atual)}      delta={dCompara ? { pct: kpiC.inativos.delta, invert: true } : undefined} />
+              <KpiCard label="Perdidos"           value={fmtNum(kpiC.perdidos.atual)}      delta={dCompara ? { pct: kpiC.perdidos.delta, invert: true } : undefined} icon={<UserMinus className="h-3.5 w-3.5" />} />
+              <KpiCard label="Novos"              value={fmtNum(kpiC.novos.atual)}         delta={dCompara ? { pct: kpiC.novos.delta } : undefined} />
+              <KpiCard label="Reativados"         value={fmtNum(kpiC.reativados.atual)}    delta={dCompara ? { pct: kpiC.reativados.delta } : undefined} icon={<RefreshCw className="h-3.5 w-3.5" />} />
+              <KpiCard label="Positivados"        value={fmtNum(kpiC.positivados.atual)}   delta={dCompara ? { pct: kpiC.positivados.delta } : undefined} />
+              <KpiCard label="Tx. positivação"    value={fmtPct(kpiC.txPositivacao.atual)} delta={dCompara ? { pct: kpiC.txPositivacao.delta } : undefined} />
+              <KpiCard label="Churn rate"         value={fmtPct(kpiC.churn.atual)}         delta={dCompara ? { pct: kpiC.churn.delta, invert: true } : undefined} />
+              <KpiCard label="Tx. reativação"     value={fmtPct(kpiC.txReativacao.atual)}  delta={dCompara ? { pct: kpiC.txReativacao.delta } : undefined} />
+              <KpiCard label="Recência média"     value={fmtDias(kpiC.recenciaMedia.atual)} delta={dCompara ? { pct: kpiC.recenciaMedia.delta, invert: true } : undefined} />
+              <KpiCard label="Ticket médio/cli."  value={fmtBRLc(kpiC.ticketMedio.atual)}   delta={dCompara ? { pct: kpiC.ticketMedio.delta } : undefined} />
+              <KpiCard label="Frequência média"   value={kpiC.frequenciaMedia.atual.toFixed(1).replace(".", ",")} hint="pedidos/cliente 12m" delta={dCompara ? { pct: kpiC.frequenciaMedia.delta } : undefined} />
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Representante</th>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Região</th>
-                    <th className="text-center py-2 px-3 text-xs font-medium text-muted-foreground">Carteira</th>
-                    <th className="text-center py-2 px-3 text-xs font-medium text-muted-foreground">Ativos</th>
-                    <th className="text-center py-2 px-3 text-xs font-medium text-muted-foreground">Em risco</th>
-                    <th className="text-center py-2 px-3 text-xs font-medium text-muted-foreground">Oport.</th>
-                    <th className="text-center py-2 px-3 text-xs font-medium text-muted-foreground">Conversão</th>
-                    <th className="text-center py-2 px-3 text-xs font-medium text-muted-foreground">Tarefas pend.</th>
-                    <th className="text-center py-2 px-3 text-xs font-medium text-muted-foreground">Último acesso</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {performanceRepresentantes.map((r, i) => (
-                    <tr
-                      key={i}
-                      className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
-                      onClick={() => navigate("/vendedor/representantes")}
-                    >
-                      <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                            <span className="text-[10px] font-bold text-primary">{r.nome.split(" ").map(w => w[0]).join("")}</span>
-                          </div>
-                          <span className="font-medium text-foreground text-xs">{r.nome}</span>
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-3 text-xs text-muted-foreground">{r.regiao}</td>
-                      <td className="py-2.5 px-3 text-xs text-center font-medium">{r.carteira}</td>
-                      <td className="py-2.5 px-3 text-xs text-center text-emerald-600 font-medium">{r.ativos}</td>
-                      <td className="py-2.5 px-3 text-xs text-center">
-                        {r.emRisco > 2 ? <span className="text-red-600 font-semibold">{r.emRisco}</span> : r.emRisco}
-                      </td>
-                      <td className="py-2.5 px-3 text-xs text-center">{r.oportunidades}</td>
-                      <td className="py-2.5 px-3 text-xs text-center">
-                        <span className={r.conversao >= 30 ? "text-emerald-600 font-semibold" : r.conversao < 20 ? "text-red-500 font-semibold" : ""}>{r.conversao}%</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-xs text-center">
-                        {r.tarefasPendentes > 5 ? <span className="text-red-500 font-semibold">{r.tarefasPendentes}</span> : r.tarefasPendentes}
-                      </td>
-                      <td className="py-2.5 px-3 text-xs text-center text-muted-foreground">{r.ultimoAcesso}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Distribuição por nicho */}
-          <Card className="border border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-heading flex items-center gap-2">
-                <PieChart className="h-4 w-4 text-violet-500" /> Por Nicho
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {distribuicaoNicho.map((n, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: n.cor }} />
-                  <span className="text-xs text-foreground flex-1">{n.nicho}</span>
-                  <span className="text-xs font-medium text-foreground">{n.clientes}</span>
-                  <span className="text-[10px] text-muted-foreground w-10 text-right">{n.percentual}%</span>
-                  <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${n.percentual}%`, backgroundColor: n.cor }} />
-                  </div>
+            {/* Composição */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Distribuição por status">
+                <StatusDonut data={donutData} />
+              </SectionCard>
+              <SectionCard title="Aging da carteira" subtitle="Recência do último pedido">
+                <AgingBars data={agingData} />
+              </SectionCard>
+              <SectionCard title="Distribuição por nicho">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={nichoData} dataKey="valor" nameKey="nome" outerRadius={80} label={{ fontSize: 10 }}>
+                      {nichoData.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} formatter={(v: number) => fmtNum(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Top clientes" subtitle="Curva ABC por valor (12m)" action={
+                <div className="flex gap-1 text-[10px]">
+                  <Badge style={{ background: "#16A34A", color: "#fff" }}>A {abcClientes.filter(r => r.classe === "A").length}</Badge>
+                  <Badge style={{ background: "#F59E0B", color: "#fff" }}>B {abcClientes.filter(r => r.classe === "B").length}</Badge>
+                  <Badge style={{ background: "#DC2626", color: "#fff" }}>C {abcClientes.filter(r => r.classe === "C").length}</Badge>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
+              }>
+                <TreemapClientes data={treemapClientes} />
+              </SectionCard>
+            </div>
 
-          {/* Evolução do período */}
-          <Card className="border border-border lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-heading flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-blue-500" /> Evolução do Período
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+            {/* RFV */}
+            <SectionCard title="Matriz RFV" subtitle="Recência × Frequência × Valor (12 meses)">
+              <RfvHeatmap cells={rfv} />
+            </SectionCard>
+
+            {/* Movimento */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Movimentação líquida" subtitle="Novos + reativados − perdidos">
+                <Waterfall data={waterfall} />
+              </SectionCard>
+              <SectionCard title="Evolução por status" subtitle="Ativos e faturamento — últimos 6 meses">
+                <MultiLineSerie
+                  data={serieStatus}
+                  series={[{ key: "ativos", nome: "Ativos", color: STATUS_COLORS.ativo }]}
+                  fmtY={fmtNum}
+                />
+              </SectionCard>
+              <SectionCard title="Movimentação por marca">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={movimentoMarca}>
+                    <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                    <XAxis dataKey="marca" tick={{ fontSize: 10, fill: NX.muted }} angle={-20} textAnchor="end" height={50} interval={0} />
+                    <YAxis tick={{ fontSize: 10, fill: NX.muted }} />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <RLegend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="novos" name="Novos" fill="#16A34A" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="perdidos" name="Perdidos" fill="#DC2626" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Funil de retenção">
+                <FunnelChart etapas={funRet.map(f => ({ etapa: f.etapa, valor: f.valor }))} taxas={funRet.map((f, i) => i === 0 ? null : funRet[i-1].valor > 0 ? (f.valor / funRet[i-1].valor) * 100 : 0)} />
+              </SectionCard>
+              <SectionCard className="lg:col-span-2" title="Crescimento líquido acumulado" subtitle="Entradas − saídas">
+                <MultiLineSerie data={crescAcum} series={[{ key: "valor", nome: "Saldo líquido" }]} fmtY={fmtNum} height={180} />
+              </SectionCard>
+            </div>
+
+            {/* Por representante */}
+            <SectionCard title="Carteira por representante" subtitle="Distribuição Ativo / Inativo / Perdido">
+              <StackedBarRep data={carteiraRep} />
+            </SectionCard>
+            <SectionCard title="Tabela por representante">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-2 px-2 font-medium text-muted-foreground">Mês</th>
-                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">Oport. criadas</th>
-                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">Oport. ganhas</th>
-                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">Clientes ativ.</th>
-                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">Tarefas concl.</th>
-                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">Pedidos</th>
-                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">Msgs respond.</th>
-                    </tr>
+                  <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE]">
+                    <tr><th className="text-left py-2">Representante</th><th className="text-right">Ativos</th><th className="text-right">Inativos</th><th className="text-right">Perdidos</th><th className="text-right">Positivados</th><th className="text-right">% inativa</th><th className="text-center">30d</th></tr>
                   </thead>
                   <tbody>
-                    {evolucaoPeriodo.map((e, i) => (
-                      <tr key={i} className="border-b border-border/50">
-                        <td className="py-2 px-2 font-medium">{e.mes}</td>
-                        <td className="py-2 px-2 text-center">{e.oportunidadesCriadas}</td>
-                        <td className="py-2 px-2 text-center text-emerald-600 font-medium">{e.oportunidadesGanhas}</td>
-                        <td className="py-2 px-2 text-center">{e.clientesAtivados}</td>
-                        <td className="py-2 px-2 text-center">{e.tarefasConcluidas}</td>
-                        <td className="py-2 px-2 text-center">{e.pedidos}</td>
-                        <td className="py-2 px-2 text-center">{e.mensagensRespondidas}</td>
+                    {carteiraRep.map(r => (
+                      <tr key={r.rep} className="border-b border-[#F1F3F8]">
+                        <td className="py-2 nx-text font-medium">{r.rep}</td>
+                        <td className="text-right nx-num">{fmtNum(r.ativo)}</td>
+                        <td className="text-right nx-num">{fmtNum(r.inativo)}</td>
+                        <td className="text-right nx-num">{fmtNum(r.perdido)}</td>
+                        <td className="text-right nx-num">{fmtNum(r.positivados)}</td>
+                        <td className="text-right nx-num"><span className={r.pctInativos > 30 ? "text-amber-600 font-semibold" : ""}>{fmtPct(r.pctInativos, 0)}</span></td>
+                        <td className="flex justify-center py-2"><Sparkline data={r.spark} /></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              {/* Simple bar chart */}
-              <div className="mt-4 flex items-end gap-1 h-20">
-                {evolucaoPeriodo.map((e, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full flex gap-0.5 items-end justify-center h-16">
-                      <div className="w-2 rounded-t bg-blue-400" style={{ height: `${(e.oportunidadesCriadas / 8) * 100}%` }} title="Oport." />
-                      <div className="w-2 rounded-t bg-emerald-400" style={{ height: `${(e.oportunidadesGanhas / 3) * 100}%` }} title="Ganhas" />
-                      <div className="w-2 rounded-t bg-amber-400" style={{ height: `${(e.pedidos / 5) * 100}%` }} title="Pedidos" />
+            </SectionCard>
+
+            {/* Ação */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <SectionCard className="lg:col-span-2" title="Clientes em risco" subtitle="Inativos a ≤15 dias de virar perdidos">
+                <div className="overflow-x-auto max-h-[280px] overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE] sticky top-0 bg-white">
+                      <tr><th className="text-left py-2">Cliente</th><th className="text-left">Rep</th><th className="text-right">Dias restantes</th><th className="text-right">Valor 12m</th></tr>
+                    </thead>
+                    <tbody>
+                      {emRisco.length === 0 && <tr><td colSpan={4} className="py-6 text-center nx-muted text-xs">Nenhum cliente em risco neste período</td></tr>}
+                      {emRisco.map(c => {
+                        const repNome = seed.representantes.find(r => r.id === c.conta.repId)?.nome ?? "—";
+                        return (
+                          <tr key={c.conta.id} className="border-b border-[#F1F3F8]">
+                            <td className="py-2 nx-text">{c.conta.razao}</td>
+                            <td className="nx-muted">{repNome}</td>
+                            <td className="text-right">
+                              <Badge className={c.diasRestantes <= 5 ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}>{c.diasRestantes}d</Badge>
+                            </td>
+                            <td className="text-right nx-num">{fmtBRLc(c.valor12m)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </SectionCard>
+              <SectionCard title="Alertas gerenciais">
+                <div className="space-y-2">
+                  {alertas.length === 0 && <p className="text-xs nx-muted">Nenhum alerta no momento.</p>}
+                  {alertas.map((a, i) => (
+                    <div key={i} className={`p-2.5 rounded-lg border text-[11px] ${a.severity === "danger" ? "bg-rose-50 border-rose-200" : "bg-amber-50 border-amber-200"}`}>
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${a.severity === "danger" ? "text-rose-600" : "text-amber-600"}`} />
+                        <div>
+                          <p className="font-semibold nx-text">{a.titulo}</p>
+                          <p className="nx-muted mt-0.5">{a.descricao}</p>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-[9px] text-muted-foreground">{e.mes}</span>
+                  ))}
+                </div>
+              </SectionCard>
+            </div>
+          </TabsContent>
+
+          {/* ATENDIMENTO */}
+          <TabsContent value="atendimento" className="space-y-4 mt-0">
+            <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
+              <KpiCard label="Cobertura" value={fmtPct(kpiA.cobertura.atual)} delta={dCompara ? { pct: kpiA.cobertura.delta } : undefined} icon={<Activity className="h-3.5 w-3.5" />} />
+              <KpiCard label="Atendimentos" value={fmtNum(kpiA.nAtendimentos.atual)} delta={dCompara ? { pct: kpiA.nAtendimentos.delta } : undefined} />
+              <KpiCard label="A leads" value={fmtNum(kpiA.aLeads.atual)} delta={dCompara ? { pct: kpiA.aLeads.delta } : undefined} />
+              <KpiCard label="A clientes" value={fmtNum(kpiA.aClientes.atual)} delta={dCompara ? { pct: kpiA.aClientes.delta } : undefined} />
+              <KpiCard label="Conv. Lead→Cliente" value={fmtPct(kpiA.txConversao.atual)} delta={dCompara ? { pct: kpiA.txConversao.delta } : undefined} />
+              <KpiCard label="Ciclo de vendas" value={fmtDias(kpiA.ciclo.atual)} />
+              <KpiCard label="Win rate" value={fmtPct(kpiA.winRate.atual)} icon={<Target className="h-3.5 w-3.5" />} />
+              <KpiCard label="Ticket oportunidade" value={fmtBRLc(kpiA.ticketOportunidade.atual)} />
+              <KpiCard label="Oport. abertas" value={fmtNum(kpiA.opsAbertas.atual)} />
+              <KpiCard label="Pipeline R$" value={fmtBRLc(kpiA.pipelineRS.atual)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+              <KpiCard label="Tempo médio etapa" value={fmtDias(kpiA.tempoMedioEtapa.atual)} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Funil de oportunidades" subtitle="Taxa de conversão entre etapas">
+                <FunnelChart etapas={funOp.counts.map(c => ({ etapa: c.etapa, valor: c.valor, receita: c.receita }))} taxas={funOp.taxas} money />
+              </SectionCard>
+              <SectionCard title="Pipeline por etapa (R$)">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={pipeEt}>
+                    <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                    <XAxis dataKey="etapa" tick={{ fontSize: 10, fill: NX.muted }} angle={-15} textAnchor="end" height={50} interval={0} />
+                    <YAxis tick={{ fontSize: 10, fill: NX.muted }} tickFormatter={fmtBRLc} />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} formatter={(v: number) => fmtBRL(v)} />
+                    <Bar dataKey="valor" fill={NX.primary} radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Oportunidades estagnadas" subtitle="Mais de 14 dias na mesma etapa">
+                <div className="overflow-x-auto max-h-[280px] overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE] sticky top-0 bg-white">
+                      <tr><th className="text-left py-2">Op</th><th>Cliente</th><th>Etapa</th><th className="text-right">Dias</th><th className="text-right">Valor</th></tr>
+                    </thead>
+                    <tbody>
+                      {opsEst.slice(0, 15).map(o => {
+                        const cliente = seed.contas.find(c => c.id === o.contaId);
+                        return (
+                          <tr key={o.id} className="border-b border-[#F1F3F8]">
+                            <td className="py-2 nx-text font-medium">{o.id}</td>
+                            <td className="nx-muted">{cliente?.razao}</td>
+                            <td className="nx-muted">{ETAPA_LABEL[o.etapa]}</td>
+                            <td className="text-right"><Badge className="bg-rose-100 text-rose-700">{o.diasParada}d</Badge></td>
+                            <td className="text-right nx-num">{fmtBRLc(o.valor)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </SectionCard>
+              <SectionCard title="Aging de oportunidades abertas">
+                <AgingBars data={agingOp} color={NX.accent} />
+              </SectionCard>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <SectionCard title="Atendimentos por representante">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={atPorRep}>
+                    <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                    <XAxis dataKey="rep" tick={{ fontSize: 10 }} angle={-15} textAnchor="end" height={50} interval={0} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="atendimentos" fill={NX.primary} radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Atendimentos por tipo">
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie data={atPorTipo} dataKey="valor" nameKey="nome" outerRadius={80} label={{ fontSize: 10 }}>
+                      {atPorTipo.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Lead vs Cliente por rep">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={atPorRep}>
+                    <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                    <XAxis dataKey="rep" tick={{ fontSize: 10 }} angle={-15} textAnchor="end" height={50} interval={0} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <RLegend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="leads" name="Leads" fill={STATUS_COLORS.lead} />
+                    <Bar dataKey="clientes" name="Clientes" fill={STATUS_COLORS.ativo} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Evolução de atendimentos" subtitle="No período selecionado">
+                <MultiLineSerie data={serieAtend} series={[{ key: "valor", nome: "Atendimentos" }]} fmtY={fmtNum} />
+              </SectionCard>
+              <SectionCard title="Cobertura por representante">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={coberturaRep} layout="vertical">
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                    <YAxis type="category" dataKey="rep" tick={{ fontSize: 10 }} width={100} />
+                    <Tooltip formatter={(v: number) => fmtPct(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="cobertura" fill={NX.primary} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <SectionCard title="Motivos de perda">
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie data={motivos.map(m => ({ nome: m.motivo, valor: m.qtd }))} dataKey="valor" nameKey="nome" outerRadius={80} label={{ fontSize: 10 }}>
+                      {motivos.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Win rate por representante">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={winPorRep} layout="vertical">
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                    <YAxis type="category" dataKey="rep" tick={{ fontSize: 10 }} width={100} />
+                    <Tooltip formatter={(v: number) => fmtPct(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="win" fill={STATUS_COLORS.ativo} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Funil Lead vs Cliente">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[10px] uppercase nx-muted mb-1">Prospecção (Lead)</p>
+                    <FunnelChart etapas={[{ etapa: "Lead", valor: kpiA.aLeads.atual }, { etapa: "Convertido", valor: Math.round(kpiA.aLeads.atual * (kpiA.txConversao.atual / 100)) }]} taxas={[null, kpiA.txConversao.atual]} color={STATUS_COLORS.lead} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase nx-muted mb-1">Fidelização (Cliente)</p>
+                    <FunnelChart etapas={[{ etapa: "Contatado", valor: kpiA.aClientes.atual }, { etapa: "Recomprou", valor: Math.round(kpiA.aClientes.atual * 0.42) }]} taxas={[null, 42]} color={STATUS_COLORS.ativo} />
+                  </div>
+                </div>
+              </SectionCard>
+            </div>
+          </TabsContent>
+
+          {/* PRODUTO */}
+          <TabsContent value="produto" className="space-y-4 mt-0">
+            <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-3">
+              <KpiCard label="Faturamento" value={fmtBRLc(kpiP.faturamento.atual)} delta={dCompara ? { pct: kpiP.faturamento.delta } : undefined} icon={<DollarSign className="h-3.5 w-3.5" />} />
+              <KpiCard label="Marcas ativas" value={fmtNum(kpiP.marcasAtivas.atual)} delta={dCompara ? { pct: kpiP.marcasAtivas.delta } : undefined} icon={<Layers className="h-3.5 w-3.5" />} />
+              <KpiCard label="Ticket por marca" value={fmtBRLc(kpiP.ticketMarca.atual)} delta={dCompara ? { pct: kpiP.ticketMarca.delta } : undefined} />
+              <KpiCard label="Cross-sell" value={kpiP.crossSell.atual.toFixed(1).replace(".", ",")} hint="marcas/cliente" />
+              <KpiCard label="Marca líder" value={<span className="text-base">{kpiP.marcaLider}</span>} />
+              <KpiCard label="Maior crescimento" value={<span className="text-base">{kpiP.maiorCrescimento}</span>} />
+              <KpiCard label="Maior queda" value={<span className="text-base">{kpiP.maiorQueda}</span>} />
+              <KpiCard label="Itens/pedido" value={kpiP.itensPorPedido.atual.toFixed(1).replace(".", ",")} delta={dCompara ? { pct: kpiP.itensPorPedido.delta } : undefined} icon={<Package className="h-3.5 w-3.5" />} />
+              <KpiCard label="% marca top" value={fmtPct(kpiP.concentracaoTop.atual)} delta={dCompara ? { pct: kpiP.concentracaoTop.delta, invert: true } : undefined} hint="concentração" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Faturamento por marca">
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={faturPorMarca} layout="vertical">
+                    <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={fmtBRLc} />
+                    <YAxis type="category" dataKey="nome" tick={{ fontSize: 11 }} width={90} />
+                    <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="valor" fill={NX.primary} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Faturamento por categoria/coleção">
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={faturPorCategoria}>
+                    <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                    <XAxis dataKey="nome" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={50} interval={0} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={fmtBRLc} />
+                    <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="valor" fill={NX.accent} radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Top 10 produtos">
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={topProdutos.top} layout="vertical">
+                    <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={fmtBRLc} />
+                    <YAxis type="category" dataKey="nome" tick={{ fontSize: 10 }} width={70} />
+                    <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="valor" fill="#16A34A" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Bottom 10 produtos">
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={topProdutos.bottom} layout="vertical">
+                    <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={fmtBRLc} />
+                    <YAxis type="category" dataKey="nome" tick={{ fontSize: 10 }} width={70} />
+                    <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="valor" fill="#DC2626" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+            </div>
+
+            <SectionCard title="Curva ABC de produtos" subtitle="Concentração de receita">
+              <AbcCurve data={abcProduto} labelKey={(t: { id: string }) => t.id.toUpperCase()} />
+            </SectionCard>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Penetração de marca" subtitle="% da base que compra cada marca">
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={penetracaoMarca} layout="vertical">
+                    <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                    <YAxis type="category" dataKey="nome" tick={{ fontSize: 11 }} width={90} />
+                    <Tooltip formatter={(v: number) => fmtPct(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="pct" fill={NX.primary} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Marca × Nicho" subtitle="Heatmap de receita">
+                <HeatmapMesRep data={heatMarcaNicho} />
+              </SectionCard>
+            </div>
+
+            <SectionCard title="Marcas sem giro" subtitle="Por representante (período)">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE]">
+                    <tr><th className="text-left py-2">Representante</th><th className="text-left">Marcas sem venda</th></tr>
+                  </thead>
+                  <tbody>
+                    {marcasSemGiro.map(r => (
+                      <tr key={r.rep} className="border-b border-[#F1F3F8]">
+                        <td className="py-2 nx-text font-medium">{r.rep}</td>
+                        <td className="py-2">
+                          {r.marcas.length === 0 ? <span className="nx-muted text-[11px]">Vendeu todas as marcas</span> :
+                            <div className="flex flex-wrap gap-1">{r.marcas.map(m => <Badge key={m} variant="outline" className="text-[10px]">{m}</Badge>)}</div>
+                          }
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </SectionCard>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Sazonalidade por marca">
+                <MultiLineSerie data={sazoMarca} series={seed.marcas.slice(0, 4).map((m, i) => ({ key: m.nome, nome: m.nome, color: CHART_PALETTE[i] }))} fmtY={fmtBRLc} />
+              </SectionCard>
+              <SectionCard title="Recompra por coleção">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={recompraColecao}>
+                    <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                    <XAxis dataKey="nome" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="valor" fill={NX.accent} radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+            </div>
+
+            <SectionCard title="Ticket médio por categoria">
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={ticketCategoria}>
+                  <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                  <XAxis dataKey="nome" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={50} interval={0} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={fmtBRLc} />
+                  <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                  <Bar dataKey="valor" fill={NX.primary} radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </SectionCard>
+          </TabsContent>
+
+          {/* METAS */}
+          <TabsContent value="metas" className="space-y-4 mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <SectionCard className="lg:col-span-1" title="Atingimento meta de faturamento" subtitle={`Meta ${fmtBRL(kpiM.metaFaturamento)} · Realizado ${fmtBRL(kpiM.realizado)}`}>
+                <Gauge value={kpiM.atingimento} label="Atingimento" size={220} />
+                <p className="text-center text-[11px] nx-muted mt-2">Pace projetado: <span className={`font-semibold nx-num ${deltaColor(kpiM.paceAtingimento - 100)}`}>{fmtPct(kpiM.paceAtingimento, 0)} ({fmtBRLc(kpiM.projecao)})</span></p>
+              </SectionCard>
+              <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-3 content-start">
+                <KpiCard label="Gap para meta" value={fmtBRLc(kpiM.gap)} hint="restam alcançar" />
+                <KpiCard label="Dias úteis restantes" value={fmtNum(kpiM.diasRestantes)} hint="até fim do mês" />
+                <KpiCard label="R$/dia necessário" value={fmtBRLc(kpiM.rsPorDia)} />
+                <KpiCard label="Atingimento atual" value={fmtPct(kpiM.atingimento)} />
+                <KpiCard label="Meta positivação" value="68%" hint="atingido" />
+                <KpiCard label="Meta cobertura" value="74%" hint="atingido" />
+                <KpiCard label="Meta novos clientes" value="82%" hint="atingido" />
+                <KpiCard label="Meta reativação" value="55%" hint="atingido" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <SectionCard className="lg:col-span-2" title="Realizado × Projetado × Meta (mês atual)">
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={projecaoMes}>
+                    <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                    <XAxis dataKey="dia" tick={{ fontSize: 9 }} interval={2} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={fmtBRLc} />
+                    <Tooltip formatter={(v: number) => v == null ? "—" : fmtBRL(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <RLegend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="realizado" name="Realizado" fill={NX.primary} stackId="a" />
+                    <Bar dataKey="projetado" name="Projetado" fill="#94A3B8" stackId="a" />
+                    <Bar dataKey="meta" name="Meta diária" fill={NX.accent} fillOpacity={0.2} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+              <SectionCard title="Histórico de atingimento" subtitle="Últimos 6 meses">
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={histAting}>
+                    <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                    <XAxis dataKey="mes" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${v.toFixed(0)}%`} />
+                    <Tooltip formatter={(v: number) => fmtPct(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <Bar dataKey="ating" radius={[3, 3, 0, 0]}>
+                      {histAting.map((d, i) => <Cell key={i} fill={d.ating >= 100 ? "#16A34A" : d.ating >= 75 ? "#F59E0B" : "#DC2626"} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+            </div>
+
+            <SectionCard title="Ranking por representante">
+              <div className="space-y-2">
+                {rankingMetas.map((r, i) => (
+                  <div key={r.rep} className="flex items-center gap-3 bg-[#F6F7F9] rounded-lg px-3 py-2">
+                    <span className="text-[10px] font-bold nx-muted w-5">#{i + 1}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium nx-text">{r.rep}</span>
+                        <span className="text-[11px] nx-muted nx-num">{fmtBRLc(r.real)} / {fmtBRLc(r.meta)}</span>
+                      </div>
+                      <ProgressBar value={r.pct} color={r.pct >= 100 ? "#16A34A" : r.pct >= 75 ? "#F59E0B" : "#DC2626"} />
+                    </div>
+                    <span className={`text-xs font-semibold nx-num w-16 text-right ${r.pct >= 100 ? "text-emerald-600" : "nx-text"}`}>{fmtPct(r.pct, 0)}</span>
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-4 mt-2 justify-center">
-                <div className="flex items-center gap-1 text-[9px] text-muted-foreground"><div className="w-2 h-2 rounded bg-blue-400" /> Oport. criadas</div>
-                <div className="flex items-center gap-1 text-[9px] text-muted-foreground"><div className="w-2 h-2 rounded bg-emerald-400" /> Ganhas</div>
-                <div className="flex items-center gap-1 text-[9px] text-muted-foreground"><div className="w-2 h-2 rounded bg-amber-400" /> Pedidos</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </SectionCard>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Alertas gerenciais */}
-          <Card className="border border-border">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-heading flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" /> Alertas Gerenciais
-                </CardTitle>
-                <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/vendedor/insights")}>
-                  Ver todos <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {alertasGerenciais.filter(a => a.severidade === "alta").map(a => (
-                <button
-                  key={a.id}
-                  onClick={() => a.linkTo && navigate(a.linkTo)}
-                  className="w-full flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
-                >
-                  <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                    a.tipo === "risco" ? "bg-red-50" : a.tipo === "alerta" ? "bg-amber-50" : "bg-blue-50"
-                  }`}>
-                    <AlertTriangle className={`h-3.5 w-3.5 ${
-                      a.tipo === "risco" ? "text-red-500" : a.tipo === "alerta" ? "text-amber-500" : "text-blue-500"
-                    }`} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-foreground">{a.titulo}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{a.descricao}</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
-                </button>
-              ))}
-            </CardContent>
-          </Card>
+            <SectionCard title="Atingimento por tipo de meta × representante">
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={atingPorTipo}>
+                  <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                  <XAxis dataKey="rep" tick={{ fontSize: 10 }} angle={-15} textAnchor="end" height={50} interval={0} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip formatter={(v: number) => fmtPct(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                  <RLegend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="faturamento" name="Faturamento" fill={NX.primary} />
+                  <Bar dataKey="positivacao" name="Positivação" fill={STATUS_COLORS.ativo} />
+                  <Bar dataKey="cobertura" name="Cobertura" fill={NX.accent} />
+                </BarChart>
+              </ResponsiveContainer>
+            </SectionCard>
+          </TabsContent>
 
-          {/* Listas executivas */}
-          <Card className="border border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-heading">Listas Executivas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Flame className="h-3 w-3 text-orange-500" /> Top clientes ativos</p>
-                  </div>
-                  {topClientes.map(c => (
-                    <button key={c.id} onClick={() => navigate(`/vendedor/360/${c.id}`)} className="w-full flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 text-left">
-                      <div className="flex items-center gap-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center"><span className="text-[8px] font-bold text-primary">{c.nomeFantasia[0]}</span></div>
-                        <span className="text-xs text-foreground">{c.nomeFantasia}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-[9px] px-1 py-0">{c.nicho}</Badge>
-                        <span className="text-[10px] text-muted-foreground">{c.oportunidadesAbertas} oport.</span>
-                      </div>
-                    </button>
+          {/* PROGRESSÕES */}
+          <TabsContent value="progressoes" className="space-y-4 mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Faturamento (6 meses)">
+                <MultiLineSerie data={tendFaturamento} series={[{ key: "valor", nome: "Faturamento" }]} fmtY={fmtBRLc} />
+              </SectionCard>
+              <SectionCard title="Comparativo MoM / YoY">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={yoyMoM}>
+                    <CartesianGrid stroke="#F1F3F8" vertical={false} />
+                    <XAxis dataKey="data" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={fmtBRLc} />
+                    <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                    <RLegend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="atual" name="Período atual" fill={NX.primary} />
+                    <Bar dataKey="anterior" name="Período anterior" fill="#94A3B8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </SectionCard>
+            </div>
+
+            <SectionCard title="Tabela comparativa completa">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE]">
+                    <tr><th className="text-left py-2">Métrica</th><th className="text-right">Atual</th><th className="text-right">Anterior</th><th className="text-right">Δ %</th></tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["Total clientes", kpiC.totalClientes],
+                      ["Ativos", kpiC.ativos],
+                      ["Inativos", kpiC.inativos, true],
+                      ["Perdidos", kpiC.perdidos, true],
+                      ["Novos", kpiC.novos],
+                      ["Reativados", kpiC.reativados],
+                      ["Positivados", kpiC.positivados],
+                      ["Tx. positivação", kpiC.txPositivacao, false, "pct"],
+                      ["Churn", kpiC.churn, true, "pct"],
+                      ["Faturamento", kpiP.faturamento, false, "brl"],
+                      ["Cobertura", kpiA.cobertura, false, "pct"],
+                      ["Conversão Lead→Cliente", kpiA.txConversao, false, "pct"],
+                    ].map(([nome, v, invert, kind]: any) => (
+                      <tr key={nome} className="border-b border-[#F1F3F8]">
+                        <td className="py-2 nx-text">{nome}</td>
+                        <td className="text-right nx-num">{kind === "pct" ? fmtPct(v.atual) : kind === "brl" ? fmtBRLc(v.atual) : fmtNum(v.atual)}</td>
+                        <td className="text-right nx-num nx-muted">{kind === "pct" ? fmtPct(v.anterior) : kind === "brl" ? fmtBRLc(v.anterior) : fmtNum(v.anterior)}</td>
+                        <td className={`text-right nx-num font-medium ${deltaColor(v.delta, invert)}`}>{deltaArrow(v.delta)} {fmtPct(Math.abs(v.delta), 1)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Comparativo entre representantes" subtitle="Faturamento mensal">
+              <MultiLineSerie data={comparativoRep} series={seed.representantes.map((r, i) => ({ key: r.nome, nome: r.nome, color: CHART_PALETTE[i] }))} fmtY={fmtBRLc} height={260} />
+            </SectionCard>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Crescimento líquido acumulado">
+                <MultiLineSerie data={crescAcum} series={[{ key: "valor", nome: "Saldo (novos − perdidos)" }]} fmtY={fmtNum} />
+              </SectionCard>
+              <SectionCard title="Ranking de evolução" subtitle="Crescimento % no período">
+                <div className="space-y-1.5">
+                  {rankingEvolucao.map((r, i) => (
+                    <div key={r.rep} className="flex items-center gap-2 bg-[#F6F7F9] rounded-md px-3 py-1.5">
+                      <span className="text-[10px] nx-muted w-5">#{i + 1}</span>
+                      <span className="flex-1 text-xs nx-text">{r.rep}</span>
+                      <span className={`text-xs font-semibold nx-num ${deltaColor(r.crescimento)}`}>{deltaArrow(r.crescimento)} {fmtPct(Math.abs(r.crescimento), 0)}</span>
+                    </div>
                   ))}
                 </div>
-                <div className="border-t border-border pt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-red-500" /> Clientes em risco</p>
-                  </div>
-                  {clientesEmRisco.map(c => (
-                    <button key={c.id} onClick={() => navigate(`/vendedor/360/${c.id}`)} className="w-full flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 text-left">
-                      <div className="flex items-center gap-2">
-                        <div className="h-5 w-5 rounded-full bg-red-50 flex items-center justify-center"><span className="text-[8px] font-bold text-red-600">{c.nomeFantasia[0]}</span></div>
-                        <span className="text-xs text-foreground">{c.nomeFantasia}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-muted-foreground">Último: {c.ultimoContato}</span>
-                        <Badge variant="destructive" className="text-[9px] px-1 py-0">{c.status === "em_risco" ? "Risco" : "Reativação"}</Badge>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </SectionCard>
+            </div>
+
+            <SectionCard title="Performance mensal por representante" subtitle="Faturamento — últimos 6 meses">
+              <HeatmapMesRep data={heatRep} />
+            </SectionCard>
+          </TabsContent>
+        </Tabs>
       </div>
-    </>
+    </div>
   );
 }
