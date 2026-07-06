@@ -849,15 +849,17 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
       <div className="bg-muted/50 px-4 py-2 flex items-center justify-between">
         <div>
           <div className="font-semibold capitalize">{g.slug}</div>
-          <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && " · POLÍTICA VENCIDA"}</div>
+          <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && !presentation && " · POLÍTICA VENCIDA"}</div>
         </div>
-        <div className="text-right">
-          <div className="text-xs text-muted-foreground">Sua comissão</div>
-          <div className="font-semibold text-emerald-600">{formatBRL(g.comissaoRS)}</div>
-        </div>
+        {!presentation && (
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">Sua comissão</div>
+            <div className="font-semibold text-emerald-600">{formatBRL(g.comissaoRS)}</div>
+          </div>
+        )}
       </div>
 
-      {!pol.ativa && (
+      {!pol.ativa && !presentation && (
         <div className="bg-destructive/10 text-destructive text-xs px-4 py-2">
           Política vencida — simulação bloqueada. Solicite renovação para operar esta indústria.
         </div>
@@ -868,8 +870,12 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-muted-foreground">Condição:</span>
           <b>{g.desconto}% desc</b>
-          <span className="text-muted-foreground">·</span>
-          <b className="text-emerald-600">{g.comissaoPct.toFixed(1)}% com</b>
+          {!presentation && (
+            <>
+              <span className="text-muted-foreground">·</span>
+              <b className="text-emerald-600">{g.comissaoPct.toFixed(1)}% com</b>
+            </>
+          )}
           <span className="text-muted-foreground">·</span>
           <b>{g.prazo}d</b>
         </div>
@@ -879,6 +885,7 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
           subtotalBruto={g.subtotalBruto}
           degrauIdx={g.degrauIdx}
           prazo={g.prazo}
+          presentation={presentation}
           onChangeDegrau={onChangeDegrau}
           onChangePrazo={onChangePrazo}
           trigger={
