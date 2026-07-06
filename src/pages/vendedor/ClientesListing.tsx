@@ -507,7 +507,8 @@ function FunilView({
 
               <div className="flex-1 overflow-y-auto p-2 space-y-2">
                 {items.map(c => {
-                  const s = saudeCliente(c);
+                  const saude = calcularSaude(c);
+                  const s = saude.status;
                   const dias = diasSemContato(c.ultimoContato);
                   const v = valor12m(c);
                   const ind = industriasDe(c);
@@ -524,10 +525,21 @@ function FunilView({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium truncate flex-1">{c.nomeFantasia}</p>
-                        <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${saudeColor[s]}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[s]}`} /> {saudeLabel[s]}
-                        </span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 cursor-help ${saudeColor[s]}`}>
+                                <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[s]}`} /> {saudeLabel[s]}
+                                {saude.faltamDias != null && saude.faltamDias <= 14 && (
+                                  <span className="ml-0.5 opacity-80">· {saude.faltamDias}d</span>
+                                )}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs text-xs leading-relaxed">{saude.explicacao}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
+
 
                       {ind.length > 0 && (
                         <div className="flex gap-1 flex-wrap">
