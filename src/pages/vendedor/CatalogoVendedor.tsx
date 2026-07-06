@@ -727,7 +727,7 @@ export default function CatalogoVendedor() {
                   )}
                 </>
               )}
-            </SheetFooter>
+            </div>
           </SheetContent>
         </Sheet>
 
