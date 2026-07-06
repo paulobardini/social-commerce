@@ -71,6 +71,7 @@ export function VendedorSidebar({ collapsed, onToggle }: VendedorSidebarProps) {
     if (path === "/vendedor/atendimento") return location.pathname === "/vendedor/atendimento";
     if (path === "/vendedor/atendimento/whatsapp") return location.pathname.startsWith("/vendedor/atendimento/whatsapp");
     if (path === "/vendedor/tarefas") return location.pathname.startsWith("/vendedor/tarefas");
+    if (path === "/vendedor/catalogo") return location.pathname.startsWith("/vendedor/catalogo");
     if (path === "/vendedor/agenda") return location.pathname.startsWith("/vendedor/agenda");
     if (path === "/vendedor/segmentacoes") return location.pathname.startsWith("/vendedor/segmentacoes");
     if (path === "/vendedor/dashboard") return location.pathname === "/vendedor/dashboard";
