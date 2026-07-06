@@ -426,6 +426,7 @@ export default function CatalogoVendedor() {
           prazoByBrand={prazoByBrand}
           cartByBrand={cartByBrand}
           allItems={allItems}
+          presentation={presentation}
           onChangeDegrau={updateDegrau}
           onChangePrazo={updatePrazo}
           onAddBrand={(slug) => {
