@@ -782,7 +782,74 @@ export default function CatalogoVendedor() {
           </SheetContent>
         </Sheet>
 
+        {/* Pedido de acordo comercial → supervisor */}
+        <Sheet open={acordoOpen} onOpenChange={setAcordoOpen}>
+          <SheetContent side="bottom" className="max-w-lg mx-auto rounded-t-xl max-h-[90vh] flex flex-col">
+            <SheetHeader className="shrink-0">
+              <SheetTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                Pedido de acordo comercial
+              </SheetTitle>
+            </SheetHeader>
+            <div className="py-4 space-y-3 text-sm overflow-y-auto flex-1">
+              <div className="text-muted-foreground text-xs">
+                O supervisor recebe as exceções abaixo para autorizar ou recusar. Você é notificado no CRM assim que houver decisão.
+              </div>
+              <div className="rounded-md border bg-muted/30 p-3 space-y-1.5">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cliente</div>
+                <div className="text-sm">{cliente?.nomeFantasia || "Sem cliente"}</div>
+              </div>
+              <div className="rounded-md border p-3 space-y-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exceções pedidas</div>
+                {blockedGroups.length === 0 && (
+                  <div className="text-xs text-muted-foreground">Nenhuma indústria fora da política.</div>
+                )}
+                {blockedGroups.map((g) => (
+                  <div key={g.slug} className="text-xs border-l-2 border-destructive/50 pl-2">
+                    <div className="capitalize font-medium">{g.slug} — {formatBRL(g.subtotalLiquido)}</div>
+                    <div className="text-destructive">
+                      {g.pendencias.filter((p: any) => p.tipo === "bloqueio").map((p: any) => p.msg).join(" · ") || "Fora da política vigente"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Justificativa comercial</label>
+                <Textarea
+                  value={acordoJustificativa}
+                  onChange={(e) => setAcordoJustificativa(e.target.value)}
+                  placeholder="Ex.: cliente estratégico, primeiro pedido, mix agressivo para reposição, contrapartida em volume…"
+                  rows={4}
+                />
+              </div>
+              <label className="flex items-center gap-2 text-xs cursor-pointer">
+                <Checkbox checked={acordoUrgente} onCheckedChange={(v) => setAcordoUrgente(!!v)} />
+                Marcar como urgente (notifica supervisor no Whats)
+              </label>
+            </div>
+            <SheetFooter className="flex-row gap-2 shrink-0">
+              <Button variant="outline" className="flex-1" onClick={() => setAcordoOpen(false)}>Cancelar</Button>
+              <Button
+                className="flex-1 gap-2"
+                disabled={acordoJustificativa.trim().length < 10}
+                onClick={() => {
+                  toast({
+                    title: "Pedido enviado ao supervisor",
+                    description: `${blockedGroups.length} exceção(ões) aguardando aprovação${acordoUrgente ? " · marcado como urgente" : ""}.`,
+                  });
+                  setAcordoOpen(false);
+                  setAcordoJustificativa("");
+                  setAcordoUrgente(false);
+                }}
+              >
+                <Send className="h-4 w-4" /> Enviar ao supervisor
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+
         <QRScannerModal open={qrOpen} onOpenChange={setQrOpen} onScan={handleQRScan} availableRefs={allItems.map((i) => i.ref)} />
+
 
         <AlertDialog open={addAllConfirm} onOpenChange={setAddAllConfirm}>
           <AlertDialogContent>
