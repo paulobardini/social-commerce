@@ -26,9 +26,10 @@ import { funilOportunidades, oportunidadesEstagnadas, ETAPAS_FUNIL, ETAPA_LABEL,
 import { serieMensal } from "@/cockpit/lib/series";
 import { STATUS_COLORS, fmtBRL, fmtBRLc, fmtNum, fmtPct, fmtDias, NX } from "@/cockpit/styles/tokens";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as ReTooltip, CartesianGrid, ReferenceLine } from "recharts";
-import { AlertTriangle, Flame, MessageCircle, ChevronDown, ChevronRight, Phone, ArrowRight, Search, CheckCircle2, Target, TrendingUp, Activity, Info, Sparkles, Calendar as CalIcon } from "lucide-react";
+import { AlertTriangle, Flame, MessageCircle, ChevronDown, ChevronRight, Phone, ArrowRight, Search, CheckCircle2, Target, TrendingUp, Activity, Info, Sparkles, Calendar as CalIcon, Plus, FileText, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
+import { useTarefas, type TarefaExt } from "@/contexts/TarefasContext";
 import type { Oportunidade } from "@/cockpit/data/seed";
 
 // ============ HELPERS ============
