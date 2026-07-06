@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   Search, SlidersHorizontal, ShoppingCart, X, Plus, Minus, Lock,
   ChevronDown, ChevronUp, RotateCw, MessageSquare, FileText, Check, Package,
-  Pencil, AlertTriangle, Eye, EyeOff,
+  Pencil, AlertTriangle, Eye, EyeOff, QrCode, LayoutGrid, List, RotateCcw,
 } from "lucide-react";
 import { usePresentationMode } from "@/hooks/usePresentationMode";
 import { Button } from "@/components/ui/button";
@@ -16,15 +16,19 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { brands, Product } from "@/data/mockProducts";
 import { mockClientes360 } from "@/data/mockCRM360";
 import {
   getPolitica, formatBRL, getUltimoDegrau, saveUltimoDegrau,
-  PoliticaIndustria,
+  PoliticaIndustria, enquadrarDegrau,
 } from "@/lib/politicaComercial";
+import { CatalogSecondaryMenu, QRScannerModal, GenericItem } from "@/components/vendedor/catalogo/CatalogoExtras";
 
 // ---------- Flattened catalog ----------
 type CatalogItem = Product & {
@@ -35,13 +39,14 @@ type CatalogItem = Product & {
   colecao: string;
   idade: string;
   vendas: number;
+  isGeneric?: boolean;
 };
 
 const ESTACOES = ["Verão", "Outono", "Inverno", "Primavera"];
 const COLECOES = ["Alto Verão 26", "PV 26", "OI 26", "Kids Play"];
 const IDADES = ["0-2 anos", "3-6 anos", "7-10 anos", "11-14 anos", "Adulto"];
 
-const allItems: CatalogItem[] = brands.flatMap((b) =>
+const baseItems: CatalogItem[] = brands.flatMap((b) =>
   b.products.map((p, i) => ({
     ...p,
     brandSlug: b.slug,
@@ -55,23 +60,16 @@ const allItems: CatalogItem[] = brands.flatMap((b) =>
 );
 
 // ---------- Cart types ----------
-interface CartLine { itemId: string; qty: number; }
+interface CartLine { itemId: string; qty: number; precoNegociado?: number; }
 type CartByBrand = Record<string, CartLine[]>;
 type DegrauByBrand = Record<string, number>;
 type PrazoByBrand = Record<string, number>;
 
 // ---------- Filters ----------
 interface Filters {
-  marcas: string[];
-  categorias: string[];
-  subcategorias: string[];
-  tamanhos: string[];
-  generos: string[];
-  idades: string[];
-  estacoes: string[];
-  colecoes: string[];
-  precoMin: number;
-  precoMax: number;
+  marcas: string[]; categorias: string[]; subcategorias: string[]; tamanhos: string[];
+  generos: string[]; idades: string[]; estacoes: string[]; colecoes: string[];
+  precoMin: number; precoMax: number;
 }
 const emptyFilters: Filters = {
   marcas: [], categorias: [], subcategorias: [], tamanhos: [],
@@ -91,36 +89,44 @@ export default function CatalogoVendedor() {
 
   const [search, setSearch] = useState("");
   const [order, setOrder] = useState<"az" | "menor" | "maior" | "vendas">("az");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showOnlyAdded, setShowOnlyAdded] = useState(false);
   const [cartByBrand, setCartByBrand] = useState<CartByBrand>({});
   const [degrauByBrand, setDegrauByBrand] = useState<DegrauByBrand>({});
   const [prazoByBrand, setPrazoByBrand] = useState<PrazoByBrand>({});
+  const [genericItems, setGenericItems] = useState<CatalogItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [addAllConfirm, setAddAllConfirm] = useState(false);
 
-  // Modo apresentação (esconde comissão/margem na frente do cliente)
-  const { on: presentation, set: setPresentation, toggle: togglePresentation } = usePresentationMode();
+  const allItems = useMemo(() => [...baseItems, ...genericItems], [genericItems]);
+
+  const { on: presentation, toggle: togglePresentation } = usePresentationMode();
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      // Atalho: Shift+P (evita conflito ao digitar). Ignora inputs/textareas.
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
-      if (e.shiftKey && (e.key === "P" || e.key === "p")) {
-        e.preventDefault();
-        togglePresentation();
-      }
+      if (e.shiftKey && (e.key === "P" || e.key === "p")) { e.preventDefault(); togglePresentation(); }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [togglePresentation]);
 
-  // Perfil do cliente vira chip auto-diferenciado
   const perfilChip = cliente?.interessePrincipal?.split(" ")[1] || cliente?.nicho;
 
-  // ---------- Filter data ----------
+  // ---------- Filter ----------
+  const addedItemIds = useMemo(() => {
+    const s = new Set<string>();
+    Object.values(cartByBrand).forEach((lines) => lines.forEach((l) => s.add(l.itemId)));
+    return s;
+  }, [cartByBrand]);
+
   const filtered = useMemo(() => {
     let list = allItems;
+    if (showOnlyAdded) list = list.filter((p) => addedItemIds.has(p.id));
     const q = search.trim().toLowerCase();
     if (q) list = list.filter((p) => p.name.toLowerCase().includes(q) || p.ref.toLowerCase().includes(q) || p.brandName.toLowerCase().includes(q));
     if (filters.marcas.length) list = list.filter((p) => filters.marcas.includes(p.brandSlug));
@@ -131,17 +137,12 @@ export default function CatalogoVendedor() {
     if (filters.colecoes.length) list = list.filter((p) => filters.colecoes.includes(p.colecao));
     if (filters.tamanhos.length) list = list.filter((p) => p.sizes.some((s) => filters.tamanhos.includes(s)));
     list = list.filter((p) => p.price >= filters.precoMin && p.price <= filters.precoMax);
-    // Aplicar perfil como filtro auto quando existe
-    if (perfilChip) {
-      const lc = perfilChip.toLowerCase();
-      list = list.filter((p) => p.category.toLowerCase().includes(lc) || p.gender.toLowerCase().includes(lc) || p.idade.toLowerCase().includes(lc) || p.name.toLowerCase().includes(lc) || true);
-    }
     if (order === "az") list = [...list].sort((a, b) => a.name.localeCompare(b.name));
     if (order === "menor") list = [...list].sort((a, b) => a.price - b.price);
     if (order === "maior") list = [...list].sort((a, b) => b.price - a.price);
     if (order === "vendas") list = [...list].sort((a, b) => b.vendas - a.vendas);
     return list;
-  }, [search, filters, order, perfilChip]);
+  }, [search, filters, order, perfilChip, showOnlyAdded, addedItemIds, allItems]);
 
   const activeFilterCount =
     filters.marcas.length + filters.categorias.length + filters.subcategorias.length +
@@ -158,11 +159,11 @@ export default function CatalogoVendedor() {
       });
     });
     return out;
-  }, [cartByBrand]);
+  }, [cartByBrand, allItems]);
   const totalItens = cartItemsFlat.reduce((s, x) => s + x.qty, 0);
+  const addedCount = addedItemIds.size;
 
-  // ---------- Session condition helpers ----------
-  // Brands that are part of the current session: brands with cart items OR filtered explicitly.
+  // ---------- Session condition ----------
   const activeBrandSlugs = useMemo(() => {
     const s = new Set<string>();
     Object.keys(cartByBrand).forEach((k) => s.add(k));
@@ -174,7 +175,6 @@ export default function CatalogoVendedor() {
     setDegrauByBrand((prev) => {
       if (prev[slug] !== undefined) return prev;
       const ult = getUltimoDegrau(clienteId, slug);
-      // Fallback: degrau "mais comum" mock — índice 2 (~25% desc).
       const pol = getPolitica(slug);
       const fallback = pol ? Math.min(2, pol.degraus.length - 1) : 0;
       return { ...prev, [slug]: ult ?? fallback };
@@ -186,13 +186,11 @@ export default function CatalogoVendedor() {
     });
   }
 
-  // Garante condição ao ativar marca (filtro/carrinho)
   useEffect(() => {
     activeBrandSlugs.forEach((slug) => ensureCondition(slug));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeBrandSlugs.join(",")]);
 
-  // Condição efetiva por marca (para o grid — mesmo sem estar na cesta)
   function sessionConditionFor(slug: string) {
     const pol = getPolitica(slug);
     if (!pol) return null;
@@ -213,43 +211,106 @@ export default function CatalogoVendedor() {
     return cartByBrand[brandSlug]?.find((l) => l.itemId === itemId)?.qty || 0;
   }
   function setQty(item: CatalogItem, qty: number) {
-    // Garante condição da sessão antes de adicionar
     if (qty > 0) ensureCondition(item.brandSlug);
     setCartByBrand((prev) => {
       const lines = [...(prev[item.brandSlug] || [])];
       const idx = lines.findIndex((l) => l.itemId === item.id);
-      if (qty <= 0) {
-        if (idx >= 0) lines.splice(idx, 1);
-      } else if (idx >= 0) {
-        lines[idx] = { ...lines[idx], qty };
-      } else {
-        lines.push({ itemId: item.id, qty });
-      }
+      if (qty <= 0) { if (idx >= 0) lines.splice(idx, 1); }
+      else if (idx >= 0) lines[idx] = { ...lines[idx], qty };
+      else lines.push({ itemId: item.id, qty });
       const next = { ...prev };
       if (lines.length) next[item.brandSlug] = lines; else delete next[item.brandSlug];
       return next;
     });
   }
 
-  // ---------- Compute per-brand cockpit numbers ----------
+  function setPrecoNegociado(brandSlug: string, itemId: string, valor: number | undefined) {
+    setCartByBrand((prev) => {
+      const lines = (prev[brandSlug] || []).map((l) =>
+        l.itemId === itemId ? { ...l, precoNegociado: valor } : l
+      );
+      return { ...prev, [brandSlug]: lines };
+    });
+  }
+
+  function addGenericItem(g: GenericItem) {
+    const id = `gen-${Date.now()}`;
+    const brand = brands.find((b) => b.slug === g.brandSlug);
+    const item: CatalogItem = {
+      id, ref: g.ref, name: g.name, price: g.price,
+      brandSlug: g.brandSlug, brandName: brand?.name || g.brandSlug,
+      variants: [], sizes: [], category: "Genérico", gender: "Unissex",
+      image: "", estacao: "-", colecao: "-", idade: "-", vendas: 0,
+      isGeneric: true,
+    } as CatalogItem;
+    setGenericItems((prev) => [...prev, item]);
+    setTimeout(() => setQty(item, 1), 0);
+  }
+
+  function handleQRScan(ref: string) {
+    const item = allItems.find((i) => i.ref === ref);
+    if (item) {
+      setQty(item, getQty(item.id, item.brandSlug) + 1);
+      toast({ title: "Adicionado", description: `${item.name} (ref ${ref})` });
+    }
+  }
+
+  function addAllFiltered() {
+    filtered.forEach((it) => { if (getQty(it.id, it.brandSlug) === 0) setQty(it, 1); });
+    toast({ title: "Adicionados", description: `${filtered.length} produtos adicionados à cesta.` });
+  }
+  function onAddAllClick() {
+    if (filtered.length > 30) setAddAllConfirm(true);
+    else addAllFiltered();
+  }
+
+  // ---------- Compute per-brand ----------
   function computeGroup(slug: string) {
     const pol = getPolitica(slug);
     const lines = cartByBrand[slug] || [];
-    const items = lines.map((l) => ({ ...l, item: allItems.find((x) => x.id === l.itemId)! }));
-    const subtotalBruto = items.reduce((s, l) => s + l.item.price * l.qty, 0);
+    const items = lines.map((l) => ({ ...l, item: allItems.find((x) => x.id === l.itemId)! })).filter((l) => l.item);
     const degrauIdx = degrauByBrand[slug] ?? 0;
-    const degrau = pol?.degraus[degrauIdx];
-    const desconto = degrau?.desconto ?? 0;
-    const subtotalLiquido = subtotalBruto * (1 - desconto / 100);
+    const degrauSessao = pol?.degraus[degrauIdx];
+    const descontoSessao = degrauSessao?.desconto ?? 0;
     const prazo = prazoByBrand[slug] ?? pol?.prazoMedio ?? 30;
     const bonus = pol ? Math.max(0, Math.floor((pol.prazoMedio - prazo) / 15)) * pol.bonusComissaoPor15Dias : 0;
-    const comissaoPct = (degrau?.comissao ?? 0) + bonus;
-    const comissaoRS = (subtotalLiquido * comissaoPct) / 100;
 
-    // Pendências e bloqueios POR indústria (política própria)
+    // Preço unitário efetivo por linha
+    const linhas = items.map((l) => {
+      const precoTabela = l.item.price;
+      const precoDefault = precoTabela * (1 - descontoSessao / 100);
+      const precoUnit = l.precoNegociado ?? precoDefault;
+      const descontoItem = precoTabela > 0 ? (1 - precoUnit / precoTabela) * 100 : 0;
+      return { ...l, precoTabela, precoDefault, precoUnit, descontoItem, negociado: l.precoNegociado !== undefined };
+    });
+
+    const subtotalBruto = linhas.reduce((s, l) => s + l.precoTabela * l.qty, 0);
+    const subtotalLiquido = linhas.reduce((s, l) => s + l.precoUnit * l.qty, 0);
+    const descontoMedio = subtotalBruto > 0 ? (1 - subtotalLiquido / subtotalBruto) * 100 : 0;
+
+    // Enquadramento pela política
+    const enquadrado = pol ? enquadrarDegrau(pol, descontoMedio) : null;
+    const maxDegrau = pol ? pol.degraus.reduce((a, b) => a.desconto > b.desconto ? a : b) : null;
+    const foraPorMedia = !!(pol && descontoMedio > 0 && !enquadrado);
+
+    // Regra por indústria
+    const regra = pol?.regraNegociado || "media";
+    const maxDescontoItem = maxDegrau?.desconto ?? 100;
+    const itemForaLimite = regra === "porItem"
+      ? linhas.filter((l) => l.descontoItem > maxDescontoItem + 1e-6)
+      : [];
+    const foraPorItem = itemForaLimite.length > 0;
+
+    // Comissão calculada pelo degrau ENQUADRADO
+    const degrauComissao = enquadrado?.degrau ?? degrauSessao;
+    const comissaoPct = (degrauComissao?.comissao ?? 0) + bonus;
+    const comissaoRS = enquadrado || regra === "desabilitado" ? (subtotalLiquido * comissaoPct) / 100 : 0;
+
     const politicaInativa = !!(pol && !pol.ativa);
-    const faltaMinDegrau = degrau?.minimoPedido ? Math.max(0, degrau.minimoPedido - subtotalLiquido) : 0;
+    const minEnquadrado = enquadrado?.degrau.minimoPedido ?? 0;
+    const faltaMinDegrau = minEnquadrado ? Math.max(0, minEnquadrado - subtotalLiquido) : 0;
     const abaixoDegrau = faltaMinDegrau > 0;
+
     const minDuplicata = pol?.minimoDuplicata ?? 0;
     const faltaDuplicata = minDuplicata ? Math.max(0, minDuplicata - subtotalLiquido) : 0;
     const minFrete = pol?.minimoFreteCIF ?? 0;
@@ -257,13 +318,29 @@ export default function CatalogoVendedor() {
 
     const pendencias: Array<{ tipo: "bloqueio" | "aviso"; msg: string }> = [];
     if (politicaInativa) pendencias.push({ tipo: "bloqueio", msg: "política vencida" });
-    if (abaixoDegrau) pendencias.push({ tipo: "bloqueio", msg: `faltam ${formatBRL(faltaMinDegrau)} para o degrau ${degrau!.desconto}%` });
+    if (foraPorMedia && pol && maxDegrau) {
+      const excesso = descontoMedio - maxDegrau.desconto;
+      const ajusteRS = (excesso / 100) * subtotalBruto;
+      pendencias.push({
+        tipo: "bloqueio",
+        msg: `média ${descontoMedio.toFixed(1)}% acima do teto ${maxDegrau.desconto}% — reduza ${formatBRL(ajusteRS)} em descontos`,
+      });
+    }
+    if (foraPorItem) {
+      pendencias.push({ tipo: "bloqueio", msg: `${itemForaLimite.length} item(ns) acima do teto por item (${maxDescontoItem}%)` });
+    }
+    if (abaixoDegrau && enquadrado) {
+      pendencias.push({ tipo: "bloqueio", msg: `faltam ${formatBRL(faltaMinDegrau)} para o degrau enquadrado ${enquadrado.degrau.desconto}%` });
+    }
     if (faltaDuplicata > 0) pendencias.push({ tipo: "aviso", msg: `faltam ${formatBRL(faltaDuplicata)} para a duplicata mínima` });
     if (faltaFrete > 0) pendencias.push({ tipo: "aviso", msg: `faltam ${formatBRL(faltaFrete)} para frete CIF` });
 
-    const bloqueado = politicaInativa || abaixoDegrau;
+    const bloqueado = politicaInativa || foraPorMedia || foraPorItem || abaixoDegrau;
+
     return {
-      pol, items, subtotalBruto, subtotalLiquido, desconto, degrau, degrauIdx, prazo,
+      pol, linhas, subtotalBruto, subtotalLiquido, descontoMedio,
+      degrauSessao, degrauIdx, descontoSessao, prazo,
+      enquadrado, foraPorMedia, foraPorItem, regra, maxDescontoItem,
       comissaoPct, comissaoRS, bloqueado, faltaMin: faltaMinDegrau,
       faltaDuplicata, faltaFrete, pendencias, politicaInativa,
     };
@@ -271,7 +348,7 @@ export default function CatalogoVendedor() {
 
   const groups = useMemo(
     () => Object.keys(cartByBrand).map((slug) => ({ slug, ...computeGroup(slug) })),
-    [cartByBrand, degrauByBrand, prazoByBrand]
+    [cartByBrand, degrauByBrand, prazoByBrand, allItems]
   );
 
   const totalGeral = groups.reduce((s, g) => s + g.subtotalLiquido, 0);
@@ -285,21 +362,14 @@ export default function CatalogoVendedor() {
   const totalOk = okGroups.reduce((s, g) => s + g.subtotalLiquido, 0);
   const comissaoOk = okGroups.reduce((s, g) => s + g.comissaoRS, 0);
 
-
-  function updateDegrau(slug: string, idx: number) {
-    setDegrauByBrand((p) => ({ ...p, [slug]: idx }));
-  }
-  function updatePrazo(slug: string, p: number) {
-    setPrazoByBrand((prev) => ({ ...prev, [slug]: p }));
-  }
-
+  function updateDegrau(slug: string, idx: number) { setDegrauByBrand((p) => ({ ...p, [slug]: idx })); }
+  function updatePrazo(slug: string, p: number) { setPrazoByBrand((prev) => ({ ...prev, [slug]: p })); }
 
   // ---------- Chips ----------
   function removeChip(kind: keyof Filters, value: string) {
     setFilters((f) => ({ ...f, [kind]: (f[kind] as any).filter((v: string) => v !== value) } as Filters));
   }
   function clearAllFilters() { setFilters(emptyFilters); }
-
   const chips: Array<{ kind: keyof Filters | "perfil"; label: string; value: string }> = [];
   filters.marcas.forEach((v) => chips.push({ kind: "marcas", label: brands.find((b) => b.slug === v)?.name || v, value: v }));
   filters.categorias.forEach((v) => chips.push({ kind: "categorias", label: v, value: v }));
@@ -309,20 +379,18 @@ export default function CatalogoVendedor() {
   filters.estacoes.forEach((v) => chips.push({ kind: "estacoes", label: v, value: v }));
   filters.colecoes.forEach((v) => chips.push({ kind: "colecoes", label: v, value: v }));
 
-  // ---------- Recomprar ----------
   function recomprarUltimo() {
-    // mock: pega 5 primeiros de brandili
-    const items = allItems.filter((p) => p.brandSlug === "brandili").slice(0, 5);
+    const items = baseItems.filter((p) => p.brandSlug === "brandili").slice(0, 5);
     items.forEach((it) => setQty(it, 4));
     toast({ title: "Itens adicionados", description: `${items.length} itens do último pedido do cliente foram adicionados à cesta.` });
   }
 
   function gerarOrcamento() {
-    const alvo = okGroups; // só as indústrias sem bloqueio entram
+    const alvo = okGroups;
     alvo.forEach((g) => saveUltimoDegrau(clienteId, g.slug, g.degrauIdx));
     setConfirmOpen(false);
     setCartOpen(false);
-    const itens = alvo.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0);
+    const itens = alvo.reduce((s, g) => s + g.linhas.reduce((a, i) => a + i.qty, 0), 0);
     const total = alvo.reduce((s, g) => s + g.subtotalLiquido, 0);
     toast({
       title: `Orçamento gerado · ${alvo.length} pedido${alvo.length > 1 ? "s" : ""}`,
@@ -330,7 +398,6 @@ export default function CatalogoVendedor() {
     });
     setTimeout(() => navigate("/vendedor"), 400);
   }
-
 
   function enviarPreviaWhats() {
     toast({ title: "Prévia enviada", description: `Resumo da cesta enviado no WhatsApp de ${cliente?.nomeFantasia || "cliente"}.` });
@@ -342,23 +409,29 @@ export default function CatalogoVendedor() {
         {/* TOPO */}
         <div className={`sticky top-0 z-20 bg-background/95 backdrop-blur border-b ${presentation ? "border-t-2 border-t-primary" : ""}`}>
           <div className="px-4 md:px-6 py-3 flex flex-col md:flex-row gap-2 md:gap-3 md:items-center">
-            {/* Cliente selector */}
             <ClienteSelector cliente={cliente} clienteId={clienteId} onChange={setClienteId} />
-            {/* Busca */}
             <div className="relative flex-1 md:mx-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar produto, referência ou marca"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={search} onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-10"
               />
             </div>
-            {/* Ordenação */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 md:h-10 md:w-10" onClick={() => setQrOpen(true)} aria-label="Escanear QR">
+                  <QrCode className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Escanear etiqueta (showroom)</TooltipContent>
+            </Tooltip>
+            <div className="hidden md:flex items-center border rounded-md h-10 shrink-0">
+              <button onClick={() => setViewMode("grid")} className={`h-full w-10 flex items-center justify-center ${viewMode === "grid" ? "bg-muted" : ""}`} aria-label="Grid"><LayoutGrid className="h-4 w-4" /></button>
+              <button onClick={() => setViewMode("list")} className={`h-full w-10 flex items-center justify-center ${viewMode === "list" ? "bg-muted" : ""}`} aria-label="Lista"><List className="h-4 w-4" /></button>
+            </div>
             <Select value={order} onValueChange={(v: any) => setOrder(v)}>
-              <SelectTrigger className="w-[160px] h-10 shrink-0">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger className="w-[160px] h-10 shrink-0"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="az">A-Z</SelectItem>
                 <SelectItem value="menor">Menor preço</SelectItem>
@@ -366,30 +439,20 @@ export default function CatalogoVendedor() {
                 <SelectItem value="vendas">Mais vendidos</SelectItem>
               </SelectContent>
             </Select>
-            {/* Filtrar */}
             <Button variant="outline" onClick={() => setFiltersOpen(true)} className="h-10 shrink-0 gap-2">
               <SlidersHorizontal className="h-4 w-4" />
               Filtrar {activeFilterCount > 0 && <Badge variant="secondary" className="ml-1">{activeFilterCount}</Badge>}
             </Button>
-            {/* Modo apresentação */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant={presentation ? "default" : "outline"}
-                  onClick={togglePresentation}
-                  className="h-10 shrink-0 gap-2"
-                  aria-pressed={presentation}
-                >
+                <Button variant={presentation ? "default" : "outline"} onClick={togglePresentation} className="h-10 shrink-0 gap-2" aria-pressed={presentation}>
                   {presentation ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  <span className="hidden md:inline">{presentation ? "Apresentação" : "Apresentação"}</span>
+                  <span className="hidden md:inline">Apresentação</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                {presentation
-                  ? "Modo apresentação ATIVO — comissão e margem ocultas. Shift+P para sair."
-                  : "Modo apresentação (Shift+P) — esconde comissão e margem para mostrar ao cliente."}
-              </TooltipContent>
+              <TooltipContent>{presentation ? "Modo apresentação ATIVO (Shift+P)" : "Modo apresentação (Shift+P)"}</TooltipContent>
             </Tooltip>
+            <CatalogSecondaryMenu activeBrandSlugs={activeBrandSlugs} onAddGeneric={addGenericItem} />
           </div>
           {presentation && (
             <div className="bg-primary text-primary-foreground text-[11px] font-semibold text-center py-0.5 flex items-center justify-center gap-1.5">
@@ -397,13 +460,20 @@ export default function CatalogoVendedor() {
               <button onClick={togglePresentation} className="underline underline-offset-2 opacity-90 hover:opacity-100 ml-2">desligar</button>
             </div>
           )}
-          {/* Chips */}
-          {(chips.length > 0 || perfilChip) && (
+          {(chips.length > 0 || perfilChip || addedCount > 0) && (
             <div className="px-4 md:px-6 pb-3 flex flex-wrap gap-2 items-center">
               {perfilChip && (
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 gap-1">
-                  Perfil: {perfilChip}
-                </Badge>
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 gap-1">Perfil: {perfilChip}</Badge>
+              )}
+              {addedCount > 0 && (
+                <button
+                  onClick={() => setShowOnlyAdded((v) => !v)}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition inline-flex items-center gap-1 ${
+                    showOnlyAdded ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:border-primary/50"
+                  }`}
+                >
+                  <ShoppingCart className="h-3 w-3" /> Só adicionados ({addedCount})
+                </button>
               )}
               {chips.map((c) => (
                 <Badge key={`${c.kind}-${c.value}`} variant="secondary" className="gap-1 cursor-pointer" onClick={() => removeChip(c.kind as any, c.value)}>
@@ -411,8 +481,11 @@ export default function CatalogoVendedor() {
                 </Badge>
               ))}
               {chips.length > 0 && (
-                <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
-                  Limpar todos
+                <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">Limpar todos</button>
+              )}
+              {filtered.length > 0 && (
+                <button onClick={onAddAllClick} className="ml-auto text-xs text-primary hover:underline inline-flex items-center gap-1">
+                  <Plus className="h-3 w-3" /> Adicionar todos ({filtered.length})
                 </button>
               )}
             </div>
@@ -422,13 +495,10 @@ export default function CatalogoVendedor() {
         {/* Barra Condição da Sessão */}
         <SessionConditionBar
           slugs={activeBrandSlugs}
-          degrauByBrand={degrauByBrand}
-          prazoByBrand={prazoByBrand}
-          cartByBrand={cartByBrand}
-          allItems={allItems}
+          degrauByBrand={degrauByBrand} prazoByBrand={prazoByBrand}
+          cartByBrand={cartByBrand} allItems={allItems}
           presentation={presentation}
-          onChangeDegrau={updateDegrau}
-          onChangePrazo={updatePrazo}
+          onChangeDegrau={updateDegrau} onChangePrazo={updatePrazo}
           onAddBrand={(slug) => {
             setFilters((f) => f.marcas.includes(slug) ? f : { ...f, marcas: [...f.marcas, slug] });
             ensureCondition(slug);
@@ -438,11 +508,12 @@ export default function CatalogoVendedor() {
         {/* CENTRO */}
         <div className="px-4 md:px-6 py-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="text-sm text-muted-foreground">{filtered.length} produtos</div>
+            <div className="text-sm text-muted-foreground">
+              {filtered.length} produtos {showOnlyAdded && "· mostrando só os adicionados"}
+            </div>
             {cliente && (
               <Button variant="ghost" size="sm" onClick={recomprarUltimo} className="gap-2 text-primary">
-                <RotateCw className="h-4 w-4" />
-                Recomprar itens do último pedido
+                <RotateCw className="h-4 w-4" /> Recomprar itens do último pedido
               </Button>
             )}
           </div>
@@ -450,12 +521,9 @@ export default function CatalogoVendedor() {
             <div className="text-center py-20 border rounded-lg">
               <Package className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
               <div className="text-base font-medium mb-1">Nenhum produto com esses filtros</div>
-              <div className="text-sm text-muted-foreground mb-4">
-                Tente remover "{chips[chips.length - 1]?.label || "algum filtro"}" para ver mais opções.
-              </div>
-              <Button variant="outline" onClick={clearAllFilters}>Limpar filtros</Button>
+              <Button variant="outline" onClick={() => { clearAllFilters(); setShowOnlyAdded(false); }}>Limpar filtros</Button>
             </div>
-          ) : (
+          ) : viewMode === "grid" ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {filtered.slice(0, 60).map((p) => {
                 const qty = getQty(p.id, p.brandSlug);
@@ -464,9 +532,7 @@ export default function CatalogoVendedor() {
                 const pol = getPolitica(p.brandSlug);
                 const conditionHint = !cond && pol ? (
                   <ConditionPopover
-                    slug={p.brandSlug}
-                    pol={pol}
-                    subtotalBruto={0}
+                    slug={p.brandSlug} pol={pol} subtotalBruto={0}
                     degrauIdx={degrauByBrand[p.brandSlug] ?? Math.min(2, pol.degraus.length - 1)}
                     prazo={prazoByBrand[p.brandSlug] ?? pol.prazoMedio}
                     onChangeDegrau={(i) => updateDegrau(p.brandSlug, i)}
@@ -479,16 +545,42 @@ export default function CatalogoVendedor() {
                   />
                 ) : null;
                 return (
-                  <ProductCard
-                    key={p.id}
-                    p={p}
-                    qty={qty}
-                    onAdd={() => setQty(p, 1)}
-                    onInc={() => setQty(p, qty + 1)}
-                    onDec={() => setQty(p, qty - 1)}
-                    precoFinal={precoFinal}
-                    conditionHint={conditionHint}
+                  <ProductCard key={p.id} p={p} qty={qty}
+                    onAdd={() => setQty(p, 1)} onInc={() => setQty(p, qty + 1)} onDec={() => setQty(p, qty - 1)}
+                    precoFinal={precoFinal} conditionHint={conditionHint}
                   />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="border rounded-lg divide-y overflow-hidden">
+              {filtered.slice(0, 100).map((p) => {
+                const qty = getQty(p.id, p.brandSlug);
+                const cond = sessionConditionFor(p.brandSlug);
+                const precoFinal = cond?.desconto ? p.price * (1 - cond.desconto / 100) : null;
+                return (
+                  <div key={p.id} className="flex items-center gap-3 p-3">
+                    <div className="w-12 h-12 rounded bg-muted shrink-0 overflow-hidden">
+                      {p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-medium text-primary uppercase truncate">{p.brandName}</div>
+                      <div className="text-sm font-medium truncate">{p.name}</div>
+                      <div className="text-[11px] text-muted-foreground">Ref {p.ref}</div>
+                    </div>
+                    <div className="text-sm font-semibold shrink-0 text-right">
+                      {precoFinal ? <><span className="line-through text-muted-foreground text-xs mr-1">{formatBRL(p.price)}</span><span className="text-emerald-600">{formatBRL(precoFinal)}</span></> : formatBRL(p.price)}
+                    </div>
+                    {qty === 0 ? (
+                      <Button size="sm" onClick={() => setQty(p, 1)} className="gap-1"><Plus className="h-3 w-3" /> Add</Button>
+                    ) : (
+                      <div className="flex items-center gap-1 border rounded-md">
+                        <button onClick={() => setQty(p, qty - 1)} className="h-8 w-8 flex items-center justify-center"><Minus className="h-3 w-3" /></button>
+                        <span className="text-sm w-8 text-center">{qty}</span>
+                        <button onClick={() => setQty(p, qty + 1)} className="h-8 w-8 flex items-center justify-center"><Plus className="h-3 w-3" /></button>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -512,14 +604,7 @@ export default function CatalogoVendedor() {
           </div>
         )}
 
-        {/* Drawer de filtros */}
-        <FiltersDrawer
-          open={filtersOpen}
-          onClose={() => setFiltersOpen(false)}
-          filters={filters}
-          setFilters={setFilters}
-          resultCount={filtered.length}
-        />
+        <FiltersDrawer open={filtersOpen} onClose={() => setFiltersOpen(false)} filters={filters} setFilters={setFilters} resultCount={filtered.length} />
 
         {/* Painel cesta */}
         <Sheet open={cartOpen} onOpenChange={setCartOpen}>
@@ -528,20 +613,14 @@ export default function CatalogoVendedor() {
               <SheetTitle>Cesta · {cliente?.nomeFantasia || "Sem cliente"}</SheetTitle>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {groups.length === 0 && (
-                <div className="text-center text-muted-foreground py-10">Cesta vazia.</div>
-              )}
+              {groups.length === 0 && <div className="text-center text-muted-foreground py-10">Cesta vazia.</div>}
               {groups.map((g) => (
                 <BrandCockpit
-                  key={g.slug}
-                  group={g}
-                  presentation={presentation}
-                  onChangeQty={(itemId, q) => {
-                    const it = allItems.find((x) => x.id === itemId);
-                    if (it) setQty(it, q);
-                  }}
-                  onChangeDegrau={(idx) => setDegrauByBrand((p) => ({ ...p, [g.slug]: idx }))}
-                  onChangePrazo={(p) => setPrazoByBrand((prev) => ({ ...prev, [g.slug]: p }))}
+                  key={g.slug} group={g} presentation={presentation}
+                  onChangeQty={(itemId, q) => { const it = allItems.find((x) => x.id === itemId); if (it) setQty(it, q); }}
+                  onChangeDegrau={(idx) => updateDegrau(g.slug, idx)}
+                  onChangePrazo={(p) => updatePrazo(g.slug, p)}
+                  onSetPrecoNegociado={(itemId, v) => setPrecoNegociado(g.slug, itemId, v)}
                 />
               ))}
             </div>
@@ -563,7 +642,6 @@ export default function CatalogoVendedor() {
                         <span className="font-semibold text-emerald-600">{formatBRL(comissaoTotal)}</span>
                       </div>
                     )}
-                    {/* Pendências por indústria */}
                     <div className="pt-1 border-t space-y-1">
                       <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Pendências por indústria</div>
                       {groups.map((g) => (
@@ -584,24 +662,18 @@ export default function CatalogoVendedor() {
                     <Button variant="outline" className="flex-1 gap-2" onClick={enviarPreviaWhats} disabled={!cliente}>
                       <MessageSquare className="h-4 w-4" /> Enviar prévia no Whats
                     </Button>
-                    <Button
-                      className="flex-1 gap-2"
-                      disabled={!canGenerate}
-                      onClick={() => setConfirmOpen(true)}
-                    >
+                    <Button className="flex-1 gap-2" disabled={!canGenerate} onClick={() => setConfirmOpen(true)}>
                       <FileText className="h-4 w-4" />
                       {partial ? `Gerar só com ${okGroups.map((g) => g.slug).join(", ")}` : "Gerar orçamento"}
                     </Button>
                   </div>
                   {partial && (
                     <div className="text-xs text-amber-600 w-full">
-                      {blockedGroups.length} indústria(s) fora por violação — ajuste {blockedGroups.map((g) => g.slug).join(", ")} para incluir.
+                      {blockedGroups.length} indústria(s) fora — ajuste {blockedGroups.map((g) => g.slug).join(", ")} para incluir.
                     </div>
                   )}
                   {!canGenerate && (
-                    <div className="text-xs text-destructive w-full">
-                      Todas as indústrias estão em violação — ajuste degraus ou remova itens.
-                    </div>
+                    <div className="text-xs text-destructive w-full">Todas as indústrias estão em violação — ajuste degraus, preços ou remova itens.</div>
                   )}
                 </>
               )}
@@ -612,13 +684,9 @@ export default function CatalogoVendedor() {
         {/* Confirmação orçamento */}
         <Sheet open={confirmOpen} onOpenChange={setConfirmOpen}>
           <SheetContent side="bottom" className="max-w-lg mx-auto rounded-t-xl">
-            <SheetHeader>
-              <SheetTitle>Confirmar orçamento</SheetTitle>
-            </SheetHeader>
+            <SheetHeader><SheetTitle>Confirmar orçamento</SheetTitle></SheetHeader>
             <div className="py-4 space-y-3 text-sm">
-              <div>
-                Este orçamento gerará <b>{okGroups.length} pedido{okGroups.length > 1 ? "s" : ""}</b> na aprovação — pedidos por indústria faturam separado:
-              </div>
+              <div>Este orçamento gerará <b>{okGroups.length} pedido{okGroups.length > 1 ? "s" : ""}</b> na aprovação — pedidos por indústria faturam separado:</div>
               <div className="space-y-1">
                 {okGroups.map((g) => (
                   <div key={g.slug} className="flex justify-between border rounded px-3 py-2">
@@ -633,7 +701,7 @@ export default function CatalogoVendedor() {
                 </div>
               )}
               <div className="text-muted-foreground text-xs">
-                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {okGroups.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0)} itens · {formatBRL(totalOk)}{!presentation && ` · comissão ${formatBRL(comissaoOk)}`}
+                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {okGroups.reduce((s, g) => s + g.linhas.reduce((a, i) => a + i.qty, 0), 0)} itens · {formatBRL(totalOk)}{!presentation && ` · comissão ${formatBRL(comissaoOk)}`}
               </div>
             </div>
             <SheetFooter className="flex-row gap-2">
@@ -642,6 +710,23 @@ export default function CatalogoVendedor() {
             </SheetFooter>
           </SheetContent>
         </Sheet>
+
+        <QRScannerModal open={qrOpen} onOpenChange={setQrOpen} onScan={handleQRScan} availableRefs={allItems.map((i) => i.ref)} />
+
+        <AlertDialog open={addAllConfirm} onOpenChange={setAddAllConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Adicionar {filtered.length} produtos à cesta?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Você vai adicionar todos os itens filtrados de uma vez. Você pode ajustar quantidades depois.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={addAllFiltered}>Adicionar todos</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );
@@ -692,16 +777,13 @@ function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal, conditionHint }:
   return (
     <div className="group relative rounded-lg overflow-hidden bg-card border hover:shadow-md transition">
       <div className="aspect-[3/4] bg-muted overflow-hidden">
-        {p.image && <img src={p.image} alt={p.name} className="w-full h-full object-cover" loading="lazy" />}
+        {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" loading="lazy" /> :
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Package className="h-8 w-8" /></div>
+        }
       </div>
-      {/* Add overlay */}
       <div className="absolute top-2 right-2">
         {qty === 0 ? (
-          <button
-            onClick={onAdd}
-            className="opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-0 opacity-100 transition bg-primary text-primary-foreground rounded-full h-9 w-9 flex items-center justify-center shadow"
-            aria-label="Adicionar"
-          >
+          <button onClick={onAdd} className="opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-0 opacity-100 transition bg-primary text-primary-foreground rounded-full h-9 w-9 flex items-center justify-center shadow" aria-label="Adicionar">
             <Plus className="h-4 w-4" />
           </button>
         ) : (
@@ -713,13 +795,11 @@ function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal, conditionHint }:
         )}
       </div>
       <div className="p-3 space-y-0.5">
-        <div className="text-[10px] font-medium text-primary uppercase tracking-wide truncate">{p.brandName}</div>
+        <div className="text-[10px] font-medium text-primary uppercase tracking-wide truncate">{p.brandName}{p.isGeneric && " · genérico"}</div>
         <div className="text-xs font-medium truncate">{p.name}</div>
         <div className="text-[10px] text-muted-foreground">Ref {p.ref}</div>
         <div className="text-sm font-semibold pt-1">
-          {precoFinal ? (
-            <span className="text-muted-foreground line-through mr-1 text-xs">{formatBRL(p.price)}</span>
-          ) : null}
+          {precoFinal ? <span className="text-muted-foreground line-through mr-1 text-xs">{formatBRL(p.price)}</span> : null}
           {precoFinal ? <span className="text-emerald-600">{formatBRL(precoFinal)}</span> : formatBRL(p.price)}
         </div>
         {conditionHint && <div className="pt-0.5">{conditionHint}</div>}
@@ -735,12 +815,10 @@ function FiltersDrawer({ open, onClose, filters, setFilters, resultCount }: {
   const [local, setLocal] = useState<Filters>(filters);
   const [q, setQ] = useState("");
   useEffect(() => { if (open) setLocal(filters); }, [open, filters]);
-
-  const allCategorias = Array.from(new Set(allItems.map((p) => p.category))).sort();
-  const allGeneros = Array.from(new Set(allItems.map((p) => p.gender))).sort();
-  const allTamanhos = Array.from(new Set(allItems.flatMap((p) => p.sizes))).sort();
+  const allCategorias = Array.from(new Set(baseItems.map((p) => p.category))).sort();
+  const allGeneros = Array.from(new Set(baseItems.map((p) => p.gender))).sort();
+  const allTamanhos = Array.from(new Set(baseItems.flatMap((p) => p.sizes))).sort();
   const matches = (s: string) => !q || s.toLowerCase().includes(q.toLowerCase());
-
   function toggle<K extends keyof Filters>(k: K, v: string) {
     setLocal((f) => {
       const arr = f[k] as unknown as string[];
@@ -748,7 +826,6 @@ function FiltersDrawer({ open, onClose, filters, setFilters, resultCount }: {
       return { ...f, [k]: next } as Filters;
     });
   }
-
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
@@ -790,16 +867,12 @@ function FiltersDrawer({ open, onClose, filters, setFilters, resultCount }: {
                 <span>{formatBRL(local.precoMin)}</span>
                 <span>{formatBRL(local.precoMax)}</span>
               </div>
-              <Slider
-                min={0} max={500} step={10}
-                value={[local.precoMin, local.precoMax]}
-                onValueChange={(v) => setLocal((f) => ({ ...f, precoMin: v[0], precoMax: v[1] }))}
-              />
+              <Slider min={0} max={500} step={10} value={[local.precoMin, local.precoMax]} onValueChange={(v) => setLocal((f) => ({ ...f, precoMin: v[0], precoMax: v[1] }))} />
             </div>
           </FilterGroup>
         </div>
         <SheetFooter className="border-t p-4 shrink-0 flex-row gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => { setLocal(emptyFilters); }}>Limpar</Button>
+          <Button variant="outline" className="flex-1" onClick={() => setLocal(emptyFilters)}>Limpar</Button>
           <Button className="flex-1" onClick={() => { setFilters(local); onClose(); }}>Aplicar ({resultCount})</Button>
         </SheetFooter>
       </SheetContent>
@@ -829,21 +902,24 @@ function CheckRow({ label, checked, onChange }: { label: string; checked: boolea
   );
 }
 
-// ---------- Brand Cockpit ----------
-function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChangePrazo }: {
-  group: ReturnType<any>;
-  presentation?: boolean;
+// ---------- Brand Cockpit (cesta) ----------
+type Group = ReturnType<CatalogoVendedor_ComputeGroup>;
+type CatalogoVendedor_ComputeGroup = () => any;
+
+function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChangePrazo, onSetPrecoNegociado }: {
+  group: any; presentation?: boolean;
   onChangeQty: (itemId: string, q: number) => void;
   onChangeDegrau: (idx: number) => void;
   onChangePrazo: (p: number) => void;
+  onSetPrecoNegociado: (itemId: string, v: number | undefined) => void;
 }) {
-  const g = group as {
-    slug: string; pol?: PoliticaIndustria; items: Array<{ item: CatalogItem; qty: number }>;
-    subtotalBruto: number; subtotalLiquido: number; desconto: number;
-    degrau?: any; degrauIdx: number; prazo: number; comissaoPct: number; comissaoRS: number; bloqueado: boolean; faltaMin: number;
-  };
-  const pol = g.pol;
+  const g = group;
+  const pol: PoliticaIndustria | undefined = g.pol;
   if (!pol) return null;
+  const regra = g.regra as "media" | "porItem" | "desabilitado";
+  const enquadrado = g.enquadrado as { degrau: any; idx: number } | null;
+  const enquadradoNoAtual = enquadrado && enquadrado.idx === g.degrauIdx;
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="bg-muted/50 px-4 py-2 flex items-center justify-between">
@@ -860,58 +936,35 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
       </div>
 
       {!pol.ativa && !presentation && (
-        <div className="bg-destructive/10 text-destructive text-xs px-4 py-2">
-          Política vencida — simulação bloqueada. Solicite renovação para operar esta indústria.
-        </div>
+        <div className="bg-destructive/10 text-destructive text-xs px-4 py-2">Política vencida — simulação bloqueada.</div>
       )}
 
-      {/* Condição herdada da sessão */}
-      <div className="px-4 py-2 border-b bg-background flex items-center justify-between gap-2 text-xs">
+      {/* Condição herdada */}
+      <div className="px-4 py-2 border-b bg-background flex items-center justify-between gap-2 text-xs flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-muted-foreground">Condição:</span>
-          <b>{g.desconto}% desc</b>
-          {!presentation && (
-            <>
-              <span className="text-muted-foreground">·</span>
-              <b className="text-emerald-600">{g.comissaoPct.toFixed(1)}% com</b>
-            </>
-          )}
+          <span className="text-muted-foreground">Condição sessão:</span>
+          <b>{g.descontoSessao}% desc</b>
           <span className="text-muted-foreground">·</span>
           <b>{g.prazo}d</b>
+          {!presentation && enquadrado && !enquadradoNoAtual && (
+            <span className="text-[11px] text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5">
+              → enquadrado {enquadrado.degrau.desconto}% · com {enquadrado.degrau.comissao}%
+            </span>
+          )}
         </div>
-        <ConditionPopover
-          slug={g.slug}
-          pol={pol}
-          subtotalBruto={g.subtotalBruto}
-          degrauIdx={g.degrauIdx}
-          prazo={g.prazo}
-          presentation={presentation}
-          onChangeDegrau={onChangeDegrau}
-          onChangePrazo={onChangePrazo}
-          trigger={
-            <button className="text-primary hover:underline text-xs gap-1 inline-flex items-center">
-              <Pencil className="h-3 w-3" /> alterar
-            </button>
-          }
+        <ConditionPopover slug={g.slug} pol={pol} subtotalBruto={g.subtotalBruto}
+          degrauIdx={g.degrauIdx} prazo={g.prazo} presentation={presentation}
+          onChangeDegrau={onChangeDegrau} onChangePrazo={onChangePrazo}
+          trigger={<button className="text-primary hover:underline text-xs gap-1 inline-flex items-center"><Pencil className="h-3 w-3" /> alterar</button>}
         />
       </div>
 
       {/* Itens */}
       <div className="divide-y">
-        {g.items.map(({ item, qty }) => (
-          <div key={item.id} className="flex items-center gap-3 p-3">
-            <img src={item.image} alt="" className="h-14 w-14 rounded object-cover bg-muted" />
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">{item.name}</div>
-              <div className="text-xs text-muted-foreground">Ref {item.ref} · {formatBRL(item.price)}</div>
-              {pol.gradeFechada && <Badge variant="secondary" className="mt-1 text-[10px]">grade fechada · sem escolha</Badge>}
-            </div>
-            <div className="flex items-center gap-1 border rounded-md">
-              <button onClick={() => onChangeQty(item.id, qty - 1)} className="h-7 w-7 flex items-center justify-center hover:bg-muted"><Minus className="h-3 w-3" /></button>
-              <span className="text-sm w-8 text-center">{qty}</span>
-              <button onClick={() => onChangeQty(item.id, qty + 1)} className="h-7 w-7 flex items-center justify-center hover:bg-muted"><Plus className="h-3 w-3" /></button>
-            </div>
-          </div>
+        {g.linhas.map((l: any) => (
+          <CartLineRow key={l.itemId} l={l} pol={pol} regra={regra} presentation={presentation}
+            onChangeQty={onChangeQty} onSetPreco={onSetPrecoNegociado}
+          />
         ))}
       </div>
 
@@ -920,19 +973,23 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
           <div className="text-muted-foreground">Subtotal líquido</div>
           <div className="font-semibold">{formatBRL(g.subtotalLiquido)}</div>
         </div>
-        {g.bloqueado && g.degrau?.minimoPedido && (
-          <div className="text-xs text-amber-600 flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> Faltam {formatBRL(g.faltaMin)} para o degrau {g.degrau.desconto}% ({formatBRL(g.degrau.minimoPedido)}) —
-            <ConditionPopover
-              slug={g.slug}
-              pol={pol}
-              subtotalBruto={g.subtotalBruto}
-              degrauIdx={g.degrauIdx}
-              prazo={g.prazo}
-              onChangeDegrau={onChangeDegrau}
-              onChangePrazo={onChangePrazo}
-              trigger={<button className="underline hover:text-amber-700">trocar degrau</button>}
-            />
+        <div className="flex justify-between text-xs">
+          <div className="text-muted-foreground">Desconto médio ponderado</div>
+          <div>
+            {g.descontoMedio.toFixed(1)}%
+            {!presentation && enquadrado && (
+              <span className="text-muted-foreground"> → degrau {enquadrado.degrau.desconto}% · com {enquadrado.degrau.comissao}%</span>
+            )}
+          </div>
+        </div>
+        {g.pendencias.length > 0 && !presentation && (
+          <div className="space-y-1 pt-1 border-t">
+            {g.pendencias.map((p: any, i: number) => (
+              <div key={i} className={`text-xs flex items-start gap-1.5 ${p.tipo === "bloqueio" ? "text-destructive" : "text-amber-600"}`}>
+                <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                <span>{p.msg}</span>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -940,18 +997,89 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
   );
 }
 
-// ---------- Condition Popover (per brand) ----------
+function CartLineRow({ l, pol, regra, presentation, onChangeQty, onSetPreco }: {
+  l: any; pol: PoliticaIndustria; regra: "media" | "porItem" | "desabilitado"; presentation?: boolean;
+  onChangeQty: (itemId: string, q: number) => void;
+  onSetPreco: (itemId: string, v: number | undefined) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState<string>(l.precoUnit.toFixed(2));
+  useEffect(() => { setVal(l.precoUnit.toFixed(2)); }, [l.precoUnit]);
+  const maxDegrau = pol.degraus.reduce((a, b) => a.desconto > b.desconto ? a : b);
+  const minPrecoPorItem = l.precoTabela * (1 - maxDegrau.desconto / 100);
+  const foraLimite = regra === "porItem" && l.precoUnit < minPrecoPorItem - 1e-6;
+  const disabled = regra === "desabilitado";
+
+  function commit(v: number) {
+    if (!Number.isFinite(v) || v <= 0) return;
+    if (regra === "porItem" && v < minPrecoPorItem) v = minPrecoPorItem;
+    onSetPreco(l.itemId, Math.abs(v - l.precoDefault) < 1e-6 ? undefined : v);
+    setEditing(false);
+  }
+
+  return (
+    <div className="flex items-center gap-3 p-3">
+      <img src={l.item.image} alt="" className="h-14 w-14 rounded object-cover bg-muted" />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium truncate flex items-center gap-2">
+          {l.item.name}
+          {l.negociado && <Badge variant="outline" className="text-[9px] py-0 border-amber-500/40 text-amber-700 bg-amber-500/10">negociado</Badge>}
+        </div>
+        <div className="text-xs text-muted-foreground">Ref {l.item.ref} · tabela {formatBRL(l.precoTabela)}</div>
+        {pol.gradeFechada && <Badge variant="secondary" className="mt-1 text-[10px]">grade fechada</Badge>}
+
+        <div className="mt-1 flex items-center gap-2 text-xs">
+          {editing && !disabled ? (
+            <>
+              <Input
+                autoFocus type="number" step={0.01} value={val}
+                onChange={(e) => setVal(e.target.value)}
+                onBlur={() => commit(Number(val))}
+                onKeyDown={(e) => { if (e.key === "Enter") commit(Number(val)); if (e.key === "Escape") setEditing(false); }}
+                className="h-7 w-24 text-xs"
+              />
+              <span className="text-muted-foreground text-[10px]">
+                {regra === "porItem" && `mínimo ${formatBRL(minPrecoPorItem)} · ${maxDegrau.desconto}%`}
+              </span>
+            </>
+          ) : (
+            <button
+              onClick={() => !disabled && setEditing(true)}
+              disabled={disabled}
+              className={`inline-flex items-center gap-1 font-semibold ${disabled ? "cursor-not-allowed opacity-70" : "hover:text-primary"}`}
+              title={disabled ? "Negociação por item não permitida pela política" : "Clique para editar o preço"}
+            >
+              {formatBRL(l.precoUnit)}
+              {!disabled && <Pencil className="h-3 w-3 opacity-60" />}
+            </button>
+          )}
+          <span className={`text-[10px] ${foraLimite ? "text-amber-600" : "text-muted-foreground"}`}>
+            = {l.descontoItem.toFixed(1)}% off
+            {foraLimite && ` · acima do teto ${maxDegrau.desconto}%`}
+          </span>
+          {l.negociado && (
+            <button onClick={() => onSetPreco(l.itemId, undefined)} className="text-muted-foreground hover:text-primary inline-flex items-center gap-1 text-[10px]">
+              <RotateCcw className="h-3 w-3" /> restaurar
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 border rounded-md">
+        <button onClick={() => onChangeQty(l.itemId, l.qty - 1)} className="h-7 w-7 flex items-center justify-center hover:bg-muted"><Minus className="h-3 w-3" /></button>
+        <span className="text-sm w-8 text-center">{l.qty}</span>
+        <button onClick={() => onChangeQty(l.itemId, l.qty + 1)} className="h-7 w-7 flex items-center justify-center hover:bg-muted"><Plus className="h-3 w-3" /></button>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Condition Popover ----------
 function ConditionPopover({
   slug, pol, subtotalBruto, degrauIdx, prazo, presentation, onChangeDegrau, onChangePrazo, trigger,
 }: {
-  slug: string;
-  pol: PoliticaIndustria;
-  subtotalBruto: number;
-  degrauIdx: number;
-  prazo: number;
-  presentation?: boolean;
-  onChangeDegrau: (idx: number) => void;
-  onChangePrazo: (p: number) => void;
+  slug: string; pol: PoliticaIndustria; subtotalBruto: number;
+  degrauIdx: number; prazo: number; presentation?: boolean;
+  onChangeDegrau: (idx: number) => void; onChangePrazo: (p: number) => void;
   trigger: React.ReactNode;
 }) {
   return (
@@ -973,8 +1101,7 @@ function ConditionPopover({
                 <Tooltip key={i}>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => onChangeDegrau(i)}
-                      disabled={!pol.ativa}
+                      onClick={() => onChangeDegrau(i)} disabled={!pol.ativa}
                       className={`text-[11px] px-2 py-2 rounded border text-center transition ${
                         active ? "border-primary bg-primary text-primary-foreground"
                               : "border-border hover:border-primary/50 bg-card"
@@ -986,9 +1113,7 @@ function ConditionPopover({
                     </button>
                   </TooltipTrigger>
                   {locked && d.minimoPedido && (
-                    <TooltipContent>
-                      Mínimo {formatBRL(d.minimoPedido)} — faltam {formatBRL(d.minimoPedido - liq)}.
-                    </TooltipContent>
+                    <TooltipContent>Mínimo {formatBRL(d.minimoPedido)} — faltam {formatBRL(d.minimoPedido - liq)}.</TooltipContent>
                   )}
                 </Tooltip>
               );
@@ -1014,11 +1139,10 @@ function ConditionPopover({
   );
 }
 
-
 // ---------- Session Condition Bar ----------
 function SessionConditionBar({
   slugs, degrauByBrand, prazoByBrand, cartByBrand, allItems, presentation,
-  onChangeDegrau, onChangePrazo, onAddBrand,
+  onChangeDegrau, onChangePrazo,
 }: {
   slugs: string[];
   degrauByBrand: Record<string, number>;
@@ -1052,24 +1176,15 @@ function SessionConditionBar({
           const liq = subtotalBruto * (1 - (degrau?.desconto ?? 0) / 100);
           const abaixoMin = !!(degrau?.minimoPedido && subtotalBruto > 0 && liq < degrau.minimoPedido);
           return (
-            <ConditionPopover
-              key={slug}
-              slug={slug}
-              pol={pol}
-              subtotalBruto={subtotalBruto}
-              degrauIdx={idx}
-              prazo={prazo}
-              presentation={presentation}
+            <ConditionPopover key={slug} slug={slug} pol={pol} subtotalBruto={subtotalBruto}
+              degrauIdx={idx} prazo={prazo} presentation={presentation}
               onChangeDegrau={(i) => onChangeDegrau(slug, i)}
               onChangePrazo={(p) => onChangePrazo(slug, p)}
               trigger={
-                <button
-                  className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full border transition ${
-                    abaixoMin
-                      ? "border-amber-500/60 bg-amber-500/10 text-amber-700 hover:bg-amber-500/15"
-                      : "border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10"
-                  }`}
-                >
+                <button className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full border transition ${
+                  abaixoMin ? "border-amber-500/60 bg-amber-500/10 text-amber-700 hover:bg-amber-500/15"
+                            : "border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10"
+                }`}>
                   <b className="capitalize">{slug}</b>
                   <span className="text-muted-foreground">·</span>
                   <span>{degrau?.desconto ?? 0}% desc</span>
@@ -1092,4 +1207,3 @@ function SessionConditionBar({
     </div>
   );
 }
-
