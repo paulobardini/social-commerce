@@ -631,7 +631,7 @@ export default function CatalogoVendedor() {
                 </div>
               )}
               <div className="text-muted-foreground text-xs">
-                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {okGroups.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0)} itens · {formatBRL(totalOk)} · comissão {formatBRL(comissaoOk)}
+                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {okGroups.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0)} itens · {formatBRL(totalOk)}{!presentation && ` · comissão ${formatBRL(comissaoOk)}`}
               </div>
             </div>
             <SheetFooter className="flex-row gap-2">
