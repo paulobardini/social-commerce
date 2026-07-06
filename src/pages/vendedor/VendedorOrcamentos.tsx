@@ -21,7 +21,7 @@ const COLUNAS: { key: OrcEtapa; label: string; recolhida?: boolean; accent?: str
   { key: "rascunho", label: "Rascunho" },
   { key: "aguardando_lojista", label: "Aguardando lojista" },
   { key: "em_revisao", label: "Em revisão" },
-  { key: "aprovado", label: "Aprovado" },
+  
   { key: "analise_comercial", label: "Análise comercial" },
   { key: "virou_pedido", label: "Virou pedido", accent: "bg-emerald-500/10 border-emerald-500/30" },
   { key: "recusado", label: "Recusado", recolhida: true },
@@ -60,7 +60,7 @@ function acaoContextual(o: Orcamento): { label: string; icon: React.ElementType;
   if (o.etapa === "aguardando_lojista" && o.linkEventoTipo === "visualizado")
     return { label: "Cobrar no Whats", icon: MessageCircle, kind: "cobrar" };
   if (o.etapa === "aguardando_lojista" && o.linkEventoTipo === "aprovado_parcial")
-    return { label: "Ver desdobramento", icon: GitBranch, kind: "desdobramento" };
+    return { label: "Renegociar no Whats", icon: MessageCircle, kind: "renegociar" };
   if (o.etapa === "em_revisao")
     return { label: "Ver alterações", icon: GitCompare, kind: "diff" };
   if (o.etapa === "virou_pedido" && o.pedidoNumero)
@@ -75,9 +75,10 @@ const fmt = (v: number | null | undefined) =>
 
 // ─── Card ──────────────────────────────────────────────────────────────
 function OrcCard({
-  o, onOpen, onDiff, onDesdobramento, onAction, onPedido,
+  o, filhosCount = 0, onOpen, onDiff, onDesdobramento, onAction, onPedido,
 }: {
   o: Orcamento;
+  filhosCount?: number;
   onOpen: () => void;
   onDiff: () => void;
   onDesdobramento: () => void;
@@ -87,6 +88,7 @@ function OrcCard({
   const atrasado = (o.tempoEtapaDias ?? 0) > (o.limiteEtapaDias ?? 999);
   const acao = acaoContextual(o);
   const Bola = o.bola ? bolaMeta[o.bola] : null;
+  const isPaiComFilhos = filhosCount > 0;
 
   return (
     <div
@@ -95,7 +97,7 @@ function OrcCard({
         atrasado ? "border-orange-500/50 ring-1 ring-orange-500/20" : "border-border"
       }`}
     >
-      {/* Vínculo desdobramento */}
+      {/* Vínculo desdobramento (filho → pai OU pai → filhos) */}
       {o.desdobradoDeId && (
         <button
           onClick={(e) => { e.stopPropagation(); onDesdobramento(); }}
@@ -105,6 +107,18 @@ function OrcCard({
           <span className="truncate">{o.desdobradoDeLabel}</span>
         </button>
       )}
+      {isPaiComFilhos && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDesdobramento(); }}
+          className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
+        >
+          <GitBranch className="h-2.5 w-2.5" />
+          <span className="truncate">
+            {filhosCount} {filhosCount === 1 ? "pedido desdobrado" : "pedidos desdobrados"} → Análise comercial
+          </span>
+        </button>
+      )}
+
 
       {/* Header: cliente + valor */}
       <div className="flex items-start justify-between gap-2">
@@ -176,21 +190,33 @@ function OrcCard({
             {atrasado ? `parado há ${o.tempoEtapaDias}d` : `${o.tempoEtapaDias ?? 0}d na etapa`}
           </span>
         </div>
-        {acao && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (acao.kind === "diff") onDiff();
-              else if (acao.kind === "desdobramento") onDesdobramento();
-              else if (acao.kind === "pedido") onPedido();
-              else onAction(acao.kind, o);
-            }}
-            className="text-[10px] font-medium px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors inline-flex items-center gap-1 shrink-0"
-          >
-            <acao.icon className="h-2.5 w-2.5" />
-            <span className="truncate max-w-[110px]">{acao.label}</span>
-          </button>
-        )}
+        <div className="flex items-center gap-1 shrink-0">
+          {isPaiComFilhos && acao?.kind !== "desdobramento" && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDesdobramento(); }}
+              title="Ver desdobramento"
+              className="text-[10px] font-medium h-6 w-6 rounded bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex items-center justify-center"
+            >
+              <GitBranch className="h-3 w-3" />
+            </button>
+          )}
+          {acao && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (acao.kind === "diff") onDiff();
+                else if (acao.kind === "desdobramento") onDesdobramento();
+                else if (acao.kind === "pedido") onPedido();
+                else onAction(acao.kind, o);
+              }}
+              className="text-[10px] font-medium px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors inline-flex items-center gap-1"
+            >
+              <acao.icon className="h-2.5 w-2.5" />
+              <span className="truncate max-w-[110px]">{acao.label}</span>
+            </button>
+          )}
+        </div>
+
       </div>
     </div>
   );
@@ -236,9 +262,18 @@ export default function VendedorOrcamentos() {
     return filtered.filter((o) => (o.etapa || "rascunho") === chipEtapa);
   }, [filtered, chipEtapa]);
 
+  const filhosPor = useMemo(() => {
+    const m = new Map<string, number>();
+    orcs.forEach((o) => {
+      if (o.desdobradoDeId) m.set(o.desdobradoDeId, (m.get(o.desdobradoDeId) ?? 0) + 1);
+    });
+    return m;
+  }, [orcs]);
+
   const handleAction = (kind: string, o: Orcamento) => {
     if (kind === "reenviar") toast.success(`Mensagem pronta enviada para ${o.lojista} 📲`);
     else if (kind === "cobrar") toast.success(`Cobrança enviada no WhatsApp para ${o.lojista}`);
+    else if (kind === "renegociar") toast.success(`Renegociação aberta no WhatsApp com ${o.lojista}`);
     else if (kind === "continuar") navigate(`/vendedor/orcamento/${o.id}`);
   };
 
@@ -346,6 +381,7 @@ export default function VendedorOrcamentos() {
                         <OrcCard
                           key={o.id}
                           o={o}
+                          filhosCount={filhosPor.get(o.id) ?? 0}
                           onOpen={() => navigate(`/vendedor/orcamento/${o.id}`)}
                           onDiff={() => setDiffOrc(o)}
                           onDesdobramento={() => abrirDesdobramento(o)}
@@ -387,6 +423,7 @@ export default function VendedorOrcamentos() {
                       {items.map((o) => (
                         <OrcCard
                           key={o.id} o={o}
+                          filhosCount={filhosPor.get(o.id) ?? 0}
                           onOpen={() => navigate(`/vendedor/orcamento/${o.id}`)}
                           onDiff={() => setDiffOrc(o)}
                           onDesdobramento={() => abrirDesdobramento(o)}
