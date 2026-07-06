@@ -123,7 +123,7 @@ export default function VendedorDashboard() {
 
           {/* HOJE */}
           <TabsContent value="hoje" className="mt-0">
-            <FilaAcao fila={fila} seed={seed} repId={repIdEfetivo} />
+            <FilaAcao fila={fila} seed={seed} repId={repIdEfetivo} opsRep={opsRep} />
           </TabsContent>
 
           {/* MINHA CARTEIRA */}
