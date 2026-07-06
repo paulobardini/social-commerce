@@ -751,6 +751,32 @@ function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
         </div>
       )}
 
+      {/* Condição herdada da sessão */}
+      <div className="px-4 py-2 border-b bg-background flex items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-muted-foreground">Condição:</span>
+          <b>{g.desconto}% desc</b>
+          <span className="text-muted-foreground">·</span>
+          <b className="text-emerald-600">{g.comissaoPct.toFixed(1)}% com</b>
+          <span className="text-muted-foreground">·</span>
+          <b>{g.prazo}d</b>
+        </div>
+        <ConditionPopover
+          slug={g.slug}
+          pol={pol}
+          subtotalBruto={g.subtotalBruto}
+          degrauIdx={g.degrauIdx}
+          prazo={g.prazo}
+          onChangeDegrau={onChangeDegrau}
+          onChangePrazo={onChangePrazo}
+          trigger={
+            <button className="text-primary hover:underline text-xs gap-1 inline-flex items-center">
+              <Pencil className="h-3 w-3" /> alterar
+            </button>
+          }
+        />
+      </div>
+
       {/* Itens */}
       <div className="divide-y">
         {g.items.map(({ item, qty }) => (
@@ -770,14 +796,59 @@ function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
         ))}
       </div>
 
-      {/* Stepper de política */}
-      <div className="p-3 border-t bg-background space-y-3">
+      <div className="p-3 border-t bg-background space-y-2">
+        <div className="flex justify-between text-sm">
+          <div className="text-muted-foreground">Subtotal líquido</div>
+          <div className="font-semibold">{formatBRL(g.subtotalLiquido)}</div>
+        </div>
+        {g.bloqueado && g.degrau?.minimoPedido && (
+          <div className="text-xs text-amber-600 flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" /> Faltam {formatBRL(g.faltaMin)} para o degrau {g.degrau.desconto}% ({formatBRL(g.degrau.minimoPedido)}) —
+            <ConditionPopover
+              slug={g.slug}
+              pol={pol}
+              subtotalBruto={g.subtotalBruto}
+              degrauIdx={g.degrauIdx}
+              prazo={g.prazo}
+              onChangeDegrau={onChangeDegrau}
+              onChangePrazo={onChangePrazo}
+              trigger={<button className="underline hover:text-amber-700">trocar degrau</button>}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Condition Popover (per brand) ----------
+function ConditionPopover({
+  slug, pol, subtotalBruto, degrauIdx, prazo, onChangeDegrau, onChangePrazo, trigger,
+}: {
+  slug: string;
+  pol: PoliticaIndustria;
+  subtotalBruto: number;
+  degrauIdx: number;
+  prazo: number;
+  onChangeDegrau: (idx: number) => void;
+  onChangePrazo: (p: number) => void;
+  trigger: React.ReactNode;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent align="end" className="w-[340px] p-3 space-y-3">
         <div>
-          <div className="text-xs font-medium mb-2">Degraus desconto ↔ comissão</div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1.5">
+          <div className="text-xs font-semibold capitalize">{slug}</div>
+          <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && " · POLÍTICA VENCIDA"}</div>
+        </div>
+        <div>
+          <div className="text-xs font-medium mb-1.5">Degrau desconto ↔ comissão</div>
+          <div className="grid grid-cols-3 gap-1.5">
             {pol.degraus.map((d, i) => {
-              const locked = d.minimoPedido && g.subtotalBruto * (1 - d.desconto / 100) < d.minimoPedido;
-              const active = i === g.degrauIdx;
+              const liq = subtotalBruto * (1 - d.desconto / 100);
+              const locked = d.minimoPedido && subtotalBruto > 0 && liq < d.minimoPedido;
+              const active = i === degrauIdx;
               return (
                 <Tooltip key={i}>
                   <TooltipTrigger asChild>
@@ -785,9 +856,8 @@ function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
                       onClick={() => onChangeDegrau(i)}
                       disabled={!pol.ativa}
                       className={`text-[11px] px-2 py-2 rounded border text-center transition ${
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-primary/50 bg-card"
+                        active ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border hover:border-primary/50 bg-card"
                       } ${!pol.ativa ? "opacity-40 cursor-not-allowed" : ""}`}
                     >
                       <div className="font-semibold">{d.desconto}%</div>
@@ -797,7 +867,7 @@ function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
                   </TooltipTrigger>
                   {locked && d.minimoPedido && (
                     <TooltipContent>
-                      Faltam {formatBRL(d.minimoPedido - g.subtotalBruto * (1 - d.desconto / 100))} para desbloquear {d.desconto}%.
+                      Mínimo {formatBRL(d.minimoPedido)} — faltam {formatBRL(d.minimoPedido - liq)}.
                     </TooltipContent>
                   )}
                 </Tooltip>
@@ -805,32 +875,92 @@ function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
             })}
           </div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-xs font-medium">Prazo de pagamento</div>
-          <Select value={String(g.prazo)} onValueChange={(v) => onChangePrazo(Number(v))}>
-            <SelectTrigger className="w-[120px] h-8"><SelectValue /></SelectTrigger>
+        <div>
+          <div className="text-xs font-medium mb-1.5">Prazo de pagamento</div>
+          <Select value={String(prazo)} onValueChange={(v) => onChangePrazo(Number(v))}>
+            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {pol.prazos.map((p) => <SelectItem key={p} value={String(p)}>{p} dias</SelectItem>)}
+              {pol.prazos.map((p) => <SelectItem key={p} value={String(p)}>{p} dias{p === pol.prazoMedio ? " (médio)" : ""}</SelectItem>)}
             </SelectContent>
           </Select>
-          <div className="text-[11px] text-muted-foreground">
-            Médio: {pol.prazoMedio}d · +{pol.bonusComissaoPor15Dias}% comissão a cada 15d a menos
+          <div className="text-[10px] text-muted-foreground mt-1">
+            +{pol.bonusComissaoPor15Dias}% de comissão a cada 15d abaixo do prazo médio ({pol.prazoMedio}d).
           </div>
         </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
-        <div className="flex justify-between text-sm pt-2 border-t">
-          <div className="text-muted-foreground">
-            {g.desconto}% desc · comissão {g.comissaoPct.toFixed(1)}%
-          </div>
-          <div className="font-semibold">{formatBRL(g.subtotalLiquido)}</div>
-        </div>
-        {g.bloqueado && g.degrau?.minimoPedido && (
-          <div className="text-xs text-amber-600 flex items-center gap-1">
-            <Lock className="h-3 w-3" /> Faltam {formatBRL(g.faltaMin)} para atingir o mínimo deste degrau ({formatBRL(g.degrau.minimoPedido)}).
-          </div>
+// ---------- Session Condition Bar ----------
+function SessionConditionBar({
+  slugs, degrauByBrand, prazoByBrand, cartByBrand, allItems,
+  onChangeDegrau, onChangePrazo, onAddBrand,
+}: {
+  slugs: string[];
+  degrauByBrand: Record<string, number>;
+  prazoByBrand: Record<string, number>;
+  cartByBrand: Record<string, Array<{ itemId: string; qty: number }>>;
+  allItems: CatalogItem[];
+  onChangeDegrau: (slug: string, idx: number) => void;
+  onChangePrazo: (slug: string, p: number) => void;
+  onAddBrand: (slug: string) => void;
+}) {
+  return (
+    <div className="border-b bg-muted/30">
+      <div className="px-4 md:px-6 py-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">Condição da sessão:</span>
+        {slugs.length === 0 && (
+          <span className="text-xs text-muted-foreground italic">Nenhuma indústria ativa — filtre por marca ou adicione um produto.</span>
         )}
+        {slugs.map((slug) => {
+          const pol = getPolitica(slug);
+          if (!pol) return null;
+          const idx = degrauByBrand[slug] ?? 0;
+          const degrau = pol.degraus[idx];
+          const prazo = prazoByBrand[slug] ?? pol.prazoMedio;
+          const bonus = Math.max(0, Math.floor((pol.prazoMedio - prazo) / 15)) * pol.bonusComissaoPor15Dias;
+          const comPct = (degrau?.comissao ?? 0) + bonus;
+          const subtotalBruto = (cartByBrand[slug] || []).reduce((s, l) => {
+            const it = allItems.find((x) => x.id === l.itemId);
+            return s + (it ? it.price * l.qty : 0);
+          }, 0);
+          const liq = subtotalBruto * (1 - (degrau?.desconto ?? 0) / 100);
+          const abaixoMin = !!(degrau?.minimoPedido && subtotalBruto > 0 && liq < degrau.minimoPedido);
+          return (
+            <ConditionPopover
+              key={slug}
+              slug={slug}
+              pol={pol}
+              subtotalBruto={subtotalBruto}
+              degrauIdx={idx}
+              prazo={prazo}
+              onChangeDegrau={(i) => onChangeDegrau(slug, i)}
+              onChangePrazo={(p) => onChangePrazo(slug, p)}
+              trigger={
+                <button
+                  className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full border transition ${
+                    abaixoMin
+                      ? "border-amber-500/60 bg-amber-500/10 text-amber-700 hover:bg-amber-500/15"
+                      : "border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10"
+                  }`}
+                >
+                  <b className="capitalize">{slug}</b>
+                  <span className="text-muted-foreground">·</span>
+                  <span>{degrau?.desconto ?? 0}% desc</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-emerald-600 font-semibold">{comPct.toFixed(1)}% com</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span>{prazo}d</span>
+                  {abaixoMin && <AlertTriangle className="h-3 w-3 text-amber-600" />}
+                  <Pencil className="h-3 w-3 opacity-60" />
+                </button>
+              }
+            />
+          );
+        })}
       </div>
     </div>
   );
 }
+
