@@ -57,8 +57,11 @@ export function AppTopbar({ onMenuToggle }: AppTopbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated: authFlag, logout } = useAuth();
   const cart = useCart();
+  // Rotas do vendedor operam sempre em modo logado (mock — usuário vendedor).
+  const isVendedorRoute = location.pathname.startsWith("/vendedor");
+  const isAuthenticated = authFlag || isVendedorRoute;
 
   return (
     <>

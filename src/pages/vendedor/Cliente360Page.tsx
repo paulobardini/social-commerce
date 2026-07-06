@@ -60,14 +60,15 @@ function whatsappUrl(phone: string, text?: string) {
 }
 
 // Próxima ação sugerida pelo motor (mesmo espírito da fila do Painel).
-function proximaAcaoSugerida(cliente: Cliente360, saude: SaudeStatus, orcamentosAtivos: number): { titulo: string; motivo: string } {
-  if (saude === "novo") return { titulo: "Fazer primeiro contato", motivo: "Cliente novo, ainda sem primeira compra" };
-  if (saude === "perdido") return { titulo: "Última tentativa de reativação", motivo: `Sem compra há mais de ${SAUDE_LIMIARES.INATIVO_MAX_DIAS} dias` };
-  if (saude === "inativo") return { titulo: "Resgatar antes de virar Perdido", motivo: `Última compra há mais de ${SAUDE_LIMIARES.RISCO_MAX_DIAS} dias` };
-  if (saude === "risco") return { titulo: "Reativar com oferta específica", motivo: `Última compra há mais de ${SAUDE_LIMIARES.ATIVO_MAX_DIAS} dias` };
-  if (orcamentosAtivos > 0) return { titulo: "Cobrar retorno de orçamento", motivo: `${orcamentosAtivos} orçamento(s) em aberto` };
-  if (cliente.proximaAcao) return { titulo: cliente.proximaAcao, motivo: "Definido pelo vendedor" };
-  return { titulo: "Registrar visita mensal", motivo: "Manter cadência ativa" };
+// `modo` define como o botão executa: whatsapp abre conversa; registrar abre modal.
+function proximaAcaoSugerida(cliente: Cliente360, saude: SaudeStatus, orcamentosAtivos: number): { titulo: string; motivo: string; modo: "whatsapp" | "registrar" | "orcamento" } {
+  if (saude === "novo")    return { titulo: "Fazer primeiro contato via WhatsApp", motivo: "Cliente novo, ainda sem primeira compra", modo: "whatsapp" };
+  if (saude === "perdido") return { titulo: "Enviar mensagem de reativação", motivo: `Sem compra há mais de ${SAUDE_LIMIARES.INATIVO_MAX_DIAS} dias`, modo: "whatsapp" };
+  if (saude === "inativo") return { titulo: "Enviar mensagem de resgate",     motivo: `Última compra há mais de ${SAUDE_LIMIARES.RISCO_MAX_DIAS} dias`, modo: "whatsapp" };
+  if (saude === "risco")   return { titulo: "Enviar oferta específica no WhatsApp", motivo: `Última compra há mais de ${SAUDE_LIMIARES.ATIVO_MAX_DIAS} dias`, modo: "whatsapp" };
+  if (orcamentosAtivos > 0) return { titulo: "Cobrar retorno de orçamento", motivo: `${orcamentosAtivos} orçamento(s) em aberto`, modo: "whatsapp" };
+  if (cliente.proximaAcao) return { titulo: cliente.proximaAcao, motivo: "Definido pelo vendedor", modo: "registrar" };
+  return { titulo: "Registrar visita mensal", motivo: "Manter cadência ativa", modo: "registrar" };
 }
 
 // Deriva métricas por indústria (mock determinístico coerente com saúde).
@@ -170,6 +171,7 @@ export default function Cliente360Page() {
   const [notaInput, setNotaInput] = useState("");
   const [timelineFilter, setTimelineFilter] = useState<string>("todos");
   const [registrarOpen, setRegistrarOpen] = useState(false);
+  const [showFantasmas, setShowFantasmas] = useState(false);
   const [nicho, setNicho] = useState<Nicho | null>(cliente.nicho ?? null);
   const [interesse, setInteresse] = useState(cliente.interessePrincipal ?? "");
 
@@ -198,14 +200,28 @@ export default function Cliente360Page() {
     : pedidosAll;
 
   const totalPedidosValor = pedidos.reduce((s, p) => s + p.valor, 0);
-  const ticketMedio = pedidos.length ? totalPedidosValor / pedidos.length : 0;
   const tarefasPendentes = tarefas.filter(t => t.status !== "concluida" && t.status !== "cancelada");
+
+  // Valor 12m — total DEVE ser exatamente a soma das camadas por indústria (breakdown fonte da verdade).
+  const industriasReais = industrias.filter(i => i.vinculada && i.valor12m > 0);
+  const somaIndustrias = industriasReais.reduce((s, i) => s + i.valor12m, 0);
   const valorTotal12m = industriaFocus
     ? (industrias.find(i => i.nome === industriaFocus)?.valor12m ?? 0)
-    : valor12m(cliente);
+    : somaIndustrias;
+
+  // Ticket médio robusto: usa freq real de pedidos ou fallback em pedidosRealizados.
+  const freqPedidos = pedidos.length || cliente.pedidosRealizados;
+  const ticketMedio = freqPedidos > 0 ? (totalPedidosValor || valorTotal12m) / freqPedidos : 0;
+
   const orcamentosAbertosValor = orcamentos
     .filter(o => o.status === "ativo" || o.status === "revisao_lojista" || o.status === "revisao_comercial")
     .reduce((s, o) => s + (o.valorTotal ?? 0), 0);
+
+  // Camadas por indústria: reais primeiro (por valor DESC), fantasmas agrupados.
+  const industriasVinculadasOrdenadas = industrias
+    .filter(i => i.vinculada)
+    .sort((a, b) => b.valor12m - a.valor12m);
+  const industriasFantasmas = industrias.filter(i => !i.vinculada);
 
   // Timeline unificada
   const timeline: TimelineItem[] = useMemo(() => {
@@ -276,10 +292,12 @@ export default function Cliente360Page() {
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs text-xs">{saudeCompleta.explicacao}</TooltipContent>
                       </Tooltip>
-                      <span className="inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full border border-border bg-card">
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: estagio.cor }} />
-                        {estagio.nome}
-                      </span>
+                      {estagio.nome.toLowerCase() !== saudeLabel[saudeCompleta.status].toLowerCase() && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: estagio.cor }} />
+                          Estágio: <span className="text-foreground font-medium">{estagio.nome}</span>
+                        </span>
+                      )}
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate">{cliente.razaoSocial} · {cliente.documento}</p>
                   </div>
@@ -308,7 +326,7 @@ export default function Cliente360Page() {
                       onBlur={e => { if (e.target.value) { setInteresse(e.target.value); toast.success("Interesse definido"); } }}
                     />
                   )}
-                  {cliente.tags.map(t => <TagBadge key={t} tag={t} />)}
+                  {cliente.tags.filter(t => t !== "quente" && t !== "morna" && t !== "fria").map(t => <TagBadge key={t} tag={t} />)}
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 shrink-0">
@@ -340,15 +358,14 @@ export default function Cliente360Page() {
             <span className="text-[11px] text-muted-foreground">Clique num card para filtrar a tela</span>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
-            {industrias.map(ind => {
+            {industriasVinculadasOrdenadas.map(ind => {
               const ativo = industriaFocus === ind.nome;
               return (
                 <button
                   key={ind.nome}
                   onClick={() => setIndustriaFocus(ativo ? null : ind.nome)}
                   className={`shrink-0 w-[220px] snap-start text-left p-3 rounded-xl border transition-all
-                    ${ativo ? "border-primary shadow-sm bg-primary/5" : "border-border bg-card hover:border-primary/40"}
-                    ${!ind.vinculada ? "border-dashed opacity-90" : ""}`}
+                    ${ativo ? "border-primary shadow-sm bg-primary/5" : "border-border bg-card hover:border-primary/40"}`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2 min-w-0">
@@ -357,41 +374,61 @@ export default function Cliente360Page() {
                       </div>
                       <span className="text-sm font-semibold truncate">{ind.nome}</span>
                     </div>
-                    {ind.vinculada && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border cursor-help ${saudeColor[ind.saude]}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[ind.saude]}`} />
-                            {saudeLabel[ind.saude]}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent className="text-xs max-w-xs">{ind.explicacao}</TooltipContent>
-                      </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border cursor-help ${saudeColor[ind.saude]}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[ind.saude]}`} />
+                          {saudeLabel[ind.saude]}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="text-xs max-w-xs">{ind.explicacao}</TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Valor 12m</span><span className="font-semibold">{ind.valor12m > 0 ? formatBRL(ind.valor12m) : "—"}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Última compra</span><span className="font-medium">{ind.ultimaCompra ?? "—"}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Pedidos</span><span className="font-medium">{ind.pedidos}</span></div>
+                    {ind.orcamentoAndamento && (
+                      <div className="mt-1.5 pt-1.5 border-t border-border/70 text-primary flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        <span className="truncate">{ind.orcamentoAndamento.nome}</span>
+                      </div>
                     )}
                   </div>
-                  {ind.vinculada ? (
-                    <div className="space-y-1 text-[11px]">
-                      <div className="flex justify-between"><span className="text-muted-foreground">Valor 12m</span><span className="font-semibold">{ind.valor12m > 0 ? formatBRL(ind.valor12m) : "—"}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Última compra</span><span className="font-medium">{ind.ultimaCompra ?? "—"}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Pedidos</span><span className="font-medium">{ind.pedidos}</span></div>
-                      {ind.orcamentoAndamento && (
-                        <div className="mt-1.5 pt-1.5 border-t border-border/70 text-primary flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          <span className="truncate">{ind.orcamentoAndamento.nome}</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5">
-                      <p className="text-[11px] text-muted-foreground">Nunca comprou {ind.nome}</p>
-                      <Button size="sm" variant="outline" className="w-full h-7 text-[10px]" onClick={e => { e.stopPropagation(); toast.success(`Criando 1ª oportunidade em ${ind.nome}`); }}>
-                        <Sparkles className="h-3 w-3 mr-1" /> Criar 1ª oportunidade
-                      </Button>
-                    </div>
-                  )}
                 </button>
               );
             })}
+
+            {/* Fantasmas agrupados */}
+            {industriasFantasmas.length > 0 && !showFantasmas && (
+              <button
+                onClick={() => setShowFantasmas(true)}
+                className="shrink-0 w-[180px] snap-start text-left p-3 rounded-xl border border-dashed border-border bg-muted/30 hover:border-primary/40 transition-all flex flex-col justify-center items-center gap-1"
+              >
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+                <p className="text-xs font-medium text-center">Expandir para outras indústrias</p>
+                <p className="text-[10px] text-muted-foreground">{industriasFantasmas.length} disponíveis</p>
+              </button>
+            )}
+            {showFantasmas && industriasFantasmas.map(ind => (
+              <div key={ind.nome} className="shrink-0 w-[200px] snap-start p-3 rounded-xl border border-dashed border-border bg-card">
+                <div className="flex items-center gap-2 mb-2 min-w-0">
+                  <div className="h-7 w-7 rounded-lg bg-muted grid place-items-center text-muted-foreground font-bold text-xs shrink-0">
+                    {ind.nome[0]}
+                  </div>
+                  <span className="text-sm font-semibold truncate">{ind.nome}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-2">Nunca comprou {ind.nome}</p>
+                <Button size="sm" variant="outline" className="w-full h-7 text-[10px]" onClick={() => toast.success(`Criando 1ª oportunidade em ${ind.nome}`)}>
+                  <Sparkles className="h-3 w-3 mr-1" /> Criar 1ª oportunidade
+                </Button>
+              </div>
+            ))}
+            {showFantasmas && (
+              <button onClick={() => setShowFantasmas(false)} className="shrink-0 text-[11px] text-primary underline self-center px-2">
+                Recolher
+              </button>
+            )}
           </div>
         </div>
 
@@ -418,12 +455,19 @@ export default function Cliente360Page() {
                   <p className="text-sm font-heading font-semibold">{proxima.titulo}</p>
                   <p className="text-[11px] text-muted-foreground">{proxima.motivo}</p>
                 </div>
-                <div className="flex gap-2 shrink-0">
-                  <Button size="sm" variant="outline" onClick={() => abrirWhats(`Olá ${cliente.nomeFantasia.split(" ")[0]}, tudo bem?`)}>
-                    <MessageCircle className="h-4 w-4 mr-1" /> WhatsApp
-                  </Button>
-                  <Button size="sm" onClick={() => setRegistrarOpen(true)}>
-                    Executar <ArrowRight className="h-3 w-3 ml-1" />
+                <div className="shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (proxima.modo === "whatsapp") abrirWhats(`Olá ${cliente.nomeFantasia.split(" ")[0]}, tudo bem?`);
+                      else if (proxima.modo === "orcamento") toast.success("Abrindo criador de orçamento");
+                      else setRegistrarOpen(true);
+                    }}
+                  >
+                    {proxima.modo === "whatsapp" && <MessageCircle className="h-4 w-4 mr-1" />}
+                    {proxima.modo === "orcamento" && <FileText className="h-4 w-4 mr-1" />}
+                    {proxima.modo === "registrar" && <PhoneCall className="h-4 w-4 mr-1" />}
+                    {proxima.titulo}
                   </Button>
                 </div>
               </CardContent>
@@ -524,7 +568,7 @@ export default function Cliente360Page() {
                         <span className="text-muted-foreground">Valor 12m {industriaFocus ? `· ${industriaFocus}` : "(total)"}</span>
                         <span className="text-lg font-heading font-bold text-emerald-600">{valorTotal12m > 0 ? formatBRL(valorTotal12m) : "—"}</span>
                       </div>
-                      {!industriaFocus && industrias.filter(i => i.vinculada && i.valor12m > 0).map(i => (
+                      {!industriaFocus && industriasReais.map(i => (
                         <div key={i.nome} className="flex justify-between text-[11px] pl-2">
                           <span className="text-muted-foreground">↳ {i.nome}</span>
                           <span className="font-medium">{formatBRL(i.valor12m)}</span>
@@ -537,11 +581,20 @@ export default function Cliente360Page() {
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground">Frequência</p>
-                          <p className="font-semibold">{pedidos.length} pedidos</p>
+                          <p className="font-semibold">{freqPedidos} pedidos</p>
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground">Orçamentos em aberto</p>
-                          <p className="font-semibold">{orcamentosAbertosValor > 0 ? formatBRL(orcamentosAbertosValor) : "—"}</p>
+                          {orcamentosAbertosValor > 0 ? (
+                            <p className="font-semibold">{formatBRL(orcamentosAbertosValor)}</p>
+                          ) : (
+                            <button
+                              onClick={() => toast.success("Abrindo catálogo")}
+                              className="text-[11px] text-primary hover:underline font-medium text-left"
+                            >
+                              Nenhum · montar cesta →
+                            </button>
+                          )}
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground">Origem</p>
