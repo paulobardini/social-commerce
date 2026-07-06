@@ -598,7 +598,19 @@ export default function CatalogoVendedor() {
                       {precoFinal ? <><span className="line-through text-muted-foreground text-xs mr-1">{formatBRL(p.price)}</span><span className="text-emerald-600">{formatBRL(precoFinal)}</span></> : formatBRL(p.price)}
                     </div>
                     {qty === 0 ? (
-                      <Button size="sm" onClick={() => setQty(p, 1)} className="gap-1"><Plus className="h-3 w-3" /> Add</Button>
+                      <div className="flex items-center gap-1">
+                        <AddWithPricePopover
+                          precoTabela={p.price}
+                          precoSugerido={precoFinal ?? p.price}
+                          onConfirm={(v) => { setQty(p, 1); setPrecoNegociado(p.brandSlug, p.id, v); }}
+                          trigger={
+                            <Button size="sm" variant="outline" className="gap-1" aria-label="Adicionar com preço negociado">
+                              <Pencil className="h-3 w-3" /> R$
+                            </Button>
+                          }
+                        />
+                        <Button size="sm" onClick={() => setQty(p, 1)} className="gap-1"><Plus className="h-3 w-3" /> Add</Button>
+                      </div>
                     ) : (
                       <div className="flex items-center gap-1 border rounded-md">
                         <button onClick={() => setQty(p, qty - 1)} className="h-8 w-8 flex items-center justify-center"><Minus className="h-3 w-3" /></button>
