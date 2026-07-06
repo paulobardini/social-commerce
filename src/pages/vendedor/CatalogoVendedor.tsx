@@ -910,6 +910,39 @@ function ClienteSelector({ cliente, clienteId, onChange }: { cliente: any; clien
 }
 
 // ---------- Product Card ----------
+function AddWithPricePopover({ precoTabela, precoSugerido, onConfirm, trigger }: {
+  precoTabela: number; precoSugerido: number; onConfirm: (v: number) => void; trigger: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const [valor, setValor] = useState(precoSugerido.toFixed(2));
+  useEffect(() => { if (open) setValor(precoSugerido.toFixed(2)); }, [open, precoSugerido]);
+  const parsed = parseFloat(valor.replace(",", "."));
+  const valid = !isNaN(parsed) && parsed > 0;
+  const desconto = valid ? ((1 - parsed / precoTabela) * 100) : 0;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>{trigger}</PopoverTrigger>
+      <PopoverContent className="w-64 p-3 space-y-2" onClick={(e) => e.stopPropagation()}>
+        <div className="text-xs font-semibold">Adicionar com preço negociado</div>
+        <div className="text-[11px] text-muted-foreground">Tabela: <b>{formatBRL(precoTabela)}</b></div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">R$</span>
+          <Input value={valor} onChange={(e) => setValor(e.target.value)} className="h-8 text-sm" autoFocus />
+        </div>
+        {valid && (
+          <div className={`text-[11px] ${desconto >= 0 ? "text-emerald-600" : "text-amber-600"}`}>
+            {desconto >= 0 ? `${desconto.toFixed(1)}% off` : `+${Math.abs(desconto).toFixed(1)}% acima da tabela`}
+          </div>
+        )}
+        <div className="flex gap-2 pt-1">
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button size="sm" className="flex-1" disabled={!valid} onClick={() => { onConfirm(parsed); setOpen(false); }}>Adicionar</Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function ProductCard({ p, qty, onAdd, onInc, onDec, onAddWithPrice, precoFinal, conditionHint }: {
   p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; onAddWithPrice?: (v: number) => void; precoFinal: number | null; conditionHint?: React.ReactNode;
 }) {
