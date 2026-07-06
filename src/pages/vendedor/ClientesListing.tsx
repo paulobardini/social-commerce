@@ -388,10 +388,29 @@ function TabelaView({
                   )}
                 </TableCell>
                 <TableCell>
-                  <span className={`inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full border ${saudeColor[s]}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[s]}`} />
-                    {saudeLabel[s]}
-                  </span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={`inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full border cursor-help ${saudeColor[s]}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[s]}`} />
+                        {saudeLabel[s]}
+                        {saude.faltamDias != null && saude.faltamDias <= 14 && (
+                          <span className="ml-0.5 text-[9px] opacity-80">· {saude.faltamDias}d</span>
+                        )}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs text-xs leading-relaxed">
+                      <p className="font-semibold mb-1">{saude.explicacao}</p>
+                      {saude.industrias.length > 1 && (
+                        <ul className="space-y-0.5 text-[11px] opacity-90">
+                          {saude.industrias.map(i => (
+                            <li key={i.industria}>
+                              <span className="font-medium">{i.industria}</span>: {i.diasDesdeUltimaCompra != null ? `${i.diasDesdeUltimaCompra}d — ${saudeLabel[i.status]}` : `sem compra — ${saudeLabel[i.status]}`}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
                 </TableCell>
                 <TableCell>
                   <span className="inline-flex items-center gap-1.5 text-[11px]">
