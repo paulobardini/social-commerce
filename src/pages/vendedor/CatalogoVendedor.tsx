@@ -569,18 +569,23 @@ export default function CatalogoVendedor() {
             </SheetHeader>
             <div className="py-4 space-y-3 text-sm">
               <div>
-                Este orçamento gerará <b>{groups.length} pedido{groups.length > 1 ? "s" : ""}</b> na aprovação — pedidos por indústria faturam separado:
+                Este orçamento gerará <b>{okGroups.length} pedido{okGroups.length > 1 ? "s" : ""}</b> na aprovação — pedidos por indústria faturam separado:
               </div>
               <div className="space-y-1">
-                {groups.map((g) => (
+                {okGroups.map((g) => (
                   <div key={g.slug} className="flex justify-between border rounded px-3 py-2">
                     <span className="capitalize">{g.slug}</span>
                     <span className="font-medium">{formatBRL(g.subtotalLiquido)}</span>
                   </div>
                 ))}
               </div>
+              {blockedGroups.length > 0 && (
+                <div className="text-xs text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded px-3 py-2">
+                  <b>Fora deste orçamento</b> ({blockedGroups.length}): {blockedGroups.map((g) => `${g.slug} — ${g.pendencias.filter((p) => p.tipo === "bloqueio").map((p) => p.msg).join(", ")}`).join(" · ")}. Ajuste e gere depois.
+                </div>
+              )}
               <div className="text-muted-foreground text-xs">
-                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {totalItens} itens · {formatBRL(totalGeral)}
+                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {okGroups.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0)} itens · {formatBRL(totalOk)} · comissão {formatBRL(comissaoOk)}
               </div>
             </div>
             <SheetFooter className="flex-row gap-2">
