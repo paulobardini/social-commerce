@@ -99,6 +99,22 @@ export default function CatalogoVendedor() {
   const [cartOpen, setCartOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // Modo apresentação (esconde comissão/margem na frente do cliente)
+  const { on: presentation, set: setPresentation, toggle: togglePresentation } = usePresentationMode();
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      // Atalho: Shift+P (evita conflito ao digitar). Ignora inputs/textareas.
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.shiftKey && (e.key === "P" || e.key === "p")) {
+        e.preventDefault();
+        togglePresentation();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [togglePresentation]);
+
   // Perfil do cliente vira chip auto-diferenciado
   const perfilChip = cliente?.interessePrincipal?.split(" ")[1] || cliente?.nicho;
 
