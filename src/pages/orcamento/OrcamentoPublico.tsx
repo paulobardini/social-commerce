@@ -524,7 +524,8 @@ export default function OrcamentoPublico() {
                                   {oferta && <span className="text-[10px] text-muted-foreground line-through">({fmt(item.precoPeca)}/peça)</span>}
                                 </>
                               )}
-                              <Tag className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <Pencil className="h-3 w-3 text-muted-foreground/60 group-hover:text-primary transition-colors" />
+                              <span className="sr-only">propor outro valor</span>
                             </button>
 
                             {oferta && (
