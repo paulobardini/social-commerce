@@ -21,6 +21,7 @@ const menuItems: MenuItem[] = [
   { icon: ShoppingCart, label: "Pedidos", path: "/vendedor/360/pedidos", indent: true },
   { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
   { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
+  { icon: ShoppingCart, label: "Catálogo", path: "/vendedor/catalogo" },
   { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
   { icon: CheckSquare, label: "Tarefas", path: "/vendedor/tarefas" },
   {
