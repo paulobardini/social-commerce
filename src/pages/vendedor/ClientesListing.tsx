@@ -26,7 +26,7 @@ import {
 import { NovoClienteModal } from "@/components/vendedor/NovoClienteModal";
 import {
   ESTAGIOS, type EstagioFunil, type Saude, saudeCliente, saudeLabel, saudeColor, saudeDot,
-  diasSemContato, valor12m, formatBRL, industriasDe, estagioAtual, saveOverride,
+  calcularSaude, diasSemContato, valor12m, formatBRL, industriasDe, estagioAtual, saveOverride,
   loadOverrides, contagemChips, aplicarChip, calcularMetodo, type ChipFilter,
 } from "@/lib/carteiraMetodo";
 
@@ -338,7 +338,8 @@ function TabelaView({
         </TableHeader>
         <TableBody>
           {clientes.map(c => {
-            const s = saudeCliente(c);
+            const saude = calcularSaude(c);
+            const s = saude.status;
             const est = ESTAGIOS.find(e => e.id === estagioAtual(c, overrides))!;
             const dias = diasSemContato(c.ultimoContato);
             const v = valor12m(c);
@@ -387,10 +388,29 @@ function TabelaView({
                   )}
                 </TableCell>
                 <TableCell>
-                  <span className={`inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full border ${saudeColor[s]}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[s]}`} />
-                    {saudeLabel[s]}
-                  </span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={`inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full border cursor-help ${saudeColor[s]}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[s]}`} />
+                        {saudeLabel[s]}
+                        {saude.faltamDias != null && saude.faltamDias <= 14 && (
+                          <span className="ml-0.5 text-[9px] opacity-80">· {saude.faltamDias}d</span>
+                        )}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs text-xs leading-relaxed">
+                      <p className="font-semibold mb-1">{saude.explicacao}</p>
+                      {saude.industrias.length > 1 && (
+                        <ul className="space-y-0.5 text-[11px] opacity-90">
+                          {saude.industrias.map(i => (
+                            <li key={i.industria}>
+                              <span className="font-medium">{i.industria}</span>: {i.diasDesdeUltimaCompra != null ? `${i.diasDesdeUltimaCompra}d — ${saudeLabel[i.status]}` : `sem compra — ${saudeLabel[i.status]}`}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
                 </TableCell>
                 <TableCell>
                   <span className="inline-flex items-center gap-1.5 text-[11px]">
@@ -487,7 +507,8 @@ function FunilView({
 
               <div className="flex-1 overflow-y-auto p-2 space-y-2">
                 {items.map(c => {
-                  const s = saudeCliente(c);
+                  const saude = calcularSaude(c);
+                  const s = saude.status;
                   const dias = diasSemContato(c.ultimoContato);
                   const v = valor12m(c);
                   const ind = industriasDe(c);
@@ -504,10 +525,21 @@ function FunilView({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium truncate flex-1">{c.nomeFantasia}</p>
-                        <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 ${saudeColor[s]}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[s]}`} /> {saudeLabel[s]}
-                        </span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border shrink-0 cursor-help ${saudeColor[s]}`}>
+                                <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[s]}`} /> {saudeLabel[s]}
+                                {saude.faltamDias != null && saude.faltamDias <= 14 && (
+                                  <span className="ml-0.5 opacity-80">· {saude.faltamDias}d</span>
+                                )}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs text-xs leading-relaxed">{saude.explicacao}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
+
 
                       {ind.length > 0 && (
                         <div className="flex gap-1 flex-wrap">
