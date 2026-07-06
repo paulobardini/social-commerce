@@ -455,12 +455,19 @@ export default function Cliente360Page() {
                   <p className="text-sm font-heading font-semibold">{proxima.titulo}</p>
                   <p className="text-[11px] text-muted-foreground">{proxima.motivo}</p>
                 </div>
-                <div className="flex gap-2 shrink-0">
-                  <Button size="sm" variant="outline" onClick={() => abrirWhats(`Olá ${cliente.nomeFantasia.split(" ")[0]}, tudo bem?`)}>
-                    <MessageCircle className="h-4 w-4 mr-1" /> WhatsApp
-                  </Button>
-                  <Button size="sm" onClick={() => setRegistrarOpen(true)}>
-                    Executar <ArrowRight className="h-3 w-3 ml-1" />
+                <div className="shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (proxima.modo === "whatsapp") abrirWhats(`Olá ${cliente.nomeFantasia.split(" ")[0]}, tudo bem?`);
+                      else if (proxima.modo === "orcamento") toast.success("Abrindo criador de orçamento");
+                      else setRegistrarOpen(true);
+                    }}
+                  >
+                    {proxima.modo === "whatsapp" && <MessageCircle className="h-4 w-4 mr-1" />}
+                    {proxima.modo === "orcamento" && <FileText className="h-4 w-4 mr-1" />}
+                    {proxima.modo === "registrar" && <PhoneCall className="h-4 w-4 mr-1" />}
+                    {proxima.titulo}
                   </Button>
                 </div>
               </CardContent>
