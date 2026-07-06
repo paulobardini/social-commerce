@@ -60,14 +60,15 @@ function whatsappUrl(phone: string, text?: string) {
 }
 
 // Próxima ação sugerida pelo motor (mesmo espírito da fila do Painel).
-function proximaAcaoSugerida(cliente: Cliente360, saude: SaudeStatus, orcamentosAtivos: number): { titulo: string; motivo: string } {
-  if (saude === "novo") return { titulo: "Fazer primeiro contato", motivo: "Cliente novo, ainda sem primeira compra" };
-  if (saude === "perdido") return { titulo: "Última tentativa de reativação", motivo: `Sem compra há mais de ${SAUDE_LIMIARES.INATIVO_MAX_DIAS} dias` };
-  if (saude === "inativo") return { titulo: "Resgatar antes de virar Perdido", motivo: `Última compra há mais de ${SAUDE_LIMIARES.RISCO_MAX_DIAS} dias` };
-  if (saude === "risco") return { titulo: "Reativar com oferta específica", motivo: `Última compra há mais de ${SAUDE_LIMIARES.ATIVO_MAX_DIAS} dias` };
-  if (orcamentosAtivos > 0) return { titulo: "Cobrar retorno de orçamento", motivo: `${orcamentosAtivos} orçamento(s) em aberto` };
-  if (cliente.proximaAcao) return { titulo: cliente.proximaAcao, motivo: "Definido pelo vendedor" };
-  return { titulo: "Registrar visita mensal", motivo: "Manter cadência ativa" };
+// `modo` define como o botão executa: whatsapp abre conversa; registrar abre modal.
+function proximaAcaoSugerida(cliente: Cliente360, saude: SaudeStatus, orcamentosAtivos: number): { titulo: string; motivo: string; modo: "whatsapp" | "registrar" | "orcamento" } {
+  if (saude === "novo")    return { titulo: "Fazer primeiro contato via WhatsApp", motivo: "Cliente novo, ainda sem primeira compra", modo: "whatsapp" };
+  if (saude === "perdido") return { titulo: "Enviar mensagem de reativação", motivo: `Sem compra há mais de ${SAUDE_LIMIARES.INATIVO_MAX_DIAS} dias`, modo: "whatsapp" };
+  if (saude === "inativo") return { titulo: "Enviar mensagem de resgate",     motivo: `Última compra há mais de ${SAUDE_LIMIARES.RISCO_MAX_DIAS} dias`, modo: "whatsapp" };
+  if (saude === "risco")   return { titulo: "Enviar oferta específica no WhatsApp", motivo: `Última compra há mais de ${SAUDE_LIMIARES.ATIVO_MAX_DIAS} dias`, modo: "whatsapp" };
+  if (orcamentosAtivos > 0) return { titulo: "Cobrar retorno de orçamento", motivo: `${orcamentosAtivos} orçamento(s) em aberto`, modo: "whatsapp" };
+  if (cliente.proximaAcao) return { titulo: cliente.proximaAcao, motivo: "Definido pelo vendedor", modo: "registrar" };
+  return { titulo: "Registrar visita mensal", motivo: "Manter cadência ativa", modo: "registrar" };
 }
 
 // Deriva métricas por indústria (mock determinístico coerente com saúde).
