@@ -572,6 +572,7 @@ export default function CatalogoVendedor() {
                 return (
                   <ProductCard key={p.id} p={p} qty={qty}
                     onAdd={() => setQty(p, 1)} onInc={() => setQty(p, qty + 1)} onDec={() => setQty(p, qty - 1)}
+                    onAddWithPrice={(v) => { setQty(p, 1); setPrecoNegociado(p.brandSlug, p.id, v); }}
                     precoFinal={precoFinal} conditionHint={conditionHint}
                   />
                 );
@@ -597,7 +598,19 @@ export default function CatalogoVendedor() {
                       {precoFinal ? <><span className="line-through text-muted-foreground text-xs mr-1">{formatBRL(p.price)}</span><span className="text-emerald-600">{formatBRL(precoFinal)}</span></> : formatBRL(p.price)}
                     </div>
                     {qty === 0 ? (
-                      <Button size="sm" onClick={() => setQty(p, 1)} className="gap-1"><Plus className="h-3 w-3" /> Add</Button>
+                      <div className="flex items-center gap-1">
+                        <AddWithPricePopover
+                          precoTabela={p.price}
+                          precoSugerido={precoFinal ?? p.price}
+                          onConfirm={(v) => { setQty(p, 1); setPrecoNegociado(p.brandSlug, p.id, v); }}
+                          trigger={
+                            <Button size="sm" variant="outline" className="gap-1" aria-label="Adicionar com preço negociado">
+                              <Pencil className="h-3 w-3" /> R$
+                            </Button>
+                          }
+                        />
+                        <Button size="sm" onClick={() => setQty(p, 1)} className="gap-1"><Plus className="h-3 w-3" /> Add</Button>
+                      </div>
                     ) : (
                       <div className="flex items-center gap-1 border rounded-md">
                         <button onClick={() => setQty(p, qty - 1)} className="h-8 w-8 flex items-center justify-center"><Minus className="h-3 w-3" /></button>
@@ -909,8 +922,41 @@ function ClienteSelector({ cliente, clienteId, onChange }: { cliente: any; clien
 }
 
 // ---------- Product Card ----------
-function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal, conditionHint }: {
-  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; precoFinal: number | null; conditionHint?: React.ReactNode;
+function AddWithPricePopover({ precoTabela, precoSugerido, onConfirm, trigger }: {
+  precoTabela: number; precoSugerido: number; onConfirm: (v: number) => void; trigger: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const [valor, setValor] = useState(precoSugerido.toFixed(2));
+  useEffect(() => { if (open) setValor(precoSugerido.toFixed(2)); }, [open, precoSugerido]);
+  const parsed = parseFloat(valor.replace(",", "."));
+  const valid = !isNaN(parsed) && parsed > 0;
+  const desconto = valid ? ((1 - parsed / precoTabela) * 100) : 0;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>{trigger}</PopoverTrigger>
+      <PopoverContent className="w-64 p-3 space-y-2" onClick={(e) => e.stopPropagation()}>
+        <div className="text-xs font-semibold">Adicionar com preço negociado</div>
+        <div className="text-[11px] text-muted-foreground">Tabela: <b>{formatBRL(precoTabela)}</b></div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">R$</span>
+          <Input value={valor} onChange={(e) => setValor(e.target.value)} className="h-8 text-sm" autoFocus />
+        </div>
+        {valid && (
+          <div className={`text-[11px] ${desconto >= 0 ? "text-emerald-600" : "text-amber-600"}`}>
+            {desconto >= 0 ? `${desconto.toFixed(1)}% off` : `+${Math.abs(desconto).toFixed(1)}% acima da tabela`}
+          </div>
+        )}
+        <div className="flex gap-2 pt-1">
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button size="sm" className="flex-1" disabled={!valid} onClick={() => { onConfirm(parsed); setOpen(false); }}>Adicionar</Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function ProductCard({ p, qty, onAdd, onInc, onDec, onAddWithPrice, precoFinal, conditionHint }: {
+  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; onAddWithPrice?: (v: number) => void; precoFinal: number | null; conditionHint?: React.ReactNode;
 }) {
   return (
     <div className="group relative rounded-lg overflow-hidden bg-card border hover:shadow-md transition">
@@ -919,11 +965,25 @@ function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal, conditionHint }:
           <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Package className="h-8 w-8" /></div>
         }
       </div>
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2 flex items-center gap-1">
         {qty === 0 ? (
-          <button onClick={onAdd} className="opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-0 opacity-100 transition bg-primary text-primary-foreground rounded-full h-9 w-9 flex items-center justify-center shadow" aria-label="Adicionar">
-            <Plus className="h-4 w-4" />
-          </button>
+          <>
+            {onAddWithPrice && (
+              <AddWithPricePopover
+                precoTabela={p.price}
+                precoSugerido={precoFinal ?? p.price}
+                onConfirm={onAddWithPrice}
+                trigger={
+                  <button className="opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-0 opacity-100 transition bg-background border rounded-full h-9 px-2 text-[11px] font-semibold flex items-center gap-1 shadow" aria-label="Adicionar com preço negociado">
+                    <Pencil className="h-3 w-3" /> R$
+                  </button>
+                }
+              />
+            )}
+            <button onClick={onAdd} className="opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-0 opacity-100 transition bg-primary text-primary-foreground rounded-full h-9 w-9 flex items-center justify-center shadow" aria-label="Adicionar">
+              <Plus className="h-4 w-4" />
+            </button>
+          </>
         ) : (
           <div className="flex items-center gap-1 bg-primary text-primary-foreground rounded-full px-1 shadow">
             <button onClick={onDec} className="h-7 w-7 flex items-center justify-center hover:bg-primary-foreground/10 rounded-full"><Minus className="h-3.5 w-3.5" /></button>
