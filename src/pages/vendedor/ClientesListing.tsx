@@ -338,7 +338,8 @@ function TabelaView({
         </TableHeader>
         <TableBody>
           {clientes.map(c => {
-            const s = saudeCliente(c);
+            const saude = calcularSaude(c);
+            const s = saude.status;
             const est = ESTAGIOS.find(e => e.id === estagioAtual(c, overrides))!;
             const dias = diasSemContato(c.ultimoContato);
             const v = valor12m(c);
