@@ -1267,10 +1267,12 @@ function CartLineRow({ l, pol, regra, presentation, onChangeQty, onSetPreco }: {
               {!disabled && <Pencil className="h-3 w-3 opacity-60" />}
             </button>
           )}
-          <span className={`text-[10px] ${foraLimite ? "text-amber-600" : "text-muted-foreground"}`}>
-            = {l.descontoItem.toFixed(1)}% off
-            {foraLimite && ` · acima do teto ${maxDegrau.desconto}%`}
-          </span>
+          {!presentation && (
+            <span className={`text-[10px] ${foraLimite ? "text-amber-600" : "text-muted-foreground"}`}>
+              = {l.descontoItem.toFixed(1)}% off
+              {foraLimite && ` · acima do teto ${maxDegrau.desconto}%`}
+            </span>
+          )}
           {l.negociado && (
             <button onClick={() => onSetPreco(l.itemId, undefined)} className="text-muted-foreground hover:text-primary inline-flex items-center gap-1 text-[10px]">
               <RotateCcw className="h-3 w-3" /> restaurar
