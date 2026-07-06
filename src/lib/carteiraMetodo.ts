@@ -1,7 +1,6 @@
 // Método de gestão de carteira — utilitários derivados de Cliente360.
 import type { Cliente360 } from "@/data/mockCRM360";
 
-export type Saude = "ativo" | "risco" | "inativo" | "perdido";
 export type EstagioFunil = "novo" | "em_ativacao" | "ativo" | "em_risco" | "reativacao" | "perdido";
 
 // Âncora de "hoje" fixa para consistência do mock.
@@ -20,35 +19,26 @@ export function diasSemContato(ultimoContato: string, hoje: Date = HOJE_ANCHOR):
   return Math.max(0, Math.floor((hoje.getTime() - dt.getTime()) / 86400000));
 }
 
-/** Saúde calculada (nunca editável). Baseada em recência de contato/compra. */
+// -----------------------------------------------------------------------------
+// SAÚDE — régua única centralizada em src/lib/saudeCliente.ts.
+// Re-exportada aqui para retrocompatibilidade dos consumidores existentes.
+// -----------------------------------------------------------------------------
+import {
+  calcularSaude, calcularSaudeStatus,
+  saudeLabel as _saudeLabel, saudeColor as _saudeColor, saudeDot as _saudeDot,
+  type SaudeStatus,
+} from "./saudeCliente";
+
+export type Saude = SaudeStatus;
+export const saudeLabel = _saudeLabel;
+export const saudeColor = _saudeColor;
+export const saudeDot = _saudeDot;
+export { calcularSaude };
+
+/** Saúde global do cliente (baseada em recência de compra, por indústria). */
 export function saudeCliente(c: Cliente360, hoje: Date = HOJE_ANCHOR): Saude {
-  const dias = diasSemContato(c.ultimoContato, hoje);
-  if (dias > 120) return "perdido";
-  if (dias > 60) return "inativo";
-  if (dias > 30) return "risco";
-  return "ativo";
+  return calcularSaudeStatus(c, hoje);
 }
-
-export const saudeLabel: Record<Saude, string> = {
-  ativo: "Ativo",
-  risco: "Em risco",
-  inativo: "Inativo",
-  perdido: "Perdido",
-};
-
-export const saudeColor: Record<Saude, string> = {
-  ativo: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  risco: "bg-orange-100 text-orange-700 border-orange-200",
-  inativo: "bg-red-100 text-red-700 border-red-200",
-  perdido: "bg-slate-200 text-slate-600 border-slate-300",
-};
-
-export const saudeDot: Record<Saude, string> = {
-  ativo: "bg-emerald-500",
-  risco: "bg-orange-500",
-  inativo: "bg-red-500",
-  perdido: "bg-slate-400",
-};
 
 // Ticket médio pseudo-random estável por id.
 function hash(id: string): number {
