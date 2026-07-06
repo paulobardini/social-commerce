@@ -198,14 +198,28 @@ export default function Cliente360Page() {
     : pedidosAll;
 
   const totalPedidosValor = pedidos.reduce((s, p) => s + p.valor, 0);
-  const ticketMedio = pedidos.length ? totalPedidosValor / pedidos.length : 0;
   const tarefasPendentes = tarefas.filter(t => t.status !== "concluida" && t.status !== "cancelada");
+
+  // Valor 12m — total DEVE ser exatamente a soma das camadas por indústria (breakdown fonte da verdade).
+  const industriasReais = industrias.filter(i => i.vinculada && i.valor12m > 0);
+  const somaIndustrias = industriasReais.reduce((s, i) => s + i.valor12m, 0);
   const valorTotal12m = industriaFocus
     ? (industrias.find(i => i.nome === industriaFocus)?.valor12m ?? 0)
-    : valor12m(cliente);
+    : somaIndustrias;
+
+  // Ticket médio robusto: usa freq real de pedidos ou fallback em pedidosRealizados.
+  const freqPedidos = pedidos.length || cliente.pedidosRealizados;
+  const ticketMedio = freqPedidos > 0 ? (totalPedidosValor || valorTotal12m) / freqPedidos : 0;
+
   const orcamentosAbertosValor = orcamentos
     .filter(o => o.status === "ativo" || o.status === "revisao_lojista" || o.status === "revisao_comercial")
     .reduce((s, o) => s + (o.valorTotal ?? 0), 0);
+
+  // Camadas por indústria: reais primeiro (por valor DESC), fantasmas agrupados.
+  const industriasVinculadasOrdenadas = industrias
+    .filter(i => i.vinculada)
+    .sort((a, b) => b.valor12m - a.valor12m);
+  const industriasFantasmas = industrias.filter(i => !i.vinculada);
 
   // Timeline unificada
   const timeline: TimelineItem[] = useMemo(() => {
