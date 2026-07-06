@@ -385,8 +385,8 @@ export default function CatalogoVendedor() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {filtered.slice(0, 60).map((p) => {
                 const qty = getQty(p.id, p.brandSlug);
-                const grp = groups.find((g) => g.slug === p.brandSlug);
-                const precoFinal = grp?.desconto ? p.price * (1 - grp.desconto / 100) : null;
+                const cond = sessionConditionFor(p.brandSlug);
+                const precoFinal = cond?.desconto ? p.price * (1 - cond.desconto / 100) : null;
                 return (
                   <ProductCard
                     key={p.id}
