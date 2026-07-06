@@ -14,7 +14,7 @@ import {
 import {
   MessageCircle, ChevronDown, ChevronUp, Plus, Minus, CheckCircle2,
   Clock, Truck, Percent, CalendarClock, ZoomIn, ShieldCheck, X, Info,
-  Search, Undo2, Send, HandCoins, Sparkles, Tag,
+  Search, Undo2, Send, HandCoins, Sparkles, Pencil, Eye, MessageSquareMore,
 } from "lucide-react";
 import { mockOrcamentos, mockCatalogoProdutos, type Orcamento, type OrcamentoProduto } from "@/data/mockVendedor";
 import { toast } from "sonner";
@@ -121,6 +121,9 @@ export default function OrcamentoPublico() {
   const [sugerirNota, setSugerirNota] = useState("");
   const [recusarOpen, setRecusarOpen] = useState(false);
   const [recusarMotivo, setRecusarMotivo] = useState<string | null>(null);
+
+  // Modo de edição (contraproposta ativa) — ativado por "Solicitar alterações"
+  const [edicaoMode, setEdicaoMode] = useState(false);
 
   useEffect(() => { window.scrollTo(0, 0); }, [id]);
 
@@ -362,35 +365,36 @@ export default function OrcamentoPublico() {
           {/* Resumo simples */}
           <div className="bg-muted/50 rounded-xl p-3 mt-2">
             <div className="flex items-baseline justify-between gap-2">
-              <div>
+              <div className="min-w-0">
                 <p className="text-[11px] text-muted-foreground">Seu pedido</p>
                 <p className="text-base font-semibold text-foreground">{itensAtivos.length} itens · {pecasTotal} peças</p>
               </div>
-              <p className="text-xl font-bold text-primary">{fmt(totalGeral)}</p>
-            </div>
-
-            {/* Modo de exibição de preço */}
-            <div className="mt-3 flex items-center gap-1.5 bg-background rounded-lg p-1 border border-border w-fit">
-              {(["peca", "kit", "ambos"] as ModoPreco[]).map(m => (
+              <div className="flex items-center gap-2 shrink-0">
+                <p className="text-xl font-bold text-primary">{fmt(totalGeral)}</p>
+                {/* Toggle discreto de visualização de preço */}
                 <button
-                  key={m}
-                  onClick={() => setModoPreco(m)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                    modoPreco === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  onClick={() => setModoPreco(modoPreco === "peca" ? "kit" : modoPreco === "kit" ? "ambos" : "peca")}
+                  className="h-7 w-7 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground flex items-center justify-center"
+                  title={`Exibir preços: ${modoPreco === "peca" ? "Por peça" : modoPreco === "kit" ? "Por kit" : "Ambos"} (toque para alternar)`}
+                  aria-label="Alternar exibição de preço"
                 >
-                  {m === "peca" ? "Por peça" : m === "kit" ? "Por kit" : "Ambos"}
+                  <Eye className="h-3.5 w-3.5" />
                 </button>
-              ))}
+              </div>
             </div>
 
-            <button
-              onClick={() => setResumoAberto(v => !v)}
-              className="mt-2 text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-            >
-              {resumoAberto ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              {resumoAberto ? "Esconder detalhes" : "Ver detalhes por peça"}
-            </button>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <button
+                onClick={() => setResumoAberto(v => !v)}
+                className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+              >
+                {resumoAberto ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                {resumoAberto ? "Esconder detalhes" : "Ver detalhes por peça"}
+              </button>
+              <span className="text-[10px] text-muted-foreground">
+                exibindo: <span className="font-medium text-foreground">{modoPreco === "peca" ? "por peça" : modoPreco === "kit" ? "por kit" : "ambos"}</span>
+              </span>
+            </div>
             {resumoAberto && (
               <div className="mt-2 pt-2 border-t border-border grid grid-cols-3 gap-2 text-center">
                 {(() => {
@@ -465,6 +469,16 @@ export default function OrcamentoPublico() {
                     </div>
                   )}
 
+                  {/* Instrução de contraproposta (modo edição ou já há ofertas) */}
+                  {(edicaoMode || modoContraproposta) && (
+                    <div className="px-4 py-2 bg-primary/5 border-b border-primary/10 flex gap-2 items-center">
+                      <Pencil className="h-3 w-3 text-primary shrink-0" />
+                      <p className="text-[11px] text-foreground">
+                        Toque no <span className="font-semibold text-primary">preço</span> para propor outro valor.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Itens */}
                   <ul className="divide-y divide-border">
                     {marcaItens.map((item) => {
@@ -524,7 +538,8 @@ export default function OrcamentoPublico() {
                                   {oferta && <span className="text-[10px] text-muted-foreground line-through">({fmt(item.precoPeca)}/peça)</span>}
                                 </>
                               )}
-                              <Tag className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <Pencil className="h-3 w-3 text-muted-foreground/60 group-hover:text-primary transition-colors" />
+                              <span className="sr-only">propor outro valor</span>
                             </button>
 
                             {oferta && (
@@ -593,59 +608,103 @@ export default function OrcamentoPublico() {
 
       {/* Sticky footer */}
       <div className="fixed bottom-0 inset-x-0 bg-card border-t border-border shadow-2xl z-40">
-        <div className="max-w-2xl mx-auto p-3 space-y-2">
+        <div className="max-w-2xl mx-auto p-3 space-y-2.5">
           {ofertaTotal != null && (
             <div className="flex items-center justify-between gap-2 bg-primary/10 border border-primary/20 rounded-lg px-3 py-1.5">
               <span className="text-[11px] text-primary font-semibold">Sua oferta global: {fmt(ofertaTotal)}</span>
-              <button onClick={() => setOfertaTotal(null)} className="text-primary/70 hover:text-primary">
-                <Undo2 className="h-3 w-3" />
+              <button onClick={() => setOfertaTotal(null)} className="text-primary/70 hover:text-primary p-1" aria-label="Remover oferta global">
+                <Undo2 className="h-3.5 w-3.5" />
               </button>
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                {modoContraproposta ? "Total com suas ofertas" : "Total"}
+          {/* Botão "Propor valor total" só quando em modo edição/contraproposta */}
+          {(edicaoMode || modoContraproposta) && (
+            <button
+              onClick={() => { setOfertaTotalValor(ofertaTotal ? String(ofertaTotal) : ""); setOfertaTotalAberta(true); }}
+              className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-lg border border-dashed border-primary/40 text-sm font-medium text-primary hover:bg-primary/5"
+            >
+              <HandCoins className="h-4 w-4" />
+              {ofertaTotal != null ? "Alterar valor total proposto" : "Propor valor total do pedido"}
+            </button>
+          )}
+
+          {/* Total + CTAs */}
+          <div className="flex items-stretch gap-2 flex-wrap min-[360px]:flex-nowrap">
+            <div className="min-w-0 flex flex-col justify-center pr-1 basis-full min-[360px]:basis-auto">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground leading-tight">
+                {modoContraproposta ? "Total c/ ofertas" : "Total"}
               </p>
-              <p className="text-lg font-bold text-foreground">{fmt(totalGeral)}</p>
+              <p className="text-lg font-bold text-foreground leading-tight">{fmt(totalGeral)}</p>
               {modoContraproposta && (
-                <p className="text-[10px] text-muted-foreground">sujeito a confirmação</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">sujeito a confirmação</p>
               )}
             </div>
+
             {modoContraproposta ? (
-              <Button
-                onClick={enviarContraproposta}
-                disabled={totalGeral === 0}
-                className="flex-1 max-w-[280px] gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground h-11 text-sm font-semibold"
-              >
-                <Send className="h-4 w-4" />Enviar contraproposta
-              </Button>
+              <>
+                <Button
+                  onClick={enviarContraproposta}
+                  disabled={totalGeral === 0}
+                  className="flex-1 min-h-[48px] gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold px-3"
+                >
+                  <Send className="h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    Enviar contraproposta
+                    {(() => {
+                      const n = itens.filter(i => i.incluido && i.ofertaPeca != null).length +
+                                (ofertaTotal != null ? 1 : 0) +
+                                itens.filter(i => i.addedByLojista && i.incluido).length;
+                      return n > 0 ? ` (${n})` : "";
+                    })()}
+                  </span>
+                </Button>
+                <Button
+                  onClick={() => aprovar("total")}
+                  disabled={totalGeral === 0}
+                  variant="outline"
+                  className="flex-1 min-h-[48px] gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/5 text-sm font-semibold px-3"
+                >
+                  <ShieldCheck className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Aprovar sem alterações</span>
+                </Button>
+              </>
             ) : (
-              <Button
-                onClick={() => aprovar("total")}
-                disabled={totalGeral === 0}
-                className="flex-1 max-w-[280px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white h-11 text-sm font-semibold"
-              >
-                <ShieldCheck className="h-4 w-4" />Aprovar ({fmt(totalGeral)})
-              </Button>
+              <>
+                <Button
+                  onClick={() => aprovar("total")}
+                  disabled={totalGeral === 0}
+                  className="flex-1 min-h-[48px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3"
+                >
+                  <ShieldCheck className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Aprovar ({fmt(totalGeral)})</span>
+                </Button>
+                <Button
+                  onClick={() => {
+                    setEdicaoMode(true);
+                    toast.info("Toque no preço de qualquer item para propor outro valor");
+                    // scroll suave para a primeira seção de itens
+                    setTimeout(() => {
+                      document.querySelector("main section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }, 50);
+                  }}
+                  variant="outline"
+                  className="flex-1 min-h-[48px] gap-1.5 border-primary/40 text-primary hover:bg-primary/5 text-sm font-semibold px-3"
+                >
+                  <MessageSquareMore className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Solicitar alterações</span>
+                </Button>
+              </>
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-3 text-[11px] flex-wrap">
+          {/* Recusar isolado */}
+          <div className="flex justify-center">
             <button
-              onClick={() => { setOfertaTotalValor(ofertaTotal ? String(ofertaTotal) : ""); setOfertaTotalAberta(true); }}
-              className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium"
+              onClick={() => setRecusarOpen(true)}
+              className="min-h-[44px] px-4 text-sm text-muted-foreground hover:text-destructive underline underline-offset-4"
             >
-              <HandCoins className="h-3 w-3" />Propor valor total
-            </button>
-            <span className="text-border">·</span>
-            <button onClick={() => setSugerirOpen(true)} className="text-muted-foreground hover:text-foreground underline underline-offset-2">
-              Sugerir alterações
-            </button>
-            <span className="text-border">·</span>
-            <button onClick={() => setRecusarOpen(true)} className="text-muted-foreground hover:text-destructive underline underline-offset-2">
-              Recusar
+              Recusar proposta
             </button>
           </div>
         </div>
