@@ -549,26 +549,12 @@ export default function CatalogoVendedor() {
                 const qty = getQty(p.id, p.brandSlug);
                 const cond = sessionConditionFor(p.brandSlug);
                 const precoFinal = cond?.desconto ? p.price * (1 - cond.desconto / 100) : null;
-                const pol = getPolitica(p.brandSlug);
-                const conditionHint = !cond && pol ? (
-                  <ConditionPopover
-                    slug={p.brandSlug} pol={pol} subtotalBruto={0}
-                    degrauIdx={degrauByBrand[p.brandSlug] ?? Math.min(2, pol.degraus.length - 1)}
-                    prazo={prazoByBrand[p.brandSlug] ?? pol.prazoMedio}
-                    onChangeDegrau={(i) => updateDegrau(p.brandSlug, i)}
-                    onChangePrazo={(pr) => updatePrazo(p.brandSlug, pr)}
-                    trigger={
-                      <button className="text-[10px] text-primary hover:underline inline-flex items-center gap-1">
-                        <Pencil className="h-2.5 w-2.5" /> definir condição {p.brandName}
-                      </button>
-                    }
-                  />
-                ) : null;
+                const semCondicao = !cond && !!getPolitica(p.brandSlug);
                 return (
                   <ProductCard key={p.id} p={p} qty={qty}
                     onAdd={() => setQty(p, 1)} onInc={() => setQty(p, qty + 1)} onDec={() => setQty(p, qty - 1)}
                     onAddWithPrice={(v) => { setQty(p, 1); setPrecoNegociado(p.brandSlug, p.id, v); }}
-                    precoFinal={precoFinal} conditionHint={conditionHint}
+                    precoFinal={precoFinal} semCondicao={semCondicao}
                   />
                 );
               })}
