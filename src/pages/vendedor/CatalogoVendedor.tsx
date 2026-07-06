@@ -3,8 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   Search, SlidersHorizontal, ShoppingCart, X, Plus, Minus, Lock,
   ChevronDown, ChevronUp, RotateCw, MessageSquare, FileText, Check, Package,
-  Pencil, AlertTriangle,
+  Pencil, AlertTriangle, Eye, EyeOff,
 } from "lucide-react";
+import { usePresentationMode } from "@/hooks/usePresentationMode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -97,6 +98,22 @@ export default function CatalogoVendedor() {
   const [prazoByBrand, setPrazoByBrand] = useState<PrazoByBrand>({});
   const [cartOpen, setCartOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // Modo apresentação (esconde comissão/margem na frente do cliente)
+  const { on: presentation, set: setPresentation, toggle: togglePresentation } = usePresentationMode();
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      // Atalho: Shift+P (evita conflito ao digitar). Ignora inputs/textareas.
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.shiftKey && (e.key === "P" || e.key === "p")) {
+        e.preventDefault();
+        togglePresentation();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [togglePresentation]);
 
   // Perfil do cliente vira chip auto-diferenciado
   const perfilChip = cliente?.interessePrincipal?.split(" ")[1] || cliente?.nicho;
@@ -321,9 +338,9 @@ export default function CatalogoVendedor() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="min-h-[calc(100vh-4rem)] bg-background">
+      <div className={`min-h-[calc(100vh-4rem)] bg-background ${presentation ? "ring-2 ring-primary/40 ring-offset-0" : ""}`}>
         {/* TOPO */}
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
+        <div className={`sticky top-0 z-20 bg-background/95 backdrop-blur border-b ${presentation ? "border-t-2 border-t-primary" : ""}`}>
           <div className="px-4 md:px-6 py-3 flex flex-col md:flex-row gap-2 md:gap-3 md:items-center">
             {/* Cliente selector */}
             <ClienteSelector cliente={cliente} clienteId={clienteId} onChange={setClienteId} />
@@ -354,7 +371,32 @@ export default function CatalogoVendedor() {
               <SlidersHorizontal className="h-4 w-4" />
               Filtrar {activeFilterCount > 0 && <Badge variant="secondary" className="ml-1">{activeFilterCount}</Badge>}
             </Button>
+            {/* Modo apresentação */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={presentation ? "default" : "outline"}
+                  onClick={togglePresentation}
+                  className="h-10 shrink-0 gap-2"
+                  aria-pressed={presentation}
+                >
+                  {presentation ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  <span className="hidden md:inline">{presentation ? "Apresentação" : "Apresentação"}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {presentation
+                  ? "Modo apresentação ATIVO — comissão e margem ocultas. Shift+P para sair."
+                  : "Modo apresentação (Shift+P) — esconde comissão e margem para mostrar ao cliente."}
+              </TooltipContent>
+            </Tooltip>
           </div>
+          {presentation && (
+            <div className="bg-primary text-primary-foreground text-[11px] font-semibold text-center py-0.5 flex items-center justify-center gap-1.5">
+              <Eye className="h-3 w-3" /> Modo apresentação ativo
+              <button onClick={togglePresentation} className="underline underline-offset-2 opacity-90 hover:opacity-100 ml-2">desligar</button>
+            </div>
+          )}
           {/* Chips */}
           {(chips.length > 0 || perfilChip) && (
             <div className="px-4 md:px-6 pb-3 flex flex-wrap gap-2 items-center">
@@ -384,6 +426,7 @@ export default function CatalogoVendedor() {
           prazoByBrand={prazoByBrand}
           cartByBrand={cartByBrand}
           allItems={allItems}
+          presentation={presentation}
           onChangeDegrau={updateDegrau}
           onChangePrazo={updatePrazo}
           onAddBrand={(slug) => {
@@ -460,7 +503,9 @@ export default function CatalogoVendedor() {
               <div className="flex-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
                 <span className="font-semibold">{totalItens} itens</span>
                 <span className="text-muted-foreground">Total <b className="text-foreground">{formatBRL(totalGeral)}</b></span>
-                <span className="text-muted-foreground">Sua comissão <b className="text-emerald-600">{formatBRL(comissaoTotal)}</b></span>
+                {!presentation && (
+                  <span className="text-muted-foreground">Sua comissão <b className="text-emerald-600">{formatBRL(comissaoTotal)}</b></span>
+                )}
               </div>
               <Button onClick={() => setCartOpen(true)}>Ver cesta</Button>
             </div>
@@ -490,6 +535,7 @@ export default function CatalogoVendedor() {
                 <BrandCockpit
                   key={g.slug}
                   group={g}
+                  presentation={presentation}
                   onChangeQty={(itemId, q) => {
                     const it = allItems.find((x) => x.id === itemId);
                     if (it) setQty(it, q);
@@ -511,10 +557,12 @@ export default function CatalogoVendedor() {
                       <span className="text-muted-foreground">Desconto médio ponderado</span>
                       <span>{descontoMedio.toFixed(1)}%</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sua comissão total</span>
-                      <span className="font-semibold text-emerald-600">{formatBRL(comissaoTotal)}</span>
-                    </div>
+                    {!presentation && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Sua comissão total</span>
+                        <span className="font-semibold text-emerald-600">{formatBRL(comissaoTotal)}</span>
+                      </div>
+                    )}
                     {/* Pendências por indústria */}
                     <div className="pt-1 border-t space-y-1">
                       <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Pendências por indústria</div>
@@ -585,7 +633,7 @@ export default function CatalogoVendedor() {
                 </div>
               )}
               <div className="text-muted-foreground text-xs">
-                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {okGroups.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0)} itens · {formatBRL(totalOk)} · comissão {formatBRL(comissaoOk)}
+                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {okGroups.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0)} itens · {formatBRL(totalOk)}{!presentation && ` · comissão ${formatBRL(comissaoOk)}`}
               </div>
             </div>
             <SheetFooter className="flex-row gap-2">
@@ -782,8 +830,9 @@ function CheckRow({ label, checked, onChange }: { label: string; checked: boolea
 }
 
 // ---------- Brand Cockpit ----------
-function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
+function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChangePrazo }: {
   group: ReturnType<any>;
+  presentation?: boolean;
   onChangeQty: (itemId: string, q: number) => void;
   onChangeDegrau: (idx: number) => void;
   onChangePrazo: (p: number) => void;
@@ -800,15 +849,17 @@ function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
       <div className="bg-muted/50 px-4 py-2 flex items-center justify-between">
         <div>
           <div className="font-semibold capitalize">{g.slug}</div>
-          <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && " · POLÍTICA VENCIDA"}</div>
+          <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && !presentation && " · POLÍTICA VENCIDA"}</div>
         </div>
-        <div className="text-right">
-          <div className="text-xs text-muted-foreground">Sua comissão</div>
-          <div className="font-semibold text-emerald-600">{formatBRL(g.comissaoRS)}</div>
-        </div>
+        {!presentation && (
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">Sua comissão</div>
+            <div className="font-semibold text-emerald-600">{formatBRL(g.comissaoRS)}</div>
+          </div>
+        )}
       </div>
 
-      {!pol.ativa && (
+      {!pol.ativa && !presentation && (
         <div className="bg-destructive/10 text-destructive text-xs px-4 py-2">
           Política vencida — simulação bloqueada. Solicite renovação para operar esta indústria.
         </div>
@@ -819,8 +870,12 @@ function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-muted-foreground">Condição:</span>
           <b>{g.desconto}% desc</b>
-          <span className="text-muted-foreground">·</span>
-          <b className="text-emerald-600">{g.comissaoPct.toFixed(1)}% com</b>
+          {!presentation && (
+            <>
+              <span className="text-muted-foreground">·</span>
+              <b className="text-emerald-600">{g.comissaoPct.toFixed(1)}% com</b>
+            </>
+          )}
           <span className="text-muted-foreground">·</span>
           <b>{g.prazo}d</b>
         </div>
@@ -830,6 +885,7 @@ function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
           subtotalBruto={g.subtotalBruto}
           degrauIdx={g.degrauIdx}
           prazo={g.prazo}
+          presentation={presentation}
           onChangeDegrau={onChangeDegrau}
           onChangePrazo={onChangePrazo}
           trigger={
@@ -886,13 +942,14 @@ function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
 
 // ---------- Condition Popover (per brand) ----------
 function ConditionPopover({
-  slug, pol, subtotalBruto, degrauIdx, prazo, onChangeDegrau, onChangePrazo, trigger,
+  slug, pol, subtotalBruto, degrauIdx, prazo, presentation, onChangeDegrau, onChangePrazo, trigger,
 }: {
   slug: string;
   pol: PoliticaIndustria;
   subtotalBruto: number;
   degrauIdx: number;
   prazo: number;
+  presentation?: boolean;
   onChangeDegrau: (idx: number) => void;
   onChangePrazo: (p: number) => void;
   trigger: React.ReactNode;
@@ -903,10 +960,10 @@ function ConditionPopover({
       <PopoverContent align="end" className="w-[340px] p-3 space-y-3">
         <div>
           <div className="text-xs font-semibold capitalize">{slug}</div>
-          <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && " · POLÍTICA VENCIDA"}</div>
+          <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && !presentation && " · POLÍTICA VENCIDA"}</div>
         </div>
         <div>
-          <div className="text-xs font-medium mb-1.5">Degrau desconto ↔ comissão</div>
+          <div className="text-xs font-medium mb-1.5">{presentation ? "Desconto" : "Degrau desconto ↔ comissão"}</div>
           <div className="grid grid-cols-3 gap-1.5">
             {pol.degraus.map((d, i) => {
               const liq = subtotalBruto * (1 - d.desconto / 100);
@@ -924,7 +981,7 @@ function ConditionPopover({
                       } ${!pol.ativa ? "opacity-40 cursor-not-allowed" : ""}`}
                     >
                       <div className="font-semibold">{d.desconto}%</div>
-                      <div className="text-[10px] opacity-80">com {d.comissao}%</div>
+                      {!presentation && <div className="text-[10px] opacity-80">com {d.comissao}%</div>}
                       {locked && <Lock className="h-2.5 w-2.5 inline mt-0.5" />}
                     </button>
                   </TooltipTrigger>
@@ -946,18 +1003,21 @@ function ConditionPopover({
               {pol.prazos.map((p) => <SelectItem key={p} value={String(p)}>{p} dias{p === pol.prazoMedio ? " (médio)" : ""}</SelectItem>)}
             </SelectContent>
           </Select>
-          <div className="text-[10px] text-muted-foreground mt-1">
-            +{pol.bonusComissaoPor15Dias}% de comissão a cada 15d abaixo do prazo médio ({pol.prazoMedio}d).
-          </div>
+          {!presentation && (
+            <div className="text-[10px] text-muted-foreground mt-1">
+              +{pol.bonusComissaoPor15Dias}% de comissão a cada 15d abaixo do prazo médio ({pol.prazoMedio}d).
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>
   );
 }
 
+
 // ---------- Session Condition Bar ----------
 function SessionConditionBar({
-  slugs, degrauByBrand, prazoByBrand, cartByBrand, allItems,
+  slugs, degrauByBrand, prazoByBrand, cartByBrand, allItems, presentation,
   onChangeDegrau, onChangePrazo, onAddBrand,
 }: {
   slugs: string[];
@@ -965,6 +1025,7 @@ function SessionConditionBar({
   prazoByBrand: Record<string, number>;
   cartByBrand: Record<string, Array<{ itemId: string; qty: number }>>;
   allItems: CatalogItem[];
+  presentation?: boolean;
   onChangeDegrau: (slug: string, idx: number) => void;
   onChangePrazo: (slug: string, p: number) => void;
   onAddBrand: (slug: string) => void;
@@ -998,6 +1059,7 @@ function SessionConditionBar({
               subtotalBruto={subtotalBruto}
               degrauIdx={idx}
               prazo={prazo}
+              presentation={presentation}
               onChangeDegrau={(i) => onChangeDegrau(slug, i)}
               onChangePrazo={(p) => onChangePrazo(slug, p)}
               trigger={
@@ -1011,8 +1073,12 @@ function SessionConditionBar({
                   <b className="capitalize">{slug}</b>
                   <span className="text-muted-foreground">·</span>
                   <span>{degrau?.desconto ?? 0}% desc</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="text-emerald-600 font-semibold">{comPct.toFixed(1)}% com</span>
+                  {!presentation && (
+                    <>
+                      <span className="text-muted-foreground">·</span>
+                      <span className="text-emerald-600 font-semibold">{comPct.toFixed(1)}% com</span>
+                    </>
+                  )}
                   <span className="text-muted-foreground">·</span>
                   <span>{prazo}d</span>
                   {abaixoMin && <AlertTriangle className="h-3 w-3 text-amber-600" />}
