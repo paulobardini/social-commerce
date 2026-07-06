@@ -21,7 +21,7 @@ const COLUNAS: { key: OrcEtapa; label: string; recolhida?: boolean; accent?: str
   { key: "rascunho", label: "Rascunho" },
   { key: "aguardando_lojista", label: "Aguardando lojista" },
   { key: "em_revisao", label: "Em revisão" },
-  { key: "aprovado", label: "Aprovado" },
+  
   { key: "analise_comercial", label: "Análise comercial" },
   { key: "virou_pedido", label: "Virou pedido", accent: "bg-emerald-500/10 border-emerald-500/30" },
   { key: "recusado", label: "Recusado", recolhida: true },
