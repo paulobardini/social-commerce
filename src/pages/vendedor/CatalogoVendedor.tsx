@@ -879,14 +879,20 @@ export default function CatalogoVendedor() {
 }
 
 // ---------- Cliente Selector ----------
-function ClienteSelector({ cliente, clienteId, onChange }: { cliente: any; clienteId: string | null; onChange: (id: string | null) => void }) {
-  const [open, setOpen] = useState(false);
+function ClienteSelector({ cliente, clienteId, onChange, open, onOpenChange }: {
+  cliente: any; clienteId: string | null; onChange: (id: string | null) => void;
+  open?: boolean; onOpenChange?: (o: boolean) => void;
+}) {
+  const [inner, setInner] = useState(false);
+  const isOpen = open ?? inner;
+  const setOpen = onOpenChange ?? setInner;
+  const missing = !cliente;
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="min-w-[220px] max-w-[280px] h-10 px-3 rounded-md border bg-card text-left text-sm hover:border-primary/50 transition flex items-center gap-2">
+        <button className={`min-w-[220px] max-w-[280px] h-10 px-3 rounded-md border bg-card text-left text-sm hover:border-primary/50 transition flex items-center gap-2 ${missing ? "border-amber-500/60 bg-amber-500/5" : ""}`}>
           <span className="text-xs text-muted-foreground shrink-0">Montando para:</span>
-          <span className="truncate font-medium">{cliente?.nomeFantasia || "Sem cliente"}</span>
+          <span className={`truncate font-medium ${missing ? "text-amber-700" : ""}`}>{cliente?.nomeFantasia || "Sem cliente"}</span>
           <ChevronDown className="h-3.5 w-3.5 ml-auto text-muted-foreground shrink-0" />
         </button>
       </PopoverTrigger>
@@ -909,6 +915,7 @@ function ClienteSelector({ cliente, clienteId, onChange }: { cliente: any; clien
                 </CommandItem>
               ))}
             </CommandGroup>
+
           </CommandList>
         </Command>
       </PopoverContent>
