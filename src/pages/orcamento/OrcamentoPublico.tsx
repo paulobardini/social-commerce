@@ -14,7 +14,7 @@ import {
 import {
   MessageCircle, ChevronDown, ChevronUp, Plus, Minus, CheckCircle2,
   Clock, Truck, Percent, CalendarClock, ZoomIn, ShieldCheck, X, Info,
-  Search, Undo2, Send, HandCoins, Sparkles, Tag,
+  Search, Undo2, Send, HandCoins, Sparkles, Pencil, Eye, MessageSquareMore,
 } from "lucide-react";
 import { mockOrcamentos, mockCatalogoProdutos, type Orcamento, type OrcamentoProduto } from "@/data/mockVendedor";
 import { toast } from "sonner";
