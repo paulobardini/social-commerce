@@ -728,8 +728,22 @@ export default function CatalogoVendedor() {
                       )}
                     </Tooltip>
                   </div>
-                  {!canGenerate && (
-                    <div className="text-xs text-destructive w-full">Todas as indústrias estão em violação — ajuste degraus, preços ou remova itens.</div>
+
+                  {/* Fora da política → pedido de acordo comercial ao supervisor */}
+                  {(blockedGroups.length > 0 || !canGenerate) && (
+                    <div className="w-full rounded-md border border-primary/30 bg-primary/5 p-3 flex items-start gap-3">
+                      <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="text-xs">
+                          <b>Fora da política</b> em {blockedGroups.length} indústria{blockedGroups.length > 1 ? "s" : ""} ({blockedGroups.map((g) => g.slug).join(", ")}).
+                          Peça um <b>acordo comercial</b> ao supervisor para liberar a exceção.
+                        </div>
+                        <Button size="sm" variant="secondary" className="gap-2 w-full sm:w-auto" onClick={() => setAcordoOpen(true)} disabled={!cliente}>
+                          <Send className="h-3.5 w-3.5" />
+                          Enviar pedido de acordo comercial
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </>
               )}
