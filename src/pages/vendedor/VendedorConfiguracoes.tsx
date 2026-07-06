@@ -24,6 +24,7 @@ export default function VendedorConfiguracoes() {
     { icon: Zap, title: "Automações de followup", desc: "Crie sequências de tarefas disparadas pelas etapas do funil", action: () => navigate("/vendedor/configuracoes/automacoes"), btnLabel: "Configurar" },
     { icon: Target, title: "Metas", desc: "Defina sua meta mensal de vendas exibida no Painel", action: () => setShowMeta(true), btnLabel: "Configurar" },
     { icon: MessageSquare, title: "Templates de mensagem", desc: "Modelos rápidos com variáveis para usar no chat do WhatsApp", action: () => navigate("/vendedor/configuracoes/templates"), btnLabel: "Gerenciar" },
+    { icon: FileText, title: "Políticas comerciais", desc: "Degraus, prazos, mínimos e regras de negociação por indústria", action: () => navigate("/vendedor/configuracoes/politicas"), btnLabel: "Gerenciar" },
     { icon: Bell, title: "Notificações", desc: "Gerencie alertas e lembretes do sistema", action: undefined, btnLabel: "Em breve", disabled: true },
     { icon: User, title: "Perfil do vendedor", desc: "Edite suas informações e preferências", action: undefined, btnLabel: "Em breve", disabled: true },
   ];
