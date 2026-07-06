@@ -418,7 +418,7 @@ export default function CatalogoVendedor() {
         <div className={`sticky top-0 z-20 bg-background/95 backdrop-blur border-b ${presentation ? "border-t-2 border-t-primary" : ""}`}>
           {/* LINHA 1: cliente · busca(QR) · view · order · filtrar · apresentação · ⋯ */}
           <div className="px-4 md:px-6 py-3 flex flex-col md:flex-row gap-2 md:gap-3 md:items-center">
-            <ClienteSelector cliente={cliente} clienteId={clienteId} onChange={setClienteId} />
+            <ClienteSelector cliente={cliente} clienteId={clienteId} onChange={setClienteId} open={clientePickerOpen} onOpenChange={setClientePickerOpen} />
             <div className="relative flex-1 md:mx-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -464,19 +464,13 @@ export default function CatalogoVendedor() {
               <SlidersHorizontal className="h-4 w-4" />
               Filtrar {activeFilterCount > 0 && <Badge variant="secondary" className="ml-1">{activeFilterCount}</Badge>}
             </Button>
-            <Button
-              variant="outline"
-              onClick={onAddAllClick}
-              disabled={filtered.length === 0}
-              className="h-10 shrink-0 gap-2"
-            >
-              <Plus className="h-4 w-4" /> Adicionar todos{filtered.length > 0 ? ` (${filtered.length})` : ""}
-            </Button>
             <CatalogSecondaryMenu
               activeBrandSlugs={activeBrandSlugs}
               onAddGeneric={addGenericItem}
               presentation={presentation}
               onTogglePresentation={togglePresentation}
+              onAddAll={onAddAllClick}
+              addAllCount={filtered.length}
             />
           </div>
           {presentation && (
