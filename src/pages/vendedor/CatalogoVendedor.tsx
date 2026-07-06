@@ -633,8 +633,8 @@ function ClienteSelector({ cliente, clienteId, onChange }: { cliente: any; clien
 }
 
 // ---------- Product Card ----------
-function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal }: {
-  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; precoFinal: number | null;
+function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal, conditionHint }: {
+  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; precoFinal: number | null; conditionHint?: React.ReactNode;
 }) {
   return (
     <div className="group relative rounded-lg overflow-hidden bg-card border hover:shadow-md transition">
@@ -669,6 +669,7 @@ function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal }: {
           ) : null}
           {precoFinal ? <span className="text-emerald-600">{formatBRL(precoFinal)}</span> : formatBRL(p.price)}
         </div>
+        {conditionHint && <div className="pt-0.5">{conditionHint}</div>}
       </div>
     </div>
   );
