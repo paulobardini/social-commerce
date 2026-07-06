@@ -535,6 +535,7 @@ export default function CatalogoVendedor() {
                 <BrandCockpit
                   key={g.slug}
                   group={g}
+                  presentation={presentation}
                   onChangeQty={(itemId, q) => {
                     const it = allItems.find((x) => x.id === itemId);
                     if (it) setQty(it, q);
