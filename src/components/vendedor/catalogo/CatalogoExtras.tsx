@@ -15,12 +15,14 @@ import { PoliticaViewModal } from "@/components/vendedor/politica/PoliticaModals
 import { toast } from "sonner";
 
 export function CatalogSecondaryMenu({
-  activeBrandSlugs, onAddGeneric, presentation, onTogglePresentation,
+  activeBrandSlugs, onAddGeneric, presentation, onTogglePresentation, onAddAll, addAllCount,
 }: {
   activeBrandSlugs: string[];
   onAddGeneric: (item: GenericItem) => void;
   presentation?: boolean;
   onTogglePresentation?: () => void;
+  onAddAll?: () => void;
+  addAllCount?: number;
 }) {
   const [genOpen, setGenOpen] = useState(false);
   const [matOpen, setMatOpen] = useState(false);
