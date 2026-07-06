@@ -1198,7 +1198,7 @@ function ConditionPopover({
 }
 
 // ---------- Session Condition Bar ----------
-function SessionConditionBar({
+function SessionConditionChips({
   slugs, degrauByBrand, prazoByBrand, cartByBrand, allItems, presentation,
   onChangeDegrau, onChangePrazo,
 }: {
