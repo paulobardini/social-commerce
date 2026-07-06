@@ -1,5 +1,30 @@
 // Mock data for the Vendedor (Seller) module
 
+export interface OrcamentoProduto {
+  id: string;
+  ref: string;
+  nome: string;
+  marca: string;
+  image: string;
+  categoria: string;
+  genero: string;
+  preco: number;
+  pecas: number;
+  tamanhos: string[];
+  grade: "Fechada" | "Aberta";
+  valorTotal: number;
+  quantidadeGrades: number;
+}
+
+export interface ClienteCarteira {
+  id: string;
+  nome: string;
+  documento: string;
+  cidade: string;
+  tipo: "Lojista" | "Atacadista" | "Representante";
+}
+
+
 export type OrcEtapa =
   | "rascunho"
   | "aguardando_lojista"
