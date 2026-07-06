@@ -515,20 +515,22 @@ export default function CatalogoVendedor() {
                       <span className="text-muted-foreground">Sua comissão total</span>
                       <span className="font-semibold text-emerald-600">{formatBRL(comissaoTotal)}</span>
                     </div>
-                    {freteFaltando > 0 ? (
-                      <div>
-                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                          <span>Faltam {formatBRL(freteFaltando)} para frete CIF grátis</span>
-                          <span>{Math.round((totalGeral / 1800) * 100)}%</span>
+                    {/* Pendências por indústria */}
+                    <div className="pt-1 border-t space-y-1">
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Pendências por indústria</div>
+                      {groups.map((g) => (
+                        <div key={g.slug} className="flex items-start justify-between gap-2 text-xs">
+                          <span className="capitalize font-medium">{g.slug}</span>
+                          {g.pendencias.length === 0 ? (
+                            <span className="text-emerald-600 inline-flex items-center gap-1"><Check className="h-3 w-3" /> ok</span>
+                          ) : (
+                            <span className={g.bloqueado ? "text-destructive text-right" : "text-amber-600 text-right"}>
+                              {g.pendencias.map((p) => p.msg).join(" · ")}
+                            </span>
+                          )}
                         </div>
-                        <Progress value={Math.min(100, (totalGeral / 1800) * 100)} className="h-1.5" />
-                      </div>
-                    ) : (
-                      <div className="text-xs text-emerald-600 flex items-center gap-1"><Check className="h-3 w-3" /> Frete CIF grátis atingido</div>
-                    )}
-                    {totalGeral > 0 && totalGeral < 300 && (
-                      <div className="text-xs text-amber-600">⚠ Abaixo do mínimo de duplicata (R$ 300).</div>
-                    )}
+                      ))}
+                    </div>
                   </div>
                   <div className="flex gap-2 w-full">
                     <Button variant="outline" className="flex-1 gap-2" onClick={enviarPreviaWhats} disabled={!cliente}>
@@ -536,15 +538,21 @@ export default function CatalogoVendedor() {
                     </Button>
                     <Button
                       className="flex-1 gap-2"
-                      disabled={bloqueioGlobal}
+                      disabled={!canGenerate}
                       onClick={() => setConfirmOpen(true)}
                     >
-                      <FileText className="h-4 w-4" /> Gerar orçamento
+                      <FileText className="h-4 w-4" />
+                      {partial ? `Gerar só com ${okGroups.map((g) => g.slug).join(", ")}` : "Gerar orçamento"}
                     </Button>
                   </div>
-                  {bloqueioGlobal && (
+                  {partial && (
+                    <div className="text-xs text-amber-600 w-full">
+                      {blockedGroups.length} indústria(s) fora por violação — ajuste {blockedGroups.map((g) => g.slug).join(", ")} para incluir.
+                    </div>
+                  )}
+                  {!canGenerate && (
                     <div className="text-xs text-destructive w-full">
-                      Existem violações de política — ajuste degraus ou remova itens para prosseguir.
+                      Todas as indústrias estão em violação — ajuste degraus ou remova itens.
                     </div>
                   )}
                 </>
