@@ -139,9 +139,10 @@ export const mockOrcamentos: Orcamento[] = [
 
   { id: "13", nome: "auto", lojista: "CJD Pozza", marcas: ["BRANDILI"], dataCriacao: "25/06/2026", valorTotal: 8900.00, status: "aprovado",
     oportunidadeId: "op5", oportunidadeNome: "Pedido Alto Verão – CJD Pozza",
-    etapa: "aprovado", itensCount: 62, bola: "comercial", tempoEtapaDias: 1, limiteEtapaDias: 2,
+    etapa: "analise_comercial", itensCount: 62, bola: "comercial", tempoEtapaDias: 1, limiteEtapaDias: 2,
     linkEventoTipo: "aprovado_total", linkEventoLabel: "aprovado integralmente",
-    industriaValores: [{ marca: "BRANDILI", valor: 8900, aprovada: true }] },
+    industriaValores: [{ marca: "BRANDILI", valor: 8900, aprovada: true }],
+    motivoAnalise: "Dentro da política · aprovação direta", aprovacaoDireta: true },
 
   { id: "12", nome: "auto", lojista: "Alemão Vestuário", marcas: ["BRANDILI","MUNDI"], dataCriacao: "28/06/2026", valorTotal: 15420.30, status: "revisao_comercial",
     oportunidadeId: "op3", oportunidadeNome: "Reposição Verão – Alemão Vestuário",
