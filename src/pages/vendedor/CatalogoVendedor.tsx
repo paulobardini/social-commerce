@@ -964,8 +964,8 @@ function CheckRow({ label, checked, onChange }: { label: string; checked: boolea
 type Group = ReturnType<CatalogoVendedor_ComputeGroup>;
 type CatalogoVendedor_ComputeGroup = () => any;
 
-function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChangePrazo, onSetPrecoNegociado }: {
-  group: any; presentation?: boolean;
+function BrandCockpit({ group, presentation, showCommission, onChangeQty, onChangeDegrau, onChangePrazo, onSetPrecoNegociado }: {
+  group: any; presentation?: boolean; showCommission?: boolean;
   onChangeQty: (itemId: string, q: number) => void;
   onChangeDegrau: (idx: number) => void;
   onChangePrazo: (p: number) => void;
@@ -985,7 +985,7 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
           <div className="font-semibold capitalize">{g.slug}</div>
           <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && !presentation && " · POLÍTICA VENCIDA"}</div>
         </div>
-        {!presentation && (
+        {showCommission && (
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Sua comissão</div>
             <div className="font-semibold text-emerald-600">{formatBRL(g.comissaoRS)}</div>
@@ -1006,7 +1006,7 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
           <b>{g.prazo}d</b>
           {!presentation && enquadrado && !enquadradoNoAtual && (
             <span className="text-[11px] text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5">
-              → enquadrado {enquadrado.degrau.desconto}% · com {enquadrado.degrau.comissao}%
+              → enquadrado {enquadrado.degrau.desconto}%{showCommission ? ` · com ${enquadrado.degrau.comissao}%` : ""}
             </span>
           )}
         </div>
@@ -1036,7 +1036,9 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
           <div>
             {g.descontoMedio.toFixed(1)}%
             {!presentation && enquadrado && (
-              <span className="text-muted-foreground"> → degrau {enquadrado.degrau.desconto}% · com {enquadrado.degrau.comissao}%</span>
+              <span className="text-muted-foreground">
+                {" "}→ degrau {enquadrado.degrau.desconto}%{showCommission ? ` · com ${enquadrado.degrau.comissao}%` : ""}
+              </span>
             )}
           </div>
         </div>
@@ -1054,6 +1056,7 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
     </div>
   );
 }
+
 
 function CartLineRow({ l, pol, regra, presentation, onChangeQty, onSetPreco }: {
   l: any; pol: PoliticaIndustria; regra: "media" | "porItem" | "desabilitado"; presentation?: boolean;
