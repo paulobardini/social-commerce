@@ -156,6 +156,7 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/cadastro" element={<Cadastro />} />
                 <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/proposta/:id" element={<OrcamentoPublico />} />
 
                 {/* Consumer pages */}
                 <Route path="/" element={<LayoutRoute><Index /></LayoutRoute>} />
