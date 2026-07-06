@@ -29,6 +29,7 @@ import VendedorDashboard from "./pages/vendedor/VendedorDashboard";
 import VendedorOportunidades from "./pages/vendedor/VendedorOportunidades";
 import OportunidadeDetalhe from "./pages/vendedor/OportunidadeDetalhe";
 import VendedorConfiguracoes from "./pages/vendedor/VendedorConfiguracoes";
+import PoliticasComerciaisPage from "./pages/vendedor/PoliticasComerciaisPage";
 import ClientesListing from "./pages/vendedor/ClientesListing";
 import Cliente360Page from "./pages/vendedor/Cliente360Page";
 import Nextil360Hub from "./pages/vendedor/Nextil360Hub";
