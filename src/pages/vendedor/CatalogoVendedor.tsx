@@ -942,13 +942,14 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
 
 // ---------- Condition Popover (per brand) ----------
 function ConditionPopover({
-  slug, pol, subtotalBruto, degrauIdx, prazo, onChangeDegrau, onChangePrazo, trigger,
+  slug, pol, subtotalBruto, degrauIdx, prazo, presentation, onChangeDegrau, onChangePrazo, trigger,
 }: {
   slug: string;
   pol: PoliticaIndustria;
   subtotalBruto: number;
   degrauIdx: number;
   prazo: number;
+  presentation?: boolean;
   onChangeDegrau: (idx: number) => void;
   onChangePrazo: (p: number) => void;
   trigger: React.ReactNode;
@@ -959,10 +960,10 @@ function ConditionPopover({
       <PopoverContent align="end" className="w-[340px] p-3 space-y-3">
         <div>
           <div className="text-xs font-semibold capitalize">{slug}</div>
-          <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && " · POLÍTICA VENCIDA"}</div>
+          <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && !presentation && " · POLÍTICA VENCIDA"}</div>
         </div>
         <div>
-          <div className="text-xs font-medium mb-1.5">Degrau desconto ↔ comissão</div>
+          <div className="text-xs font-medium mb-1.5">{presentation ? "Desconto" : "Degrau desconto ↔ comissão"}</div>
           <div className="grid grid-cols-3 gap-1.5">
             {pol.degraus.map((d, i) => {
               const liq = subtotalBruto * (1 - d.desconto / 100);
@@ -980,7 +981,7 @@ function ConditionPopover({
                       } ${!pol.ativa ? "opacity-40 cursor-not-allowed" : ""}`}
                     >
                       <div className="font-semibold">{d.desconto}%</div>
-                      <div className="text-[10px] opacity-80">com {d.comissao}%</div>
+                      {!presentation && <div className="text-[10px] opacity-80">com {d.comissao}%</div>}
                       {locked && <Lock className="h-2.5 w-2.5 inline mt-0.5" />}
                     </button>
                   </TooltipTrigger>
@@ -1002,14 +1003,17 @@ function ConditionPopover({
               {pol.prazos.map((p) => <SelectItem key={p} value={String(p)}>{p} dias{p === pol.prazoMedio ? " (médio)" : ""}</SelectItem>)}
             </SelectContent>
           </Select>
-          <div className="text-[10px] text-muted-foreground mt-1">
-            +{pol.bonusComissaoPor15Dias}% de comissão a cada 15d abaixo do prazo médio ({pol.prazoMedio}d).
-          </div>
+          {!presentation && (
+            <div className="text-[10px] text-muted-foreground mt-1">
+              +{pol.bonusComissaoPor15Dias}% de comissão a cada 15d abaixo do prazo médio ({pol.prazoMedio}d).
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>
   );
 }
+
 
 // ---------- Session Condition Bar ----------
 function SessionConditionBar({
