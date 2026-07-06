@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { FunilConfigModal } from "@/components/vendedor/FunilConfigModal";
 import { MetasModal } from "@/components/vendedor/MetasModal";
 import { useCockpit } from "@/cockpit/contexts/CockpitContext";
-import { Settings, Kanban, Bell, User, Zap, Target, MessageSquare, Gauge, AlertTriangle } from "lucide-react";
+import { Settings, Kanban, Bell, User, Zap, Target, MessageSquare, Gauge, AlertTriangle, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
