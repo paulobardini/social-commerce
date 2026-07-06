@@ -101,6 +101,7 @@ export default function CatalogoVendedor() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [addAllConfirm, setAddAllConfirm] = useState(false);
+  const [showCommission, setShowCommission] = useState(false);
 
   const allItems = useMemo(() => [...baseItems, ...genericItems], [genericItems]);
 
@@ -408,6 +409,7 @@ export default function CatalogoVendedor() {
       <div className={`min-h-[calc(100vh-4rem)] bg-background ${presentation ? "ring-2 ring-primary/40 ring-offset-0" : ""}`}>
         {/* TOPO */}
         <div className={`sticky top-0 z-20 bg-background/95 backdrop-blur border-b ${presentation ? "border-t-2 border-t-primary" : ""}`}>
+          {/* LINHA 1: cliente · busca(QR) · view · order · filtrar · apresentação · ⋯ */}
           <div className="px-4 md:px-6 py-3 flex flex-col md:flex-row gap-2 md:gap-3 md:items-center">
             <ClienteSelector cliente={cliente} clienteId={clienteId} onChange={setClienteId} />
             <div className="relative flex-1 md:mx-2">
@@ -415,23 +417,35 @@ export default function CatalogoVendedor() {
               <Input
                 placeholder="Buscar produto, referência ou marca"
                 value={search} onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-10"
+                className="pl-9 pr-10 h-10"
               />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setQrOpen(true)}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label="Escanear QR"
+                  >
+                    <QrCode className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Escanear etiqueta (showroom)</TooltipContent>
+              </Tooltip>
             </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 md:h-10 md:w-10" onClick={() => setQrOpen(true)} aria-label="Escanear QR">
-                  <QrCode className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Escanear etiqueta (showroom)</TooltipContent>
-            </Tooltip>
-            <div className="hidden md:flex items-center border rounded-md h-10 shrink-0">
-              <button onClick={() => setViewMode("grid")} className={`h-full w-10 flex items-center justify-center ${viewMode === "grid" ? "bg-muted" : ""}`} aria-label="Grid"><LayoutGrid className="h-4 w-4" /></button>
-              <button onClick={() => setViewMode("list")} className={`h-full w-10 flex items-center justify-center ${viewMode === "list" ? "bg-muted" : ""}`} aria-label="Lista"><List className="h-4 w-4" /></button>
+            <div className="flex items-center border rounded-md h-10 shrink-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button onClick={() => setViewMode("grid")} className={`h-full w-9 flex items-center justify-center ${viewMode === "grid" ? "bg-muted" : ""}`} aria-label="Grid"><LayoutGrid className="h-4 w-4" /></button>
+                </TooltipTrigger><TooltipContent>Grade</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button onClick={() => setViewMode("list")} className={`h-full w-9 flex items-center justify-center ${viewMode === "list" ? "bg-muted" : ""}`} aria-label="Lista"><List className="h-4 w-4" /></button>
+                </TooltipTrigger><TooltipContent>Lista</TooltipContent>
+              </Tooltip>
             </div>
             <Select value={order} onValueChange={(v: any) => setOrder(v)}>
-              <SelectTrigger className="w-[160px] h-10 shrink-0"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[150px] h-10 shrink-0"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="az">A-Z</SelectItem>
                 <SelectItem value="menor">Menor preço</SelectItem>
@@ -445,14 +459,25 @@ export default function CatalogoVendedor() {
             </Button>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant={presentation ? "default" : "outline"} onClick={togglePresentation} className="h-10 shrink-0 gap-2" aria-pressed={presentation}>
+                <Button
+                  variant={presentation ? "default" : "outline"}
+                  size="icon"
+                  onClick={togglePresentation}
+                  className="h-10 w-10 shrink-0"
+                  aria-pressed={presentation}
+                  aria-label="Modo apresentação"
+                >
                   {presentation ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  <span className="hidden md:inline">Apresentação</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{presentation ? "Modo apresentação ATIVO (Shift+P)" : "Modo apresentação (Shift+P)"}</TooltipContent>
             </Tooltip>
-            <CatalogSecondaryMenu activeBrandSlugs={activeBrandSlugs} onAddGeneric={addGenericItem} />
+            <CatalogSecondaryMenu
+              activeBrandSlugs={activeBrandSlugs}
+              onAddGeneric={addGenericItem}
+              onAddAll={onAddAllClick}
+              addAllCount={filtered.length}
+            />
           </div>
           {presentation && (
             <div className="bg-primary text-primary-foreground text-[11px] font-semibold text-center py-0.5 flex items-center justify-center gap-1.5">
@@ -460,63 +485,64 @@ export default function CatalogoVendedor() {
               <button onClick={togglePresentation} className="underline underline-offset-2 opacity-90 hover:opacity-100 ml-2">desligar</button>
             </div>
           )}
-          {(chips.length > 0 || perfilChip || addedCount > 0) && (
-            <div className="px-4 md:px-6 pb-3 flex flex-wrap gap-2 items-center">
-              {perfilChip && (
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 gap-1">Perfil: {perfilChip}</Badge>
-              )}
-              {addedCount > 0 && (
-                <button
-                  onClick={() => setShowOnlyAdded((v) => !v)}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition inline-flex items-center gap-1 ${
-                    showOnlyAdded ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:border-primary/50"
-                  }`}
-                >
-                  <ShoppingCart className="h-3 w-3" /> Só adicionados ({addedCount})
-                </button>
-              )}
-              {chips.map((c) => (
-                <Badge key={`${c.kind}-${c.value}`} variant="secondary" className="gap-1 cursor-pointer" onClick={() => removeChip(c.kind as any, c.value)}>
-                  {c.label} <X className="h-3 w-3" />
-                </Badge>
-              ))}
-              {chips.length > 0 && (
-                <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">Limpar todos</button>
-              )}
-              {filtered.length > 0 && (
-                <button onClick={onAddAllClick} className="ml-auto text-xs text-primary hover:underline inline-flex items-center gap-1">
-                  <Plus className="h-3 w-3" /> Adicionar todos ({filtered.length})
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+          {/* LINHA 2: chips de contexto/condição em uma linha com scroll horizontal */}
+          <div className="px-4 md:px-6 pb-3 pt-1 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            {perfilChip && (
+              <Badge
+                variant="outline"
+                className="shrink-0 bg-primary/10 text-primary border-primary/30 gap-1 cursor-pointer"
+                onClick={() => { /* limpar perfil visual (não altera filtros) */ }}
+              >
+                Perfil: {perfilChip}
+              </Badge>
+            )}
+            {addedCount > 0 && (
+              <button
+                onClick={() => setShowOnlyAdded((v) => !v)}
+                className={`shrink-0 text-xs px-2.5 py-1 rounded-full border transition inline-flex items-center gap-1 ${
+                  showOnlyAdded ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:border-primary/50"
+                }`}
+              >
+                <ShoppingCart className="h-3 w-3" /> Só adicionados ({addedCount})
+              </button>
+            )}
+            {chips.map((c) => (
+              <Badge key={`${c.kind}-${c.value}`} variant="secondary" className="shrink-0 gap-1 cursor-pointer" onClick={() => removeChip(c.kind as any, c.value)}>
+                {c.label} <X className="h-3 w-3" />
+              </Badge>
+            ))}
+            {chips.length > 0 && (
+              <button onClick={clearAllFilters} className="shrink-0 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">Limpar</button>
+            )}
 
-        {/* Barra Condição da Sessão */}
-        <SessionConditionBar
-          slugs={activeBrandSlugs}
-          degrauByBrand={degrauByBrand} prazoByBrand={prazoByBrand}
-          cartByBrand={cartByBrand} allItems={allItems}
-          presentation={presentation}
-          onChangeDegrau={updateDegrau} onChangePrazo={updatePrazo}
-          onAddBrand={(slug) => {
-            setFilters((f) => f.marcas.includes(slug) ? f : { ...f, marcas: [...f.marcas, slug] });
-            ensureCondition(slug);
-          }}
-        />
+            {/* Chips de condição da sessão (mesma linha) */}
+            <SessionConditionChips
+              slugs={activeBrandSlugs}
+              degrauByBrand={degrauByBrand} prazoByBrand={prazoByBrand}
+              cartByBrand={cartByBrand} allItems={allItems}
+              presentation={presentation}
+              onChangeDegrau={updateDegrau} onChangePrazo={updatePrazo}
+              onAddBrand={(slug) => {
+                setFilters((f) => f.marcas.includes(slug) ? f : { ...f, marcas: [...f.marcas, slug] });
+                ensureCondition(slug);
+              }}
+            />
+
+            <div className="ml-auto text-xs text-muted-foreground shrink-0 pl-2">
+              {filtered.length} produtos{showOnlyAdded && " (só adicionados)"}
+            </div>
+          </div>
+        </div>
 
         {/* CENTRO */}
         <div className="px-4 md:px-6 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm text-muted-foreground">
-              {filtered.length} produtos {showOnlyAdded && "· mostrando só os adicionados"}
-            </div>
-            {cliente && (
+          {cliente && (
+            <div className="flex items-center justify-end mb-3">
               <Button variant="ghost" size="sm" onClick={recomprarUltimo} className="gap-2 text-primary">
                 <RotateCw className="h-4 w-4" /> Recomprar itens do último pedido
               </Button>
-            )}
-          </div>
+            </div>
+          )}
           {filtered.length === 0 ? (
             <div className="text-center py-20 border rounded-lg">
               <Package className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
@@ -587,7 +613,7 @@ export default function CatalogoVendedor() {
           )}
         </div>
 
-        {/* Rodapé cesta */}
+        {/* Rodapé cesta — comissão sempre oculta aqui */}
         {totalItens > 0 && !cartOpen && (
           <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background shadow-lg">
             <div className="max-w-full px-4 md:px-6 py-3 flex items-center gap-3">
@@ -595,9 +621,6 @@ export default function CatalogoVendedor() {
               <div className="flex-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
                 <span className="font-semibold">{totalItens} itens</span>
                 <span className="text-muted-foreground">Total <b className="text-foreground">{formatBRL(totalGeral)}</b></span>
-                {!presentation && (
-                  <span className="text-muted-foreground">Sua comissão <b className="text-emerald-600">{formatBRL(comissaoTotal)}</b></span>
-                )}
               </div>
               <Button onClick={() => setCartOpen(true)}>Ver cesta</Button>
             </div>
@@ -609,14 +632,31 @@ export default function CatalogoVendedor() {
         {/* Painel cesta */}
         <Sheet open={cartOpen} onOpenChange={setCartOpen}>
           <SheetContent side="right" className="w-full sm:max-w-2xl flex flex-col p-0">
-            <SheetHeader className="p-4 border-b shrink-0">
+            <SheetHeader className="p-4 border-b shrink-0 flex-row items-center justify-between space-y-0">
               <SheetTitle>Cesta · {cliente?.nomeFantasia || "Sem cliente"}</SheetTitle>
+              {!presentation && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setShowCommission((v) => !v)}
+                      className={`text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border transition ${
+                        showCommission ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700" : "text-muted-foreground hover:border-primary/40"
+                      }`}
+                      aria-pressed={showCommission}
+                    >
+                      {showCommission ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                      {showCommission ? "ocultar comissão" : "mostrar comissão"}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{showCommission ? "Comissão visível — clique para ocultar" : "Revelar comissões por grupo e total"}</TooltipContent>
+                </Tooltip>
+              )}
             </SheetHeader>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {groups.length === 0 && <div className="text-center text-muted-foreground py-10">Cesta vazia.</div>}
               {groups.map((g) => (
                 <BrandCockpit
-                  key={g.slug} group={g} presentation={presentation}
+                  key={g.slug} group={g} presentation={presentation} showCommission={showCommission && !presentation}
                   onChangeQty={(itemId, q) => { const it = allItems.find((x) => x.id === itemId); if (it) setQty(it, q); }}
                   onChangeDegrau={(idx) => updateDegrau(g.slug, idx)}
                   onChangePrazo={(p) => updatePrazo(g.slug, p)}
@@ -624,54 +664,71 @@ export default function CatalogoVendedor() {
                 />
               ))}
             </div>
-            <SheetFooter className="border-t p-4 shrink-0 flex-col gap-3">
+            <SheetFooter className="border-t p-4 shrink-0 flex-col gap-3 items-stretch">
               {groups.length > 0 && (
                 <>
-                  <div className="w-full space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total da cesta</span>
-                      <span className="font-semibold text-base">{formatBRL(totalGeral)}</span>
+                  {/* Linha 1: total + desconto médio */}
+                  <div className="w-full flex items-baseline justify-between gap-4">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Total da cesta</div>
+                      <div className="text-xl font-bold">{formatBRL(totalGeral)}</div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Desconto médio ponderado</span>
-                      <span>{descontoMedio.toFixed(1)}%</span>
+                    <div className="text-right">
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Desc. médio pond.</div>
+                      <div className="text-sm font-semibold">{descontoMedio.toFixed(1)}%</div>
                     </div>
-                    {!presentation && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Sua comissão total</span>
-                        <span className="font-semibold text-emerald-600">{formatBRL(comissaoTotal)}</span>
+                    {showCommission && !presentation && (
+                      <div className="text-right">
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Sua comissão</div>
+                        <div className="text-sm font-semibold text-emerald-600">{formatBRL(comissaoTotal)}</div>
                       </div>
                     )}
-                    <div className="pt-1 border-t space-y-1">
-                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Pendências por indústria</div>
-                      {groups.map((g) => (
-                        <div key={g.slug} className="flex items-start justify-between gap-2 text-xs">
-                          <span className="capitalize font-medium">{g.slug}</span>
-                          {g.pendencias.length === 0 ? (
-                            <span className="text-emerald-600 inline-flex items-center gap-1"><Check className="h-3 w-3" /> ok</span>
-                          ) : (
-                            <span className={g.bloqueado ? "text-destructive text-right" : "text-amber-600 text-right"}>
-                              {g.pendencias.map((p) => p.msg).join(" · ")}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
                   </div>
+
+                  {/* Linha 2: pendências por indústria, banners largura total */}
+                  <div className="space-y-1.5 w-full">
+                    {groups.map((g) => {
+                      if (g.pendencias.length === 0) return null;
+                      const isBlock = g.bloqueado;
+                      return (
+                        <div
+                          key={g.slug}
+                          className={`w-full text-xs rounded-md border px-3 py-2 flex items-start gap-2 ${
+                            isBlock
+                              ? "border-destructive/30 bg-destructive/10 text-destructive"
+                              : "border-amber-500/30 bg-amber-500/10 text-amber-700"
+                          }`}
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <b className="capitalize">{g.slug}</b>: {g.pendencias.map((p) => p.msg).join(" · ")}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Linha 3: CTAs lado a lado */}
                   <div className="flex gap-2 w-full">
                     <Button variant="outline" className="flex-1 gap-2" onClick={enviarPreviaWhats} disabled={!cliente}>
                       <MessageSquare className="h-4 w-4" /> Enviar prévia no Whats
                     </Button>
-                    <Button className="flex-1 gap-2" disabled={!canGenerate} onClick={() => setConfirmOpen(true)}>
-                      <FileText className="h-4 w-4" />
-                      {partial ? `Gerar só com ${okGroups.map((g) => g.slug).join(", ")}` : "Gerar orçamento"}
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex-1">
+                          <Button className="w-full gap-2" disabled={!canGenerate} onClick={() => setConfirmOpen(true)}>
+                            <FileText className="h-4 w-4" />
+                            {partial ? `Gerar só com ${okGroups.map((g) => g.slug).join(", ")}` : "Gerar orçamento"}
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+                      {partial && (
+                        <TooltipContent>
+                          {blockedGroups.length} indústria(s) fora — ajuste {blockedGroups.map((g) => g.slug).join(", ")} para incluir.
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
                   </div>
-                  {partial && (
-                    <div className="text-xs text-amber-600 w-full">
-                      {blockedGroups.length} indústria(s) fora — ajuste {blockedGroups.map((g) => g.slug).join(", ")} para incluir.
-                    </div>
-                  )}
                   {!canGenerate && (
                     <div className="text-xs text-destructive w-full">Todas as indústrias estão em violação — ajuste degraus, preços ou remova itens.</div>
                   )}
@@ -680,6 +737,7 @@ export default function CatalogoVendedor() {
             </SheetFooter>
           </SheetContent>
         </Sheet>
+
 
         {/* Confirmação orçamento */}
         <Sheet open={confirmOpen} onOpenChange={setConfirmOpen}>
@@ -906,8 +964,8 @@ function CheckRow({ label, checked, onChange }: { label: string; checked: boolea
 type Group = ReturnType<CatalogoVendedor_ComputeGroup>;
 type CatalogoVendedor_ComputeGroup = () => any;
 
-function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChangePrazo, onSetPrecoNegociado }: {
-  group: any; presentation?: boolean;
+function BrandCockpit({ group, presentation, showCommission, onChangeQty, onChangeDegrau, onChangePrazo, onSetPrecoNegociado }: {
+  group: any; presentation?: boolean; showCommission?: boolean;
   onChangeQty: (itemId: string, q: number) => void;
   onChangeDegrau: (idx: number) => void;
   onChangePrazo: (p: number) => void;
@@ -927,7 +985,7 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
           <div className="font-semibold capitalize">{g.slug}</div>
           <div className="text-[11px] text-muted-foreground">{pol.nomeTabela}{!pol.ativa && !presentation && " · POLÍTICA VENCIDA"}</div>
         </div>
-        {!presentation && (
+        {showCommission && (
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Sua comissão</div>
             <div className="font-semibold text-emerald-600">{formatBRL(g.comissaoRS)}</div>
@@ -948,7 +1006,7 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
           <b>{g.prazo}d</b>
           {!presentation && enquadrado && !enquadradoNoAtual && (
             <span className="text-[11px] text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5">
-              → enquadrado {enquadrado.degrau.desconto}% · com {enquadrado.degrau.comissao}%
+              → enquadrado {enquadrado.degrau.desconto}%{showCommission ? ` · com ${enquadrado.degrau.comissao}%` : ""}
             </span>
           )}
         </div>
@@ -978,7 +1036,9 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
           <div>
             {g.descontoMedio.toFixed(1)}%
             {!presentation && enquadrado && (
-              <span className="text-muted-foreground"> → degrau {enquadrado.degrau.desconto}% · com {enquadrado.degrau.comissao}%</span>
+              <span className="text-muted-foreground">
+                {" "}→ degrau {enquadrado.degrau.desconto}%{showCommission ? ` · com ${enquadrado.degrau.comissao}%` : ""}
+              </span>
             )}
           </div>
         </div>
@@ -996,6 +1056,7 @@ function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChan
     </div>
   );
 }
+
 
 function CartLineRow({ l, pol, regra, presentation, onChangeQty, onSetPreco }: {
   l: any; pol: PoliticaIndustria; regra: "media" | "porItem" | "desabilitado"; presentation?: boolean;
@@ -1140,7 +1201,7 @@ function ConditionPopover({
 }
 
 // ---------- Session Condition Bar ----------
-function SessionConditionBar({
+function SessionConditionChips({
   slugs, degrauByBrand, prazoByBrand, cartByBrand, allItems, presentation,
   onChangeDegrau, onChangePrazo,
 }: {
@@ -1155,55 +1216,44 @@ function SessionConditionBar({
   onAddBrand: (slug: string) => void;
 }) {
   return (
-    <div className="border-b bg-muted/30">
-      <div className="px-4 md:px-6 py-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">Condição da sessão:</span>
-        {slugs.length === 0 && (
-          <span className="text-xs text-muted-foreground italic">Nenhuma indústria ativa — filtre por marca ou adicione um produto.</span>
-        )}
-        {slugs.map((slug) => {
-          const pol = getPolitica(slug);
-          if (!pol) return null;
-          const idx = degrauByBrand[slug] ?? 0;
-          const degrau = pol.degraus[idx];
-          const prazo = prazoByBrand[slug] ?? pol.prazoMedio;
-          const bonus = Math.max(0, Math.floor((pol.prazoMedio - prazo) / 15)) * pol.bonusComissaoPor15Dias;
-          const comPct = (degrau?.comissao ?? 0) + bonus;
-          const subtotalBruto = (cartByBrand[slug] || []).reduce((s, l) => {
-            const it = allItems.find((x) => x.id === l.itemId);
-            return s + (it ? it.price * l.qty : 0);
-          }, 0);
-          const liq = subtotalBruto * (1 - (degrau?.desconto ?? 0) / 100);
-          const abaixoMin = !!(degrau?.minimoPedido && subtotalBruto > 0 && liq < degrau.minimoPedido);
-          return (
-            <ConditionPopover key={slug} slug={slug} pol={pol} subtotalBruto={subtotalBruto}
-              degrauIdx={idx} prazo={prazo} presentation={presentation}
-              onChangeDegrau={(i) => onChangeDegrau(slug, i)}
-              onChangePrazo={(p) => onChangePrazo(slug, p)}
-              trigger={
-                <button className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full border transition ${
-                  abaixoMin ? "border-amber-500/60 bg-amber-500/10 text-amber-700 hover:bg-amber-500/15"
-                            : "border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10"
-                }`}>
-                  <b className="capitalize">{slug}</b>
-                  <span className="text-muted-foreground">·</span>
-                  <span>{degrau?.desconto ?? 0}% desc</span>
-                  {!presentation && (
-                    <>
-                      <span className="text-muted-foreground">·</span>
-                      <span className="text-emerald-600 font-semibold">{comPct.toFixed(1)}% com</span>
-                    </>
-                  )}
-                  <span className="text-muted-foreground">·</span>
-                  <span>{prazo}d</span>
-                  {abaixoMin && <AlertTriangle className="h-3 w-3 text-amber-600" />}
-                  <Pencil className="h-3 w-3 opacity-60" />
-                </button>
-              }
-            />
-          );
-        })}
-      </div>
-    </div>
+    <>
+      {slugs.length === 0 && (
+        <span className="text-xs text-muted-foreground italic shrink-0">Nenhuma indústria ativa — filtre por marca ou adicione um produto.</span>
+      )}
+      {slugs.map((slug) => {
+        const pol = getPolitica(slug);
+        if (!pol) return null;
+        const idx = degrauByBrand[slug] ?? 0;
+        const degrau = pol.degraus[idx];
+        const prazo = prazoByBrand[slug] ?? pol.prazoMedio;
+        const subtotalBruto = (cartByBrand[slug] || []).reduce((s, l) => {
+          const it = allItems.find((x) => x.id === l.itemId);
+          return s + (it ? it.price * l.qty : 0);
+        }, 0);
+        const liq = subtotalBruto * (1 - (degrau?.desconto ?? 0) / 100);
+        const abaixoMin = !!(degrau?.minimoPedido && subtotalBruto > 0 && liq < degrau.minimoPedido);
+        return (
+          <ConditionPopover key={slug} slug={slug} pol={pol} subtotalBruto={subtotalBruto}
+            degrauIdx={idx} prazo={prazo} presentation={presentation}
+            onChangeDegrau={(i) => onChangeDegrau(slug, i)}
+            onChangePrazo={(p) => onChangePrazo(slug, p)}
+            trigger={
+              <button className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition ${
+                abaixoMin ? "border-amber-500/60 bg-amber-500/10 text-amber-700 hover:bg-amber-500/15"
+                          : "border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10"
+              }`}>
+                <b className="capitalize">{slug}</b>
+                <span>{degrau?.desconto ?? 0}%</span>
+                <span className="text-muted-foreground">·</span>
+                <span>{prazo}d</span>
+                {abaixoMin && <AlertTriangle className="h-3 w-3 text-amber-600" />}
+                <Pencil className="h-3 w-3 opacity-60" />
+              </button>
+            }
+          />
+        );
+      })}
+    </>
   );
 }
+
