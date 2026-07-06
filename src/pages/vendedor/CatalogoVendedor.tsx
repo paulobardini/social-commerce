@@ -1213,55 +1213,44 @@ function SessionConditionChips({
   onAddBrand: (slug: string) => void;
 }) {
   return (
-    <div className="border-b bg-muted/30">
-      <div className="px-4 md:px-6 py-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide shrink-0">Condição da sessão:</span>
-        {slugs.length === 0 && (
-          <span className="text-xs text-muted-foreground italic">Nenhuma indústria ativa — filtre por marca ou adicione um produto.</span>
-        )}
-        {slugs.map((slug) => {
-          const pol = getPolitica(slug);
-          if (!pol) return null;
-          const idx = degrauByBrand[slug] ?? 0;
-          const degrau = pol.degraus[idx];
-          const prazo = prazoByBrand[slug] ?? pol.prazoMedio;
-          const bonus = Math.max(0, Math.floor((pol.prazoMedio - prazo) / 15)) * pol.bonusComissaoPor15Dias;
-          const comPct = (degrau?.comissao ?? 0) + bonus;
-          const subtotalBruto = (cartByBrand[slug] || []).reduce((s, l) => {
-            const it = allItems.find((x) => x.id === l.itemId);
-            return s + (it ? it.price * l.qty : 0);
-          }, 0);
-          const liq = subtotalBruto * (1 - (degrau?.desconto ?? 0) / 100);
-          const abaixoMin = !!(degrau?.minimoPedido && subtotalBruto > 0 && liq < degrau.minimoPedido);
-          return (
-            <ConditionPopover key={slug} slug={slug} pol={pol} subtotalBruto={subtotalBruto}
-              degrauIdx={idx} prazo={prazo} presentation={presentation}
-              onChangeDegrau={(i) => onChangeDegrau(slug, i)}
-              onChangePrazo={(p) => onChangePrazo(slug, p)}
-              trigger={
-                <button className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full border transition ${
-                  abaixoMin ? "border-amber-500/60 bg-amber-500/10 text-amber-700 hover:bg-amber-500/15"
-                            : "border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10"
-                }`}>
-                  <b className="capitalize">{slug}</b>
-                  <span className="text-muted-foreground">·</span>
-                  <span>{degrau?.desconto ?? 0}% desc</span>
-                  {!presentation && (
-                    <>
-                      <span className="text-muted-foreground">·</span>
-                      <span className="text-emerald-600 font-semibold">{comPct.toFixed(1)}% com</span>
-                    </>
-                  )}
-                  <span className="text-muted-foreground">·</span>
-                  <span>{prazo}d</span>
-                  {abaixoMin && <AlertTriangle className="h-3 w-3 text-amber-600" />}
-                  <Pencil className="h-3 w-3 opacity-60" />
-                </button>
-              }
-            />
-          );
-        })}
-      </div>
-    </div>
+    <>
+      {slugs.length === 0 && (
+        <span className="text-xs text-muted-foreground italic shrink-0">Nenhuma indústria ativa — filtre por marca ou adicione um produto.</span>
+      )}
+      {slugs.map((slug) => {
+        const pol = getPolitica(slug);
+        if (!pol) return null;
+        const idx = degrauByBrand[slug] ?? 0;
+        const degrau = pol.degraus[idx];
+        const prazo = prazoByBrand[slug] ?? pol.prazoMedio;
+        const subtotalBruto = (cartByBrand[slug] || []).reduce((s, l) => {
+          const it = allItems.find((x) => x.id === l.itemId);
+          return s + (it ? it.price * l.qty : 0);
+        }, 0);
+        const liq = subtotalBruto * (1 - (degrau?.desconto ?? 0) / 100);
+        const abaixoMin = !!(degrau?.minimoPedido && subtotalBruto > 0 && liq < degrau.minimoPedido);
+        return (
+          <ConditionPopover key={slug} slug={slug} pol={pol} subtotalBruto={subtotalBruto}
+            degrauIdx={idx} prazo={prazo} presentation={presentation}
+            onChangeDegrau={(i) => onChangeDegrau(slug, i)}
+            onChangePrazo={(p) => onChangePrazo(slug, p)}
+            trigger={
+              <button className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition ${
+                abaixoMin ? "border-amber-500/60 bg-amber-500/10 text-amber-700 hover:bg-amber-500/15"
+                          : "border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10"
+              }`}>
+                <b className="capitalize">{slug}</b>
+                <span>{degrau?.desconto ?? 0}%</span>
+                <span className="text-muted-foreground">·</span>
+                <span>{prazo}d</span>
+                {abaixoMin && <AlertTriangle className="h-3 w-3 text-amber-600" />}
+                <Pencil className="h-3 w-3 opacity-60" />
+              </button>
+            }
+          />
+        );
+      })}
+    </>
   );
 }
+
