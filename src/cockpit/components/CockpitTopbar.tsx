@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
 
 const PERIODOS: PeriodKey[] = ["hoje", "7d", "30d", "90d", "trimestre", "semestre", "ano"];
 
-interface Props { title?: string; showRep?: boolean; }
+interface Props { title?: string; showRep?: boolean; showPeriod?: boolean; }
 
-export function CockpitTopbar({ title, showRep = false }: Props) {
+export function CockpitTopbar({ title, showRep = false, showPeriod = true }: Props) {
   const { period, setPeriod, comparar, setComparar, customRange, setCustomRange, repId, setRepId, seed } = useCockpit();
 
   return (
