@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   Search, SlidersHorizontal, ShoppingCart, X, Plus, Minus, Lock,
   ChevronDown, ChevronUp, RotateCw, MessageSquare, FileText, Check, Package,
+  Pencil, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
