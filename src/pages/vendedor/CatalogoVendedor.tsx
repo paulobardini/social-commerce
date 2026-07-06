@@ -555,10 +555,12 @@ export default function CatalogoVendedor() {
                       <span className="text-muted-foreground">Desconto médio ponderado</span>
                       <span>{descontoMedio.toFixed(1)}%</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sua comissão total</span>
-                      <span className="font-semibold text-emerald-600">{formatBRL(comissaoTotal)}</span>
-                    </div>
+                    {!presentation && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Sua comissão total</span>
+                        <span className="font-semibold text-emerald-600">{formatBRL(comissaoTotal)}</span>
+                      </div>
+                    )}
                     {/* Pendências por indústria */}
                     <div className="pt-1 border-t space-y-1">
                       <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Pendências por indústria</div>
