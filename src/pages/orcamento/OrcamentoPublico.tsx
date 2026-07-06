@@ -122,6 +122,9 @@ export default function OrcamentoPublico() {
   const [recusarOpen, setRecusarOpen] = useState(false);
   const [recusarMotivo, setRecusarMotivo] = useState<string | null>(null);
 
+  // Modo de edição (contraproposta ativa) — ativado por "Solicitar alterações"
+  const [edicaoMode, setEdicaoMode] = useState(false);
+
   useEffect(() => { window.scrollTo(0, 0); }, [id]);
 
   const marcas = useMemo(() => Array.from(new Set(itens.map(i => i.marca))), [itens]);
