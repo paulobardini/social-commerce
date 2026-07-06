@@ -101,6 +101,7 @@ export default function CatalogoVendedor() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const [addAllConfirm, setAddAllConfirm] = useState(false);
+  const [showCommission, setShowCommission] = useState(false);
 
   const allItems = useMemo(() => [...baseItems, ...genericItems], [genericItems]);
 
