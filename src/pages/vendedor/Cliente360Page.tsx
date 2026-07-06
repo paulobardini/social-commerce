@@ -276,10 +276,12 @@ export default function Cliente360Page() {
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs text-xs">{saudeCompleta.explicacao}</TooltipContent>
                       </Tooltip>
-                      <span className="inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full border border-border bg-card">
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: estagio.cor }} />
-                        {estagio.nome}
-                      </span>
+                      {estagio.nome.toLowerCase() !== saudeLabel[saudeCompleta.status].toLowerCase() && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: estagio.cor }} />
+                          Estágio: <span className="text-foreground font-medium">{estagio.nome}</span>
+                        </span>
+                      )}
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate">{cliente.razaoSocial} · {cliente.documento}</p>
                   </div>
