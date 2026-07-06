@@ -1354,9 +1354,6 @@ function SessionConditionChips({
 }) {
   return (
     <>
-      {slugs.length === 0 && (
-        <span className="text-xs text-muted-foreground italic shrink-0">Nenhuma indústria ativa — filtre por marca ou adicione um produto.</span>
-      )}
       {slugs.map((slug) => {
         const pol = getPolitica(slug);
         if (!pol) return null;
