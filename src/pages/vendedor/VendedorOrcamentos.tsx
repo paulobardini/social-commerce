@@ -60,7 +60,7 @@ function acaoContextual(o: Orcamento): { label: string; icon: React.ElementType;
   if (o.etapa === "aguardando_lojista" && o.linkEventoTipo === "visualizado")
     return { label: "Cobrar no Whats", icon: MessageCircle, kind: "cobrar" };
   if (o.etapa === "aguardando_lojista" && o.linkEventoTipo === "aprovado_parcial")
-    return { label: "Ver desdobramento", icon: GitBranch, kind: "desdobramento" };
+    return { label: "Renegociar no Whats", icon: MessageCircle, kind: "renegociar" };
   if (o.etapa === "em_revisao")
     return { label: "Ver alterações", icon: GitCompare, kind: "diff" };
   if (o.etapa === "virou_pedido" && o.pedidoNumero)
