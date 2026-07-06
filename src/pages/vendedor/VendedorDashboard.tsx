@@ -26,9 +26,10 @@ import { funilOportunidades, oportunidadesEstagnadas, ETAPAS_FUNIL, ETAPA_LABEL,
 import { serieMensal } from "@/cockpit/lib/series";
 import { STATUS_COLORS, fmtBRL, fmtBRLc, fmtNum, fmtPct, fmtDias, NX } from "@/cockpit/styles/tokens";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as ReTooltip, CartesianGrid, ReferenceLine } from "recharts";
-import { AlertTriangle, Flame, MessageCircle, ChevronDown, ChevronRight, Phone, ArrowRight, Search, CheckCircle2, Target, TrendingUp, Activity, Info, Sparkles, Calendar as CalIcon } from "lucide-react";
+import { AlertTriangle, Flame, MessageCircle, ChevronDown, ChevronRight, Phone, ArrowRight, Search, CheckCircle2, Target, TrendingUp, Activity, Info, Sparkles, Calendar as CalIcon, Plus, FileText, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
+import { useTarefas, type TarefaExt } from "@/contexts/TarefasContext";
 import type { Oportunidade } from "@/cockpit/data/seed";
 
 // ============ HELPERS ============
@@ -122,7 +123,7 @@ export default function VendedorDashboard() {
 
           {/* HOJE */}
           <TabsContent value="hoje" className="mt-0">
-            <FilaAcao fila={fila} seed={seed} repId={repIdEfetivo} />
+            <FilaAcao fila={fila} seed={seed} repId={repIdEfetivo} opsRep={opsRep} />
           </TabsContent>
 
           {/* MINHA CARTEIRA */}
@@ -259,87 +260,346 @@ function KpiWithTip({ label, value, icon, tip }: { label: string; value: string;
   );
 }
 
-// ============ FILA DE AÇÃO ============
-type FiltroFila = "todos" | "risco" | "paradas" | "cobertura";
+// ============ FILA UNIFICADA DE AÇÕES ============
+// Ancora "hoje" nas datas do mock de tarefas para que os buckets fiquem ricos no demo.
+const HOJE_ANCHOR = new Date(2026, 3, 14); // 14/04/2026
+const HOJE_ANCHOR_BR = "14/04/2026";
 
-function FilaAcao({ fila, seed, repId }: { fila: ReturnType<typeof filaAcaoVendedor>; seed: ReturnType<typeof useCockpit>["seed"]; repId: string }) {
-  const [openModal, setOpenModal] = useState<{ item: FilaItem } | null>(null);
+type Grupo = "agendado" | "urgente" | "sugerido";
+type Origem = "tarefa" | "tarefa_vencida" | "alerta_inativo" | "alerta_orcamento" | "alerta_cobertura" | "alerta_esfriando";
+
+interface ItemUnificado {
+  key: string;
+  grupo: Grupo;
+  origem: Origem;
+  tarefaId?: string;
+  contaId?: string;
+  oportunidadeId?: string;
+  cliente: string;
+  inicial: string;
+  motivo: string;
+  hora?: string;
+  metaLinha?: string;
+  saudeBadge?: { label: string; classe: string };
+  chipUrgencia?: { label: string; classe: string };
+  temOrcamento?: boolean;
+  ordem: number;
+}
+
+function parseBR(s: string): Date | null {
+  const m = s?.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+}
+function formatBRDate(d: Date) {
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
+function diasEntre(a: Date, b: Date) {
+  return Math.floor((a.getTime() - b.getTime()) / 86400000);
+}
+
+function chipParaDiasRest(dias: number) {
+  if (dias <= 2) return { label: `Faltam ${dias}d`, classe: "bg-rose-500 text-white" };
+  if (dias <= 9) return { label: `Faltam ${dias}d`, classe: "bg-amber-500 text-white" };
+  return { label: `Faltam ${dias}d`, classe: "bg-yellow-400 text-yellow-950" };
+}
+
+type FiltroFila = "todos" | "agendado" | "urgente" | "sugerido";
+
+function FilaAcao({ fila, seed, repId, opsRep }: {
+  fila: ReturnType<typeof filaAcaoVendedor>;
+  seed: ReturnType<typeof useCockpit>["seed"];
+  repId: string;
+  opsRep: Oportunidade[];
+}) {
+  const { tarefas, addTarefa, toggleConcluida } = useTarefas();
+  const [openReg, setOpenReg] = useState<{ item: ItemUnificado } | null>(null);
+  const [openQuick, setOpenQuick] = useState(false);
   const [filtro, setFiltro] = useState<FiltroFila>("todos");
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [dismissedAlerta, setDismissedAlerta] = useState<Set<string>>(new Set());
   const [contadorReg, setContadorReg] = useState(0);
 
-  const dismiss = (item: FilaItem) => {
-    setDismissed(prev => new Set(prev).add(item.contaId + item.motivo));
+  const conta = (id?: string) => id ? seed.contas.find(c => c.id === id) : undefined;
+
+  const ultimaCompra = (contaId?: string): string | undefined => {
+    if (!contaId) return undefined;
+    const p = seed.pedidos.filter(x => x.contaId === contaId).sort((a, b) => b.data.getTime() - a.data.getTime())[0];
+    return p ? formatBRDate(p.data) : undefined;
+  };
+
+  const buildMeta = (contaId?: string) => {
+    const c = conta(contaId);
+    if (!c) return undefined;
+    const parts: string[] = [];
+    const uc = ultimaCompra(contaId);
+    if (uc) parts.push(`última compra ${uc}`);
+    const p12 = seed.pedidos.filter(x => x.contaId === contaId).reduce((s, x) => s + x.valor, 0);
+    if (p12 > 0) parts.push(`${fmtBRLc(p12)} (12m)`);
+    if (c.nicho) parts.push(c.nicho);
+    return parts.join(" · ");
+  };
+
+  const saudeBadge = (contaId?: string): ItemUnificado["saudeBadge"] => {
+    const c = conta(contaId);
+    if (!c?.nicho) return undefined;
+    return { label: c.nicho, classe: "bg-slate-100 text-slate-600" };
+  };
+
+  const itens = useMemo<ItemUnificado[]>(() => {
+    const lista: ItemUnificado[] = [];
+
+    // ===== AGENDADO PARA HOJE =====
+    // tarefas do usuário logado (Paulo Bardini como mock) com vencimento === hoje anchor
+    const tarefasHoje = tarefas.filter(t =>
+      t.status === "pendente" && t.vencimento === HOJE_ANCHOR_BR
+    );
+    tarefasHoje
+      .sort((a, b) => (a.hora ?? "99").localeCompare(b.hora ?? "99"))
+      .forEach((t, idx) => {
+        lista.push({
+          key: `tar-${t.id}`,
+          grupo: "agendado",
+          origem: "tarefa",
+          tarefaId: t.id,
+          contaId: t.clienteId,
+          oportunidadeId: t.oportunidadeId,
+          cliente: t.clienteNome || "Cliente",
+          inicial: (t.clienteNome || "?").slice(0, 1).toUpperCase(),
+          motivo: `${t.titulo}${t.hora ? ` · ${t.hora}` : ""}`,
+          hora: t.hora,
+          metaLinha: t.oportunidadeNome ? `Oport.: ${t.oportunidadeNome}` : t.descricao,
+          temOrcamento: !!t.oportunidadeId,
+          ordem: idx,
+        });
+      });
+
+    // ===== URGENTE =====
+    // 1) Tarefas vencidas
+    const tarefasVencidas = tarefas.filter(t => {
+      if (t.status !== "pendente" && t.status !== "atrasada") return false;
+      const d = parseBR(t.vencimento);
+      return d ? d < HOJE_ANCHOR : false;
+    });
+    tarefasVencidas.forEach(t => {
+      const d = parseBR(t.vencimento)!;
+      const atraso = diasEntre(HOJE_ANCHOR, d);
+      lista.push({
+        key: `tarv-${t.id}`,
+        grupo: "urgente",
+        origem: "tarefa_vencida",
+        tarefaId: t.id,
+        contaId: t.clienteId,
+        oportunidadeId: t.oportunidadeId,
+        cliente: t.clienteNome || "Cliente",
+        inicial: (t.clienteNome || "?").slice(0, 1).toUpperCase(),
+        motivo: `${t.titulo} · vencida há ${atraso}d`,
+        metaLinha: t.oportunidadeNome ? `Oport.: ${t.oportunidadeNome}` : t.descricao,
+        chipUrgencia: { label: `Vencida ${atraso}d`, classe: "bg-rose-600 text-white" },
+        temOrcamento: !!t.oportunidadeId,
+        ordem: 1000 + atraso,
+      });
+    });
+
+    // 2) Inativos prestes a virar perdidos
+    fila.inativosEmRisco.forEach(i => {
+      const key = `ini-${i.contaId}`;
+      if (dismissedAlerta.has(key)) return;
+      lista.push({
+        key,
+        grupo: "urgente",
+        origem: "alerta_inativo",
+        contaId: i.contaId,
+        cliente: i.razao,
+        inicial: i.razao.slice(0, 1).toUpperCase(),
+        motivo: i.diasRestantes !== undefined
+          ? `Faltam ${i.diasRestantes}d para virar Perdido · ${i.motivo.toLowerCase()}`
+          : i.motivo,
+        metaLinha: buildMeta(i.contaId),
+        saudeBadge: saudeBadge(i.contaId),
+        chipUrgencia: i.diasRestantes !== undefined ? chipParaDiasRest(i.diasRestantes) : undefined,
+        ordem: 500 + (i.diasRestantes ?? 0),
+      });
+    });
+
+    // 3) Orçamentos aguardando (proposta_enviada / orcamento_aprovado parados > 3 dias)
+    const orcParados = opsRep
+      .filter(o => (o.etapa === "proposta_enviada" || o.etapa === "orcamento_aprovado"))
+      .map(o => ({ o, dias: diasEntre(HOJE_ANCHOR, o.ultimaMov) }))
+      .filter(x => x.dias > 3);
+    orcParados.forEach(({ o, dias }) => {
+      const key = `orc-${o.id}`;
+      if (dismissedAlerta.has(key)) return;
+      const c = seed.contas.find(x => x.id === o.contaId);
+      lista.push({
+        key,
+        grupo: "urgente",
+        origem: "alerta_orcamento",
+        contaId: o.contaId,
+        oportunidadeId: o.id,
+        cliente: c?.razao ?? "Cliente",
+        inicial: (c?.razao ?? "?").slice(0, 1).toUpperCase(),
+        motivo: `Orçamento ${fmtBRLc(o.valor)} parado há ${dias} dias`,
+        metaLinha: buildMeta(o.contaId),
+        saudeBadge: saudeBadge(o.contaId),
+        chipUrgencia: { label: `${dias}d parado`, classe: "bg-orange-500 text-white" },
+        temOrcamento: true,
+        ordem: 2000 - dias,
+      });
+    });
+
+    // ===== SUGERIDO =====
+    // 1) Ativos sem cobertura no período
+    fila.ativosSemCobertura.forEach(i => {
+      const key = `cob-${i.contaId}`;
+      if (dismissedAlerta.has(key)) return;
+      lista.push({
+        key,
+        grupo: "sugerido",
+        origem: "alerta_cobertura",
+        contaId: i.contaId,
+        cliente: i.razao,
+        inicial: i.razao.slice(0, 1).toUpperCase(),
+        motivo: i.motivo.replace("Sem contato", "Sem atendimento"),
+        metaLinha: buildMeta(i.contaId),
+        saudeBadge: saudeBadge(i.contaId),
+        ordem: -(i.valor ?? 0),
+      });
+    });
+
+    // 2) Oportunidades esfriando (novo_lead / em_negociacao paradas)
+    const esfriando = opsRep
+      .filter(o => (o.etapa === "novo_lead" || o.etapa === "em_negociacao"))
+      .map(o => ({ o, dias: diasEntre(HOJE_ANCHOR, o.ultimaMov) }))
+      .filter(x => x.dias >= 5);
+    esfriando.forEach(({ o, dias }) => {
+      const key = `esf-${o.id}`;
+      if (dismissedAlerta.has(key)) return;
+      const c = seed.contas.find(x => x.id === o.contaId);
+      lista.push({
+        key,
+        grupo: "sugerido",
+        origem: "alerta_esfriando",
+        contaId: o.contaId,
+        oportunidadeId: o.id,
+        cliente: c?.razao ?? "Cliente",
+        inicial: (c?.razao ?? "?").slice(0, 1).toUpperCase(),
+        motivo: `${ETAPA_LABEL[o.etapa]} sem movimento há ${dias} dias · ${fmtBRLc(o.valor)}`,
+        metaLinha: buildMeta(o.contaId),
+        saudeBadge: saudeBadge(o.contaId),
+        ordem: -(o.valor),
+      });
+    });
+
+    return lista;
+  }, [tarefas, fila, opsRep, seed, dismissedAlerta]);
+
+  const agendado = itens.filter(i => i.grupo === "agendado").sort((a, b) => a.ordem - b.ordem);
+  const urgente = itens.filter(i => i.grupo === "urgente").sort((a, b) => a.ordem - b.ordem);
+  const sugerido = itens.filter(i => i.grupo === "sugerido").sort((a, b) => a.ordem - b.ordem);
+  const total = agendado.length + urgente.length + sugerido.length;
+
+  // totais iniciais para mensagem de progresso quando o grupo fica vazio
+  const [iniciais] = useState({ agendado: 0, urgente: 0, sugerido: 0 });
+  if (iniciais.agendado === 0 && agendado.length > 0) iniciais.agendado = agendado.length;
+  if (iniciais.urgente === 0 && urgente.length > 0) iniciais.urgente = urgente.length;
+  if (iniciais.sugerido === 0 && sugerido.length > 0) iniciais.sugerido = sugerido.length;
+
+  const mostrar = (g: Grupo) => filtro === "todos" || filtro === g;
+
+  const registrarAcao = (item: ItemUnificado) => setOpenReg({ item });
+
+  const concluirItem = (item: ItemUnificado, proximaData?: string, nota?: string) => {
+    if (item.tarefaId) {
+      toggleConcluida(item.tarefaId);
+    } else {
+      setDismissedAlerta(prev => new Set(prev).add(item.key));
+    }
+    // Cria tarefa de follow-up se informado
+    if (proximaData) {
+      const [y, m, d] = proximaData.split("-");
+      const venc = `${d}/${m}/${y}`;
+      addTarefa({
+        titulo: `Follow-up · ${item.cliente}`,
+        descricao: nota || "Follow-up gerado a partir do painel do vendedor",
+        tipo: "follow_up",
+        clienteId: item.contaId,
+        clienteNome: item.cliente,
+        oportunidadeId: item.oportunidadeId,
+        prioridade: "media",
+        vencimento: venc,
+        responsavel: "Paulo Bardini",
+        status: "pendente",
+      });
+    }
     setContadorReg(c => c + 1);
   };
 
-  const filtrar = (items: FilaItem[]) => items.filter(i => !dismissed.has(i.contaId + i.motivo));
-
-  const inativos = filtrar(fila.inativosEmRisco);
-  const paradas = filtrar(fila.leadsQuentesParados);
-  const cobertura = filtrar(fila.ativosSemCobertura);
-  const totalReal = inativos.length + paradas.length + cobertura.length;
-
-  const mostrarBloco = (chave: FiltroFila) => filtro === "todos" || filtro === chave;
-
-  if (totalReal === 0) return <FilaZerada seed={seed} repId={repId} atendidos={contadorReg} />;
+  if (total === 0 && contadorReg === 0) {
+    return <FilaZerada seed={seed} repId={repId} atendidos={contadorReg} onNova={() => setOpenQuick(true)} openQuick={openQuick} setOpenQuick={setOpenQuick} />;
+  }
 
   return (
     <div className="space-y-4">
-      {/* Barra compacta de indicadores do dia — topo */}
+      {/* Barra compacta de indicadores do dia — topo (mobile) */}
       <div className="grid grid-cols-3 gap-2 md:hidden">
         <IndicadorMini label="Atendidos hoje" value={String(4 + contadorReg)} sub="meta: 8" />
         <IndicadorMini label="Positivados" value="2" sub="meta: 5" />
         <IndicadorMini label="Meta do dia" value="50%" sub="R$ 8,5k/17k" />
       </div>
 
-      {/* Banner-resumo com chips filtráveis */}
+      {/* Banner-resumo com chips filtráveis + botão + Ação */}
       <div className="rounded-xl p-5 text-white shadow-sm" style={{ background: "linear-gradient(135deg, #2D3A8C 0%, #363BB4 100%)" }}>
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Você tem {totalReal} {totalReal === 1 ? "cliente" : "clientes"} para atender hoje</h2>
-            <p className="text-xs opacity-80 mt-1">Priorizado por urgência. Clique nos chips para filtrar.</p>
+            <h2 className="text-lg font-semibold">Você tem {total} {total === 1 ? "ação" : "ações"} hoje</h2>
+            <p className="text-xs opacity-80 mt-1">Tarefas suas e alertas do sistema, na mesma fila. Clique nos chips para filtrar.</p>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <ChipFiltro ativo={filtro === "todos"} onClick={() => setFiltro("todos")} color="white" label={`Todos ${totalReal}`} />
-            <ChipFiltro ativo={filtro === "risco"} onClick={() => setFiltro("risco")} color="rose" label={`${inativos.length} em risco`} />
-            <ChipFiltro ativo={filtro === "paradas"} onClick={() => setFiltro("paradas")} color="amber" label={`${paradas.length} oport. paradas`} />
-            <ChipFiltro ativo={filtro === "cobertura"} onClick={() => setFiltro("cobertura")} color="slate" label={`${cobertura.length} sem cobertura`} />
+          <div className="flex gap-2 flex-wrap items-center">
+            <ChipFiltro ativo={filtro === "todos"} onClick={() => setFiltro("todos")} color="white" label={`Todos ${total}`} />
+            <ChipFiltro ativo={filtro === "agendado"} onClick={() => setFiltro("agendado")} color="sky" label={`${agendado.length} agendadas`} />
+            <ChipFiltro ativo={filtro === "urgente"} onClick={() => setFiltro("urgente")} color="rose" label={`${urgente.length} urgentes`} />
+            <ChipFiltro ativo={filtro === "sugerido"} onClick={() => setFiltro("sugerido")} color="amber" label={`${sugerido.length} sugeridas`} />
+            <Button size="sm" onClick={() => setOpenQuick(true)} className="h-8 bg-white text-[#2D3A8C] hover:bg-white/90 ml-1">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Ação
+            </Button>
           </div>
         </div>
       </div>
 
-      {mostrarBloco("risco") && (
+      {mostrar("agendado") && (
         <BlocoFila
-          titulo="Inativos prestes a virar perdidos"
-          descricao="Faltam ≤15 dias para virar Perdido — prioridade máxima"
+          grupo="agendado"
+          titulo="Agendado para hoje"
+          descricao="Tarefas com vencimento hoje — o que você planejou"
+          accent="sky"
+          icon={<Clock className="h-4 w-4" />}
+          itens={agendado}
+          totalInicial={iniciais.agendado}
+          onAcao={registrarAcao}
+        />
+      )}
+      {mostrar("urgente") && (
+        <BlocoFila
+          grupo="urgente"
+          titulo="Urgente"
+          descricao="Tarefas vencidas + risco de churn + orçamentos parados"
           accent="rose"
           icon={<AlertTriangle className="h-4 w-4" />}
-          itens={inativos}
-          defaultOpen
-          onAcao={(item) => setOpenModal({ item })}
+          itens={urgente}
+          totalInicial={iniciais.urgente}
+          onAcao={registrarAcao}
         />
       )}
-      {mostrarBloco("paradas") && (
+      {mostrar("sugerido") && (
         <BlocoFila
-          titulo="Orçamentos / oportunidades parados aguardando ação"
-          descricao="Sem movimento recente — perdendo temperatura"
+          grupo="sugerido"
+          titulo="Sugerido"
+          descricao="Sem cobertura, oportunidades esfriando e candidatos a reativação"
           accent="amber"
           icon={<Flame className="h-4 w-4" />}
-          itens={paradas}
-          defaultOpen
-          onAcao={(item) => setOpenModal({ item })}
-        />
-      )}
-      {mostrarBloco("cobertura") && (
-        <BlocoFila
-          titulo="Clientes sem cobertura no período"
-          descricao="Ativos que ainda não receberam atendimento neste período"
-          accent="slate"
-          icon={<MessageCircle className="h-4 w-4" />}
-          itens={cobertura}
-          defaultOpen={false}
-          onAcao={(item) => setOpenModal({ item })}
+          itens={sugerido}
+          totalInicial={iniciais.sugerido}
+          onAcao={registrarAcao}
         />
       )}
 
@@ -355,16 +615,31 @@ function FilaAcao({ fila, seed, repId }: { fila: ReturnType<typeof filaAcaoVende
       </div>
 
       <RegistrarModal
-        open={!!openModal}
-        item={openModal?.item}
-        onClose={() => setOpenModal(null)}
-        onSaved={(item) => { dismiss(item); setOpenModal(null); }}
+        open={!!openReg}
+        item={openReg?.item}
+        onClose={() => setOpenReg(null)}
+        onSaved={(item, proxData, nota) => { concluirItem(item, proxData, nota); setOpenReg(null); }}
+      />
+      <QuickAcaoModal
+        open={openQuick}
+        onClose={() => setOpenQuick(false)}
+        seed={seed}
+        repId={repId}
+        onCriar={(t) => { addTarefa(t); toast.success("Ação criada"); }}
       />
     </div>
   );
 }
 
-function FilaZerada({ seed, repId, atendidos }: { seed: ReturnType<typeof useCockpit>["seed"]; repId: string; atendidos: number }) {
+function FilaZerada({ seed, repId, atendidos, onNova, openQuick, setOpenQuick }: {
+  seed: ReturnType<typeof useCockpit>["seed"];
+  repId: string;
+  atendidos: number;
+  onNova: () => void;
+  openQuick: boolean;
+  setOpenQuick: (b: boolean) => void;
+}) {
+  const { addTarefa } = useTarefas();
   const sugestoes = useMemo(() => {
     const contas = seed.contas.filter(c => c.repId === repId);
     const ultMap = new Map<string, Date>();
@@ -392,9 +667,12 @@ function FilaZerada({ seed, repId, atendidos }: { seed: ReturnType<typeof useCoc
         </div>
         <h2 className="text-xl font-bold text-emerald-900">Fila zerada 🎉</h2>
         <p className="text-sm text-emerald-800/80 mt-1">
-          {atendidos > 0 ? `Você registrou ${atendidos} atendimento${atendidos > 1 ? "s" : ""} agora. ` : ""}
+          {atendidos > 0 ? `Você concluiu ${atendidos} ${atendidos > 1 ? "ações" : "ação"} agora. ` : ""}
           Tudo em dia por aqui.
         </p>
+        <Button size="sm" onClick={onNova} className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Plus className="h-3.5 w-3.5 mr-1" /> Criar ação
+        </Button>
       </div>
       {sugestoes.length > 0 && (
         <SectionCard title={`${sugestoes.length} clientes não compram há 60+ dias`} subtitle="Quer adiantar contato enquanto está livre?">
@@ -418,6 +696,13 @@ function FilaZerada({ seed, repId, atendidos }: { seed: ReturnType<typeof useCoc
           </div>
         </SectionCard>
       )}
+      <QuickAcaoModal
+        open={openQuick}
+        onClose={() => setOpenQuick(false)}
+        seed={seed}
+        repId={repId}
+        onCriar={(t) => { addTarefa(t); toast.success("Ação criada"); }}
+      />
     </div>
   );
 }
@@ -432,32 +717,53 @@ function IndicadorMini({ label, value, sub }: { label: string; value: string; su
   );
 }
 
-function ChipFiltro({ ativo, onClick, color, label }: { ativo: boolean; onClick: () => void; color: "rose" | "amber" | "slate" | "white"; label: string }) {
+function ChipFiltro({ ativo, onClick, color, label }: { ativo: boolean; onClick: () => void; color: "rose" | "amber" | "sky" | "white"; label: string }) {
   const base = "text-[11px] px-2.5 py-1 rounded-full border transition cursor-pointer";
   const inactive = {
     rose: "bg-rose-500/20 text-rose-50 border-rose-300/30 hover:bg-rose-500/30",
     amber: "bg-amber-500/20 text-amber-50 border-amber-300/30 hover:bg-amber-500/30",
-    slate: "bg-white/15 text-white border-white/20 hover:bg-white/25",
+    sky: "bg-sky-500/20 text-sky-50 border-sky-300/30 hover:bg-sky-500/30",
     white: "bg-white/15 text-white border-white/20 hover:bg-white/25",
   }[color];
   const active = "bg-white text-[#2D3A8C] border-white font-semibold shadow";
   return <button onClick={onClick} className={`${base} ${ativo ? active : inactive}`}>{label}</button>;
 }
 
-function BlocoFila({ titulo, descricao, accent, icon, itens, defaultOpen, onAcao }: {
-  titulo: string; descricao: string; accent: "rose" | "amber" | "slate"; icon: React.ReactNode;
-  itens: FilaItem[]; defaultOpen: boolean; onAcao: (item: FilaItem) => void;
+// ===== Bloco por grupo =====
+function BlocoFila({ grupo, titulo, descricao, accent, icon, itens, totalInicial, onAcao }: {
+  grupo: Grupo;
+  titulo: string; descricao: string; accent: "sky" | "rose" | "amber"; icon: React.ReactNode;
+  itens: ItemUnificado[]; totalInicial: number; onAcao: (item: ItemUnificado) => void;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(true);
   const [verTodos, setVerTodos] = useState(false);
   const accentMap = {
+    sky:   { bar: "bg-sky-500",   bg: "bg-sky-50",   text: "text-sky-800",   border: "border-sky-200" },
     rose:  { bar: "bg-rose-500",  bg: "bg-rose-50",  text: "text-rose-700",  border: "border-rose-200" },
     amber: { bar: "bg-amber-500", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
-    slate: { bar: "bg-slate-400", bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200" },
   }[accent];
 
   const visiveis = verTodos ? itens : itens.slice(0, 5);
   const restantes = itens.length - visiveis.length;
+  const grupoConcluido = itens.length === 0 && totalInicial > 0;
+
+  if (grupoConcluido) {
+    return (
+      <div className={`nx-card overflow-hidden border ${accentMap.border} ${accentMap.bg}`}>
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className={`h-7 w-7 rounded-md ${accentMap.bar} text-white flex items-center justify-center`}>
+            <CheckCircle2 className="h-4 w-4" />
+          </div>
+          <div className="flex-1">
+            <p className={`text-sm font-semibold ${accentMap.text}`}>{titulo} · {totalInicial}/{totalInicial} ✓</p>
+            <p className="text-[11px] nx-muted">Grupo concluído — bom trabalho!</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (itens.length === 0) return null;
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -466,32 +772,29 @@ function BlocoFila({ titulo, descricao, accent, icon, itens, defaultOpen, onAcao
           <div className={`flex items-center gap-3 px-4 py-3 ${accentMap.bg} border-b ${accentMap.border}`}>
             <div className={`h-7 w-7 rounded-md ${accentMap.bar} text-white flex items-center justify-center`}>{icon}</div>
             <div className="flex-1 text-left">
-              <p className={`text-sm font-semibold ${accentMap.text}`}>{titulo}</p>
+              <p className={`text-sm font-semibold ${accentMap.text} uppercase tracking-wide text-[11px]`}>{titulo}</p>
               <p className="text-[11px] nx-muted">{descricao}</p>
             </div>
+            {totalInicial > 0 && itens.length < totalInicial && (
+              <span className="text-[10px] nx-muted mr-1">{totalInicial - itens.length}/{totalInicial} concluídas</span>
+            )}
             <Badge className={`${accentMap.bar} text-white`}>{itens.length}</Badge>
             {open ? <ChevronDown className="h-4 w-4 nx-muted" /> : <ChevronRight className="h-4 w-4 nx-muted" />}
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          {itens.length === 0 ? (
-            <EmptyState message="Tudo em dia neste bloco." icon={<CheckCircle2 className="h-5 w-5" />} />
-          ) : (
-            <>
-              <div className="divide-y divide-[#F1F3F8]">
-                {visiveis.map(item => (
-                  <FilaItemRow key={item.contaId + item.motivo} item={item} onAcao={onAcao} />
-                ))}
-              </div>
-              {restantes > 0 && (
-                <button
-                  onClick={() => setVerTodos(true)}
-                  className={`w-full py-2.5 text-xs font-medium ${accentMap.text} hover:${accentMap.bg} border-t ${accentMap.border} transition`}
-                >
-                  Ver todos ({restantes} restantes)
-                </button>
-              )}
-            </>
+          <div className="divide-y divide-[#F1F3F8]">
+            {visiveis.map(item => (
+              <FilaItemRow key={item.key} item={item} onAcao={onAcao} />
+            ))}
+          </div>
+          {restantes > 0 && (
+            <button
+              onClick={() => setVerTodos(true)}
+              className={`w-full py-2.5 text-xs font-medium ${accentMap.text} hover:${accentMap.bg} border-t ${accentMap.border} transition`}
+            >
+              Ver todos ({restantes} restantes)
+            </button>
           )}
         </CollapsibleContent>
       </div>
@@ -499,46 +802,36 @@ function BlocoFila({ titulo, descricao, accent, icon, itens, defaultOpen, onAcao
   );
 }
 
-function FilaItemRow({ item, onAcao }: { item: FilaItem; onAcao: (item: FilaItem) => void }) {
-  const inicial = item.razao.slice(0, 1).toUpperCase();
-  const { seed } = useCockpit();
-  const conta = seed.contas.find(c => c.id === item.contaId);
-
-  let corFaltam: string | null = null;
-  if (item.diasRestantes !== undefined) {
-    if (item.diasRestantes <= 2) corFaltam = "bg-rose-500 text-white";
-    else if (item.diasRestantes <= 9) corFaltam = "bg-amber-500 text-white";
-    else corFaltam = "bg-yellow-400 text-yellow-950";
-  }
-
-  const ultimaCompra = conta ? (() => {
-    const peds = seed.pedidos.filter(p => p.contaId === conta.id).sort((a, b) => b.data.getTime() - a.data.getTime());
-    return peds[0]?.data;
-  })() : undefined;
-
+// ===== Item unificado =====
+function FilaItemRow({ item, onAcao }: { item: ItemUnificado; onAcao: (item: ItemUnificado) => void }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-[#F6F7F9] animate-in fade-in slide-in-from-left-1 duration-200">
-      <div className="h-9 w-9 rounded-full bg-[#E8EAF6] text-[#2D3A8C] flex items-center justify-center text-sm font-semibold shrink-0">{inicial}</div>
+    <div className="flex items-start gap-3 px-4 py-3 hover:bg-[#F6F7F9] animate-in fade-in slide-in-from-left-1 duration-200">
+      <div className="h-9 w-9 rounded-full bg-[#E8EAF6] text-[#2D3A8C] flex items-center justify-center text-sm font-semibold shrink-0 mt-0.5">
+        {item.inicial}
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-medium nx-text truncate">{item.razao}</p>
-          <Badge variant="outline" className="text-[10px]">{item.status}</Badge>
-          {corFaltam && <Badge className={corFaltam}>Faltam {item.diasRestantes}d</Badge>}
-          {conta?.nicho && <span className="text-[10px] nx-muted">· {conta.nicho}</span>}
+          <p className="text-sm font-medium nx-text truncate">{item.cliente}</p>
+          {item.saudeBadge && <Badge className={`${item.saudeBadge.classe} border-0 text-[10px]`}>{item.saudeBadge.label}</Badge>}
+          {item.chipUrgencia && <Badge className={item.chipUrgencia.classe}>{item.chipUrgencia.label}</Badge>}
         </div>
-        <p className="text-[11px] nx-muted mt-0.5">
+        <p className="text-[12px] nx-text font-medium mt-0.5 leading-snug">
           {item.motivo}
-          {ultimaCompra && ` · última compra ${ultimaCompra.toLocaleDateString("pt-BR")}`}
-          {item.valor ? ` · ${fmtBRLc(item.valor)} (12m)` : ""}
         </p>
+        {item.metaLinha && <p className="text-[11px] nx-muted mt-0.5 truncate">{item.metaLinha}</p>}
       </div>
-      <div className="flex gap-1 shrink-0">
+      <div className="flex gap-1 shrink-0 flex-wrap justify-end">
         <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => toast.success("Abrindo WhatsApp")} title="WhatsApp">
           <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
         </Button>
         <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => toast.success("Discando…")} title="Ligar">
           <Phone className="h-3.5 w-3.5" />
         </Button>
+        {item.temOrcamento && (
+          <Button size="sm" variant="outline" className="h-8 px-2 text-[11px]" onClick={() => toast.success("Abrindo orçamento")} title="Abrir orçamento">
+            <FileText className="h-3.5 w-3.5 mr-1" /> Orçamento
+          </Button>
+        )}
         <Button size="sm" className="h-8 px-2.5 text-[11px] bg-[#2D3A8C] hover:bg-[#363BB4]" onClick={() => onAcao(item)}>
           Registrar
         </Button>
@@ -547,24 +840,34 @@ function FilaItemRow({ item, onAcao }: { item: FilaItem; onAcao: (item: FilaItem
   );
 }
 
-function RegistrarModal({ open, item, onClose, onSaved }: { open: boolean; item?: FilaItem; onClose: () => void; onSaved: (item: FilaItem) => void }) {
+// ===== Modal Registrar (papel central) =====
+function RegistrarModal({ open, item, onClose, onSaved }: {
+  open: boolean; item?: ItemUnificado; onClose: () => void;
+  onSaved: (item: ItemUnificado, proxData?: string, nota?: string) => void;
+}) {
   const [resultado, setResultado] = useState("falou");
   const [proxData, setProxData] = useState("");
   const [nota, setNota] = useState("");
+  const [confirmarSemFollow, setConfirmarSemFollow] = useState(false);
+
+  const reset = () => { setResultado("falou"); setProxData(""); setNota(""); setConfirmarSemFollow(false); };
 
   const salvar = () => {
     if (!item) return;
-    toast.success(`Atendimento registrado${proxData ? " · tarefa criada para " + proxData : ""}`);
-    onSaved(item);
-    setResultado("falou"); setProxData(""); setNota("");
+    if (!proxData && !confirmarSemFollow) { setConfirmarSemFollow(true); return; }
+    toast.success(proxData
+      ? `Atendimento registrado · tarefa criada para ${new Date(proxData).toLocaleDateString("pt-BR")}`
+      : "Atendimento registrado sem follow-up");
+    onSaved(item, proxData || undefined, nota || undefined);
+    reset();
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { onClose(); reset(); } }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Registrar atendimento</DialogTitle>
-          {item && <p className="text-xs nx-muted">{item.razao}</p>}
+          {item && <p className="text-xs nx-muted">{item.cliente}</p>}
         </DialogHeader>
         <div className="space-y-3">
           <div>
@@ -580,21 +883,101 @@ function RegistrarModal({ open, item, onClose, onSaved }: { open: boolean; item?
             </Select>
           </div>
           <div>
-            <label className="text-[11px] nx-muted mb-1 block">Próximo passo (opcional — cria tarefa)</label>
+            <label className="text-[11px] nx-muted mb-1 block">Próximo passo (cria tarefa no dia escolhido)</label>
             <div className="space-y-2">
-              <Input type="date" value={proxData} onChange={(e) => setProxData(e.target.value)} className="h-9 text-xs" />
+              <Input type="date" value={proxData} onChange={(e) => { setProxData(e.target.value); setConfirmarSemFollow(false); }} className="h-9 text-xs" />
               <Textarea value={nota} onChange={(e) => setNota(e.target.value)} rows={2} placeholder="Nota rápida…" className="text-xs" />
             </div>
           </div>
+          {confirmarSemFollow && !proxData && (
+            <div className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+              Nenhum follow-up definido. Clique em Salvar novamente para confirmar.
+            </div>
+          )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={salvar} style={{ background: "#2D3A8C" }}>Salvar</Button>
+          <Button variant="outline" onClick={() => { onClose(); reset(); }}>Cancelar</Button>
+          <Button onClick={salvar} style={{ background: "#2D3A8C" }}>
+            {confirmarSemFollow && !proxData ? "Confirmar sem follow-up" : "Salvar"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
+// ===== Modal + Ação rápido =====
+function QuickAcaoModal({ open, onClose, seed, repId, onCriar }: {
+  open: boolean; onClose: () => void;
+  seed: ReturnType<typeof useCockpit>["seed"];
+  repId: string;
+  onCriar: (t: Omit<TarefaExt, "id">) => void;
+}) {
+  const [cliente, setCliente] = useState("");
+  const [oQue, setOQue] = useState("");
+  const [quando, setQuando] = useState("");
+
+  const contasRep = useMemo(() => seed.contas.filter(c => c.repId === repId).slice(0, 200), [seed, repId]);
+
+  const reset = () => { setCliente(""); setOQue(""); setQuando(""); };
+
+  const criar = () => {
+    if (!cliente || !oQue || !quando) { toast.error("Preencha cliente, o quê e quando"); return; }
+    const [y, m, d] = quando.split("-");
+    const venc = `${d}/${m}/${y}`;
+    const c = contasRep.find(x => x.id === cliente);
+    onCriar({
+      titulo: oQue,
+      descricao: "",
+      tipo: "follow_up",
+      clienteId: cliente,
+      clienteNome: c?.razao ?? "Cliente",
+      prioridade: "media",
+      vencimento: venc,
+      responsavel: "Paulo Bardini",
+      status: "pendente",
+    });
+    reset();
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { onClose(); reset(); } }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nova ação rápida</DialogTitle>
+          <p className="text-xs nx-muted">Cliente + o quê + quando</p>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-[11px] nx-muted mb-1 block">Cliente</label>
+            <Select value={cliente} onValueChange={setCliente}>
+              <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+              <SelectContent className="max-h-[280px]">
+                {contasRep.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.razao}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-[11px] nx-muted mb-1 block">O quê</label>
+            <Input value={oQue} onChange={(e) => setOQue(e.target.value)} placeholder="Ex.: Ligar para apresentar coleção" className="h-9 text-xs" />
+          </div>
+          <div>
+            <label className="text-[11px] nx-muted mb-1 block">Quando</label>
+            <Input type="date" value={quando} onChange={(e) => setQuando(e.target.value)} className="h-9 text-xs" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => { onClose(); reset(); }}>Cancelar</Button>
+          <Button onClick={criar} style={{ background: "#2D3A8C" }}>Criar ação</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 // ============ METAS ============
 function MetasView({ kpiM, hist6m, metaRef, kpiC }: {
