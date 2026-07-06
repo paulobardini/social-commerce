@@ -910,8 +910,8 @@ function ClienteSelector({ cliente, clienteId, onChange }: { cliente: any; clien
 }
 
 // ---------- Product Card ----------
-function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal, conditionHint }: {
-  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; precoFinal: number | null; conditionHint?: React.ReactNode;
+function ProductCard({ p, qty, onAdd, onInc, onDec, onAddWithPrice, precoFinal, conditionHint }: {
+  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; onAddWithPrice?: (v: number) => void; precoFinal: number | null; conditionHint?: React.ReactNode;
 }) {
   return (
     <div className="group relative rounded-lg overflow-hidden bg-card border hover:shadow-md transition">
@@ -920,11 +920,25 @@ function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal, conditionHint }:
           <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Package className="h-8 w-8" /></div>
         }
       </div>
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2 flex items-center gap-1">
         {qty === 0 ? (
-          <button onClick={onAdd} className="opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-0 opacity-100 transition bg-primary text-primary-foreground rounded-full h-9 w-9 flex items-center justify-center shadow" aria-label="Adicionar">
-            <Plus className="h-4 w-4" />
-          </button>
+          <>
+            {onAddWithPrice && (
+              <AddWithPricePopover
+                precoTabela={p.price}
+                precoSugerido={precoFinal ?? p.price}
+                onConfirm={onAddWithPrice}
+                trigger={
+                  <button className="opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-0 opacity-100 transition bg-background border rounded-full h-9 px-2 text-[11px] font-semibold flex items-center gap-1 shadow" aria-label="Adicionar com preço negociado">
+                    <Pencil className="h-3 w-3" /> R$
+                  </button>
+                }
+              />
+            )}
+            <button onClick={onAdd} className="opacity-0 group-hover:opacity-100 focus:opacity-100 md:opacity-0 opacity-100 transition bg-primary text-primary-foreground rounded-full h-9 w-9 flex items-center justify-center shadow" aria-label="Adicionar">
+              <Plus className="h-4 w-4" />
+            </button>
+          </>
         ) : (
           <div className="flex items-center gap-1 bg-primary text-primary-foreground rounded-full px-1 shadow">
             <button onClick={onDec} className="h-7 w-7 flex items-center justify-center hover:bg-primary-foreground/10 rounded-full"><Minus className="h-3.5 w-3.5" /></button>
