@@ -381,6 +381,7 @@ export default function VendedorOrcamentos() {
                         <OrcCard
                           key={o.id}
                           o={o}
+                          filhosCount={filhosPor.get(o.id) ?? 0}
                           onOpen={() => navigate(`/vendedor/orcamento/${o.id}`)}
                           onDiff={() => setDiffOrc(o)}
                           onDesdobramento={() => abrirDesdobramento(o)}
