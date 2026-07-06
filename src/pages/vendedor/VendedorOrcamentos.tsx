@@ -265,6 +265,7 @@ export default function VendedorOrcamentos() {
   const handleAction = (kind: string, o: Orcamento) => {
     if (kind === "reenviar") toast.success(`Mensagem pronta enviada para ${o.lojista} 📲`);
     else if (kind === "cobrar") toast.success(`Cobrança enviada no WhatsApp para ${o.lojista}`);
+    else if (kind === "renegociar") toast.success(`Renegociação aberta no WhatsApp com ${o.lojista}`);
     else if (kind === "continuar") navigate(`/vendedor/orcamento/${o.id}`);
   };
 
