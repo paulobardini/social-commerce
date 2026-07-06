@@ -8,19 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MoreVertical, Package, BookOpen, FileText, MessageSquare, QrCode, Camera, Plus } from "lucide-react";
+import { MoreVertical, Package, BookOpen, FileText, MessageSquare, QrCode, Camera, Plus, Eye, EyeOff } from "lucide-react";
 import { materiaisApoio, listPoliticas, PoliticaIndustria } from "@/lib/politicaComercial";
 import { brands } from "@/data/mockProducts";
 import { PoliticaViewModal } from "@/components/vendedor/politica/PoliticaModals";
 import { toast } from "sonner";
 
 export function CatalogSecondaryMenu({
-  activeBrandSlugs, onAddGeneric, onAddAll, addAllCount,
+  activeBrandSlugs, onAddGeneric, presentation, onTogglePresentation,
 }: {
   activeBrandSlugs: string[];
   onAddGeneric: (item: GenericItem) => void;
-  onAddAll?: () => void;
-  addAllCount?: number;
+  presentation?: boolean;
+  onTogglePresentation?: () => void;
 }) {
   const [genOpen, setGenOpen] = useState(false);
   const [matOpen, setMatOpen] = useState(false);
@@ -37,21 +37,18 @@ export function CatalogSecondaryMenu({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="text-[11px] text-muted-foreground">Ações do catálogo</DropdownMenuLabel>
-          {onAddAll && (
-            <DropdownMenuItem
-              onClick={onAddAll}
-              disabled={!addAllCount}
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" /> Adicionar todos{addAllCount ? ` (${addAllCount})` : ""}
-            </DropdownMenuItem>
-          )}
           <DropdownMenuItem onClick={() => setGenOpen(true)} className="gap-2">
             <Package className="h-4 w-4" /> Produto genérico
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setMatOpen(true)} className="gap-2">
             <BookOpen className="h-4 w-4" /> Material de apoio
           </DropdownMenuItem>
+          {onTogglePresentation && (
+            <DropdownMenuItem onClick={onTogglePresentation} className="gap-2">
+              {presentation ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              {presentation ? "Desligar apresentação" : "Modo apresentação"}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-[11px] text-muted-foreground">Política comercial</DropdownMenuLabel>
           {activeBrandSlugs.length === 0 && (
