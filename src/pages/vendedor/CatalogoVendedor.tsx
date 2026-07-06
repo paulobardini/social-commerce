@@ -301,12 +301,19 @@ export default function CatalogoVendedor() {
   }
 
   function gerarOrcamento() {
-    groups.forEach((g) => saveUltimoDegrau(clienteId, g.slug, g.degrauIdx));
+    const alvo = okGroups; // só as indústrias sem bloqueio entram
+    alvo.forEach((g) => saveUltimoDegrau(clienteId, g.slug, g.degrauIdx));
     setConfirmOpen(false);
     setCartOpen(false);
-    toast({ title: "Orçamento gerado", description: `${cliente?.nomeFantasia || "Sem cliente"} · ${totalItens} itens · ${formatBRL(totalGeral)}` });
+    const itens = alvo.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0);
+    const total = alvo.reduce((s, g) => s + g.subtotalLiquido, 0);
+    toast({
+      title: `Orçamento gerado · ${alvo.length} pedido${alvo.length > 1 ? "s" : ""}`,
+      description: `${cliente?.nomeFantasia || "Sem cliente"} · ${itens} itens · ${formatBRL(total)}${blockedGroups.length ? ` (${blockedGroups.length} indústria(s) ficou de fora)` : ""}`,
+    });
     setTimeout(() => navigate("/vendedor"), 400);
   }
+
 
   function enviarPreviaWhats() {
     toast({ title: "Prévia enviada", description: `Resumo da cesta enviado no WhatsApp de ${cliente?.nomeFantasia || "cliente"}.` });
