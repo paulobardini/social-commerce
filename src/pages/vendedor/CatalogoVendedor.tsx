@@ -943,9 +943,17 @@ function AddWithPricePopover({ precoTabela, precoSugerido, onConfirm, trigger }:
   );
 }
 
-function ProductCard({ p, qty, onAdd, onInc, onDec, onAddWithPrice, precoFinal, conditionHint }: {
-  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; onAddWithPrice?: (v: number) => void; precoFinal: number | null; conditionHint?: React.ReactNode;
+function ProductCard({ p, qty, onAdd, onInc, onDec, onAddWithPrice, precoFinal, semCondicao }: {
+  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; onAddWithPrice?: (v: number) => void; precoFinal: number | null; semCondicao?: boolean;
 }) {
+  const priceNode = (
+    <div className="text-sm font-semibold pt-1">
+      {precoFinal ? <span className="text-muted-foreground line-through mr-1 text-xs">{formatBRL(p.price)}</span> : null}
+      {precoFinal
+        ? <span className="text-emerald-600">{formatBRL(precoFinal)}</span>
+        : <span className={semCondicao ? "border-b border-dotted border-muted-foreground/60 cursor-help" : ""}>{formatBRL(p.price)}</span>}
+    </div>
+  );
   return (
     <div className="group relative rounded-lg overflow-hidden bg-card border hover:shadow-md transition">
       <div className="aspect-[3/4] bg-muted overflow-hidden">
@@ -984,11 +992,12 @@ function ProductCard({ p, qty, onAdd, onInc, onDec, onAddWithPrice, precoFinal, 
         <div className="text-[10px] font-medium text-primary uppercase tracking-wide truncate">{p.brandName}{p.isGeneric && " · genérico"}</div>
         <div className="text-xs font-medium truncate">{p.name}</div>
         <div className="text-[10px] text-muted-foreground">Ref {p.ref}</div>
-        <div className="text-sm font-semibold pt-1">
-          {precoFinal ? <span className="text-muted-foreground line-through mr-1 text-xs">{formatBRL(p.price)}</span> : null}
-          {precoFinal ? <span className="text-emerald-600">{formatBRL(precoFinal)}</span> : formatBRL(p.price)}
-        </div>
-        {conditionHint && <div className="pt-0.5">{conditionHint}</div>}
+        {semCondicao ? (
+          <Tooltip>
+            <TooltipTrigger asChild>{priceNode}</TooltipTrigger>
+            <TooltipContent>preço de tabela — defina a condição da {p.brandName}</TooltipContent>
+          </Tooltip>
+        ) : priceNode}
       </div>
     </div>
   );
