@@ -357,15 +357,14 @@ export default function Cliente360Page() {
             <span className="text-[11px] text-muted-foreground">Clique num card para filtrar a tela</span>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
-            {industrias.map(ind => {
+            {industriasVinculadasOrdenadas.map(ind => {
               const ativo = industriaFocus === ind.nome;
               return (
                 <button
                   key={ind.nome}
                   onClick={() => setIndustriaFocus(ativo ? null : ind.nome)}
                   className={`shrink-0 w-[220px] snap-start text-left p-3 rounded-xl border transition-all
-                    ${ativo ? "border-primary shadow-sm bg-primary/5" : "border-border bg-card hover:border-primary/40"}
-                    ${!ind.vinculada ? "border-dashed opacity-90" : ""}`}
+                    ${ativo ? "border-primary shadow-sm bg-primary/5" : "border-border bg-card hover:border-primary/40"}`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2 min-w-0">
@@ -374,41 +373,61 @@ export default function Cliente360Page() {
                       </div>
                       <span className="text-sm font-semibold truncate">{ind.nome}</span>
                     </div>
-                    {ind.vinculada && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border cursor-help ${saudeColor[ind.saude]}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[ind.saude]}`} />
-                            {saudeLabel[ind.saude]}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent className="text-xs max-w-xs">{ind.explicacao}</TooltipContent>
-                      </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border cursor-help ${saudeColor[ind.saude]}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${saudeDot[ind.saude]}`} />
+                          {saudeLabel[ind.saude]}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="text-xs max-w-xs">{ind.explicacao}</TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <div className="space-y-1 text-[11px]">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Valor 12m</span><span className="font-semibold">{ind.valor12m > 0 ? formatBRL(ind.valor12m) : "—"}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Última compra</span><span className="font-medium">{ind.ultimaCompra ?? "—"}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Pedidos</span><span className="font-medium">{ind.pedidos}</span></div>
+                    {ind.orcamentoAndamento && (
+                      <div className="mt-1.5 pt-1.5 border-t border-border/70 text-primary flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        <span className="truncate">{ind.orcamentoAndamento.nome}</span>
+                      </div>
                     )}
                   </div>
-                  {ind.vinculada ? (
-                    <div className="space-y-1 text-[11px]">
-                      <div className="flex justify-between"><span className="text-muted-foreground">Valor 12m</span><span className="font-semibold">{ind.valor12m > 0 ? formatBRL(ind.valor12m) : "—"}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Última compra</span><span className="font-medium">{ind.ultimaCompra ?? "—"}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Pedidos</span><span className="font-medium">{ind.pedidos}</span></div>
-                      {ind.orcamentoAndamento && (
-                        <div className="mt-1.5 pt-1.5 border-t border-border/70 text-primary flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          <span className="truncate">{ind.orcamentoAndamento.nome}</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5">
-                      <p className="text-[11px] text-muted-foreground">Nunca comprou {ind.nome}</p>
-                      <Button size="sm" variant="outline" className="w-full h-7 text-[10px]" onClick={e => { e.stopPropagation(); toast.success(`Criando 1ª oportunidade em ${ind.nome}`); }}>
-                        <Sparkles className="h-3 w-3 mr-1" /> Criar 1ª oportunidade
-                      </Button>
-                    </div>
-                  )}
                 </button>
               );
             })}
+
+            {/* Fantasmas agrupados */}
+            {industriasFantasmas.length > 0 && !showFantasmas && (
+              <button
+                onClick={() => setShowFantasmas(true)}
+                className="shrink-0 w-[180px] snap-start text-left p-3 rounded-xl border border-dashed border-border bg-muted/30 hover:border-primary/40 transition-all flex flex-col justify-center items-center gap-1"
+              >
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+                <p className="text-xs font-medium text-center">Expandir para outras indústrias</p>
+                <p className="text-[10px] text-muted-foreground">{industriasFantasmas.length} disponíveis</p>
+              </button>
+            )}
+            {showFantasmas && industriasFantasmas.map(ind => (
+              <div key={ind.nome} className="shrink-0 w-[200px] snap-start p-3 rounded-xl border border-dashed border-border bg-card">
+                <div className="flex items-center gap-2 mb-2 min-w-0">
+                  <div className="h-7 w-7 rounded-lg bg-muted grid place-items-center text-muted-foreground font-bold text-xs shrink-0">
+                    {ind.nome[0]}
+                  </div>
+                  <span className="text-sm font-semibold truncate">{ind.nome}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-2">Nunca comprou {ind.nome}</p>
+                <Button size="sm" variant="outline" className="w-full h-7 text-[10px]" onClick={() => toast.success(`Criando 1ª oportunidade em ${ind.nome}`)}>
+                  <Sparkles className="h-3 w-3 mr-1" /> Criar 1ª oportunidade
+                </Button>
+              </div>
+            ))}
+            {showFantasmas && (
+              <button onClick={() => setShowFantasmas(false)} className="shrink-0 text-[11px] text-primary underline self-center px-2">
+                Recolher
+              </button>
+            )}
           </div>
         </div>
 
