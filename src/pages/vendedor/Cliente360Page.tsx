@@ -310,7 +310,7 @@ export default function Cliente360Page() {
                       onBlur={e => { if (e.target.value) { setInteresse(e.target.value); toast.success("Interesse definido"); } }}
                     />
                   )}
-                  {cliente.tags.map(t => <TagBadge key={t} tag={t} />)}
+                  {cliente.tags.filter(t => t !== "quente" && t !== "morna" && t !== "fria").map(t => <TagBadge key={t} tag={t} />)}
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 shrink-0">
