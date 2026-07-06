@@ -408,6 +408,7 @@ export default function CatalogoVendedor() {
       <div className={`min-h-[calc(100vh-4rem)] bg-background ${presentation ? "ring-2 ring-primary/40 ring-offset-0" : ""}`}>
         {/* TOPO */}
         <div className={`sticky top-0 z-20 bg-background/95 backdrop-blur border-b ${presentation ? "border-t-2 border-t-primary" : ""}`}>
+          {/* LINHA 1: cliente · busca(QR) · view · order · filtrar · apresentação · ⋯ */}
           <div className="px-4 md:px-6 py-3 flex flex-col md:flex-row gap-2 md:gap-3 md:items-center">
             <ClienteSelector cliente={cliente} clienteId={clienteId} onChange={setClienteId} />
             <div className="relative flex-1 md:mx-2">
@@ -415,23 +416,35 @@ export default function CatalogoVendedor() {
               <Input
                 placeholder="Buscar produto, referência ou marca"
                 value={search} onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-10"
+                className="pl-9 pr-10 h-10"
               />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setQrOpen(true)}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label="Escanear QR"
+                  >
+                    <QrCode className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Escanear etiqueta (showroom)</TooltipContent>
+              </Tooltip>
             </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 md:h-10 md:w-10" onClick={() => setQrOpen(true)} aria-label="Escanear QR">
-                  <QrCode className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Escanear etiqueta (showroom)</TooltipContent>
-            </Tooltip>
-            <div className="hidden md:flex items-center border rounded-md h-10 shrink-0">
-              <button onClick={() => setViewMode("grid")} className={`h-full w-10 flex items-center justify-center ${viewMode === "grid" ? "bg-muted" : ""}`} aria-label="Grid"><LayoutGrid className="h-4 w-4" /></button>
-              <button onClick={() => setViewMode("list")} className={`h-full w-10 flex items-center justify-center ${viewMode === "list" ? "bg-muted" : ""}`} aria-label="Lista"><List className="h-4 w-4" /></button>
+            <div className="flex items-center border rounded-md h-10 shrink-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button onClick={() => setViewMode("grid")} className={`h-full w-9 flex items-center justify-center ${viewMode === "grid" ? "bg-muted" : ""}`} aria-label="Grid"><LayoutGrid className="h-4 w-4" /></button>
+                </TooltipTrigger><TooltipContent>Grade</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button onClick={() => setViewMode("list")} className={`h-full w-9 flex items-center justify-center ${viewMode === "list" ? "bg-muted" : ""}`} aria-label="Lista"><List className="h-4 w-4" /></button>
+                </TooltipTrigger><TooltipContent>Lista</TooltipContent>
+              </Tooltip>
             </div>
             <Select value={order} onValueChange={(v: any) => setOrder(v)}>
-              <SelectTrigger className="w-[160px] h-10 shrink-0"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[150px] h-10 shrink-0"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="az">A-Z</SelectItem>
                 <SelectItem value="menor">Menor preço</SelectItem>
@@ -445,14 +458,25 @@ export default function CatalogoVendedor() {
             </Button>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant={presentation ? "default" : "outline"} onClick={togglePresentation} className="h-10 shrink-0 gap-2" aria-pressed={presentation}>
+                <Button
+                  variant={presentation ? "default" : "outline"}
+                  size="icon"
+                  onClick={togglePresentation}
+                  className="h-10 w-10 shrink-0"
+                  aria-pressed={presentation}
+                  aria-label="Modo apresentação"
+                >
                   {presentation ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  <span className="hidden md:inline">Apresentação</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{presentation ? "Modo apresentação ATIVO (Shift+P)" : "Modo apresentação (Shift+P)"}</TooltipContent>
             </Tooltip>
-            <CatalogSecondaryMenu activeBrandSlugs={activeBrandSlugs} onAddGeneric={addGenericItem} />
+            <CatalogSecondaryMenu
+              activeBrandSlugs={activeBrandSlugs}
+              onAddGeneric={addGenericItem}
+              onAddAll={onAddAllClick}
+              addAllCount={filtered.length}
+            />
           </div>
           {presentation && (
             <div className="bg-primary text-primary-foreground text-[11px] font-semibold text-center py-0.5 flex items-center justify-center gap-1.5">
@@ -460,50 +484,54 @@ export default function CatalogoVendedor() {
               <button onClick={togglePresentation} className="underline underline-offset-2 opacity-90 hover:opacity-100 ml-2">desligar</button>
             </div>
           )}
-          {(chips.length > 0 || perfilChip || addedCount > 0) && (
-            <div className="px-4 md:px-6 pb-3 flex flex-wrap gap-2 items-center">
-              {perfilChip && (
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 gap-1">Perfil: {perfilChip}</Badge>
-              )}
-              {addedCount > 0 && (
-                <button
-                  onClick={() => setShowOnlyAdded((v) => !v)}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition inline-flex items-center gap-1 ${
-                    showOnlyAdded ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:border-primary/50"
-                  }`}
-                >
-                  <ShoppingCart className="h-3 w-3" /> Só adicionados ({addedCount})
-                </button>
-              )}
-              {chips.map((c) => (
-                <Badge key={`${c.kind}-${c.value}`} variant="secondary" className="gap-1 cursor-pointer" onClick={() => removeChip(c.kind as any, c.value)}>
-                  {c.label} <X className="h-3 w-3" />
-                </Badge>
-              ))}
-              {chips.length > 0 && (
-                <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">Limpar todos</button>
-              )}
-              {filtered.length > 0 && (
-                <button onClick={onAddAllClick} className="ml-auto text-xs text-primary hover:underline inline-flex items-center gap-1">
-                  <Plus className="h-3 w-3" /> Adicionar todos ({filtered.length})
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+          {/* LINHA 2: chips de contexto/condição em uma linha com scroll horizontal */}
+          <div className="px-4 md:px-6 pb-3 pt-1 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            {perfilChip && (
+              <Badge
+                variant="outline"
+                className="shrink-0 bg-primary/10 text-primary border-primary/30 gap-1 cursor-pointer"
+                onClick={() => { /* limpar perfil visual (não altera filtros) */ }}
+              >
+                Perfil: {perfilChip}
+              </Badge>
+            )}
+            {addedCount > 0 && (
+              <button
+                onClick={() => setShowOnlyAdded((v) => !v)}
+                className={`shrink-0 text-xs px-2.5 py-1 rounded-full border transition inline-flex items-center gap-1 ${
+                  showOnlyAdded ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:border-primary/50"
+                }`}
+              >
+                <ShoppingCart className="h-3 w-3" /> Só adicionados ({addedCount})
+              </button>
+            )}
+            {chips.map((c) => (
+              <Badge key={`${c.kind}-${c.value}`} variant="secondary" className="shrink-0 gap-1 cursor-pointer" onClick={() => removeChip(c.kind as any, c.value)}>
+                {c.label} <X className="h-3 w-3" />
+              </Badge>
+            ))}
+            {chips.length > 0 && (
+              <button onClick={clearAllFilters} className="shrink-0 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">Limpar</button>
+            )}
 
-        {/* Barra Condição da Sessão */}
-        <SessionConditionBar
-          slugs={activeBrandSlugs}
-          degrauByBrand={degrauByBrand} prazoByBrand={prazoByBrand}
-          cartByBrand={cartByBrand} allItems={allItems}
-          presentation={presentation}
-          onChangeDegrau={updateDegrau} onChangePrazo={updatePrazo}
-          onAddBrand={(slug) => {
-            setFilters((f) => f.marcas.includes(slug) ? f : { ...f, marcas: [...f.marcas, slug] });
-            ensureCondition(slug);
-          }}
-        />
+            {/* Chips de condição da sessão (mesma linha) */}
+            <SessionConditionChips
+              slugs={activeBrandSlugs}
+              degrauByBrand={degrauByBrand} prazoByBrand={prazoByBrand}
+              cartByBrand={cartByBrand} allItems={allItems}
+              presentation={presentation}
+              onChangeDegrau={updateDegrau} onChangePrazo={updatePrazo}
+              onAddBrand={(slug) => {
+                setFilters((f) => f.marcas.includes(slug) ? f : { ...f, marcas: [...f.marcas, slug] });
+                ensureCondition(slug);
+              }}
+            />
+
+            <div className="ml-auto text-xs text-muted-foreground shrink-0 pl-2">
+              {filtered.length} produtos{showOnlyAdded && " (só adicionados)"}
+            </div>
+          </div>
+        </div>
 
         {/* CENTRO */}
         <div className="px-4 md:px-6 py-4">
