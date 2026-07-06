@@ -26,7 +26,7 @@ import {
 import { NovoClienteModal } from "@/components/vendedor/NovoClienteModal";
 import {
   ESTAGIOS, type EstagioFunil, type Saude, saudeCliente, saudeLabel, saudeColor, saudeDot,
-  diasSemContato, valor12m, formatBRL, industriasDe, estagioAtual, saveOverride,
+  calcularSaude, diasSemContato, valor12m, formatBRL, industriasDe, estagioAtual, saveOverride,
   loadOverrides, contagemChips, aplicarChip, calcularMetodo, type ChipFilter,
 } from "@/lib/carteiraMetodo";
 
