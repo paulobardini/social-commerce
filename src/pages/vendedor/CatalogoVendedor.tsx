@@ -657,7 +657,7 @@ export default function CatalogoVendedor() {
                 />
               ))}
             </div>
-            <SheetFooter className="border-t p-4 shrink-0 flex-col gap-3 items-stretch">
+            <div className="border-t p-4 shrink-0 flex flex-col gap-3 items-stretch w-full">
               {groups.length > 0 && (
                 <>
                   {/* Linha 1: total + desconto médio */}
@@ -727,7 +727,7 @@ export default function CatalogoVendedor() {
                   )}
                 </>
               )}
-            </SheetFooter>
+            </div>
           </SheetContent>
         </Sheet>
 
