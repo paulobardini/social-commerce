@@ -1,9 +1,41 @@
 // Mock data for the Vendedor (Seller) module
 
+export type OrcEtapa =
+  | "rascunho"
+  | "aguardando_lojista"
+  | "em_revisao"
+  | "aprovado"
+  | "analise_comercial"
+  | "virou_pedido"
+  | "recusado";
+
+export type LinkEvento =
+  | "nao_aberto"
+  | "visualizado"
+  | "editando"
+  | "aprovado_total"
+  | "aprovado_parcial"
+  | "recusado";
+
+export type BolaCom = "vendedor" | "lojista" | "comercial" | "industria";
+
+export interface IndustriaValor {
+  marca: string;
+  valor: number;
+  aprovada?: boolean;
+}
+
+export interface OrcamentoDiff {
+  itensRemovidos: { nome: string; qtd: number; valor: number }[];
+  itensAlterados: { nome: string; deQtd: number; paraQtd: number; deValor: number; paraValor: number }[];
+  totalAntes: number;
+  totalDepois: number;
+  impactoPolitica?: string;
+}
+
 export interface Orcamento {
   id: string;
   nome: string;
-  // Nome base (sem o sufixo " — vN") usado para agrupar versões
   nomeBase?: string;
   versao?: number;
   lojista: string | null;
@@ -13,48 +45,120 @@ export interface Orcamento {
   status: "ativo" | "revisao_lojista" | "revisao_comercial" | "aprovado_parcial" | "aprovado" | "recusado";
   oportunidadeId?: string;
   oportunidadeNome?: string;
+  etapa?: OrcEtapa;
+  itensCount?: number;
+  bola?: BolaCom;
+  tempoEtapaDias?: number;
+  limiteEtapaDias?: number;
+  linkEventoTipo?: LinkEvento;
+  linkEventoLabel?: string;
+  industriaValores?: IndustriaValor[];
+  desdobradoDeId?: string;
+  desdobradoDeLabel?: string;
+  pedidoNumero?: string;
+  pedidoMarca?: string;
+  aprovacaoDireta?: boolean;
+  motivoAnalise?: string;
+  diff?: OrcamentoDiff;
+  politicaVigenteEnvio?: string;
 }
 
-export interface OrcamentoProduto {
-  id: string;
-  ref: string;
-  nome: string;
-  marca: string;
-  image: string;
-  categoria: string;
-  genero: string;
-  preco: number;
-  pecas: number;
-  tamanhos: string[];
-  grade: "Fechada" | "Aberta";
-  valorTotal: number;
-  quantidadeGrades: number;
-}
-
-export interface ClienteCarteira {
-  id: string;
-  nome: string;
-  documento: string;
-  cidade: string;
-  tipo: "Lojista" | "Atacadista" | "Representante";
+export function nomeAuto(o: Orcamento): string {
+  const cliente = o.lojista || "Sem cliente";
+  const itens = o.itensCount != null ? `${o.itensCount} itens` : "—";
+  const total = o.valorTotal
+    ? `R$ ${o.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+    : "—";
+  return `${cliente} · ${itens} · ${total}`;
 }
 
 export const mockOrcamentos: Orcamento[] = [
-  { id: "1", nome: "Rascunho rápido", nomeBase: "Rascunho rápido", versao: 1, lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
-  { id: "2", nome: "Coleção Inverno 2026 — Boutique da Thay", nomeBase: "Coleção Inverno 2026 — Boutique da Thay", versao: 1, lojista: "Boutique da Thay", marcas: ["BRANDILI"], dataCriacao: "01/04/2026", valorTotal: 9800.00, status: "ativo", oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas" },
-  { id: "3", nome: "Reposição Boutique da Thay", nomeBase: "Reposição Boutique da Thay", versao: 1, lojista: "Boutique da Thay", marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo", oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas" },
-  { id: "4", nome: "Coleção Inverno 2026 — Boutique da Thay — v2", nomeBase: "Coleção Inverno 2026 — Boutique da Thay", versao: 2, lojista: "Boutique da Thay", marcas: ["BRANDILI", "MUNDI"], dataCriacao: "09/04/2026", valorTotal: 8457.50, status: "ativo", oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas" },
-  { id: "5", nome: "Catálogo verão — esboço", nomeBase: "Catálogo verão — esboço", versao: 1, lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
-  { id: "6", nome: "Mix infantil express", nomeBase: "Mix infantil express", versao: 1, lojista: null, marcas: [], dataCriacao: "09/04/2026", valorTotal: null, status: "ativo" },
-  { id: "7", nome: "Coleção Inverno 2026 — Boutique da Thay — v3", nomeBase: "Coleção Inverno 2026 — Boutique da Thay", versao: 3, lojista: "Boutique da Thay", marcas: ["BRANDILI"], dataCriacao: "07/04/2026", valorTotal: 11610.60, status: "ativo", oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas" },
-  { id: "8", nome: "Teste linha fitness", nomeBase: "Teste linha fitness", versao: 1, lojista: null, marcas: [], dataCriacao: "07/04/2026", valorTotal: null, status: "ativo" },
-  { id: "9", nome: "Promo Super preço — Outono", nomeBase: "Promo Super preço — Outono", versao: 1, lojista: "Loja - Super preço", marcas: ["BRANDILI", "MUNDI"], dataCriacao: "07/04/2026", valorTotal: 1369.71, status: "ativo" },
-  { id: "10", nome: "Apresentação institucional", nomeBase: "Apresentação institucional", versao: 1, lojista: null, marcas: [], dataCriacao: "02/04/2026", valorTotal: null, status: "ativo" },
-  { id: "11", nome: "Pedido especial Milykids", nomeBase: "Pedido especial Milykids", versao: 1, lojista: "Milykids", marcas: ["BRANDILI"], dataCriacao: "01/04/2026", valorTotal: 5230.00, status: "revisao_lojista", oportunidadeId: "op11", oportunidadeNome: "Pedido Especial – Milykids" },
-  { id: "12", nome: "Reposição Verão Alemão Vestuário", nomeBase: "Reposição Verão Alemão Vestuário", versao: 1, lojista: "Alemão Vestuário", marcas: ["BRANDILI", "MUNDI"], dataCriacao: "28/03/2026", valorTotal: 15420.30, status: "revisao_comercial", oportunidadeId: "op3", oportunidadeNome: "Reposição Verão – Alemão Vestuário" },
-  { id: "13", nome: "Pedido Alto Verão CJD Pozza", nomeBase: "Pedido Alto Verão CJD Pozza", versao: 1, lojista: "CJD Pozza", marcas: ["BRANDILI"], dataCriacao: "25/03/2026", valorTotal: 8900.00, status: "aprovado", oportunidadeId: "op5", oportunidadeNome: "Pedido Alto Verão – CJD Pozza" },
-  { id: "14", nome: "Lote Outlet DBN", nomeBase: "Lote Outlet DBN", versao: 1, lojista: "DBN OUTLET", marcas: ["MUNDI"], dataCriacao: "20/03/2026", valorTotal: 3200.00, status: "recusado", oportunidadeId: "op6", oportunidadeNome: "Lote Outlet – DBN OUTLET" },
+  { id: "1", nome: "Rascunho rápido", lojista: "Boutique da Thay", marcas: ["BRANDILI"], dataCriacao: "06/07/2026", valorTotal: 2340.00, status: "ativo",
+    etapa: "rascunho", itensCount: 18, bola: "vendedor", tempoEtapaDias: 1, limiteEtapaDias: 3,
+    industriaValores: [{ marca: "BRANDILI", valor: 2340 }] },
+  { id: "5", nome: "Catálogo verão — esboço", lojista: "Fashion Kids Store", marcas: ["BRANDILI","MUNDI"], dataCriacao: "05/07/2026", valorTotal: 5800.50, status: "ativo",
+    etapa: "rascunho", itensCount: 42, bola: "vendedor", tempoEtapaDias: 2, limiteEtapaDias: 3,
+    industriaValores: [{ marca: "BRANDILI", valor: 3200 }, { marca: "MUNDI", valor: 2600.50 }] },
+
+  { id: "2", nome: "auto", lojista: "Boutique da Thay", marcas: ["BRANDILI"], dataCriacao: "03/07/2026", valorTotal: 9800.00, status: "ativo",
+    oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas",
+    etapa: "aguardando_lojista", itensCount: 74, bola: "lojista", tempoEtapaDias: 4, limiteEtapaDias: 3,
+    linkEventoTipo: "nao_aberto", linkEventoLabel: "enviado · não aberto há 2d",
+    industriaValores: [{ marca: "BRANDILI", valor: 9800 }],
+    politicaVigenteEnvio: "Política Inverno 2026 v3 (28/03/2026)" },
+  { id: "9", nome: "auto", lojista: "Loja - Super preço", marcas: ["BRANDILI","MUNDI"], dataCriacao: "04/07/2026", valorTotal: 12369.71, status: "ativo",
+    etapa: "aguardando_lojista", itensCount: 96, bola: "lojista", tempoEtapaDias: 2, limiteEtapaDias: 3,
+    linkEventoTipo: "visualizado", linkEventoLabel: "visualizado ontem",
+    industriaValores: [{ marca: "BRANDILI", valor: 7369.71 }, { marca: "MUNDI", valor: 5000 }] },
+  { id: "15", nome: "auto", lojista: "APOLO ATACADO", marcas: ["BRANDILI","KYLY"], dataCriacao: "06/07/2026", valorTotal: 24500, status: "ativo",
+    etapa: "aguardando_lojista", itensCount: 180, bola: "lojista", tempoEtapaDias: 0, limiteEtapaDias: 3,
+    linkEventoTipo: "editando", linkEventoLabel: "editando agora",
+    industriaValores: [{ marca: "BRANDILI", valor: 14500 }, { marca: "KYLY", valor: 10000 }] },
+
+  { id: "11", nome: "auto", lojista: "Milykids", marcas: ["BRANDILI"], dataCriacao: "01/07/2026", valorTotal: 5230.00, status: "revisao_lojista",
+    oportunidadeId: "op11", oportunidadeNome: "Pedido Especial – Milykids",
+    etapa: "em_revisao", itensCount: 38, bola: "vendedor", tempoEtapaDias: 1, limiteEtapaDias: 2,
+    linkEventoTipo: "editando", linkEventoLabel: "lojista editou 3 itens",
+    industriaValores: [{ marca: "BRANDILI", valor: 5230 }],
+    politicaVigenteEnvio: "Política Inverno 2026 v3 (28/03/2026)",
+    diff: {
+      itensRemovidos: [{ nome: "Bermuda Ciclista 4-10", qtd: 3, valor: 280.10 }],
+      itensAlterados: [
+        { nome: "Conjunto Moletom 4-10", deQtd: 12, paraQtd: 8, deValor: 1514.16, paraValor: 1009.44 },
+        { nome: "Camiseta Básica 1-3", deQtd: 6, paraQtd: 4, deValor: 384.06, paraValor: 256.04 },
+      ],
+      totalAntes: 6178.32,
+      totalDepois: 5230.00,
+      impactoPolitica: "Com essa edição o pedido perde o desconto de 32,5% (mínimo R$ 6.000)",
+    } },
+
+  { id: "13", nome: "auto", lojista: "CJD Pozza", marcas: ["BRANDILI"], dataCriacao: "25/06/2026", valorTotal: 8900.00, status: "aprovado",
+    oportunidadeId: "op5", oportunidadeNome: "Pedido Alto Verão – CJD Pozza",
+    etapa: "aprovado", itensCount: 62, bola: "comercial", tempoEtapaDias: 1, limiteEtapaDias: 2,
+    linkEventoTipo: "aprovado_total", linkEventoLabel: "aprovado integralmente",
+    industriaValores: [{ marca: "BRANDILI", valor: 8900, aprovada: true }] },
+
+  { id: "12", nome: "auto", lojista: "Alemão Vestuário", marcas: ["BRANDILI","MUNDI"], dataCriacao: "28/06/2026", valorTotal: 15420.30, status: "revisao_comercial",
+    oportunidadeId: "op3", oportunidadeNome: "Reposição Verão – Alemão Vestuário",
+    etapa: "analise_comercial", itensCount: 120, bola: "comercial", tempoEtapaDias: 3, limiteEtapaDias: 2,
+    industriaValores: [{ marca: "BRANDILI", valor: 10420.30, aprovada: true }, { marca: "MUNDI", valor: 5000, aprovada: true }],
+    motivoAnalise: "Fora da política: desconto 35% sem mínimo — em revisão", aprovacaoDireta: false },
+  { id: "16", nome: "auto", lojista: "Rei das Crianças", marcas: ["BRANDILI"], dataCriacao: "02/07/2026", valorTotal: 6300, status: "aprovado",
+    etapa: "analise_comercial", itensCount: 44, bola: "industria", tempoEtapaDias: 1, limiteEtapaDias: 2,
+    industriaValores: [{ marca: "BRANDILI", valor: 6300, aprovada: true }],
+    motivoAnalise: "Dentro da política · cliente ativo · aguardando estoque", aprovacaoDireta: true },
+
+  { id: "20", nome: "auto", lojista: "Trendy Kids", marcas: ["BRANDILI","MUNDI","KYLY"], dataCriacao: "29/06/2026", valorTotal: 900, status: "aprovado_parcial",
+    etapa: "aguardando_lojista", itensCount: 12, bola: "lojista", tempoEtapaDias: 2, limiteEtapaDias: 3,
+    linkEventoTipo: "aprovado_parcial", linkEventoLabel: "aprovou parcialmente",
+    industriaValores: [
+      { marca: "BRANDILI", valor: 3200, aprovada: true },
+      { marca: "MUNDI", valor: 2100, aprovada: true },
+      { marca: "KYLY", valor: 900, aprovada: false },
+    ] },
+  { id: "20a", nome: "auto", lojista: "Trendy Kids", marcas: ["BRANDILI"], dataCriacao: "29/06/2026", valorTotal: 3200, status: "aprovado",
+    etapa: "analise_comercial", itensCount: 24, bola: "comercial", tempoEtapaDias: 1, limiteEtapaDias: 2,
+    industriaValores: [{ marca: "BRANDILI", valor: 3200, aprovada: true }],
+    motivoAnalise: "Dentro da política · aprovação direta", aprovacaoDireta: true,
+    desdobradoDeId: "20", desdobradoDeLabel: "desdobrado de Trendy Kids · 60 itens" },
+  { id: "20b", nome: "auto", lojista: "Trendy Kids", marcas: ["MUNDI"], dataCriacao: "29/06/2026", valorTotal: 2100, status: "aprovado",
+    etapa: "virou_pedido", itensCount: 18, bola: "industria", tempoEtapaDias: 0, limiteEtapaDias: 5,
+    industriaValores: [{ marca: "MUNDI", valor: 2100, aprovada: true }],
+    pedidoNumero: "MUNDI #4210", pedidoMarca: "MUNDI",
+    desdobradoDeId: "20", desdobradoDeLabel: "desdobrado de Trendy Kids · 60 itens" },
+
+  { id: "21", nome: "auto", lojista: "Universo Infantil", marcas: ["BRANDILI"], dataCriacao: "22/06/2026", valorTotal: 18400, status: "aprovado",
+    etapa: "virou_pedido", itensCount: 130, bola: "industria", tempoEtapaDias: 0, limiteEtapaDias: 5,
+    industriaValores: [{ marca: "BRANDILI", valor: 18400, aprovada: true }],
+    pedidoNumero: "Brandili #1234", pedidoMarca: "BRANDILI" },
+
+  { id: "14", nome: "auto", lojista: "DBN OUTLET", marcas: ["MUNDI"], dataCriacao: "20/06/2026", valorTotal: 3200.00, status: "recusado",
+    oportunidadeId: "op6", oportunidadeNome: "Lote Outlet – DBN OUTLET",
+    etapa: "recusado", itensCount: 22, bola: "vendedor", tempoEtapaDias: 6, limiteEtapaDias: 3,
+    linkEventoTipo: "recusado", linkEventoLabel: "recusado pelo lojista",
+    industriaValores: [{ marca: "MUNDI", valor: 3200 }] },
 ];
+
 
 export const mockCatalogoProdutos: OrcamentoProduto[] = [
   { id: "cp1", ref: "80075-01", nome: "Bermuda Ciclista Cotton Ajuste Firme 1-3", marca: "BRANDILI", image: "https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=300&h=300&fit=crop", categoria: "SHORTS", genero: "UNISSEX", preco: 19.46, pecas: 3, tamanhos: ["1", "2", "3"], grade: "Fechada", valorTotal: 58.39, quantidadeGrades: 1 },
