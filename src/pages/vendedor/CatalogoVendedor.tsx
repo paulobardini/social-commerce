@@ -1017,7 +1017,7 @@ function ConditionPopover({
 
 // ---------- Session Condition Bar ----------
 function SessionConditionBar({
-  slugs, degrauByBrand, prazoByBrand, cartByBrand, allItems,
+  slugs, degrauByBrand, prazoByBrand, cartByBrand, allItems, presentation,
   onChangeDegrau, onChangePrazo, onAddBrand,
 }: {
   slugs: string[];
@@ -1025,6 +1025,7 @@ function SessionConditionBar({
   prazoByBrand: Record<string, number>;
   cartByBrand: Record<string, Array<{ itemId: string; qty: number }>>;
   allItems: CatalogItem[];
+  presentation?: boolean;
   onChangeDegrau: (slug: string, idx: number) => void;
   onChangePrazo: (slug: string, p: number) => void;
   onAddBrand: (slug: string) => void;
@@ -1058,6 +1059,7 @@ function SessionConditionBar({
               subtotalBruto={subtotalBruto}
               degrauIdx={idx}
               prazo={prazo}
+              presentation={presentation}
               onChangeDegrau={(i) => onChangeDegrau(slug, i)}
               onChangePrazo={(p) => onChangePrazo(slug, p)}
               trigger={
@@ -1071,8 +1073,12 @@ function SessionConditionBar({
                   <b className="capitalize">{slug}</b>
                   <span className="text-muted-foreground">·</span>
                   <span>{degrau?.desconto ?? 0}% desc</span>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="text-emerald-600 font-semibold">{comPct.toFixed(1)}% com</span>
+                  {!presentation && (
+                    <>
+                      <span className="text-muted-foreground">·</span>
+                      <span className="text-emerald-600 font-semibold">{comPct.toFixed(1)}% com</span>
+                    </>
+                  )}
                   <span className="text-muted-foreground">·</span>
                   <span>{prazo}d</span>
                   {abaixoMin && <AlertTriangle className="h-3 w-3 text-amber-600" />}
