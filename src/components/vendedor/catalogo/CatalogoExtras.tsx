@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MoreVertical, Package, BookOpen, FileText, MessageSquare, QrCode, Camera } from "lucide-react";
+import { MoreVertical, Package, BookOpen, FileText, MessageSquare, QrCode, Camera, Plus } from "lucide-react";
 import { materiaisApoio, listPoliticas, PoliticaIndustria } from "@/lib/politicaComercial";
 import { brands } from "@/data/mockProducts";
 import { PoliticaViewModal } from "@/components/vendedor/politica/PoliticaModals";
