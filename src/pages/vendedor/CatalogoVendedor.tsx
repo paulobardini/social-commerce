@@ -572,6 +572,7 @@ export default function CatalogoVendedor() {
                 return (
                   <ProductCard key={p.id} p={p} qty={qty}
                     onAdd={() => setQty(p, 1)} onInc={() => setQty(p, qty + 1)} onDec={() => setQty(p, qty - 1)}
+                    onAddWithPrice={(v) => { setQty(p, 1); setPrecoNegociado(p.brandSlug, p.id, v); }}
                     precoFinal={precoFinal} conditionHint={conditionHint}
                   />
                 );
