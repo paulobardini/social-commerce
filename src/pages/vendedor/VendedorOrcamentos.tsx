@@ -190,21 +190,33 @@ function OrcCard({
             {atrasado ? `parado há ${o.tempoEtapaDias}d` : `${o.tempoEtapaDias ?? 0}d na etapa`}
           </span>
         </div>
-        {acao && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (acao.kind === "diff") onDiff();
-              else if (acao.kind === "desdobramento") onDesdobramento();
-              else if (acao.kind === "pedido") onPedido();
-              else onAction(acao.kind, o);
-            }}
-            className="text-[10px] font-medium px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors inline-flex items-center gap-1 shrink-0"
-          >
-            <acao.icon className="h-2.5 w-2.5" />
-            <span className="truncate max-w-[110px]">{acao.label}</span>
-          </button>
-        )}
+        <div className="flex items-center gap-1 shrink-0">
+          {isPaiComFilhos && acao?.kind !== "desdobramento" && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDesdobramento(); }}
+              title="Ver desdobramento"
+              className="text-[10px] font-medium h-6 w-6 rounded bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/70 inline-flex items-center justify-center"
+            >
+              <GitBranch className="h-3 w-3" />
+            </button>
+          )}
+          {acao && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (acao.kind === "diff") onDiff();
+                else if (acao.kind === "desdobramento") onDesdobramento();
+                else if (acao.kind === "pedido") onPedido();
+                else onAction(acao.kind, o);
+              }}
+              className="text-[10px] font-medium px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors inline-flex items-center gap-1"
+            >
+              <acao.icon className="h-2.5 w-2.5" />
+              <span className="truncate max-w-[110px]">{acao.label}</span>
+            </button>
+          )}
+        </div>
+
       </div>
     </div>
   );
