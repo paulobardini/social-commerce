@@ -107,6 +107,7 @@ export default function CatalogoVendedor() {
   const [acordoOpen, setAcordoOpen] = useState(false);
   const [acordoJustificativa, setAcordoJustificativa] = useState("");
   const [acordoUrgente, setAcordoUrgente] = useState(false);
+  const [clientePickerOpen, setClientePickerOpen] = useState(false);
 
 
   const allItems = useMemo(() => [...baseItems, ...genericItems], [genericItems]);
