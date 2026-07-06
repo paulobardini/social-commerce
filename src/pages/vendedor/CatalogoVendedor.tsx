@@ -107,6 +107,7 @@ export default function CatalogoVendedor() {
   const [acordoOpen, setAcordoOpen] = useState(false);
   const [acordoJustificativa, setAcordoJustificativa] = useState("");
   const [acordoUrgente, setAcordoUrgente] = useState(false);
+  const [clientePickerOpen, setClientePickerOpen] = useState(false);
 
 
   const allItems = useMemo(() => [...baseItems, ...genericItems], [genericItems]);
@@ -417,7 +418,7 @@ export default function CatalogoVendedor() {
         <div className={`sticky top-0 z-20 bg-background/95 backdrop-blur border-b ${presentation ? "border-t-2 border-t-primary" : ""}`}>
           {/* LINHA 1: cliente · busca(QR) · view · order · filtrar · apresentação · ⋯ */}
           <div className="px-4 md:px-6 py-3 flex flex-col md:flex-row gap-2 md:gap-3 md:items-center">
-            <ClienteSelector cliente={cliente} clienteId={clienteId} onChange={setClienteId} />
+            <ClienteSelector cliente={cliente} clienteId={clienteId} onChange={setClienteId} open={clientePickerOpen} onOpenChange={setClientePickerOpen} />
             <div className="relative flex-1 md:mx-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -463,19 +464,13 @@ export default function CatalogoVendedor() {
               <SlidersHorizontal className="h-4 w-4" />
               Filtrar {activeFilterCount > 0 && <Badge variant="secondary" className="ml-1">{activeFilterCount}</Badge>}
             </Button>
-            <Button
-              variant="outline"
-              onClick={onAddAllClick}
-              disabled={filtered.length === 0}
-              className="h-10 shrink-0 gap-2"
-            >
-              <Plus className="h-4 w-4" /> Adicionar todos{filtered.length > 0 ? ` (${filtered.length})` : ""}
-            </Button>
             <CatalogSecondaryMenu
               activeBrandSlugs={activeBrandSlugs}
               onAddGeneric={addGenericItem}
               presentation={presentation}
               onTogglePresentation={togglePresentation}
+              onAddAll={onAddAllClick}
+              addAllCount={filtered.length}
             />
           </div>
           {presentation && (
@@ -554,26 +549,12 @@ export default function CatalogoVendedor() {
                 const qty = getQty(p.id, p.brandSlug);
                 const cond = sessionConditionFor(p.brandSlug);
                 const precoFinal = cond?.desconto ? p.price * (1 - cond.desconto / 100) : null;
-                const pol = getPolitica(p.brandSlug);
-                const conditionHint = !cond && pol ? (
-                  <ConditionPopover
-                    slug={p.brandSlug} pol={pol} subtotalBruto={0}
-                    degrauIdx={degrauByBrand[p.brandSlug] ?? Math.min(2, pol.degraus.length - 1)}
-                    prazo={prazoByBrand[p.brandSlug] ?? pol.prazoMedio}
-                    onChangeDegrau={(i) => updateDegrau(p.brandSlug, i)}
-                    onChangePrazo={(pr) => updatePrazo(p.brandSlug, pr)}
-                    trigger={
-                      <button className="text-[10px] text-primary hover:underline inline-flex items-center gap-1">
-                        <Pencil className="h-2.5 w-2.5" /> definir condição {p.brandName}
-                      </button>
-                    }
-                  />
-                ) : null;
+                const semCondicao = !cond && !!getPolitica(p.brandSlug);
                 return (
                   <ProductCard key={p.id} p={p} qty={qty}
                     onAdd={() => setQty(p, 1)} onInc={() => setQty(p, qty + 1)} onDec={() => setQty(p, qty - 1)}
                     onAddWithPrice={(v) => { setQty(p, 1); setPrecoNegociado(p.brandSlug, p.id, v); }}
-                    precoFinal={precoFinal} conditionHint={conditionHint}
+                    precoFinal={precoFinal} semCondicao={semCondicao}
                   />
                 );
               })}
@@ -643,8 +624,8 @@ export default function CatalogoVendedor() {
 
         {/* Painel cesta */}
         <Sheet open={cartOpen} onOpenChange={setCartOpen}>
-          <SheetContent side="right" className="w-full sm:max-w-2xl flex flex-col p-0">
-            <SheetHeader className="p-4 border-b shrink-0 flex-row items-center justify-between space-y-0">
+          <SheetContent side="right" className="w-full sm:max-w-2xl p-0 overflow-y-auto flex flex-col">
+            <SheetHeader className="p-4 border-b sticky top-0 z-10 bg-background/95 backdrop-blur flex-row items-center justify-between space-y-0">
               <SheetTitle>Cesta · {cliente?.nomeFantasia || "Sem cliente"}</SheetTitle>
               {!presentation && (
                 <Tooltip>
@@ -664,7 +645,7 @@ export default function CatalogoVendedor() {
                 </Tooltip>
               )}
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="p-4 space-y-4">
               {groups.length === 0 && <div className="text-center text-muted-foreground py-10">Cesta vazia.</div>}
               {groups.map((g) => (
                 <BrandCockpit
@@ -676,9 +657,8 @@ export default function CatalogoVendedor() {
                 />
               ))}
             </div>
-            <div className="border-t p-4 shrink-0 flex flex-col gap-3 items-stretch w-full">
-              {groups.length > 0 && (
-                <>
+            {groups.length > 0 && (
+              <div className="border-t p-4 flex flex-col gap-3 items-stretch w-full bg-background">
                   {/* Linha 1: total + desconto médio */}
                   <div className="w-full flex items-baseline justify-between gap-4">
                     <div>
@@ -697,28 +677,30 @@ export default function CatalogoVendedor() {
                     )}
                   </div>
 
-                  {/* Linha 2: pendências por indústria, banners largura total */}
-                  <div className="space-y-1.5 w-full">
-                    {groups.map((g) => {
-                      if (g.pendencias.length === 0) return null;
-                      const isBlock = g.bloqueado;
-                      return (
-                        <div
-                          key={g.slug}
-                          className={`w-full text-xs rounded-md border px-3 py-2 flex items-start gap-2 ${
-                            isBlock
-                              ? "border-destructive/30 bg-destructive/10 text-destructive"
-                              : "border-amber-500/30 bg-amber-500/10 text-amber-700"
-                          }`}
-                        >
-                          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                          <div className="flex-1 min-w-0">
-                            <b className="capitalize">{g.slug}</b>: {g.pendencias.map((p) => p.msg).join(" · ")}
+                  {/* Linha 2: pendências por indústria (ocultas em apresentação) */}
+                  {!presentation && (
+                    <div className="space-y-1.5 w-full">
+                      {groups.map((g) => {
+                        if (g.pendencias.length === 0) return null;
+                        const isBlock = g.bloqueado;
+                        return (
+                          <div
+                            key={g.slug}
+                            className={`w-full text-xs rounded-md border px-3 py-2 flex items-start gap-2 ${
+                              isBlock
+                                ? "border-destructive/30 bg-destructive/10 text-destructive"
+                                : "border-amber-500/30 bg-amber-500/10 text-amber-700"
+                            }`}
+                          >
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <b className="capitalize">{g.slug}</b>: {g.pendencias.map((p) => p.msg).join(" · ")}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* Linha 3: CTAs lado a lado */}
                   <div className="flex gap-2 w-full">
@@ -728,22 +710,36 @@ export default function CatalogoVendedor() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex-1">
-                          <Button className="w-full gap-2" disabled={!canGenerate} onClick={() => setConfirmOpen(true)}>
+                          <Button
+                            className="w-full gap-2"
+                            disabled={!canGenerate}
+                            onClick={() => {
+                              if (!cliente) {
+                                toast({ title: "Selecione um cliente", description: "O orçamento nasce sempre vinculado a um cliente." });
+                                setCartOpen(false);
+                                setClientePickerOpen(true);
+                                return;
+                              }
+                              setConfirmOpen(true);
+                            }}
+                          >
                             <FileText className="h-4 w-4" />
-                            {partial ? `Gerar só com ${okGroups.map((g) => g.slug).join(", ")}` : "Gerar orçamento"}
+                            {!cliente ? "Selecionar cliente" : partial ? `Gerar só com ${okGroups.map((g) => g.slug).join(", ")}` : "Gerar orçamento"}
                           </Button>
                         </div>
                       </TooltipTrigger>
-                      {partial && (
+                      {(!cliente || partial) && (
                         <TooltipContent>
-                          {blockedGroups.length} indústria(s) fora — ajuste {blockedGroups.map((g) => g.slug).join(", ")} para incluir.
+                          {!cliente
+                            ? "selecione o cliente"
+                            : `${blockedGroups.length} indústria(s) fora — ajuste ${blockedGroups.map((g) => g.slug).join(", ")} para incluir.`}
                         </TooltipContent>
                       )}
                     </Tooltip>
                   </div>
 
                   {/* Fora da política → pedido de acordo comercial ao supervisor */}
-                  {(blockedGroups.length > 0 || !canGenerate) && (
+                  {!presentation && (blockedGroups.length > 0 || !canGenerate) && (
                     <div className="w-full rounded-md border border-primary/30 bg-primary/5 p-3 flex items-start gap-3">
                       <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0 space-y-2">
@@ -758,11 +754,12 @@ export default function CatalogoVendedor() {
                       </div>
                     </div>
                   )}
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </SheetContent>
         </Sheet>
+
+
 
 
         {/* Confirmação orçamento */}
@@ -884,14 +881,20 @@ export default function CatalogoVendedor() {
 }
 
 // ---------- Cliente Selector ----------
-function ClienteSelector({ cliente, clienteId, onChange }: { cliente: any; clienteId: string | null; onChange: (id: string | null) => void }) {
-  const [open, setOpen] = useState(false);
+function ClienteSelector({ cliente, clienteId, onChange, open, onOpenChange }: {
+  cliente: any; clienteId: string | null; onChange: (id: string | null) => void;
+  open?: boolean; onOpenChange?: (o: boolean) => void;
+}) {
+  const [inner, setInner] = useState(false);
+  const isOpen = open ?? inner;
+  const setOpen = onOpenChange ?? setInner;
+  const missing = !cliente;
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="min-w-[220px] max-w-[280px] h-10 px-3 rounded-md border bg-card text-left text-sm hover:border-primary/50 transition flex items-center gap-2">
+        <button className={`min-w-[220px] max-w-[280px] h-10 px-3 rounded-md border bg-card text-left text-sm hover:border-primary/50 transition flex items-center gap-2 ${missing ? "border-amber-500/60 bg-amber-500/5" : ""}`}>
           <span className="text-xs text-muted-foreground shrink-0">Montando para:</span>
-          <span className="truncate font-medium">{cliente?.nomeFantasia || "Sem cliente"}</span>
+          <span className={`truncate font-medium ${missing ? "text-amber-700" : ""}`}>{cliente?.nomeFantasia || "Sem cliente"}</span>
           <ChevronDown className="h-3.5 w-3.5 ml-auto text-muted-foreground shrink-0" />
         </button>
       </PopoverTrigger>
@@ -914,6 +917,7 @@ function ClienteSelector({ cliente, clienteId, onChange }: { cliente: any; clien
                 </CommandItem>
               ))}
             </CommandGroup>
+
           </CommandList>
         </Command>
       </PopoverContent>
@@ -955,9 +959,17 @@ function AddWithPricePopover({ precoTabela, precoSugerido, onConfirm, trigger }:
   );
 }
 
-function ProductCard({ p, qty, onAdd, onInc, onDec, onAddWithPrice, precoFinal, conditionHint }: {
-  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; onAddWithPrice?: (v: number) => void; precoFinal: number | null; conditionHint?: React.ReactNode;
+function ProductCard({ p, qty, onAdd, onInc, onDec, onAddWithPrice, precoFinal, semCondicao }: {
+  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; onAddWithPrice?: (v: number) => void; precoFinal: number | null; semCondicao?: boolean;
 }) {
+  const priceNode = (
+    <div className="text-sm font-semibold pt-1">
+      {precoFinal ? <span className="text-muted-foreground line-through mr-1 text-xs">{formatBRL(p.price)}</span> : null}
+      {precoFinal
+        ? <span className="text-emerald-600">{formatBRL(precoFinal)}</span>
+        : <span className={semCondicao ? "border-b border-dotted border-muted-foreground/60 cursor-help" : ""}>{formatBRL(p.price)}</span>}
+    </div>
+  );
   return (
     <div className="group relative rounded-lg overflow-hidden bg-card border hover:shadow-md transition">
       <div className="aspect-[3/4] bg-muted overflow-hidden">
@@ -996,11 +1008,12 @@ function ProductCard({ p, qty, onAdd, onInc, onDec, onAddWithPrice, precoFinal, 
         <div className="text-[10px] font-medium text-primary uppercase tracking-wide truncate">{p.brandName}{p.isGeneric && " · genérico"}</div>
         <div className="text-xs font-medium truncate">{p.name}</div>
         <div className="text-[10px] text-muted-foreground">Ref {p.ref}</div>
-        <div className="text-sm font-semibold pt-1">
-          {precoFinal ? <span className="text-muted-foreground line-through mr-1 text-xs">{formatBRL(p.price)}</span> : null}
-          {precoFinal ? <span className="text-emerald-600">{formatBRL(precoFinal)}</span> : formatBRL(p.price)}
-        </div>
-        {conditionHint && <div className="pt-0.5">{conditionHint}</div>}
+        {semCondicao ? (
+          <Tooltip>
+            <TooltipTrigger asChild>{priceNode}</TooltipTrigger>
+            <TooltipContent>preço de tabela — defina a condição da {p.brandName}</TooltipContent>
+          </Tooltip>
+        ) : priceNode}
       </div>
     </div>
   );
@@ -1254,10 +1267,12 @@ function CartLineRow({ l, pol, regra, presentation, onChangeQty, onSetPreco }: {
               {!disabled && <Pencil className="h-3 w-3 opacity-60" />}
             </button>
           )}
-          <span className={`text-[10px] ${foraLimite ? "text-amber-600" : "text-muted-foreground"}`}>
-            = {l.descontoItem.toFixed(1)}% off
-            {foraLimite && ` · acima do teto ${maxDegrau.desconto}%`}
-          </span>
+          {!presentation && (
+            <span className={`text-[10px] ${foraLimite ? "text-amber-600" : "text-muted-foreground"}`}>
+              = {l.descontoItem.toFixed(1)}% off
+              {foraLimite && ` · acima do teto ${maxDegrau.desconto}%`}
+            </span>
+          )}
           {l.negociado && (
             <button onClick={() => onSetPreco(l.itemId, undefined)} className="text-muted-foreground hover:text-primary inline-flex items-center gap-1 text-[10px]">
               <RotateCcw className="h-3 w-3" /> restaurar
@@ -1357,9 +1372,6 @@ function SessionConditionChips({
 }) {
   return (
     <>
-      {slugs.length === 0 && (
-        <span className="text-xs text-muted-foreground italic shrink-0">Nenhuma indústria ativa — filtre por marca ou adicione um produto.</span>
-      )}
       {slugs.map((slug) => {
         const pol = getPolitica(slug);
         if (!pol) return null;

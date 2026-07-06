@@ -15,12 +15,14 @@ import { PoliticaViewModal } from "@/components/vendedor/politica/PoliticaModals
 import { toast } from "sonner";
 
 export function CatalogSecondaryMenu({
-  activeBrandSlugs, onAddGeneric, presentation, onTogglePresentation,
+  activeBrandSlugs, onAddGeneric, presentation, onTogglePresentation, onAddAll, addAllCount,
 }: {
   activeBrandSlugs: string[];
   onAddGeneric: (item: GenericItem) => void;
   presentation?: boolean;
   onTogglePresentation?: () => void;
+  onAddAll?: () => void;
+  addAllCount?: number;
 }) {
   const [genOpen, setGenOpen] = useState(false);
   const [matOpen, setMatOpen] = useState(false);
@@ -37,6 +39,11 @@ export function CatalogSecondaryMenu({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="text-[11px] text-muted-foreground">Ações do catálogo</DropdownMenuLabel>
+          {onAddAll && (
+            <DropdownMenuItem onClick={onAddAll} disabled={!addAllCount} className="gap-2">
+              <Plus className="h-4 w-4" /> Adicionar todos{addAllCount ? ` (${addAllCount})` : ""}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setGenOpen(true)} className="gap-2">
             <Package className="h-4 w-4" /> Produto genérico
           </DropdownMenuItem>
