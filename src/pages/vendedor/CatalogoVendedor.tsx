@@ -502,7 +502,9 @@ export default function CatalogoVendedor() {
               <div className="flex-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
                 <span className="font-semibold">{totalItens} itens</span>
                 <span className="text-muted-foreground">Total <b className="text-foreground">{formatBRL(totalGeral)}</b></span>
-                <span className="text-muted-foreground">Sua comissão <b className="text-emerald-600">{formatBRL(comissaoTotal)}</b></span>
+                {!presentation && (
+                  <span className="text-muted-foreground">Sua comissão <b className="text-emerald-600">{formatBRL(comissaoTotal)}</b></span>
+                )}
               </div>
               <Button onClick={() => setCartOpen(true)}>Ver cesta</Button>
             </div>
