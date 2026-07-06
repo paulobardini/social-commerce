@@ -54,6 +54,7 @@ import AutomacoesPage from "./pages/vendedor/AutomacoesPage";
 import AtendimentoPage from "./pages/vendedor/AtendimentoPage";
 import AtendimentoWhatsApp from "./pages/vendedor/AtendimentoWhatsApp";
 import MessageTemplatesPage from "./pages/vendedor/MessageTemplatesPage";
+import CatalogoVendedor from "./pages/vendedor/CatalogoVendedor";
 import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
 import { MetasProvider } from "@/contexts/MetasContext";
 import { MessageTemplatesProvider } from "@/contexts/MessageTemplatesContext";
@@ -171,6 +172,7 @@ const App = () => (
                 <Route path="/vendedor/oportunidades/nova" element={<LayoutRoute><VendedorOportunidades /></LayoutRoute>} />
                 <Route path="/vendedor/oportunidades/:id" element={<LayoutRoute><OportunidadeDetalhe /></LayoutRoute>} />
                 <Route path="/vendedor/novo-orcamento" element={<LayoutRoute><NovoOrcamento /></LayoutRoute>} />
+                <Route path="/vendedor/catalogo" element={<LayoutRoute><CatalogoVendedor /></LayoutRoute>} />
                 <Route path="/vendedor/orcamento/:id" element={<LayoutRoute><NovoOrcamento /></LayoutRoute>} />
                 <Route path="/vendedor/grade" element={<LayoutRoute><GradeEdicao /></LayoutRoute>} />
                 <Route path="/vendedor/carteira-antiga" element={<LayoutRoute><VendedorCarteira /></LayoutRoute>} />
