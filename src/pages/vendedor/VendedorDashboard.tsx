@@ -341,16 +341,8 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
 
   const saudeBadge = (contaId?: string): ItemUnificado["saudeBadge"] => {
     const c = conta(contaId);
-    if (!c) return undefined;
-    const st = c.status as string | undefined;
-    if (!st) return undefined;
-    const cor: Record<string, string> = {
-      ativo: "bg-emerald-100 text-emerald-700",
-      inativo: "bg-amber-100 text-amber-700",
-      perdido: "bg-rose-100 text-rose-700",
-      lead: "bg-slate-100 text-slate-600",
-    };
-    return { label: st, classe: cor[st] || "bg-slate-100 text-slate-600" };
+    if (!c?.nicho) return undefined;
+    return { label: c.nicho, classe: "bg-slate-100 text-slate-600" };
   };
 
   const itens = useMemo<ItemUnificado[]>(() => {
