@@ -457,26 +457,19 @@ export default function CatalogoVendedor() {
               <SlidersHorizontal className="h-4 w-4" />
               Filtrar {activeFilterCount > 0 && <Badge variant="secondary" className="ml-1">{activeFilterCount}</Badge>}
             </Button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={presentation ? "default" : "outline"}
-                  size="icon"
-                  onClick={togglePresentation}
-                  className="h-10 w-10 shrink-0"
-                  aria-pressed={presentation}
-                  aria-label="Modo apresentação"
-                >
-                  {presentation ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{presentation ? "Modo apresentação ATIVO (Shift+P)" : "Modo apresentação (Shift+P)"}</TooltipContent>
-            </Tooltip>
+            <Button
+              variant="outline"
+              onClick={onAddAllClick}
+              disabled={filtered.length === 0}
+              className="h-10 shrink-0 gap-2"
+            >
+              <Plus className="h-4 w-4" /> Adicionar todos{filtered.length > 0 ? ` (${filtered.length})` : ""}
+            </Button>
             <CatalogSecondaryMenu
               activeBrandSlugs={activeBrandSlugs}
               onAddGeneric={addGenericItem}
-              onAddAll={onAddAllClick}
-              addAllCount={filtered.length}
+              presentation={presentation}
+              onTogglePresentation={togglePresentation}
             />
           </div>
           {presentation && (
