@@ -36,44 +36,48 @@ export function CockpitTopbar({ title, showRep = false, showPeriod = true }: Pro
             </Select>
           )}
 
-          <div className="flex items-center bg-[#F6F7F9] rounded-lg p-0.5">
-            {PERIODOS.map(p => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={cn(
-                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition",
-                  period === p ? "bg-white nx-text shadow-sm" : "nx-muted hover:nx-text"
-                )}
-              >
-                {periodLabel[p]}
-              </button>
-            ))}
-          </div>
+          {showPeriod && (
+            <>
+              <div className="flex items-center bg-[#F6F7F9] rounded-lg p-0.5">
+                {PERIODOS.map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPeriod(p)}
+                    className={cn(
+                      "px-2.5 py-1 text-[11px] font-medium rounded-md transition",
+                      period === p ? "bg-white nx-text shadow-sm" : "nx-muted hover:nx-text"
+                    )}
+                  >
+                    {periodLabel[p]}
+                  </button>
+                ))}
+              </div>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className={cn("h-8 text-xs gap-1.5", period === "custom" && "border-[#2D3A8C] text-[#2D3A8C]")}>
-                <CalendarIcon className="h-3.5 w-3.5" />
-                {customRange ? `${format(customRange.from, "dd/MM")} – ${format(customRange.to, "dd/MM")}` : "Personalizado"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="range"
-                selected={customRange ? { from: customRange.from, to: customRange.to } : undefined}
-                onSelect={(r) => {
-                  if (r?.from && r?.to) { setCustomRange({ from: r.from, to: r.to }); setPeriod("custom"); }
-                }}
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("h-8 text-xs gap-1.5", period === "custom" && "border-[#2D3A8C] text-[#2D3A8C]")}>
+                    <CalendarIcon className="h-3.5 w-3.5" />
+                    {customRange ? `${format(customRange.from, "dd/MM")} – ${format(customRange.to, "dd/MM")}` : "Personalizado"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="range"
+                    selected={customRange ? { from: customRange.from, to: customRange.to } : undefined}
+                    onSelect={(r) => {
+                      if (r?.from && r?.to) { setCustomRange({ from: r.from, to: r.to }); setPeriod("custom"); }
+                    }}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
 
-          <div className="flex items-center gap-2 pl-2 border-l border-[#E7E9EE]">
-            <Switch id="comparar" checked={comparar} onCheckedChange={setComparar} />
-            <Label htmlFor="comparar" className="text-[11px] nx-muted cursor-pointer">Comparar</Label>
-          </div>
+              <div className="flex items-center gap-2 pl-2 border-l border-[#E7E9EE]">
+                <Switch id="comparar" checked={comparar} onCheckedChange={setComparar} />
+                <Label htmlFor="comparar" className="text-[11px] nx-muted cursor-pointer">Comparar</Label>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
