@@ -144,11 +144,60 @@ export default function CatalogoVendedor() {
   }, [cartByBrand]);
   const totalItens = cartItemsFlat.reduce((s, x) => s + x.qty, 0);
 
+  // ---------- Session condition helpers ----------
+  // Brands that are part of the current session: brands with cart items OR filtered explicitly.
+  const activeBrandSlugs = useMemo(() => {
+    const s = new Set<string>();
+    Object.keys(cartByBrand).forEach((k) => s.add(k));
+    filters.marcas.forEach((k) => s.add(k));
+    return Array.from(s);
+  }, [cartByBrand, filters.marcas]);
+
+  function ensureCondition(slug: string) {
+    setDegrauByBrand((prev) => {
+      if (prev[slug] !== undefined) return prev;
+      const ult = getUltimoDegrau(clienteId, slug);
+      // Fallback: degrau "mais comum" mock — índice 2 (~25% desc).
+      const pol = getPolitica(slug);
+      const fallback = pol ? Math.min(2, pol.degraus.length - 1) : 0;
+      return { ...prev, [slug]: ult ?? fallback };
+    });
+    setPrazoByBrand((prev) => {
+      if (prev[slug] !== undefined) return prev;
+      const pol = getPolitica(slug);
+      return pol ? { ...prev, [slug]: pol.prazoMedio } : prev;
+    });
+  }
+
+  // Garante condição ao ativar marca (filtro/carrinho)
+  useEffect(() => {
+    activeBrandSlugs.forEach((slug) => ensureCondition(slug));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBrandSlugs.join(",")]);
+
+  // Condição efetiva por marca (para o grid — mesmo sem estar na cesta)
+  function sessionConditionFor(slug: string) {
+    const pol = getPolitica(slug);
+    if (!pol) return null;
+    const idx = degrauByBrand[slug];
+    if (idx === undefined) return null;
+    const degrau = pol.degraus[idx];
+    const prazo = prazoByBrand[slug] ?? pol.prazoMedio;
+    const bonus = Math.max(0, Math.floor((pol.prazoMedio - prazo) / 15)) * pol.bonusComissaoPor15Dias;
+    return {
+      pol, idx, degrau, prazo,
+      desconto: degrau?.desconto ?? 0,
+      comissaoPct: (degrau?.comissao ?? 0) + bonus,
+    };
+  }
+
   // ---------- Cart ops ----------
   function getQty(itemId: string, brandSlug: string): number {
     return cartByBrand[brandSlug]?.find((l) => l.itemId === itemId)?.qty || 0;
   }
   function setQty(item: CatalogItem, qty: number) {
+    // Garante condição da sessão antes de adicionar
+    if (qty > 0) ensureCondition(item.brandSlug);
     setCartByBrand((prev) => {
       const lines = [...(prev[item.brandSlug] || [])];
       const idx = lines.findIndex((l) => l.itemId === item.id);
@@ -161,15 +210,6 @@ export default function CatalogoVendedor() {
       }
       const next = { ...prev };
       if (lines.length) next[item.brandSlug] = lines; else delete next[item.brandSlug];
-      // Inicializa degrau/prazo
-      if (lines.length && degrauByBrand[item.brandSlug] === undefined) {
-        const ult = getUltimoDegrau(clienteId, item.brandSlug);
-        setDegrauByBrand((p) => ({ ...p, [item.brandSlug]: ult ?? 0 }));
-      }
-      if (lines.length && prazoByBrand[item.brandSlug] === undefined) {
-        const pol = getPolitica(item.brandSlug);
-        if (pol) setPrazoByBrand((p) => ({ ...p, [item.brandSlug]: pol.prazoMedio }));
-      }
       return next;
     });
   }
@@ -204,6 +244,14 @@ export default function CatalogoVendedor() {
   const descontoMedio = totalBruto > 0 ? (1 - totalGeral / totalBruto) * 100 : 0;
   const freteFaltando = Math.max(0, 1800 - totalGeral);
   const bloqueioGlobal = groups.some((g) => g.bloqueado || (g.pol && !g.pol.ativa));
+
+  function updateDegrau(slug: string, idx: number) {
+    setDegrauByBrand((p) => ({ ...p, [slug]: idx }));
+  }
+  function updatePrazo(slug: string, p: number) {
+    setPrazoByBrand((prev) => ({ ...prev, [slug]: p }));
+  }
+
 
   // ---------- Chips ----------
   function removeChip(kind: keyof Filters, value: string) {
