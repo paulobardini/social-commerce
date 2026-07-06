@@ -170,6 +170,7 @@ export default function Cliente360Page() {
   const [notaInput, setNotaInput] = useState("");
   const [timelineFilter, setTimelineFilter] = useState<string>("todos");
   const [registrarOpen, setRegistrarOpen] = useState(false);
+  const [showFantasmas, setShowFantasmas] = useState(false);
   const [nicho, setNicho] = useState<Nicho | null>(cliente.nicho ?? null);
   const [interesse, setInteresse] = useState(cliente.interessePrincipal ?? "");
 
