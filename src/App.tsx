@@ -181,6 +181,7 @@ const App = () => (
                 <Route path="/vendedor/configuracoes" element={<LayoutRoute><VendedorConfiguracoes /></LayoutRoute>} />
                 <Route path="/vendedor/configuracoes/automacoes" element={<LayoutRoute><AutomacoesPage /></LayoutRoute>} />
                 <Route path="/vendedor/configuracoes/templates" element={<LayoutRoute><MessageTemplatesPage /></LayoutRoute>} />
+                <Route path="/vendedor/configuracoes/politicas" element={<LayoutRoute><PoliticasComerciaisPage /></LayoutRoute>} />
                 <Route path="/vendedor/clientes" element={<LayoutRoute><ClientesListing /></LayoutRoute>} />
                 <Route path="/vendedor/clientes/kanban" element={<LayoutRoute><KanbanClientesPage /></LayoutRoute>} />
                 <Route path="/vendedor/clientes/kanban/config" element={<LayoutRoute><FunilClientesConfigPage /></LayoutRoute>} />
