@@ -469,6 +469,16 @@ export default function OrcamentoPublico() {
                     </div>
                   )}
 
+                  {/* Instrução de contraproposta (modo edição ou já há ofertas) */}
+                  {(edicaoMode || modoContraproposta) && (
+                    <div className="px-4 py-2 bg-primary/5 border-b border-primary/10 flex gap-2 items-center">
+                      <Pencil className="h-3 w-3 text-primary shrink-0" />
+                      <p className="text-[11px] text-foreground">
+                        Toque no <span className="font-semibold text-primary">preço</span> para propor outro valor.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Itens */}
                   <ul className="divide-y divide-border">
                     {marcaItens.map((item) => {
