@@ -228,9 +228,28 @@ export default function CatalogoVendedor() {
     const bonus = pol ? Math.max(0, Math.floor((pol.prazoMedio - prazo) / 15)) * pol.bonusComissaoPor15Dias : 0;
     const comissaoPct = (degrau?.comissao ?? 0) + bonus;
     const comissaoRS = (subtotalLiquido * comissaoPct) / 100;
-    const bloqueado = !!(degrau?.minimoPedido && subtotalLiquido < degrau.minimoPedido);
-    const faltaMin = degrau?.minimoPedido ? Math.max(0, degrau.minimoPedido - subtotalLiquido) : 0;
-    return { pol, items, subtotalBruto, subtotalLiquido, desconto, degrau, degrauIdx, prazo, comissaoPct, comissaoRS, bloqueado, faltaMin };
+
+    // Pendências e bloqueios POR indústria (política própria)
+    const politicaInativa = !!(pol && !pol.ativa);
+    const faltaMinDegrau = degrau?.minimoPedido ? Math.max(0, degrau.minimoPedido - subtotalLiquido) : 0;
+    const abaixoDegrau = faltaMinDegrau > 0;
+    const minDuplicata = pol?.minimoDuplicata ?? 0;
+    const faltaDuplicata = minDuplicata ? Math.max(0, minDuplicata - subtotalLiquido) : 0;
+    const minFrete = pol?.minimoFreteCIF ?? 0;
+    const faltaFrete = minFrete ? Math.max(0, minFrete - subtotalLiquido) : 0;
+
+    const pendencias: Array<{ tipo: "bloqueio" | "aviso"; msg: string }> = [];
+    if (politicaInativa) pendencias.push({ tipo: "bloqueio", msg: "política vencida" });
+    if (abaixoDegrau) pendencias.push({ tipo: "bloqueio", msg: `faltam ${formatBRL(faltaMinDegrau)} para o degrau ${degrau!.desconto}%` });
+    if (faltaDuplicata > 0) pendencias.push({ tipo: "aviso", msg: `faltam ${formatBRL(faltaDuplicata)} para a duplicata mínima` });
+    if (faltaFrete > 0) pendencias.push({ tipo: "aviso", msg: `faltam ${formatBRL(faltaFrete)} para frete CIF` });
+
+    const bloqueado = politicaInativa || abaixoDegrau;
+    return {
+      pol, items, subtotalBruto, subtotalLiquido, desconto, degrau, degrauIdx, prazo,
+      comissaoPct, comissaoRS, bloqueado, faltaMin: faltaMinDegrau,
+      faltaDuplicata, faltaFrete, pendencias, politicaInativa,
+    };
   }
 
   const groups = useMemo(
@@ -242,8 +261,13 @@ export default function CatalogoVendedor() {
   const totalBruto = groups.reduce((s, g) => s + g.subtotalBruto, 0);
   const comissaoTotal = groups.reduce((s, g) => s + g.comissaoRS, 0);
   const descontoMedio = totalBruto > 0 ? (1 - totalGeral / totalBruto) * 100 : 0;
-  const freteFaltando = Math.max(0, 1800 - totalGeral);
-  const bloqueioGlobal = groups.some((g) => g.bloqueado || (g.pol && !g.pol.ativa));
+  const okGroups = groups.filter((g) => !g.bloqueado);
+  const blockedGroups = groups.filter((g) => g.bloqueado);
+  const canGenerate = okGroups.length > 0;
+  const partial = blockedGroups.length > 0 && okGroups.length > 0;
+  const totalOk = okGroups.reduce((s, g) => s + g.subtotalLiquido, 0);
+  const comissaoOk = okGroups.reduce((s, g) => s + g.comissaoRS, 0);
+
 
   function updateDegrau(slug: string, idx: number) {
     setDegrauByBrand((p) => ({ ...p, [slug]: idx }));
@@ -277,12 +301,19 @@ export default function CatalogoVendedor() {
   }
 
   function gerarOrcamento() {
-    groups.forEach((g) => saveUltimoDegrau(clienteId, g.slug, g.degrauIdx));
+    const alvo = okGroups; // só as indústrias sem bloqueio entram
+    alvo.forEach((g) => saveUltimoDegrau(clienteId, g.slug, g.degrauIdx));
     setConfirmOpen(false);
     setCartOpen(false);
-    toast({ title: "Orçamento gerado", description: `${cliente?.nomeFantasia || "Sem cliente"} · ${totalItens} itens · ${formatBRL(totalGeral)}` });
+    const itens = alvo.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0);
+    const total = alvo.reduce((s, g) => s + g.subtotalLiquido, 0);
+    toast({
+      title: `Orçamento gerado · ${alvo.length} pedido${alvo.length > 1 ? "s" : ""}`,
+      description: `${cliente?.nomeFantasia || "Sem cliente"} · ${itens} itens · ${formatBRL(total)}${blockedGroups.length ? ` (${blockedGroups.length} indústria(s) ficou de fora)` : ""}`,
+    });
     setTimeout(() => navigate("/vendedor"), 400);
   }
+
 
   function enviarPreviaWhats() {
     toast({ title: "Prévia enviada", description: `Resumo da cesta enviado no WhatsApp de ${cliente?.nomeFantasia || "cliente"}.` });
@@ -387,6 +418,23 @@ export default function CatalogoVendedor() {
                 const qty = getQty(p.id, p.brandSlug);
                 const cond = sessionConditionFor(p.brandSlug);
                 const precoFinal = cond?.desconto ? p.price * (1 - cond.desconto / 100) : null;
+                const pol = getPolitica(p.brandSlug);
+                const conditionHint = !cond && pol ? (
+                  <ConditionPopover
+                    slug={p.brandSlug}
+                    pol={pol}
+                    subtotalBruto={0}
+                    degrauIdx={degrauByBrand[p.brandSlug] ?? Math.min(2, pol.degraus.length - 1)}
+                    prazo={prazoByBrand[p.brandSlug] ?? pol.prazoMedio}
+                    onChangeDegrau={(i) => updateDegrau(p.brandSlug, i)}
+                    onChangePrazo={(pr) => updatePrazo(p.brandSlug, pr)}
+                    trigger={
+                      <button className="text-[10px] text-primary hover:underline inline-flex items-center gap-1">
+                        <Pencil className="h-2.5 w-2.5" /> definir condição {p.brandName}
+                      </button>
+                    }
+                  />
+                ) : null;
                 return (
                   <ProductCard
                     key={p.id}
@@ -396,6 +444,7 @@ export default function CatalogoVendedor() {
                     onInc={() => setQty(p, qty + 1)}
                     onDec={() => setQty(p, qty - 1)}
                     precoFinal={precoFinal}
+                    conditionHint={conditionHint}
                   />
                 );
               })}
@@ -466,20 +515,22 @@ export default function CatalogoVendedor() {
                       <span className="text-muted-foreground">Sua comissão total</span>
                       <span className="font-semibold text-emerald-600">{formatBRL(comissaoTotal)}</span>
                     </div>
-                    {freteFaltando > 0 ? (
-                      <div>
-                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                          <span>Faltam {formatBRL(freteFaltando)} para frete CIF grátis</span>
-                          <span>{Math.round((totalGeral / 1800) * 100)}%</span>
+                    {/* Pendências por indústria */}
+                    <div className="pt-1 border-t space-y-1">
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Pendências por indústria</div>
+                      {groups.map((g) => (
+                        <div key={g.slug} className="flex items-start justify-between gap-2 text-xs">
+                          <span className="capitalize font-medium">{g.slug}</span>
+                          {g.pendencias.length === 0 ? (
+                            <span className="text-emerald-600 inline-flex items-center gap-1"><Check className="h-3 w-3" /> ok</span>
+                          ) : (
+                            <span className={g.bloqueado ? "text-destructive text-right" : "text-amber-600 text-right"}>
+                              {g.pendencias.map((p) => p.msg).join(" · ")}
+                            </span>
+                          )}
                         </div>
-                        <Progress value={Math.min(100, (totalGeral / 1800) * 100)} className="h-1.5" />
-                      </div>
-                    ) : (
-                      <div className="text-xs text-emerald-600 flex items-center gap-1"><Check className="h-3 w-3" /> Frete CIF grátis atingido</div>
-                    )}
-                    {totalGeral > 0 && totalGeral < 300 && (
-                      <div className="text-xs text-amber-600">⚠ Abaixo do mínimo de duplicata (R$ 300).</div>
-                    )}
+                      ))}
+                    </div>
                   </div>
                   <div className="flex gap-2 w-full">
                     <Button variant="outline" className="flex-1 gap-2" onClick={enviarPreviaWhats} disabled={!cliente}>
@@ -487,15 +538,21 @@ export default function CatalogoVendedor() {
                     </Button>
                     <Button
                       className="flex-1 gap-2"
-                      disabled={bloqueioGlobal}
+                      disabled={!canGenerate}
                       onClick={() => setConfirmOpen(true)}
                     >
-                      <FileText className="h-4 w-4" /> Gerar orçamento
+                      <FileText className="h-4 w-4" />
+                      {partial ? `Gerar só com ${okGroups.map((g) => g.slug).join(", ")}` : "Gerar orçamento"}
                     </Button>
                   </div>
-                  {bloqueioGlobal && (
+                  {partial && (
+                    <div className="text-xs text-amber-600 w-full">
+                      {blockedGroups.length} indústria(s) fora por violação — ajuste {blockedGroups.map((g) => g.slug).join(", ")} para incluir.
+                    </div>
+                  )}
+                  {!canGenerate && (
                     <div className="text-xs text-destructive w-full">
-                      Existem violações de política — ajuste degraus ou remova itens para prosseguir.
+                      Todas as indústrias estão em violação — ajuste degraus ou remova itens.
                     </div>
                   )}
                 </>
@@ -512,18 +569,23 @@ export default function CatalogoVendedor() {
             </SheetHeader>
             <div className="py-4 space-y-3 text-sm">
               <div>
-                Este orçamento gerará <b>{groups.length} pedido{groups.length > 1 ? "s" : ""}</b> na aprovação — pedidos por indústria faturam separado:
+                Este orçamento gerará <b>{okGroups.length} pedido{okGroups.length > 1 ? "s" : ""}</b> na aprovação — pedidos por indústria faturam separado:
               </div>
               <div className="space-y-1">
-                {groups.map((g) => (
+                {okGroups.map((g) => (
                   <div key={g.slug} className="flex justify-between border rounded px-3 py-2">
                     <span className="capitalize">{g.slug}</span>
                     <span className="font-medium">{formatBRL(g.subtotalLiquido)}</span>
                   </div>
                 ))}
               </div>
+              {blockedGroups.length > 0 && (
+                <div className="text-xs text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded px-3 py-2">
+                  <b>Fora deste orçamento</b> ({blockedGroups.length}): {blockedGroups.map((g) => `${g.slug} — ${g.pendencias.filter((p) => p.tipo === "bloqueio").map((p) => p.msg).join(", ")}`).join(" · ")}. Ajuste e gere depois.
+                </div>
+              )}
               <div className="text-muted-foreground text-xs">
-                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {totalItens} itens · {formatBRL(totalGeral)}
+                Nome sugerido: {cliente?.nomeFantasia || "Sem cliente"} · {okGroups.reduce((s, g) => s + g.items.reduce((a, i) => a + i.qty, 0), 0)} itens · {formatBRL(totalOk)} · comissão {formatBRL(comissaoOk)}
               </div>
             </div>
             <SheetFooter className="flex-row gap-2">
@@ -576,8 +638,8 @@ function ClienteSelector({ cliente, clienteId, onChange }: { cliente: any; clien
 }
 
 // ---------- Product Card ----------
-function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal }: {
-  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; precoFinal: number | null;
+function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal, conditionHint }: {
+  p: CatalogItem; qty: number; onAdd: () => void; onInc: () => void; onDec: () => void; precoFinal: number | null; conditionHint?: React.ReactNode;
 }) {
   return (
     <div className="group relative rounded-lg overflow-hidden bg-card border hover:shadow-md transition">
@@ -612,6 +674,7 @@ function ProductCard({ p, qty, onAdd, onInc, onDec, precoFinal }: {
           ) : null}
           {precoFinal ? <span className="text-emerald-600">{formatBRL(precoFinal)}</span> : formatBRL(p.price)}
         </div>
+        {conditionHint && <div className="pt-0.5">{conditionHint}</div>}
       </div>
     </div>
   );
