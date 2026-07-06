@@ -672,27 +672,20 @@ export default function OrcamentoPublico() {
             ) : (
               <>
                 <Button
+                  onClick={() => setSolicitarOpen(true)}
+                  variant="outline"
+                  className="flex-1 min-h-[48px] gap-1.5 border-primary/40 text-primary hover:bg-primary/5 text-sm font-semibold px-3"
+                >
+                  <MessageSquareMore className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Solicitar alterações</span>
+                </Button>
+                <Button
                   onClick={() => aprovar("total")}
                   disabled={totalGeral === 0}
                   className="flex-1 min-h-[48px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3"
                 >
                   <ShieldCheck className="h-4 w-4 shrink-0" />
                   <span className="truncate">Aprovar ({fmt(totalGeral)})</span>
-                </Button>
-                <Button
-                  onClick={() => {
-                    setEdicaoMode(true);
-                    toast.info("Toque no preço de qualquer item para propor outro valor");
-                    // scroll suave para a primeira seção de itens
-                    setTimeout(() => {
-                      document.querySelector("main section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }, 50);
-                  }}
-                  variant="outline"
-                  className="flex-1 min-h-[48px] gap-1.5 border-primary/40 text-primary hover:bg-primary/5 text-sm font-semibold px-3"
-                >
-                  <MessageSquareMore className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Solicitar alterações</span>
                 </Button>
               </>
             )}
