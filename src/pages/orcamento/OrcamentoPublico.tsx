@@ -124,6 +124,7 @@ export default function OrcamentoPublico() {
 
   // Modo de edição (contraproposta ativa) — ativado por "Solicitar alterações"
   const [edicaoMode, setEdicaoMode] = useState(false);
+  const [solicitarOpen, setSolicitarOpen] = useState(false);
 
   useEffect(() => { window.scrollTo(0, 0); }, [id]);
 
@@ -672,27 +673,20 @@ export default function OrcamentoPublico() {
             ) : (
               <>
                 <Button
+                  onClick={() => setSolicitarOpen(true)}
+                  variant="outline"
+                  className="flex-1 min-h-[48px] gap-1.5 border-primary/40 text-primary hover:bg-primary/5 text-sm font-semibold px-3"
+                >
+                  <MessageSquareMore className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Solicitar alterações</span>
+                </Button>
+                <Button
                   onClick={() => aprovar("total")}
                   disabled={totalGeral === 0}
                   className="flex-1 min-h-[48px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3"
                 >
                   <ShieldCheck className="h-4 w-4 shrink-0" />
                   <span className="truncate">Aprovar ({fmt(totalGeral)})</span>
-                </Button>
-                <Button
-                  onClick={() => {
-                    setEdicaoMode(true);
-                    toast.info("Toque no preço de qualquer item para propor outro valor");
-                    // scroll suave para a primeira seção de itens
-                    setTimeout(() => {
-                      document.querySelector("main section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }, 50);
-                  }}
-                  variant="outline"
-                  className="flex-1 min-h-[48px] gap-1.5 border-primary/40 text-primary hover:bg-primary/5 text-sm font-semibold px-3"
-                >
-                  <MessageSquareMore className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Solicitar alterações</span>
                 </Button>
               </>
             )}
@@ -826,6 +820,61 @@ export default function OrcamentoPublico() {
           <DialogFooter className="p-3 border-t border-border shrink-0">
             <Button variant="outline" onClick={() => setAddOpenMarca(null)} className="w-full sm:w-auto">
               Concluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Solicitar alterações — escolha do tipo */}
+      <Dialog open={solicitarOpen} onOpenChange={setSolicitarOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>O que você quer solicitar?</DialogTitle>
+            <DialogDescription className="text-xs">
+              Escolha o tipo — o {VENDEDOR.nome.split(" ")[0]} recebe seu pedido junto com a proposta.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2.5">
+            <button
+              onClick={() => {
+                setSolicitarOpen(false);
+                setEdicaoMode(true);
+                toast.info("Altere o preço de cada item ou proponha um valor total do pedido");
+                setTimeout(() => {
+                  document.querySelector("main section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 50);
+              }}
+              className="text-left rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors p-4 flex gap-3 items-start"
+            >
+              <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <HandCoins className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Quero um desconto</p>
+                <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                  Toque no preço de qualquer item para propor outro valor, ou proponha um valor total para o pedido inteiro.
+                </p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => { setSolicitarOpen(false); setSugerirOpen(true); }}
+              className="text-left rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors p-4 flex gap-3 items-start"
+            >
+              <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <MessageSquareMore className="h-4.5 w-4.5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Quero ajustar mix, prazo ou sortimento</p>
+                <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                  Escreva o que precisa mudar (trocar tamanhos, incluir/remover produtos, alterar prazo de pagamento).
+                </p>
+              </div>
+            </button>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSolicitarOpen(false)} className="w-full sm:w-auto">
+              Cancelar
             </Button>
           </DialogFooter>
         </DialogContent>
