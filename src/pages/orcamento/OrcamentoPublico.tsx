@@ -124,6 +124,7 @@ export default function OrcamentoPublico() {
 
   // Modo de edição (contraproposta ativa) — ativado por "Solicitar alterações"
   const [edicaoMode, setEdicaoMode] = useState(false);
+  const [solicitarOpen, setSolicitarOpen] = useState(false);
 
   useEffect(() => { window.scrollTo(0, 0); }, [id]);
 
