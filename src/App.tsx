@@ -54,6 +54,7 @@ import AutomacoesPage from "./pages/vendedor/AutomacoesPage";
 import AtendimentoPage from "./pages/vendedor/AtendimentoPage";
 import AtendimentoWhatsApp from "./pages/vendedor/AtendimentoWhatsApp";
 import MessageTemplatesPage from "./pages/vendedor/MessageTemplatesPage";
+import CatalogoVendedor from "./pages/vendedor/CatalogoVendedor";
 import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
 import { MetasProvider } from "@/contexts/MetasContext";
 import { MessageTemplatesProvider } from "@/contexts/MessageTemplatesContext";
