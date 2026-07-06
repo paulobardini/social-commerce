@@ -338,9 +338,9 @@ export default function CatalogoVendedor() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="min-h-[calc(100vh-4rem)] bg-background">
+      <div className={`min-h-[calc(100vh-4rem)] bg-background ${presentation ? "ring-2 ring-primary/40 ring-offset-0" : ""}`}>
         {/* TOPO */}
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
+        <div className={`sticky top-0 z-20 bg-background/95 backdrop-blur border-b ${presentation ? "border-t-2 border-t-primary" : ""}`}>
           <div className="px-4 md:px-6 py-3 flex flex-col md:flex-row gap-2 md:gap-3 md:items-center">
             {/* Cliente selector */}
             <ClienteSelector cliente={cliente} clienteId={clienteId} onChange={setClienteId} />
@@ -371,7 +371,32 @@ export default function CatalogoVendedor() {
               <SlidersHorizontal className="h-4 w-4" />
               Filtrar {activeFilterCount > 0 && <Badge variant="secondary" className="ml-1">{activeFilterCount}</Badge>}
             </Button>
+            {/* Modo apresentação */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={presentation ? "default" : "outline"}
+                  onClick={togglePresentation}
+                  className="h-10 shrink-0 gap-2"
+                  aria-pressed={presentation}
+                >
+                  {presentation ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  <span className="hidden md:inline">{presentation ? "Apresentação" : "Apresentação"}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {presentation
+                  ? "Modo apresentação ATIVO — comissão e margem ocultas. Shift+P para sair."
+                  : "Modo apresentação (Shift+P) — esconde comissão e margem para mostrar ao cliente."}
+              </TooltipContent>
+            </Tooltip>
           </div>
+          {presentation && (
+            <div className="bg-primary text-primary-foreground text-[11px] font-semibold text-center py-0.5 flex items-center justify-center gap-1.5">
+              <Eye className="h-3 w-3" /> Modo apresentação ativo
+              <button onClick={togglePresentation} className="underline underline-offset-2 opacity-90 hover:opacity-100 ml-2">desligar</button>
+            </div>
+          )}
           {/* Chips */}
           {(chips.length > 0 || perfilChip) && (
             <div className="px-4 md:px-6 pb-3 flex flex-wrap gap-2 items-center">
