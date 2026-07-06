@@ -346,6 +346,21 @@ export default function CatalogoVendedor() {
           )}
         </div>
 
+        {/* Barra Condição da Sessão */}
+        <SessionConditionBar
+          slugs={activeBrandSlugs}
+          degrauByBrand={degrauByBrand}
+          prazoByBrand={prazoByBrand}
+          cartByBrand={cartByBrand}
+          allItems={allItems}
+          onChangeDegrau={updateDegrau}
+          onChangePrazo={updatePrazo}
+          onAddBrand={(slug) => {
+            setFilters((f) => f.marcas.includes(slug) ? f : { ...f, marcas: [...f.marcas, slug] });
+            ensureCondition(slug);
+          }}
+        />
+
         {/* CENTRO */}
         <div className="px-4 md:px-6 py-4">
           <div className="flex items-center justify-between mb-3">
