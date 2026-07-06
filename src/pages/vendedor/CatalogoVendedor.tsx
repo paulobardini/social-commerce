@@ -830,8 +830,9 @@ function CheckRow({ label, checked, onChange }: { label: string; checked: boolea
 }
 
 // ---------- Brand Cockpit ----------
-function BrandCockpit({ group, onChangeQty, onChangeDegrau, onChangePrazo }: {
+function BrandCockpit({ group, presentation, onChangeQty, onChangeDegrau, onChangePrazo }: {
   group: ReturnType<any>;
+  presentation?: boolean;
   onChangeQty: (itemId: string, q: number) => void;
   onChangeDegrau: (idx: number) => void;
   onChangePrazo: (p: number) => void;
