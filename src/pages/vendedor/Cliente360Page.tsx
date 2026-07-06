@@ -568,7 +568,7 @@ export default function Cliente360Page() {
                         <span className="text-muted-foreground">Valor 12m {industriaFocus ? `· ${industriaFocus}` : "(total)"}</span>
                         <span className="text-lg font-heading font-bold text-emerald-600">{valorTotal12m > 0 ? formatBRL(valorTotal12m) : "—"}</span>
                       </div>
-                      {!industriaFocus && industrias.filter(i => i.vinculada && i.valor12m > 0).map(i => (
+                      {!industriaFocus && industriasReais.map(i => (
                         <div key={i.nome} className="flex justify-between text-[11px] pl-2">
                           <span className="text-muted-foreground">↳ {i.nome}</span>
                           <span className="font-medium">{formatBRL(i.valor12m)}</span>
@@ -581,11 +581,20 @@ export default function Cliente360Page() {
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground">Frequência</p>
-                          <p className="font-semibold">{pedidos.length} pedidos</p>
+                          <p className="font-semibold">{freqPedidos} pedidos</p>
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground">Orçamentos em aberto</p>
-                          <p className="font-semibold">{orcamentosAbertosValor > 0 ? formatBRL(orcamentosAbertosValor) : "—"}</p>
+                          {orcamentosAbertosValor > 0 ? (
+                            <p className="font-semibold">{formatBRL(orcamentosAbertosValor)}</p>
+                          ) : (
+                            <button
+                              onClick={() => toast.success("Abrindo catálogo")}
+                              className="text-[11px] text-primary hover:underline font-medium text-left"
+                            >
+                              Nenhum · montar cesta →
+                            </button>
+                          )}
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground">Origem</p>
