@@ -365,35 +365,36 @@ export default function OrcamentoPublico() {
           {/* Resumo simples */}
           <div className="bg-muted/50 rounded-xl p-3 mt-2">
             <div className="flex items-baseline justify-between gap-2">
-              <div>
+              <div className="min-w-0">
                 <p className="text-[11px] text-muted-foreground">Seu pedido</p>
                 <p className="text-base font-semibold text-foreground">{itensAtivos.length} itens · {pecasTotal} peças</p>
               </div>
-              <p className="text-xl font-bold text-primary">{fmt(totalGeral)}</p>
-            </div>
-
-            {/* Modo de exibição de preço */}
-            <div className="mt-3 flex items-center gap-1.5 bg-background rounded-lg p-1 border border-border w-fit">
-              {(["peca", "kit", "ambos"] as ModoPreco[]).map(m => (
+              <div className="flex items-center gap-2 shrink-0">
+                <p className="text-xl font-bold text-primary">{fmt(totalGeral)}</p>
+                {/* Toggle discreto de visualização de preço */}
                 <button
-                  key={m}
-                  onClick={() => setModoPreco(m)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                    modoPreco === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  onClick={() => setModoPreco(modoPreco === "peca" ? "kit" : modoPreco === "kit" ? "ambos" : "peca")}
+                  className="h-7 w-7 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground flex items-center justify-center"
+                  title={`Exibir preços: ${modoPreco === "peca" ? "Por peça" : modoPreco === "kit" ? "Por kit" : "Ambos"} (toque para alternar)`}
+                  aria-label="Alternar exibição de preço"
                 >
-                  {m === "peca" ? "Por peça" : m === "kit" ? "Por kit" : "Ambos"}
+                  <Eye className="h-3.5 w-3.5" />
                 </button>
-              ))}
+              </div>
             </div>
 
-            <button
-              onClick={() => setResumoAberto(v => !v)}
-              className="mt-2 text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-            >
-              {resumoAberto ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              {resumoAberto ? "Esconder detalhes" : "Ver detalhes por peça"}
-            </button>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <button
+                onClick={() => setResumoAberto(v => !v)}
+                className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+              >
+                {resumoAberto ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                {resumoAberto ? "Esconder detalhes" : "Ver detalhes por peça"}
+              </button>
+              <span className="text-[10px] text-muted-foreground">
+                exibindo: <span className="font-medium text-foreground">{modoPreco === "peca" ? "por peça" : modoPreco === "kit" ? "por kit" : "ambos"}</span>
+              </span>
+            </div>
             {resumoAberto && (
               <div className="mt-2 pt-2 border-t border-border grid grid-cols-3 gap-2 text-center">
                 {(() => {
