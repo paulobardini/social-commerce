@@ -535,16 +535,13 @@ export default function CatalogoVendedor() {
 
         {/* CENTRO */}
         <div className="px-4 md:px-6 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm text-muted-foreground">
-              {filtered.length} produtos {showOnlyAdded && "· mostrando só os adicionados"}
-            </div>
-            {cliente && (
+          {cliente && (
+            <div className="flex items-center justify-end mb-3">
               <Button variant="ghost" size="sm" onClick={recomprarUltimo} className="gap-2 text-primary">
                 <RotateCw className="h-4 w-4" /> Recomprar itens do último pedido
               </Button>
-            )}
-          </div>
+            </div>
+          )}
           {filtered.length === 0 ? (
             <div className="text-center py-20 border rounded-lg">
               <Package className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
