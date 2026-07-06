@@ -86,6 +86,7 @@ import StartConfiguracoes from "@/start/pages/StartConfiguracoes";
 import StartPlanos from "@/start/pages/StartPlanos";
 import StartNotFound from "@/start/pages/StartNotFound";
 import { Navigate } from "react-router-dom";
+import OrcamentoPublico from "./pages/orcamento/OrcamentoPublico";
 import NotFound from "./pages/NotFound";
 
 // Marketing module
@@ -155,6 +156,7 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/cadastro" element={<Cadastro />} />
                 <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/proposta/:id" element={<OrcamentoPublico />} />
 
                 {/* Consumer pages */}
                 <Route path="/" element={<LayoutRoute><Index /></LayoutRoute>} />
