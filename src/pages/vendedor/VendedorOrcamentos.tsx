@@ -262,6 +262,14 @@ export default function VendedorOrcamentos() {
     return filtered.filter((o) => (o.etapa || "rascunho") === chipEtapa);
   }, [filtered, chipEtapa]);
 
+  const filhosPor = useMemo(() => {
+    const m = new Map<string, number>();
+    orcs.forEach((o) => {
+      if (o.desdobradoDeId) m.set(o.desdobradoDeId, (m.get(o.desdobradoDeId) ?? 0) + 1);
+    });
+    return m;
+  }, [orcs]);
+
   const handleAction = (kind: string, o: Orcamento) => {
     if (kind === "reenviar") toast.success(`Mensagem pronta enviada para ${o.lojista} 📲`);
     else if (kind === "cobrar") toast.success(`Cobrança enviada no WhatsApp para ${o.lojista}`);
