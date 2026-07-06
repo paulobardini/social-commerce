@@ -75,9 +75,10 @@ const fmt = (v: number | null | undefined) =>
 
 // ─── Card ──────────────────────────────────────────────────────────────
 function OrcCard({
-  o, onOpen, onDiff, onDesdobramento, onAction, onPedido,
+  o, filhosCount = 0, onOpen, onDiff, onDesdobramento, onAction, onPedido,
 }: {
   o: Orcamento;
+  filhosCount?: number;
   onOpen: () => void;
   onDiff: () => void;
   onDesdobramento: () => void;
@@ -87,6 +88,7 @@ function OrcCard({
   const atrasado = (o.tempoEtapaDias ?? 0) > (o.limiteEtapaDias ?? 999);
   const acao = acaoContextual(o);
   const Bola = o.bola ? bolaMeta[o.bola] : null;
+  const isPaiComFilhos = filhosCount > 0;
 
   return (
     <div
@@ -95,7 +97,7 @@ function OrcCard({
         atrasado ? "border-orange-500/50 ring-1 ring-orange-500/20" : "border-border"
       }`}
     >
-      {/* Vínculo desdobramento */}
+      {/* Vínculo desdobramento (filho → pai OU pai → filhos) */}
       {o.desdobradoDeId && (
         <button
           onClick={(e) => { e.stopPropagation(); onDesdobramento(); }}
@@ -105,6 +107,18 @@ function OrcCard({
           <span className="truncate">{o.desdobradoDeLabel}</span>
         </button>
       )}
+      {isPaiComFilhos && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDesdobramento(); }}
+          className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
+        >
+          <GitBranch className="h-2.5 w-2.5" />
+          <span className="truncate">
+            {filhosCount} {filhosCount === 1 ? "pedido desdobrado" : "pedidos desdobrados"} → Análise comercial
+          </span>
+        </button>
+      )}
+
 
       {/* Header: cliente + valor */}
       <div className="flex items-start justify-between gap-2">
