@@ -228,9 +228,28 @@ export default function CatalogoVendedor() {
     const bonus = pol ? Math.max(0, Math.floor((pol.prazoMedio - prazo) / 15)) * pol.bonusComissaoPor15Dias : 0;
     const comissaoPct = (degrau?.comissao ?? 0) + bonus;
     const comissaoRS = (subtotalLiquido * comissaoPct) / 100;
-    const bloqueado = !!(degrau?.minimoPedido && subtotalLiquido < degrau.minimoPedido);
-    const faltaMin = degrau?.minimoPedido ? Math.max(0, degrau.minimoPedido - subtotalLiquido) : 0;
-    return { pol, items, subtotalBruto, subtotalLiquido, desconto, degrau, degrauIdx, prazo, comissaoPct, comissaoRS, bloqueado, faltaMin };
+
+    // Pendências e bloqueios POR indústria (política própria)
+    const politicaInativa = !!(pol && !pol.ativa);
+    const faltaMinDegrau = degrau?.minimoPedido ? Math.max(0, degrau.minimoPedido - subtotalLiquido) : 0;
+    const abaixoDegrau = faltaMinDegrau > 0;
+    const minDuplicata = pol?.minimoDuplicata ?? 0;
+    const faltaDuplicata = minDuplicata ? Math.max(0, minDuplicata - subtotalLiquido) : 0;
+    const minFrete = pol?.minimoFreteCIF ?? 0;
+    const faltaFrete = minFrete ? Math.max(0, minFrete - subtotalLiquido) : 0;
+
+    const pendencias: Array<{ tipo: "bloqueio" | "aviso"; msg: string }> = [];
+    if (politicaInativa) pendencias.push({ tipo: "bloqueio", msg: "política vencida" });
+    if (abaixoDegrau) pendencias.push({ tipo: "bloqueio", msg: `faltam ${formatBRL(faltaMinDegrau)} para o degrau ${degrau!.desconto}%` });
+    if (faltaDuplicata > 0) pendencias.push({ tipo: "aviso", msg: `faltam ${formatBRL(faltaDuplicata)} para a duplicata mínima` });
+    if (faltaFrete > 0) pendencias.push({ tipo: "aviso", msg: `faltam ${formatBRL(faltaFrete)} para frete CIF` });
+
+    const bloqueado = politicaInativa || abaixoDegrau;
+    return {
+      pol, items, subtotalBruto, subtotalLiquido, desconto, degrau, degrauIdx, prazo,
+      comissaoPct, comissaoRS, bloqueado, faltaMin: faltaMinDegrau,
+      faltaDuplicata, faltaFrete, pendencias, politicaInativa,
+    };
   }
 
   const groups = useMemo(
@@ -242,8 +261,13 @@ export default function CatalogoVendedor() {
   const totalBruto = groups.reduce((s, g) => s + g.subtotalBruto, 0);
   const comissaoTotal = groups.reduce((s, g) => s + g.comissaoRS, 0);
   const descontoMedio = totalBruto > 0 ? (1 - totalGeral / totalBruto) * 100 : 0;
-  const freteFaltando = Math.max(0, 1800 - totalGeral);
-  const bloqueioGlobal = groups.some((g) => g.bloqueado || (g.pol && !g.pol.ativa));
+  const okGroups = groups.filter((g) => !g.bloqueado);
+  const blockedGroups = groups.filter((g) => g.bloqueado);
+  const canGenerate = okGroups.length > 0;
+  const partial = blockedGroups.length > 0 && okGroups.length > 0;
+  const totalOk = okGroups.reduce((s, g) => s + g.subtotalLiquido, 0);
+  const comissaoOk = okGroups.reduce((s, g) => s + g.comissaoRS, 0);
+
 
   function updateDegrau(slug: string, idx: number) {
     setDegrauByBrand((p) => ({ ...p, [slug]: idx }));
