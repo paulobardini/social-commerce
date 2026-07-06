@@ -4,6 +4,7 @@ import {
   Search, SlidersHorizontal, ShoppingCart, X, Plus, Minus, Lock,
   ChevronDown, ChevronUp, RotateCw, MessageSquare, FileText, Check, Package,
   Pencil, AlertTriangle, Eye, EyeOff, QrCode, LayoutGrid, List, RotateCcw,
+  ShieldCheck, Send,
 } from "lucide-react";
 import { usePresentationMode } from "@/hooks/usePresentationMode";
 import { Button } from "@/components/ui/button";
