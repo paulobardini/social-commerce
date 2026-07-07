@@ -199,7 +199,7 @@ export function KanbanBoard({ searchQuery = "", filterTags = [], filterPrioridad
                           <GripVertical className="h-3 w-3 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity" />
                         )}
                       </div>
-                      <p className="text-sm font-medium text-foreground leading-snug mb-1 line-clamp-2">{op.nome}</p>
+                      <p className="text-sm font-medium text-foreground leading-snug mb-1 line-clamp-2">{getDemanda(op.nome, op.clienteNome)}</p>
                       {briefingResumo && (
                         <p className="text-[11px] text-muted-foreground line-clamp-1 mb-1.5">{briefingResumo}</p>
                       )}
