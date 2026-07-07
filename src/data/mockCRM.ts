@@ -467,8 +467,35 @@ mockOportunidades.forEach(op => {
     if (op.tags.includes("fitness")) seg.push("Fitness");
     op.segmento = seg.join(" / ") || "";
   }
-  if (op.urgente === undefined) {
-    op.urgente = op.tags.includes("urgente");
+  if (op.urgente === undefined) op.urgente = op.tags.includes("urgente");
+
+  // Briefing derivado das tags (mock) — apenas se ainda não houver
+  if (!op.briefing) {
+    const categorias: string[] = [];
+    if (op.tags.includes("fitness")) categorias.push("Fitness");
+    if (op.tags.includes("infantil")) categorias.push("Conjuntos");
+    if (op.tags.includes("adulto")) categorias.push("Vestidos");
+    if (categorias.length === 0) categorias.push("Mix");
+    const faixaMin = op.prioridade === "alta" ? 40 : 20;
+    const faixaMax = op.prioridade === "alta" ? 90 : 55;
+    const quantidade = Math.max(20, Math.round(op.valorEstimado / ((faixaMin + faixaMax) / 2)));
+    op.briefing = {
+      categorias,
+      faixaMin,
+      faixaMax,
+      quantidade,
+      genero: op.tags.includes("adulto") ? "Adulto" : op.tags.includes("fitness") ? "Fitness" : "Infantil",
+      estacao: "Inverno",
+    };
+  }
+
+  // dias na etapa (mock a partir de ultimaInteracao)
+  if (op.diasNaEtapa === undefined) {
+    try {
+      const [d, m, y] = op.ultimaInteracao.split("/").map(Number);
+      const dt = new Date(y, m - 1, d);
+      op.diasNaEtapa = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 86400000));
+    } catch { op.diasNaEtapa = 0; }
   }
 });
 
