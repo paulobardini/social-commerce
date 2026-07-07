@@ -109,6 +109,8 @@ export interface ParseNL {
   tipo?: string;
   clienteNome?: string;
   clienteId?: string;
+  // Quando >1 cliente casa com pontuação equivalente, retorna todos para desambiguação.
+  candidatos?: Array<{ id: string; nome: string }>;
 }
 
 const diasSemanaMap: Record<string, number> = {
@@ -125,11 +127,10 @@ const verboTipoMap: Array<[RegExp, string]> = [
   [/\b(ligar|liga(r)?|telefonar|telefone)\b/i, "ligacao"],
   [/\b(visitar|visita|passar em|ir na)\b/i, "visita"],
   [/\b(enviar|mandar|envio)\b/i, "follow_up"],
-  [/\b(cobrar|cobranca|cobrança|retorno)\b/i, "cobranca_resposta"],
+  [/\b(cobrar|cobranca|cobrança|retorno)\b/i, "retorno_orcamento"],
   [/\b(reuniao|reunião|reunir|call|meet)\b/i, "reuniao"],
   [/\b(follow[- ]?up|follow)\b/i, "follow_up"],
-  [/\b(pos[- ]?venda|posvenda)\b/i, "pos_venda"],
-  [/\b(proposta|contraproposta)\b/i, "retorno_proposta"],
+  [/\b(apresentar|apresentacao|apresentação)\b/i, "apresentacao"],
 ];
 
 function proximoDiaSemana(alvo: number): string {
@@ -148,7 +149,7 @@ export function parseAcaoNL(
   let text = " " + input.trim() + " ";
   const lower = text.toLowerCase();
 
-  // hora: "14h", "14:30", "14h30", "às 9"
+  // hora
   let hora: string | undefined;
   const hMatch = lower.match(/\b(?:as?\s+)?(\d{1,2})(?::|h)(\d{0,2})?\b/);
   if (hMatch) {
@@ -158,7 +159,7 @@ export function parseAcaoNL(
     text = text.replace(hMatch[0], " ");
   }
 
-  // data: hoje, amanhã, DD/MM(/YYYY), próxima seg/ter/…
+  // data
   let vencimento: string | undefined;
   if (/\bhoje\b/i.test(text)) { vencimento = HOJE_ANCHOR_BR; text = text.replace(/\bhoje\b/i, ""); }
   else if (/\b(amanh[aã]|amn)\b/i.test(text)) { vencimento = addDaysBR(HOJE_ANCHOR_BR, 1); text = text.replace(/\b(amanh[aã]|amn)\b/i, ""); }
@@ -189,21 +190,34 @@ export function parseAcaoNL(
     if (re.test(text)) { tipo = t; break; }
   }
 
-  // cliente (substring por nomeFantasia)
-  let clienteId: string | undefined;
-  let clienteNome: string | undefined;
+  // cliente — coleta TODOS os candidatos com score > 0
   const cleaned = text.toLowerCase();
-  let best: { id: string; nome: string; score: number } | null = null;
+  const scored: Array<{ id: string; nome: string; score: number }> = [];
   for (const c of clientes) {
     const nm = c.nomeFantasia.toLowerCase();
     const tokens = nm.split(/\s+/).filter(w => w.length >= 3);
     let score = 0;
     for (const w of tokens) if (cleaned.includes(w)) score += w.length;
     if (cleaned.includes(nm)) score += nm.length * 2;
-    if (score > 0 && (!best || score > best.score)) best = { id: c.id, nome: c.nomeFantasia, score };
+    if (score > 0) scored.push({ id: c.id, nome: c.nomeFantasia, score });
   }
-  if (best) { clienteId = best.id; clienteNome = best.nome; }
+  scored.sort((a, b) => b.score - a.score);
+
+  let clienteId: string | undefined;
+  let clienteNome: string | undefined;
+  let candidatos: ParseNL["candidatos"];
+  if (scored.length === 1) {
+    clienteId = scored[0].id; clienteNome = scored[0].nome;
+  } else if (scored.length > 1) {
+    // Se houver diferença clara de score (>= 40% acima do 2º), escolhe o topo; caso contrário desambigua.
+    const [a, b] = scored;
+    if (a.score >= Math.round(b.score * 1.4)) {
+      clienteId = a.id; clienteNome = a.nome;
+    } else {
+      candidatos = scored.slice(0, 5).map(s => ({ id: s.id, nome: s.nome }));
+    }
+  }
 
   const titulo = input.trim();
-  return { titulo, vencimento, hora, tipo, clienteNome, clienteId };
+  return { titulo, vencimento, hora, tipo, clienteNome, clienteId, candidatos };
 }
