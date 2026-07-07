@@ -35,6 +35,7 @@ import {
   calcularSaude, saudeLabel, saudeColor, saudeDot, type SaudeStatus,
   SAUDE_LIMIARES,
 } from "@/lib/saudeCliente";
+import { statusDerivado } from "@/lib/acoes";
 import {
   ESTAGIOS, valor12m, formatBRL, estagioAtual, loadOverrides,
 } from "@/lib/carteiraMetodo";
@@ -498,16 +499,18 @@ export default function Cliente360Page() {
               <Card className="border border-border">
                 <CardHeader className="pb-2"><CardTitle className="text-sm font-heading flex items-center gap-2"><CheckSquare className="h-4 w-4 text-orange-500" /> Tarefas pendentes</CardTitle></CardHeader>
                 <CardContent className="space-y-1.5">
-                  {tarefasPendentes.length > 0 ? tarefasPendentes.slice(0, 3).map(t => (
-                    <div key={t.id} className={`flex items-center gap-2 p-2 rounded-lg border text-xs ${t.status === "atrasada" ? "border-red-200 bg-red-50/40" : "border-border/60"}`}>
-                      <CheckSquare className={`h-3.5 w-3.5 shrink-0 ${t.status === "atrasada" ? "text-red-500" : "text-muted-foreground"}`} />
+                  {tarefasPendentes.length > 0 ? tarefasPendentes.slice(0, 3).map(t => {
+                    const st = statusDerivado(t);
+                    return (
+                    <div key={t.id} className={`flex items-center gap-2 p-2 rounded-lg border text-xs ${st === "atrasada" ? "border-red-200 bg-red-50/40" : "border-border/60"}`}>
+                      <CheckSquare className={`h-3.5 w-3.5 shrink-0 ${st === "atrasada" ? "text-red-500" : "text-muted-foreground"}`} />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium truncate">{t.titulo}</p>
                         <p className="text-[10px] text-muted-foreground">{tipoTarefaLabels[t.tipo]} · {t.vencimento}</p>
                       </div>
                       <Badge variant={t.prioridade === "alta" ? "destructive" : "secondary"} className="text-[9px] shrink-0">{t.prioridade}</Badge>
                     </div>
-                  )) : (
+                  );}) : (
                     <div className="text-center py-6">
                       <p className="text-xs text-muted-foreground mb-2">Nenhuma tarefa pendente</p>
                       <Button size="sm" variant="outline"><Plus className="h-3 w-3 mr-1" /> Criar tarefa</Button>

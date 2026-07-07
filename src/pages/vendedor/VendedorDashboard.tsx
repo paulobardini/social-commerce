@@ -376,7 +376,7 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
     // ===== URGENTE =====
     // 1) Tarefas vencidas
     const tarefasVencidas = tarefas.filter(t => {
-      if (t.status !== "pendente" && t.status !== "atrasada") return false;
+      if (t.status !== "pendente") return false;
       const d = parseBR(t.vencimento);
       return d ? d < HOJE_ANCHOR : false;
     });

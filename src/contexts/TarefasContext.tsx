@@ -22,12 +22,25 @@ export interface CompromissoExt extends Compromisso {
   lembrete?: number; // minutos antes (0 = sem lembrete)
 }
 
+interface ConcluirPayload {
+  resultado?: string;
+  proximo?: {
+    titulo: string;
+    tipo?: TarefaCRM360["tipo"];
+    vencimento?: string;
+    hora?: string;
+    prioridade?: TarefaCRM360["prioridade"];
+  };
+}
+
 interface TarefasContextType {
   tarefas: TarefaExt[];
   compromissos: CompromissoExt[];
   addTarefa: (t: Omit<TarefaExt, "id">) => TarefaExt;
   updateTarefa: (id: string, patch: Partial<TarefaExt>) => void;
   toggleConcluida: (id: string) => void;
+  concluirAcao: (id: string, payload?: ConcluirPayload) => TarefaExt | null; // loop do método
+  adiarDias: (id: string, dias: number) => void;
   updateCompromisso: (id: string, patch: Partial<CompromissoExt>) => void;
 }
 
@@ -181,8 +194,65 @@ export function TarefasProvider({ children }: { children: ReactNode }) {
     }
   }, [compromissos]);
 
+  // Loop do método: registra "resultado" da ação atual e, se houver "proximo", cria a próxima Ação encadeada.
+  const concluirAcao = useCallback((id: string, payload?: ConcluirPayload): TarefaExt | null => {
+    let novaAcao: TarefaExt | null = null;
+    setTarefas(prev => {
+      const target = prev.find(t => t.id === id);
+      if (!target) return prev;
+      let novaId: string | undefined;
+      if (payload?.proximo?.titulo) {
+        novaId = `t-${Date.now()}`;
+        novaAcao = {
+          id: novaId,
+          titulo: payload.proximo.titulo,
+          descricao: "",
+          tipo: payload.proximo.tipo ?? target.tipo,
+          clienteId: target.clienteId,
+          clienteNome: target.clienteNome,
+          oportunidadeId: target.oportunidadeId,
+          oportunidadeNome: target.oportunidadeNome,
+          prioridade: payload.proximo.prioridade ?? target.prioridade,
+          vencimento: payload.proximo.vencimento ?? target.vencimento,
+          hora: payload.proximo.hora,
+          responsavel: target.responsavel,
+          status: "pendente",
+          origem: "vendedor",
+          recorrencia: "nenhuma",
+        };
+      }
+      const updated = prev.map(t => t.id === id
+        ? { ...t, status: "concluida" as const, resultado: payload?.resultado, proximaAcaoId: novaId }
+        : t,
+      );
+      if (novaAcao) updated.push(novaAcao);
+      const cur = updated.find(t => t.id === id)!;
+      setTimeout(() => {
+        syncCompromissoFromTarefa(cur);
+        if (novaAcao) syncCompromissoFromTarefa(novaAcao);
+      }, 0);
+      return updated;
+    });
+    return novaAcao;
+  }, [syncCompromissoFromTarefa]);
+
+  const adiarDias = useCallback((id: string, dias: number) => {
+    setTarefas(prev => {
+      const target = prev.find(t => t.id === id);
+      if (!target?.vencimento) return prev;
+      const [dd, mm, yyyy] = target.vencimento.split("/").map(Number);
+      const d = new Date(yyyy, mm - 1, dd);
+      d.setDate(d.getDate() + dias);
+      const nova = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+      const updated = prev.map(t => t.id === id ? { ...t, vencimento: nova } : t);
+      const cur = updated.find(t => t.id === id)!;
+      setTimeout(() => syncCompromissoFromTarefa(cur), 0);
+      return updated;
+    });
+  }, [syncCompromissoFromTarefa]);
+
   return (
-    <TarefasContext.Provider value={{ tarefas, compromissos, addTarefa, updateTarefa, toggleConcluida, updateCompromisso }}>
+    <TarefasContext.Provider value={{ tarefas, compromissos, addTarefa, updateTarefa, toggleConcluida, concluirAcao, adiarDias, updateCompromisso }}>
       {children}
     </TarefasContext.Provider>
   );

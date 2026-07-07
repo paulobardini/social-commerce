@@ -143,9 +143,16 @@ export interface TarefaCRM360 {
   vencimento: string;
   hora?: string;
   responsavel: string;
-  status: "pendente" | "concluida" | "atrasada" | "cancelada";
+  // Status stored: só "pendente" | "concluida" | "cancelada".
+  // "atrasada" é DERIVADA pelo helper statusDerivado(vencimento < hoje).
+  status: "pendente" | "concluida" | "cancelada";
   lembrete?: string;
   observacao?: string;
+  // Origem canônica da Ação (item 7 do método)
+  origem?: "vendedor" | "sistema" | "atendimento" | "funil";
+  // Loop do método: registro do "fiz" + encadeamento da próxima ação
+  resultado?: string;
+  proximaAcaoId?: string;
 }
 
 // ---- CLIENTES ----
@@ -408,15 +415,15 @@ export const mockNotas: Nota[] = [
 export const mockTarefas360: TarefaCRM360[] = [
   { id: "t1", titulo: "Enviar contraproposta Boutique da Thay", descricao: "Revisar preços e enviar nova proposta com desconto progressivo", tipo: "retorno_proposta", clienteId: "c1", clienteNome: "Boutique da Thay", oportunidadeId: "op1", oportunidadeNome: "Pedido Inverno 2026 – Multimarcas", prioridade: "alta", vencimento: "14/04/2026", hora: "10:00", responsavel: "Paulo Bardini", status: "pendente" },
   { id: "t2", titulo: "Agendar visita Fashion Kids", descricao: "Marcar visita presencial nas 3 lojas em São Paulo", tipo: "visita", clienteId: "c2", clienteNome: "Fashion Kids Store", oportunidadeId: "op2", oportunidadeNome: "Abertura de conta – Fashion Kids", prioridade: "media", vencimento: "18/04/2026", hora: "14:00", responsavel: "Paulo Bardini", status: "pendente" },
-  { id: "t3", titulo: "Follow-up orçamento Alemão Vestuário", descricao: "Ligar para verificar retorno do orçamento enviado", tipo: "follow_up", clienteId: "c3", clienteNome: "Alemão Vestuário", oportunidadeId: "op3", oportunidadeNome: "Reposição Verão – Alemão Vestuário", prioridade: "media", vencimento: "12/04/2026", responsavel: "Paulo Bardini", status: "atrasada" },
+  { id: "t3", origem: "sistema", titulo: "Follow-up orçamento Alemão Vestuário", descricao: "Ligar para verificar retorno do orçamento enviado", tipo: "follow_up", clienteId: "c3", clienteNome: "Alemão Vestuário", oportunidadeId: "op3", oportunidadeNome: "Reposição Verão – Alemão Vestuário", prioridade: "media", vencimento: "12/04/2026", responsavel: "Paulo Bardini", status: "pendente" },
   { id: "t4", titulo: "Montar catálogo fitness para Mega Atacado", descricao: "Selecionar produtos fitness adulto e montar apresentação", tipo: "reuniao", clienteId: "c4", clienteNome: "Mega Atacado Infantil", oportunidadeId: "op4", oportunidadeNome: "Coleção Fitness Adulto – Mega Atacado", prioridade: "alta", vencimento: "15/04/2026", hora: "09:00", responsavel: "Paulo Bardini", status: "pendente" },
   { id: "t5", titulo: "Enviar catálogo Pimpolho Modas", descricao: "Enviar catálogo digital via WhatsApp", tipo: "follow_up", clienteId: "c8", clienteNome: "Pimpolho Modas", oportunidadeId: "op7", oportunidadeNome: "Primeira compra – Pimpolho Modas", prioridade: "media", vencimento: "13/04/2026", responsavel: "Paulo Bardini", status: "pendente" },
   { id: "t6", titulo: "Primeiro contato Rei das Crianças", descricao: "Ligar e apresentar Nextil. Cliente com 5 lojas em BH.", tipo: "ligacao", clienteId: "c9", clienteNome: "Rei das Crianças", oportunidadeId: "op8", oportunidadeNome: "Expansão Linha Infantil – Rei das Crianças", prioridade: "alta", vencimento: "14/04/2026", hora: "11:00", responsavel: "Paulo Bardini", status: "pendente" },
-  { id: "t7", titulo: "Follow-up orçamento Milykids", descricao: "Verificar retorno sobre orçamento enviado", tipo: "cobranca_resposta", clienteId: "c7", clienteNome: "Milykids", oportunidadeId: "op11", oportunidadeNome: "Pedido Especial – Milykids", prioridade: "media", vencimento: "10/04/2026", responsavel: "Paulo Bardini", status: "atrasada" },
-  { id: "t8", titulo: "Reativar Anjus Baby e Kids", descricao: "Sem contato há 45 dias. Verificar se houve problema.", tipo: "ligacao", clienteId: "c13", clienteNome: "Anjus Baby e Kids", prioridade: "baixa", vencimento: "16/04/2026", responsavel: "Paulo Bardini", status: "pendente" },
+  { id: "t7", origem: "sistema", titulo: "Follow-up orçamento Milykids", descricao: "Verificar retorno sobre orçamento enviado", tipo: "cobranca_resposta", clienteId: "c7", clienteNome: "Milykids", oportunidadeId: "op11", oportunidadeNome: "Pedido Especial – Milykids", prioridade: "media", vencimento: "10/04/2026", responsavel: "Paulo Bardini", status: "pendente" },
+  { id: "t8", origem: "funil", titulo: "Reativar Anjus Baby e Kids", descricao: "Sem contato há 45 dias. Verificar se houve problema.", tipo: "ligacao", clienteId: "c13", clienteNome: "Anjus Baby e Kids", prioridade: "baixa", vencimento: "16/04/2026", responsavel: "Paulo Bardini", status: "pendente" },
   { id: "t9", titulo: "Pós-venda CJD Pozza", descricao: "Verificar satisfação com último pedido entregue", tipo: "pos_venda", clienteId: "c5", clienteNome: "CJD Pozza", prioridade: "baixa", vencimento: "17/04/2026", responsavel: "Paulo Bardini", status: "pendente" },
   { id: "t10", titulo: "Enviar apresentação Trendy Kids", descricao: "Montar e enviar apresentação institucional para linha adulto", tipo: "follow_up", clienteId: "c10", clienteNome: "Trendy Kids", oportunidadeId: "op10", oportunidadeNome: "Moda Adulta – Trendy Kids", prioridade: "baixa", vencimento: "15/04/2026", responsavel: "Paulo Bardini", status: "pendente" },
-  { id: "t11", titulo: "Campanha reativação Veste Bem", descricao: "Preparar ofertas especiais para reativação do cliente", tipo: "follow_up", clienteId: "c14", clienteNome: "Veste Bem Modas", prioridade: "media", vencimento: "20/04/2026", responsavel: "Paulo Bardini", status: "pendente" },
+  { id: "t11", origem: "atendimento", titulo: "Campanha reativação Veste Bem", descricao: "Preparar ofertas especiais para reativação do cliente", tipo: "follow_up", clienteId: "c14", clienteNome: "Veste Bem Modas", prioridade: "media", vencimento: "20/04/2026", responsavel: "Paulo Bardini", status: "pendente" },
   { id: "t12", titulo: "Ligar para Super Baby Store", descricao: "Apresentar nova coleção primavera", tipo: "ligacao", clienteId: "c11", clienteNome: "Super Baby Store", oportunidadeId: "op9", oportunidadeNome: "Reposição Primavera – Super Baby", prioridade: "media", vencimento: "14/04/2026", hora: "15:00", responsavel: "Paulo Bardini", status: "pendente" },
 ];
 
