@@ -121,7 +121,8 @@ export interface Compromisso {
   clienteId?: string;
   clienteNome?: string;
   oportunidadeId?: string;
-  tipo: "ligacao" | "reuniao" | "visita" | "follow_up" | "retorno_orcamento" | "apresentacao";
+  // string aberto para acomodar tipos canônicos de Ação
+  tipo: string;
   data: string;
   hora: string;
   duracao: string;
@@ -134,7 +135,9 @@ export interface TarefaCRM360 {
   id: string;
   titulo: string;
   descricao: string;
-  tipo: "ligacao" | "follow_up" | "visita" | "reuniao" | "retorno_proposta" | "cobranca_resposta" | "pos_venda";
+  // string aberto. Canônicos: ligacao | reuniao | visita | follow_up | retorno_orcamento | apresentacao | outros
+  // Legados mantidos: retorno_proposta | cobranca_resposta | pos_venda
+  tipo: string;
   clienteId?: string;
   clienteNome?: string;
   oportunidadeId?: string;
