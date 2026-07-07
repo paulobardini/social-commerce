@@ -104,6 +104,8 @@ export default function TarefasPage() {
   const filtered = useMemo(() => {
     return tarefas.filter(t => {
       const st = statusDerivado(t);
+      // Canceladas (Dispensar) NUNCA aparecem nas lentes — item 9.
+      if (st === "cancelada") return false;
       // O filtro "total" exclui concluídas por padrão; concluídas só aparecem no chip "Concluídas".
       if (filterCounter === "total" && st === "concluida") return false;
       if (filterCounter === "pendentes" && st !== "pendente") return false;
