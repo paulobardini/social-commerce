@@ -241,7 +241,7 @@ export default function VendedorOportunidades() {
                           className={`${colGrid} px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors border-t border-border/60`}
                         >
                           <div className="min-w-0">
-                            <p className="font-medium text-sm text-primary truncate">{op.nome}</p>
+                            <p className="font-medium text-sm text-primary truncate">{getDemanda(op.nome, op.clienteNome)}</p>
                           </div>
                           <div className="text-sm text-foreground truncate">{op.clienteNome}</div>
                           <div className="min-w-0">
