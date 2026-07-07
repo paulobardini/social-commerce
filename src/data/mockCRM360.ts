@@ -121,7 +121,8 @@ export interface Compromisso {
   clienteId?: string;
   clienteNome?: string;
   oportunidadeId?: string;
-  tipo: "ligacao" | "reuniao" | "visita" | "follow_up" | "retorno_orcamento" | "apresentacao";
+  // string aberto para acomodar tipos canônicos de Ação
+  tipo: string;
   data: string;
   hora: string;
   duracao: string;
@@ -134,7 +135,9 @@ export interface TarefaCRM360 {
   id: string;
   titulo: string;
   descricao: string;
-  tipo: "ligacao" | "follow_up" | "visita" | "reuniao" | "retorno_proposta" | "cobranca_resposta" | "pos_venda";
+  // string aberto. Canônicos: ligacao | reuniao | visita | follow_up | retorno_orcamento | apresentacao | outros
+  // Legados mantidos: retorno_proposta | cobranca_resposta | pos_venda
+  tipo: string;
   clienteId?: string;
   clienteNome?: string;
   oportunidadeId?: string;
@@ -488,9 +491,22 @@ export const nichoLabels: Record<Nicho, string> = {
 export const temperaturaColors: Record<string, string> = {
   quente: "text-red-500", morna: "text-yellow-500", fria: "text-blue-400",
 };
+// Lista canônica de tipos de AÇÃO (item 2 da unificação Tarefas/Agenda).
+// Ligação · Reunião · Visita · Follow-up · Retorno de orçamento · Apresentação · Outros.
+export const tipoAcaoLabels: Record<string, string> = {
+  ligacao: "Ligação",
+  reuniao: "Reunião",
+  visita: "Visita",
+  follow_up: "Follow-up",
+  retorno_orcamento: "Retorno de orçamento",
+  apresentacao: "Apresentação",
+  outros: "Outros",
+};
+// Legado — inclui tudo (canônico + antigos) para renderização de dados existentes.
 export const tipoTarefaLabels: Record<string, string> = {
-  ligacao: "Ligação", follow_up: "Follow-up", visita: "Visita", reuniao: "Reunião", retorno_proposta: "Retorno de proposta", cobranca_resposta: "Cobrança de resposta", pos_venda: "Pós-venda",
+  ...tipoAcaoLabels,
+  retorno_proposta: "Retorno de proposta",
+  cobranca_resposta: "Cobrança de resposta",
+  pos_venda: "Pós-venda",
 };
-export const tipoCompromissoLabels: Record<string, string> = {
-  ligacao: "Ligação", reuniao: "Reunião", visita: "Visita", follow_up: "Follow-up", retorno_orcamento: "Retorno de orçamento", apresentacao: "Apresentação comercial",
-};
+export const tipoCompromissoLabels: Record<string, string> = tipoAcaoLabels;

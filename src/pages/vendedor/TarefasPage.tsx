@@ -93,6 +93,7 @@ export default function TarefasPage() {
     const c = { total: 0, pendentes: 0, atrasadas: 0, concluidas: 0 };
     for (const t of tarefas) {
       const st = statusDerivado(t);
+      if (st === "cancelada") continue; // dispensadas não contam
       c.total++;
       if (st === "concluida") c.concluidas++;
       else if (st === "atrasada") c.atrasadas++;
@@ -104,6 +105,8 @@ export default function TarefasPage() {
   const filtered = useMemo(() => {
     return tarefas.filter(t => {
       const st = statusDerivado(t);
+      // Canceladas (Dispensar) NUNCA aparecem nas lentes — item 9.
+      if (st === "cancelada") return false;
       // O filtro "total" exclui concluídas por padrão; concluídas só aparecem no chip "Concluídas".
       if (filterCounter === "total" && st === "concluida") return false;
       if (filterCounter === "pendentes" && st !== "pendente") return false;
@@ -482,6 +485,7 @@ interface LinhaProps {
   onClientClick: () => void;
 }
 function AcaoLinha({ t, selected, onSelect, onToggle, onClientClick }: LinhaProps) {
+  const { updateTarefa } = useTarefas();
   const st = statusDerivado(t);
   const prioridadeDot: Record<string, string> = { alta: "bg-red-500", media: "bg-yellow-500", baixa: "bg-green-500" };
   const concluida = st === "concluida";
@@ -508,12 +512,30 @@ function AcaoLinha({ t, selected, onSelect, onToggle, onClientClick }: LinhaProp
           {t.clienteNome}
         </button>
       )}
-      <Badge variant="secondary" className="hidden sm:inline-flex text-[9px] shrink-0">{tipoTarefaLabels[t.tipo]}</Badge>
+      <Badge variant="secondary" className="hidden sm:inline-flex text-[9px] shrink-0">{tipoTarefaLabels[t.tipo] ?? t.tipo}</Badge>
       <div className="flex items-center gap-1 text-[11px] text-muted-foreground shrink-0 min-w-[100px] justify-end">
         <Clock className="h-3 w-3" />
         <span>{t.vencimento}{t.hora ? ` · ${t.hora}` : ""}</span>
       </div>
       <div className="shrink-0"><AcaoOrigemIcon origem={t.origem} /></div>
+      {/* Dispensar — só para ações sugeridas pelo sistema */}
+      {t.origem === "sistema" && !concluida && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => {
+                updateTarefa(t.id, { status: "cancelada" });
+                toast.info("Sugestão dispensada");
+              }}
+              className="shrink-0 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+              aria-label="Dispensar sugestão"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Dispensar (não conta como concluída)</TooltipContent>
+        </Tooltip>
+      )}
     </div>
   );
 }

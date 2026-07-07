@@ -68,40 +68,85 @@ function nextDate(base: string, rec: Recorrencia, custom?: number): string | nul
   return formatBR(d);
 }
 
-// Hidrata mocks iniciais convertendo tarefas com hora em compromissos sincronizados
+// Hidrata mocks iniciais:
+// 1) começa com tarefas do mock;
+// 2) converte cada mockCompromisso em uma TAREFA (dedup por clienteId+data+hora ou titulo+data+hora);
+// 3) gera compromissos como PROJEÇÃO pura das tarefas com hora.
+// Resultado: cada ação com hora aparece exatamente 1x na Agenda.
 function hydrateInitial(): { tarefas: TarefaExt[]; compromissos: CompromissoExt[] } {
   const tarefas: TarefaExt[] = mockTarefas360.map(t => ({ ...t, recorrencia: "nenhuma" }));
-  const compromissos: CompromissoExt[] = mockCompromissos.map(c => ({ ...c, origem: "manual" }));
 
-  // Sincroniza tarefas com horário -> Agenda
-  tarefas.forEach(t => {
-    if (t.hora && t.vencimento && t.status !== "concluida" && t.status !== "cancelada") {
-      const jaExiste = compromissos.find(
-        c => c.origem === "tarefa" && c.tarefaId === t.id,
-      );
-      if (!jaExiste) {
-        const compId = `agt-${t.id}`;
-        compromissos.push({
-          id: compId,
-          titulo: t.titulo,
-          clienteId: t.clienteId,
-          clienteNome: t.clienteNome,
-          oportunidadeId: t.oportunidadeId,
-          tipo: "follow_up",
-          data: t.vencimento,
-          hora: t.hora,
-          duracao: "30min",
-          responsavel: t.responsavel,
-          descricao: t.descricao,
-          status: "agendado",
-          origem: "tarefa",
-          tarefaId: t.id,
-        });
-        t.compromissoId = compId;
-      }
+  const keyOf = (clienteId: string | undefined, titulo: string, data: string, hora: string) =>
+    `${clienteId ?? ""}|${(titulo || "").toLowerCase().slice(0, 40)}|${data}|${hora}`;
+
+  // Índice de tarefas existentes por (clienteId+data+hora) OU (titulo+data+hora)
+  const existingKeys = new Set<string>();
+  const existingByClientDatetime = new Map<string, TarefaExt>();
+  for (const t of tarefas) {
+    if (t.hora && t.vencimento) {
+      const k1 = `${t.clienteId ?? ""}||${t.vencimento}|${t.hora}`;
+      existingByClientDatetime.set(k1, t);
+      existingKeys.add(keyOf(t.clienteId, t.titulo, t.vencimento, t.hora));
     }
-  });
+  }
 
+  // Converte compromissos em tarefas (quando não houver equivalente)
+  for (const c of mockCompromissos) {
+    const k1 = `${c.clienteId ?? ""}||${c.data}|${c.hora}`;
+    const jaTarefa = existingByClientDatetime.get(k1);
+    if (jaTarefa) {
+      // Adota o TIPO do compromisso (mais descritivo: reuniao/apresentacao/etc)
+      // apenas se a tarefa está com um tipo genérico.
+      if (jaTarefa.tipo === "follow_up" || jaTarefa.tipo === "outros") {
+        jaTarefa.tipo = c.tipo;
+      }
+      continue;
+    }
+    // Cria tarefa a partir do compromisso
+    tarefas.push({
+      id: `t-from-${c.id}`,
+      titulo: c.titulo,
+      descricao: c.descricao,
+      tipo: c.tipo,
+      clienteId: c.clienteId,
+      clienteNome: c.clienteNome,
+      oportunidadeId: c.oportunidadeId,
+      prioridade: "media",
+      vencimento: c.data,
+      hora: c.hora,
+      responsavel: c.responsavel,
+      status: c.status === "concluido" ? "concluida" : c.status === "cancelado" ? "cancelada" : "pendente",
+      origem: "vendedor",
+      recorrencia: "nenhuma",
+    });
+  }
+
+  // Projeta compromissos como derivação das tarefas com hora
+  const compromissos: CompromissoExt[] = [];
+  for (const t of tarefas) {
+    if (t.hora && t.vencimento && t.status !== "concluida" && t.status !== "cancelada") {
+      const compId = `agt-${t.id}`;
+      compromissos.push({
+        id: compId,
+        titulo: t.titulo,
+        clienteId: t.clienteId,
+        clienteNome: t.clienteNome,
+        oportunidadeId: t.oportunidadeId,
+        tipo: t.tipo,
+        data: t.vencimento,
+        hora: t.hora,
+        duracao: "30min",
+        responsavel: t.responsavel,
+        descricao: t.descricao,
+        status: "agendado",
+        origem: "tarefa",
+        tarefaId: t.id,
+      });
+      t.compromissoId = compId;
+    }
+  }
+  // silencia lint no keyOf/existingKeys (auxiliares mantidos para clareza)
+  void existingKeys;
   return { tarefas, compromissos };
 }
 
@@ -119,7 +164,7 @@ export function TarefasProvider({ children }: { children: ReactNode }) {
       }
       if (existing) {
         return prev.map(c => c.id === existing.id ? {
-          ...c, titulo: t.titulo, data: t.vencimento, hora: t.hora,
+          ...c, titulo: t.titulo, data: t.vencimento, hora: t.hora, tipo: t.tipo,
           clienteId: t.clienteId, clienteNome: t.clienteNome,
           oportunidadeId: t.oportunidadeId, descricao: t.descricao,
         } : c);
@@ -127,7 +172,7 @@ export function TarefasProvider({ children }: { children: ReactNode }) {
       const compId = `agt-${t.id}-${Date.now()}`;
       return [...prev, {
         id: compId, titulo: t.titulo, clienteId: t.clienteId, clienteNome: t.clienteNome,
-        oportunidadeId: t.oportunidadeId, tipo: "follow_up", data: t.vencimento, hora: t.hora,
+        oportunidadeId: t.oportunidadeId, tipo: t.tipo, data: t.vencimento, hora: t.hora,
         duracao: "30min", responsavel: t.responsavel, descricao: t.descricao,
         status: "agendado", origem: "tarefa", tarefaId: t.id,
       }];

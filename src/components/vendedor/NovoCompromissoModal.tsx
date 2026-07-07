@@ -1,19 +1,25 @@
-// MOCK: Modal de novo compromisso com campo de lembrete (item 19)
-import { useState } from "react";
+// MOCK: "Nova Ação com hora" — antes chamado "Novo compromisso".
+// Sob a unificação Tarefas/Agenda, TODA entrada da Agenda é uma Ação.
+// Este modal apenas atalho para criar Ação com HORA obrigatória (mesma entidade).
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTarefas, type CompromissoExt } from "@/contexts/TarefasContext";
-import { tipoCompromissoLabels } from "@/data/mockCRM360";
+import { useTarefas } from "@/contexts/TarefasContext";
+import { tipoAcaoLabels, mockClientes360 } from "@/data/mockCRM360";
 import { toast } from "sonner";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   defaultDate?: string;
+  defaultHora?: string;
+  defaultClienteId?: string;
+  defaultTipo?: string;
+  defaultTitulo?: string;
 }
 
 const lembretesOpcoes = [
@@ -24,49 +30,61 @@ const lembretesOpcoes = [
   { v: "60", l: "1 hora antes" },
 ];
 
-export function NovoCompromissoModal({ open, onOpenChange, defaultDate }: Props) {
-  const { compromissos } = useTarefas();
-  // como TarefasContext não expõe addCompromisso, mockamos via push direto no array (estado local não persiste — apenas UI demo)
-  const [titulo, setTitulo] = useState("");
-  const [tipo, setTipo] = useState<keyof typeof tipoCompromissoLabels>("reuniao");
+export function NovoCompromissoModal({
+  open, onOpenChange, defaultDate, defaultHora, defaultClienteId, defaultTipo, defaultTitulo,
+}: Props) {
+  const { addTarefa } = useTarefas();
+
+  const [titulo, setTitulo] = useState(defaultTitulo || "");
+  const [tipo, setTipo] = useState<string>(defaultTipo || "reuniao");
   const [data, setData] = useState(defaultDate || "");
-  const [hora, setHora] = useState("");
+  const [hora, setHora] = useState(defaultHora || "");
   const [duracao, setDuracao] = useState("30min");
-  const [clienteNome, setClienteNome] = useState("");
+  const [clienteId, setClienteId] = useState<string>(defaultClienteId || "");
   const [descricao, setDescricao] = useState("");
   const [lembrete, setLembrete] = useState("15");
 
-  const reset = () => {
-    setTitulo(""); setData(defaultDate || ""); setHora(""); setClienteNome(""); setDescricao(""); setLembrete("15");
-  };
+  const horaRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setTitulo(defaultTitulo || "");
+      setTipo(defaultTipo || "reuniao");
+      setData(defaultDate || "");
+      setHora(defaultHora || "");
+      setClienteId(defaultClienteId || "");
+      setDescricao(""); setLembrete("15"); setDuracao("30min");
+      // Foco na hora — item 4 do briefing (hora pré-focada)
+      setTimeout(() => horaRef.current?.focus(), 60);
+    }
+  }, [open, defaultDate, defaultHora, defaultClienteId, defaultTipo, defaultTitulo]);
 
   const handleSave = () => {
     if (!titulo || !data || !hora) {
       toast.error("Título, data e hora são obrigatórios");
       return;
     }
-    const novo: CompromissoExt = {
-      id: `c-${Date.now()}`,
+    const cliente = mockClientes360.find(c => c.id === clienteId);
+    addTarefa({
       titulo,
-      tipo: tipo as CompromissoExt["tipo"],
-      data,
-      hora,
-      duracao,
-      responsavel: "Você",
       descricao,
-      status: "agendado",
-      origem: "manual",
-      clienteNome: clienteNome || undefined,
-      lembrete: Number(lembrete),
-    };
-    // Mock: anexa ao array em memória do contexto
-    compromissos.push(novo);
+      tipo,
+      clienteId: clienteId || undefined,
+      clienteNome: cliente?.nomeFantasia,
+      prioridade: "media",
+      vencimento: data,
+      hora,
+      responsavel: "Paulo Bardini",
+      status: "pendente",
+      origem: "vendedor",
+      recorrencia: "nenhuma",
+    });
     toast.success(
       Number(lembrete) > 0
-        ? `Compromisso criado · lembrete ${lembrete} min antes`
-        : "Compromisso criado",
+        ? `Ação criada · lembrete ${lembrete} min antes`
+        : "Ação criada",
     );
-    reset();
+    void duracao; // duração é meta visual da agenda; tarefa não persiste
     onOpenChange(false);
   };
 
@@ -74,7 +92,10 @@ export function NovoCompromissoModal({ open, onOpenChange, defaultDate }: Props)
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
-          <DialogTitle>Novo compromisso</DialogTitle>
+          <DialogTitle>Nova ação com hora</DialogTitle>
+          <p className="text-[11px] text-muted-foreground">
+            Toda entrada da Agenda é uma <strong>ação</strong>. Aparece também em Tarefas e no Painel.
+          </p>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto space-y-3 py-2">
           <div>
@@ -84,10 +105,10 @@ export function NovoCompromissoModal({ open, onOpenChange, defaultDate }: Props)
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Tipo</Label>
-              <Select value={tipo} onValueChange={v => setTipo(v as any)}>
+              <Select value={tipo} onValueChange={v => setTipo(v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.entries(tipoCompromissoLabels).map(([k, l]) => (
+                  {Object.entries(tipoAcaoLabels).map(([k, l]) => (
                     <SelectItem key={k} value={k}>{l}</SelectItem>
                   ))}
                 </SelectContent>
@@ -95,7 +116,12 @@ export function NovoCompromissoModal({ open, onOpenChange, defaultDate }: Props)
             </div>
             <div>
               <Label className="text-xs">Cliente</Label>
-              <Input value={clienteNome} onChange={e => setClienteNome(e.target.value)} placeholder="Nome do cliente" />
+              <Select value={clienteId} onValueChange={setClienteId}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {mockClientes360.map(c => <SelectItem key={c.id} value={c.id}>{c.nomeFantasia}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -105,7 +131,7 @@ export function NovoCompromissoModal({ open, onOpenChange, defaultDate }: Props)
             </div>
             <div>
               <Label className="text-xs">Hora *</Label>
-              <Input value={hora} onChange={e => setHora(e.target.value)} placeholder="HH:MM" />
+              <Input ref={horaRef} value={hora} onChange={e => setHora(e.target.value)} placeholder="HH:MM" />
             </div>
             <div>
               <Label className="text-xs">Duração</Label>
@@ -117,14 +143,9 @@ export function NovoCompromissoModal({ open, onOpenChange, defaultDate }: Props)
             <Select value={lembrete} onValueChange={setLembrete}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {lembretesOpcoes.map(o => (
-                  <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>
-                ))}
+                {lembretesOpcoes.map(o => <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>)}
               </SelectContent>
             </Select>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Notificação aparece como toast no horário definido antes do evento.
-            </p>
           </div>
           <div>
             <Label className="text-xs">Descrição</Label>
@@ -133,7 +154,7 @@ export function NovoCompromissoModal({ open, onOpenChange, defaultDate }: Props)
         </div>
         <DialogFooter className="shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave}>Criar compromisso</Button>
+          <Button onClick={handleSave}>Criar ação</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
