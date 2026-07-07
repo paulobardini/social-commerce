@@ -49,7 +49,7 @@ import DashboardGerencial from "./pages/vendedor/DashboardGerencial";
 import RelatoriosCentral from "./pages/vendedor/RelatoriosCentral";
 import ReportBuilder from "./pages/vendedor/ReportBuilder";
 import RelatorioViewer from "./pages/vendedor/RelatorioViewer";
-import InsightsPage from "./pages/vendedor/InsightsPage";
+// InsightsPage foi fundida em DashboardGerencial (aba Decisões) — rota redireciona.
 import VisoesSalvasPage from "./pages/vendedor/VisoesSalvasPage";
 import AutomacoesPage from "./pages/vendedor/AutomacoesPage";
 import AtendimentoPage from "./pages/vendedor/AtendimentoPage";
