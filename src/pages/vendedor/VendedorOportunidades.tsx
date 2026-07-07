@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
-  mockOportunidades, etapaMap, etapaCorMap, type TagCRM, type OportunidadeEtapa, type Oportunidade,
+  mockOportunidades, type TagCRM, type Oportunidade,
+  etapasCanonicas, etapaToCanonica, type EtapaCanonica,
 } from "@/data/mockCRM";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
@@ -25,11 +26,6 @@ function industriaDe(op: Oportunidade): string {
   const idx = Math.abs(op.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % industriaPool.length;
   return industriaPool[idx];
 }
-
-const etapasOrdem: OportunidadeEtapa[] = [
-  "novo_lead", "contato_iniciado", "em_qualificacao", "proposta_construcao",
-  "orcamento_enviado", "em_negociacao", "ganho", "perdido",
-];
 
 export default function VendedorOportunidades() {
   const navigate = useNavigate();
