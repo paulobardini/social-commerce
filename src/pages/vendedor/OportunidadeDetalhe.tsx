@@ -110,7 +110,7 @@ export default function OportunidadeDetalhe() {
     <div className="p-4 md:p-6 max-w-[1200px] mx-auto space-y-5">
       <Breadcrumbs items={[
         { label: "Oportunidades", path: "/vendedor/oportunidades" },
-        { label: op.nome },
+        { label: getTituloCompleto(op.nome, op.clienteNome) },
       ]} />
 
       {/* Header */}
