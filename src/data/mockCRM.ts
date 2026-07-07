@@ -40,6 +40,17 @@ export interface EtapaFunil {
   ativa: boolean;
 }
 
+export interface Briefing {
+  categorias?: string[];
+  faixaMin?: number;
+  faixaMax?: number;
+  genero?: string;
+  quantidade?: number;
+  estacao?: string;
+  marcasCandidatas?: string[];
+  prazoCliente?: string;
+}
+
 export interface Oportunidade {
   id: string;
   nome: string;
@@ -62,7 +73,49 @@ export interface Oportunidade {
   proximaAcao: string;
   observacoes: string;
   orcamentoIds: string[];
+  briefing?: Briefing;
+  motivoPerda?: string;
+  diasNaEtapa?: number;
 }
+
+// ===== Etapas canônicas (view do vendedor: 6 colunas) =====
+export type EtapaCanonica = "novo_lead" | "qualificando" | "em_proposta" | "em_negociacao" | "ganha" | "perdida";
+
+export const etapasCanonicas: { id: EtapaCanonica; nome: string; cor: string; limiteDias: number }[] = [
+  { id: "novo_lead", nome: "Novo lead", cor: "#94a3b8", limiteDias: 3 },
+  { id: "qualificando", nome: "Qualificando", cor: "#a78bfa", limiteDias: 5 },
+  { id: "em_proposta", nome: "Em proposta", cor: "#f59e0b", limiteDias: 7 },
+  { id: "em_negociacao", nome: "Em negociação", cor: "#f97316", limiteDias: 7 },
+  { id: "ganha", nome: "Ganha", cor: "#22c55e", limiteDias: 999 },
+  { id: "perdida", nome: "Perdida", cor: "#ef4444", limiteDias: 999 },
+];
+
+export const etapaToCanonica: Record<OportunidadeEtapa, EtapaCanonica> = {
+  novo_lead: "novo_lead",
+  contato_iniciado: "qualificando",
+  em_qualificacao: "qualificando",
+  proposta_construcao: "em_proposta",
+  orcamento_enviado: "em_proposta",
+  em_negociacao: "em_negociacao",
+  ganho: "ganha",
+  perdido: "perdida",
+};
+
+export const canonicaToBase: Record<EtapaCanonica, OportunidadeEtapa> = {
+  novo_lead: "novo_lead",
+  qualificando: "em_qualificacao",
+  em_proposta: "proposta_construcao",
+  em_negociacao: "em_negociacao",
+  ganha: "ganho",
+  perdida: "perdido",
+};
+
+export const probabilidadeAutoPorCanonica: Record<EtapaCanonica, number> = {
+  novo_lead: 10, qualificando: 25, em_proposta: 45, em_negociacao: 70, ganha: 100, perdida: 0,
+};
+
+export const motivosPerda = ["Preço", "Prazo", "Sortimento", "Concorrência", "Outro"] as const;
+export type MotivoPerda = typeof motivosPerda[number];
 
 export interface AtividadeCRM {
   id: string;
