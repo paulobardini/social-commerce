@@ -143,6 +143,7 @@ export default function WhatsAppInbox({
   const [selectedId, setSelectedId] = useState<string>(conversasBase[0]?.id || "");
   const [search, setSearch] = useState("");
   const [msgInput, setMsgInput] = useState("");
+  const [msgSuggestion, setMsgSuggestion] = useState<{ titulo: string; original: string } | null>(null);
   const [tipo, setTipo] = useState<TipoConversa>("clientes");
   const [estado, setEstado] = useState<EstadoFiltro>("todas");
   const [viewMode, setViewMode] = useState<ViewMode>("metodo");
