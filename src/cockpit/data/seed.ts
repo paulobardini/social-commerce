@@ -1,5 +1,6 @@
 // Seed determinístico para o Cockpit Comercial Nextil
-// Gera ~120 contas, ~1500 pedidos, ~600 atendimentos, ~80 oportunidades, metas e marcas.
+// Inclui região por rep, KPIs individuais com DESVIO REALISTA (nunca idênticos)
+// e orçamentos pendentes cobrindo os 3 motivos de aprovação.
 
 function mulberry32(seed: number) {
   let a = seed >>> 0;
@@ -15,14 +16,34 @@ export type Nicho = "Boutique" | "Multimarca" | "Atacadista" | "E-commerce" | "R
 export type Etapa = "novo_lead" | "em_negociacao" | "proposta_enviada" | "orcamento_aprovado" | "ganha" | "perdida";
 export type TipoAtendimento = "visita" | "ligacao" | "whatsapp";
 export type TipoMeta = "faturamento" | "positivacao" | "cobertura" | "novos" | "reativacao";
+export type MotivoAprovacao = "fora_da_politica" | "credito_cliente_novo" | "aguardando_estoque";
 
-export interface Representante { id: string; nome: string; email: string; }
+export interface Representante {
+  id: string; nome: string; email: string; regiao: string;
+  // dados de desempenho (mock realista, com desvio entre reps)
+  pace: number;             // % da meta projetada (100 = no ritmo)
+  cobertura: number;        // % de contas atendidas no mês
+  coberturaDelta: number;   // pp vs mês anterior
+  ultimoAcessoDias: number; // dias desde o último acesso ao sistema
+  historicoMedio12m: number;// faturamento médio mensal 12m (R$)
+}
 export interface Marca { id: string; nome: string; categorias: string[]; }
 export interface Conta { id: string; razao: string; nicho: Nicho; cidade: string; uf: string; repId: string; criadoEm: Date; }
 export interface Pedido { id: string; contaId: string; repId: string; data: Date; valor: number; itens: number; marcaId: string; categoria: string; colecao: string; produtoId: string; }
 export interface Atendimento { id: string; contaId: string; repId: string; data: Date; tipo: TipoAtendimento; resultado: "convertido" | "follow_up" | "sem_interesse"; leadOuCliente: "lead" | "cliente"; }
 export interface Oportunidade { id: string; contaId: string; repId: string; etapa: Etapa; valor: number; abertaEm: Date; ultimaMov: Date; motivoPerda?: string; }
 export interface Meta { repId: string | "consolidada"; tipo: TipoMeta; valor: number; mes: string; }
+export interface OrcamentoPendente {
+  id: string;
+  contaId: string;
+  repId: string;
+  valor: number;
+  desconto: number;       // %
+  minimoAtingido: boolean;
+  abertoDias: number;
+  motivo: MotivoAprovacao;
+  detalhe: string;        // resumo humano
+}
 
 export interface Seed {
   representantes: Representante[];
@@ -32,16 +53,17 @@ export interface Seed {
   atendimentos: Atendimento[];
   oportunidades: Oportunidade[];
   metas: Meta[];
+  orcamentosPendentes: OrcamentoPendente[];
   hoje: Date;
 }
 
 const REPS: Representante[] = [
-  { id: "r1", nome: "André Lima",      email: "andre@nextil.com.br" },
-  { id: "r2", nome: "Alexandre Souza", email: "alexandre@nextil.com.br" },
-  { id: "r3", nome: "Carla Mendes",    email: "carla@nextil.com.br" },
-  { id: "r4", nome: "Daniel Rocha",    email: "daniel@nextil.com.br" },
-  { id: "r5", nome: "Giovanna Pires",  email: "giovanna@nextil.com.br" },
-  { id: "r6", nome: "Sérgio Tavares",  email: "sergio@nextil.com.br" },
+  { id: "r1", nome: "André Lima",      email: "andre@nextil.com.br",     regiao: "Sudeste",     pace: 112, cobertura: 78, coberturaDelta:  4, ultimoAcessoDias: 0, historicoMedio12m: 138000 },
+  { id: "r2", nome: "Alexandre Souza", email: "alexandre@nextil.com.br", regiao: "Sul",         pace:  94, cobertura: 68, coberturaDelta: -3, ultimoAcessoDias: 1, historicoMedio12m: 112000 },
+  { id: "r3", nome: "Carla Mendes",    email: "carla@nextil.com.br",     regiao: "Sudeste",     pace: 103, cobertura: 82, coberturaDelta:  6, ultimoAcessoDias: 0, historicoMedio12m: 154000 },
+  { id: "r4", nome: "Daniel Rocha",    email: "daniel@nextil.com.br",     regiao: "Nordeste",    pace:  76, cobertura: 54, coberturaDelta:-11, ultimoAcessoDias: 3, historicoMedio12m:  92000 },
+  { id: "r5", nome: "Giovanna Pires",  email: "giovanna@nextil.com.br",  regiao: "Sul",         pace:  58, cobertura: 41, coberturaDelta:-14, ultimoAcessoDias: 9, historicoMedio12m:  78000 },
+  { id: "r6", nome: "Sérgio Tavares",  email: "sergio@nextil.com.br",    regiao: "Centro-Oeste",pace:  41, cobertura: 33, coberturaDelta:-18, ultimoAcessoDias:12, historicoMedio12m:  62000 },
 ];
 
 const MARCAS: Marca[] = [
@@ -84,7 +106,6 @@ export function buildSeed(): Seed {
   const rand = (min: number, max: number) => Math.floor(rng() * (max - min + 1)) + min;
   const daysAgo = (n: number) => { const d = new Date(hoje); d.setDate(d.getDate() - n); return d; };
 
-  // Contas (120) — distribuição forçada por faixa de recência
   const contas: Conta[] = [];
   const NUM = 900;
   for (let i = 0; i < NUM; i++) {
@@ -101,8 +122,6 @@ export function buildSeed(): Seed {
     });
   }
 
-  // Pedidos: forçar faixas
-  // 30% ativo recente (0-30d), 20% ativo borda (31-60d), 30% inativo (61-180d), 15% perdido (181-365d), 5% lead (sem pedido)
   const pedidos: Pedido[] = [];
   let pidx = 0;
   const buckets: { count: number; min: number; max: number }[] = [
@@ -116,7 +135,6 @@ export function buildSeed(): Seed {
     for (let i = 0; i < b.count; i++) {
       const conta = contas[cursor++];
       if (!conta) break;
-      // Gera 1 pedido "âncora" dentro da faixa + 3-15 anteriores ao longo do ano
       const ancora = rand(b.min, b.max);
       const nPedidos = rand(4, 22);
       for (let p = 0; p < nPedidos; p++) {
@@ -138,9 +156,7 @@ export function buildSeed(): Seed {
       }
     }
   }
-  // restantes 5% = leads (sem pedidos) — apenas pulamos
 
-  // Atendimentos (~600)
   const atendimentos: Atendimento[] = [];
   for (let i = 0; i < 1600; i++) {
     const conta = contas[rand(0, NUM - 1)];
@@ -156,10 +172,9 @@ export function buildSeed(): Seed {
     });
   }
 
-  // Oportunidades (~80)
   const oportunidades: Oportunidade[] = [];
   const etapas: Etapa[] = ["novo_lead", "em_negociacao", "proposta_enviada", "orcamento_aprovado", "ganha", "perdida"];
-  const distEtapas = [48, 42, 34, 26, 30, 24]; // total ~204
+  const distEtapas = [48, 42, 34, 26, 30, 24];
   let oid = 0;
   etapas.forEach((etapa, idx) => {
     for (let i = 0; i < distEtapas[idx]; i++) {
@@ -168,18 +183,14 @@ export function buildSeed(): Seed {
       const mov = etapa === "ganha" || etapa === "perdida" ? daysAgo(rand(0, 20)) : daysAgo(rand(0, 40));
       oportunidades.push({
         id: `op${++oid}`,
-        contaId: conta.id,
-        repId: conta.repId,
-        etapa,
-        valor: rand(3000, 80000),
-        abertaEm: aberta,
-        ultimaMov: mov,
+        contaId: conta.id, repId: conta.repId,
+        etapa, valor: rand(3000, 80000),
+        abertaEm: aberta, ultimaMov: mov,
         motivoPerda: etapa === "perdida" ? pick(MOTIVOS_PERDA) : undefined,
       });
     }
   });
 
-  // Metas — últimos 6 meses, por rep e consolidada, 5 tipos
   const metas: Meta[] = [];
   const tipos: TipoMeta[] = ["faturamento", "positivacao", "cobertura", "novos", "reativacao"];
   for (let m = 5; m >= 0; m--) {
@@ -197,6 +208,17 @@ export function buildSeed(): Seed {
     }
   }
 
-  _cache = { representantes: REPS, marcas: MARCAS, contas, pedidos, atendimentos, oportunidades, metas, hoje };
+  // ORÇAMENTOS PENDENTES DE APROVAÇÃO — cobrindo os 3 motivos
+  const orcamentosPendentes: OrcamentoPendente[] = [
+    { id: "orc-091", contaId: contas[3].id,  repId: "r1", valor: 14200, desconto: 35, minimoAtingido: false, abertoDias: 2, motivo: "fora_da_politica",     detalhe: "Desconto 35% sem mínimo atingido" },
+    { id: "orc-104", contaId: contas[7].id,  repId: "r2", valor:  8900, desconto: 22, minimoAtingido: true,  abertoDias: 1, motivo: "fora_da_politica",     detalhe: "Desconto acima do teto (22%>18%)" },
+    { id: "orc-118", contaId: contas[11].id, repId: "r3", valor: 32500, desconto: 15, minimoAtingido: true,  abertoDias: 4, motivo: "fora_da_politica",     detalhe: "Prazo pagamento 60/90/120 fora da política" },
+    { id: "orc-122", contaId: contas[24].id, repId: "r4", valor:  6700, desconto:  8, minimoAtingido: true,  abertoDias: 2, motivo: "credito_cliente_novo", detalhe: "Cliente sem histórico — análise de crédito (janela 2d)" },
+    { id: "orc-129", contaId: contas[41].id, repId: "r1", valor: 18400, desconto: 12, minimoAtingido: true,  abertoDias: 1, motivo: "credito_cliente_novo", detalhe: "Primeiro pedido — falta comprovante" },
+    { id: "orc-133", contaId: contas[52].id, repId: "r3", valor: 21800, desconto:  0, minimoAtingido: true,  abertoDias: 3, motivo: "aguardando_estoque",   detalhe: "Grade 04-14 sem estoque · ETA marca 12/05" },
+    { id: "orc-137", contaId: contas[68].id, repId: "r2", valor:  9250, desconto:  5, minimoAtingido: true,  abertoDias: 5, motivo: "aguardando_estoque",   detalhe: "Referência LZ-4412 sem previsão" },
+  ];
+
+  _cache = { representantes: REPS, marcas: MARCAS, contas, pedidos, atendimentos, oportunidades, metas, orcamentosPendentes, hoje };
   return _cache;
 }

@@ -35,7 +35,6 @@ const menuItems: MenuItem[] = [
   },
   { icon: Calendar, label: "Agenda", path: "/vendedor/agenda" },
   { icon: BarChart3, label: "Relatórios", path: "/vendedor/relatorios" },
-  { icon: Lightbulb, label: "Insights", path: "/vendedor/insights" },
   { icon: Tag, label: "Segmentações", path: "/vendedor/segmentacoes" },
   { icon: Settings, label: "Configurações", path: "/vendedor/configuracoes" },
 ];

@@ -1,20 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCockpit } from "../contexts/CockpitContext";
 import { periodLabel, type PeriodKey } from "../lib/range";
+import { EscopoSelector } from "./EscopoSelector";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const PERIODOS: PeriodKey[] = ["hoje", "7d", "30d", "90d", "trimestre", "semestre", "ano"];
 
-interface Props { title?: string; showRep?: boolean; showPeriod?: boolean; }
+interface Props {
+  title?: string;
+  showPeriod?: boolean;
+  showEscopo?: boolean;
+  showRep?: boolean;
+}
 
-export function CockpitTopbar({ title, showRep = false, showPeriod = true }: Props) {
+export function CockpitTopbar({ title, showPeriod = true, showEscopo = true, showRep = false }: Props) {
   const { period, setPeriod, comparar, setComparar, customRange, setCustomRange, repId, setRepId, seed } = useCockpit();
 
   return (
@@ -35,6 +41,7 @@ export function CockpitTopbar({ title, showRep = false, showPeriod = true }: Pro
               </SelectContent>
             </Select>
           )}
+          {showEscopo && !showRep && <EscopoSelector />}
 
           {showPeriod && (
             <>
