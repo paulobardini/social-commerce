@@ -116,7 +116,7 @@ export default function OportunidadeDetalhe() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
         <div className="space-y-2 min-w-0">
-          <h1 className="text-xl font-heading font-bold text-foreground leading-tight">{op.nome}</h1>
+          <h1 className="text-xl font-heading font-bold text-foreground leading-tight">{getDemanda(op.nome, op.clienteNome)}</h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1"><Building className="h-3.5 w-3.5" /> {op.clienteNome}</span>
             <span className="flex items-center gap-1"><User className="h-3.5 w-3.5" /> {op.representante}</span>
