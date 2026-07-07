@@ -82,12 +82,12 @@ export interface Oportunidade {
 export type EtapaCanonica = "novo_lead" | "qualificando" | "em_proposta" | "em_negociacao" | "ganha" | "perdida";
 
 export const etapasCanonicas: { id: EtapaCanonica; nome: string; cor: string; limiteDias: number }[] = [
-  { id: "novo_lead", nome: "Novo lead", cor: "#94a3b8", limiteDias: 3 },
-  { id: "qualificando", nome: "Qualificando", cor: "#a78bfa", limiteDias: 5 },
-  { id: "em_proposta", nome: "Em proposta", cor: "#f59e0b", limiteDias: 7 },
-  { id: "em_negociacao", nome: "Em negociação", cor: "#f97316", limiteDias: 7 },
-  { id: "ganha", nome: "Ganha", cor: "#22c55e", limiteDias: 999 },
-  { id: "perdida", nome: "Perdida", cor: "#ef4444", limiteDias: 999 },
+  { id: "novo_lead", nome: "Novo lead", cor: "#94a3b8", limiteDias: 7 },
+  { id: "qualificando", nome: "Qualificando", cor: "#a78bfa", limiteDias: 7 },
+  { id: "em_proposta", nome: "Em proposta", cor: "#f59e0b", limiteDias: 10 },
+  { id: "em_negociacao", nome: "Em negociação", cor: "#f97316", limiteDias: 5 },
+  { id: "ganha", nome: "Ganha", cor: "#22c55e", limiteDias: 9999 },
+  { id: "perdida", nome: "Perdida", cor: "#ef4444", limiteDias: 9999 },
 ];
 
 export const etapaToCanonica: Record<OportunidadeEtapa, EtapaCanonica> = {
