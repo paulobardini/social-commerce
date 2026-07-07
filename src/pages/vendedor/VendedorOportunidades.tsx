@@ -56,11 +56,11 @@ export default function VendedorOportunidades() {
 
   const activeFilterCount = filterTags.length + (filterPrioridade ? 1 : 0) + filterIndustrias.length;
 
-  const grupos = useMemo(() => etapasOrdem.map(etapa => ({
-    etapa,
-    cor: etapaCorMap[etapa],
-    nome: etapaMap[etapa],
-    ops: filtered.filter(o => o.etapa === etapa),
+  const grupos = useMemo(() => etapasCanonicas.map(e => ({
+    etapa: e.id,
+    cor: e.cor,
+    nome: e.nome,
+    ops: filtered.filter(o => etapaToCanonica[o.etapa] === e.id),
   })), [filtered]);
 
   const industriaLabel = filterIndustrias.length === 0
