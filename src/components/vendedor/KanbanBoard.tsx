@@ -16,6 +16,7 @@ import {
   etapaToCanonica,
   canonicaToBase,
   motivosPerda,
+  getDemanda,
   type EtapaCanonica,
   type Oportunidade,
 } from "@/data/mockCRM";
