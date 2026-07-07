@@ -12,7 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import {
   mockOportunidades, type TagCRM, type Oportunidade,
-  etapasCanonicas, etapaToCanonica, type EtapaCanonica,
+  etapasCanonicas, etapaToCanonica, type EtapaCanonica, getDemanda,
 } from "@/data/mockCRM";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
