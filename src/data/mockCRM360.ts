@@ -143,9 +143,16 @@ export interface TarefaCRM360 {
   vencimento: string;
   hora?: string;
   responsavel: string;
-  status: "pendente" | "concluida" | "atrasada" | "cancelada";
+  // Status stored: só "pendente" | "concluida" | "cancelada".
+  // "atrasada" é DERIVADA pelo helper statusDerivado(vencimento < hoje).
+  status: "pendente" | "concluida" | "cancelada";
   lembrete?: string;
   observacao?: string;
+  // Origem canônica da Ação (item 7 do método)
+  origem?: "vendedor" | "sistema" | "atendimento" | "funil";
+  // Loop do método: registro do "fiz" + encadeamento da próxima ação
+  resultado?: string;
+  proximaAcaoId?: string;
 }
 
 // ---- CLIENTES ----
