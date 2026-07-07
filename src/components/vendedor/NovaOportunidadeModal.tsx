@@ -60,9 +60,11 @@ export function NovaOportunidadeModal({ open, onOpenChange, briefingInicial, cli
     if (categorias.length) parts.push(categorias.join("/"));
     if (genero) parts.push(genero.toLowerCase());
     if (faixaMin && faixaMax) parts.push(`R$ ${faixaMin}-${faixaMax}`);
-    const base = parts.join(" ") || "Nova demanda";
-    return cliente ? `${base} · ${cliente.nome}` : base;
-  }, [categorias, genero, faixaMin, faixaMax, cliente]);
+    // Título gerado guarda apenas a DEMANDA. O nome do cliente é exibido em coluna própria
+    // no kanban/listas; contextos sem cliente visível (breadcrumb, busca global, notificações)
+    // usam getTituloCompleto para compor "demanda · cliente" a partir do clienteNome.
+    return parts.join(" ") || "Nova demanda";
+  }, [categorias, genero, faixaMin, faixaMax]);
   const titulo = tituloEdit ?? tituloAuto;
 
   // Valor estimado calculado
