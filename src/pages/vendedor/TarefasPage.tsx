@@ -93,6 +93,7 @@ export default function TarefasPage() {
     const c = { total: 0, pendentes: 0, atrasadas: 0, concluidas: 0 };
     for (const t of tarefas) {
       const st = statusDerivado(t);
+      if (st === "cancelada") continue; // dispensadas não contam
       c.total++;
       if (st === "concluida") c.concluidas++;
       else if (st === "atrasada") c.atrasadas++;
