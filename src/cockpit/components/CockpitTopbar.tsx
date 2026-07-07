@@ -1,40 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useCockpit } from "../contexts/CockpitContext";
 import { periodLabel, type PeriodKey } from "../lib/range";
+import { EscopoSelector } from "./EscopoSelector";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const PERIODOS: PeriodKey[] = ["hoje", "7d", "30d", "90d", "trimestre", "semestre", "ano"];
 
-interface Props { title?: string; showRep?: boolean; showPeriod?: boolean; }
+interface Props {
+  title?: string;
+  showPeriod?: boolean;
+  showEscopo?: boolean;
+}
 
-export function CockpitTopbar({ title, showRep = false, showPeriod = true }: Props) {
-  const { period, setPeriod, comparar, setComparar, customRange, setCustomRange, repId, setRepId, seed } = useCockpit();
+export function CockpitTopbar({ title, showPeriod = true, showEscopo = true }: Props) {
+  const { period, setPeriod, comparar, setComparar, customRange, setCustomRange } = useCockpit();
 
   return (
     <div className="nx-card border-x-0 border-t-0 rounded-none sticky top-0 z-20 px-4 md:px-6 py-3">
       <div className="flex items-center justify-between flex-wrap gap-3">
         {title && <h1 className="text-base font-semibold nx-text">{title}</h1>}
         <div className="flex items-center gap-2 flex-wrap ml-auto">
-          {showRep && (
-            <Select value={repId} onValueChange={(v) => setRepId(v as string)}>
-              <SelectTrigger className="h-8 w-[180px] text-xs">
-                <SelectValue placeholder="Representante" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os representantes</SelectItem>
-                {seed.representantes.map(r => (
-                  <SelectItem key={r.id} value={r.id}>{r.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          {showEscopo && <EscopoSelector />}
 
           {showPeriod && (
             <>
