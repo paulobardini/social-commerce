@@ -225,7 +225,9 @@ export function KanbanBoard({ searchQuery = "", filterTags = [], filterPrioridad
                       )}
                       <div className="flex items-center justify-between text-[11px] mb-2">
                         <span className="font-semibold text-foreground">R$ {op.valorEstimado.toLocaleString("pt-BR")}</span>
-                        <span className="text-muted-foreground">{idadeDemanda(op)}</span>
+                        <span className={`${parado ? "text-orange-600 font-medium" : "text-muted-foreground"}`}>
+                          {idadeLabel(op.diasNaEtapa ?? 0)} na etapa
+                        </span>
                       </div>
                       <p className="text-[10px] text-muted-foreground truncate mb-2">→ {op.proximaAcao}</p>
 
@@ -239,10 +241,13 @@ export function KanbanBoard({ searchQuery = "", filterTags = [], filterPrioridad
                             navigate(`/vendedor/catalogo?cliente=${encodeURIComponent(op.clienteNome)}&oportunidade=${op.id}`);
                           } else if (acao.kind === "cobrar") {
                             navigate(`/vendedor/whatsapp?cliente=${encodeURIComponent(op.clienteNome)}&template=cobranca`);
-                          } else if (acao.kind === "responder" && acao.orcId) {
+                          } else if ((acao.kind === "responder" || acao.kind === "abrir") && acao.orcId) {
                             navigate(`/vendedor/orcamento/${acao.orcId}`);
-                          } else if (acao.kind === "abrir" && acao.orcId) {
-                            navigate(`/vendedor/orcamento/${acao.orcId}`);
+                          } else if (acao.kind === "pedido") {
+                            navigate(`/vendedor/pedidos?oportunidade=${op.id}`);
+                          } else if (acao.kind === "reabrir") {
+                            commitMove(op.id, "qualificando");
+                            toast.success("Demanda reaberta em Qualificando.");
                           }
                         }}
                       >
