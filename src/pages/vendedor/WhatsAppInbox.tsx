@@ -722,12 +722,18 @@ export default function WhatsAppInbox({
                 </div>
               </div>
               {cliente.orcamentosAtivos > 0 && (
-                <div className="text-[10px] p-2 rounded bg-orange-50 border border-orange-200 space-y-0.5">
+                <div className="text-[10px] p-2 rounded bg-orange-50 border border-orange-200 space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">Proposta #orc-087</span>
                     <span className="text-orange-700">👁 visualizada</span>
                   </div>
                   <p className="text-muted-foreground">R$ 8.900 · 3 marcas · sem resposta há 2d</p>
+                  <button
+                    onClick={cobrarProposta}
+                    className="w-full mt-1 flex items-center justify-center gap-1 rounded bg-orange-600 text-white text-[10px] font-semibold py-1 hover:bg-orange-700 transition-colors"
+                  >
+                    <Bell className="h-3 w-3" /> Cobrar agora
+                  </button>
                 </div>
               )}
             </div>
