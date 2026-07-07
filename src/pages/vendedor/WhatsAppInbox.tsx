@@ -13,7 +13,7 @@ import {
   Zap, Check, CheckCheck, Play, Settings, AlertCircle, Flame,
   Heart, LifeBuoy, ArrowRight, SkipForward, Users, UserX, Store,
   RefreshCcw, Merge, Contact, QrCode, LogOut, Sparkles, Link2,
-  Package, TrendingUp,
+  Package, TrendingUp, X, Bell,
 } from "lucide-react";
 import {
   mockConversas, mockMensagens, mockClientes360, type Mensagem, type Conversa,
@@ -143,6 +143,7 @@ export default function WhatsAppInbox({
   const [selectedId, setSelectedId] = useState<string>(conversasBase[0]?.id || "");
   const [search, setSearch] = useState("");
   const [msgInput, setMsgInput] = useState("");
+  const [msgSuggestion, setMsgSuggestion] = useState<{ titulo: string; original: string } | null>(null);
   const [tipo, setTipo] = useState<TipoConversa>("clientes");
   const [estado, setEstado] = useState<EstadoFiltro>("todas");
   const [viewMode, setViewMode] = useState<ViewMode>("metodo");
@@ -205,15 +206,17 @@ export default function WhatsAppInbox({
   // ---------- Métricas do dia ----------
   const metricas = useMemo(() => {
     const hojeStr = "13/04/2026";
-    const cobertosHoje = conversasBase.filter(c => {
-      const msgs = mockMensagens[c.id] || [];
+    // Somente conversas de CLIENTES (grupos/outros/sem_vinculo ficam fora)
+    const clientesConvs = conversasBase.filter(c => mockClientes360.some(x => x.id === c.clienteId));
+    const cobertosHoje = clientesConvs.filter(c => {
+      const msgs = [...(mockMensagens[c.id] || []), ...(extraMessages[c.id] || [])];
       return msgs.some(m => m.remetente === "vendedor" && m.data === hojeStr);
-    }).length + Object.keys(extraMessages).length;
-    const propostasCobradas = conversasBase.filter(c => {
+    }).length;
+    const propostasCobradas = clientesConvs.filter(c => {
       const cli = mockClientes360.find(x => x.id === c.clienteId);
       return cli && cli.orcamentosAtivos > 0;
     }).length;
-    const aguardandoVoce = conversasBase.filter(c => semRespostaInfo(c.id)).length;
+    const aguardandoVoce = clientesConvs.filter(c => semRespostaInfo(c.id)).length;
     return { cobertosHoje, propostasCobradas, aguardandoVoce };
   }, [conversasBase, extraMessages]);
 
@@ -241,9 +244,20 @@ export default function WhatsAppInbox({
     };
     setExtraMessages(prev => ({ ...prev, [selected.id]: [...(prev[selected.id] || []), newMsg] }));
   }
-  function handleSendInput() { if (!msgInput.trim()) return; appendMessage(msgInput.trim()); setMsgInput(""); }
+  function handleSendInput() {
+    if (!msgInput.trim()) return;
+    if (msgSuggestion && msgInput.trim() === msgSuggestion.original.trim()) {
+      // MOCK: métrica futura de eficácia do playbook — sugestão enviada sem edição
+      toast({ title: "Sugestão do playbook usada", description: msgSuggestion.titulo });
+    }
+    appendMessage(msgInput.trim());
+    setMsgInput("");
+    setMsgSuggestion(null);
+  }
   function handleApplyTemplate(content: string) {
-    setMsgInput(prev => (prev ? prev + "\n" : "") + fillTemplate(content, templateVars));
+    const filled = fillTemplate(content, templateVars);
+    setMsgInput(prev => (prev ? prev + "\n" : "") + filled);
+    setMsgSuggestion(null);
     setTemplatesOpen(false);
   }
   function handleSendOrcamento(o: { id: string; nome: string; valorTotal: number | null; status: string }) {
@@ -255,7 +269,16 @@ export default function WhatsAppInbox({
     if (!selected) return;
     const s = sugestaoPlaybook(cliente, selected);
     setMsgInput(s.mensagem);
+    setMsgSuggestion({ titulo: s.titulo, original: s.mensagem });
     toast({ title: `Sugestão aplicada: ${s.titulo}` });
+  }
+  function cobrarProposta() {
+    if (!selected) return;
+    const nome = cliente?.nomeFantasia || selected.clienteNome;
+    const texto = `Oi ${nome}, tudo bem? Passando aqui só pra saber se conseguiu dar uma olhada na proposta que te enviei. Qualquer ajuste eu rodo rapidinho por aqui. 🙌`;
+    setMsgInput(texto);
+    setMsgSuggestion({ titulo: "Cobrar proposta parada", original: texto });
+    toast({ title: "Template de cobrança carregado no composer" });
   }
 
   // ---------- Trabalhar fila ----------
@@ -409,13 +432,13 @@ export default function WhatsAppInbox({
               <Input placeholder="Buscar conversa..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-8 text-xs" />
             </div>
 
-            {/* Tipos */}
-            <div className="flex gap-0.5 overflow-x-auto">
+            {/* Linha 1: Tipos (scroll horizontal, nunca truncar) */}
+            <div className="flex gap-1 overflow-x-auto -mx-1 px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {tipoTabs.map(t => (
                 <button
                   key={t.id}
                   onClick={() => setTipo(t.id)}
-                  className={`text-[10px] px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap transition-colors ${
+                  className={`shrink-0 text-[10px] px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap transition-colors ${
                     tipo === t.id ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
@@ -425,18 +448,18 @@ export default function WhatsAppInbox({
               ))}
             </div>
 
-            {/* Estado + view mode */}
-            <div className="flex items-center justify-between gap-1">
-              <div className="flex gap-1">
+            {/* Linha 2: Estado (esquerda) + toggle Método/Recentes (direita) */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex gap-1 overflow-x-auto -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {([
                   { key: "todas" as EstadoFiltro, label: "Todas" },
                   { key: "nao_lida" as EstadoFiltro, label: "Não lidas" },
-                  { key: "aguardando" as EstadoFiltro, label: "Aguard." },
+                  { key: "aguardando" as EstadoFiltro, label: "Aguardando" },
                 ]).map(f => (
                   <button
                     key={f.key}
                     onClick={() => setEstado(f.key)}
-                    className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                    className={`shrink-0 whitespace-nowrap text-[10px] px-2 py-0.5 rounded border transition-colors ${
                       estado === f.key ? "bg-accent text-accent-foreground border-accent" : "border-border text-muted-foreground hover:border-accent/40"
                     }`}
                   >
@@ -445,12 +468,12 @@ export default function WhatsAppInbox({
                 ))}
               </div>
               {modoMetodo && (
-                <div className="flex bg-muted rounded p-0.5">
+                <div className="flex bg-muted rounded p-0.5 shrink-0">
                   {(["metodo", "recentes"] as ViewMode[]).map(v => (
                     <button
                       key={v}
                       onClick={() => setViewMode(v)}
-                      className={`text-[9px] px-1.5 py-0.5 rounded transition-colors ${
+                      className={`text-[9px] px-1.5 py-0.5 rounded transition-colors whitespace-nowrap ${
                         viewMode === v ? "bg-background text-foreground font-semibold" : "text-muted-foreground"
                       }`}
                     >
@@ -579,48 +602,64 @@ export default function WhatsAppInbox({
               )}
             </div>
 
-            <div className="min-h-14 border-t border-border flex items-center gap-1.5 px-3 py-2 bg-card shrink-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8"><Paperclip className="h-4 w-4" /></Button>
+            <div className="border-t border-border bg-card shrink-0">
+              {msgSuggestion && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 border-b border-accent/20">
+                  <Sparkles className="h-3 w-3 text-accent shrink-0" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">Sugestão do playbook</span>
+                  <span className="text-[10px] text-muted-foreground truncate">· {msgSuggestion.titulo}</span>
+                  <button
+                    onClick={() => { setMsgSuggestion(null); setMsgInput(""); }}
+                    className="ml-auto h-5 w-5 rounded flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
+                    title="Descartar sugestão"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              <div className="min-h-14 flex items-center gap-1.5 px-3 py-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8"><Paperclip className="h-4 w-4" /></Button>
 
-              <Popover open={templatesOpen} onOpenChange={setTemplatesOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Templates de mensagem (/)"><Zap className="h-4 w-4 text-accent" /></Button>
-                </PopoverTrigger>
-                <PopoverContent side="top" align="start" className="w-[340px] p-0">
-                  <div className="p-3 border-b border-border flex items-center justify-between">
-                    <p className="text-sm font-semibold flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-accent" /> Templates do playbook</p>
-                    <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => { setTemplatesOpen(false); navigate("/vendedor/configuracoes/templates"); }}>Gerenciar</Button>
-                  </div>
-                  <div className="max-h-[320px] overflow-y-auto">
-                    {templates.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhum template cadastrado.</div>}
-                    {templates.map(t => (
-                      <button key={t.id} onClick={() => handleApplyTemplate(t.conteudo)} className="w-full text-left p-3 border-b border-border/60 hover:bg-muted/60 transition-colors">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-semibold flex-1 truncate">{t.nome}</p>
-                          {t.categoria && <Badge variant="secondary" className="text-[9px]">{t.categoria}</Badge>}
-                        </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">{fillTemplate(t.conteudo, templateVars)}</p>
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                <Popover open={templatesOpen} onOpenChange={setTemplatesOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Templates de mensagem (/)"><Zap className="h-4 w-4 text-accent" /></Button>
+                  </PopoverTrigger>
+                  <PopoverContent side="top" align="start" className="w-[340px] p-0">
+                    <div className="p-3 border-b border-border flex items-center justify-between">
+                      <p className="text-sm font-semibold flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-accent" /> Templates do playbook</p>
+                      <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => { setTemplatesOpen(false); navigate("/vendedor/configuracoes/templates"); }}>Gerenciar</Button>
+                    </div>
+                    <div className="max-h-[320px] overflow-y-auto">
+                      {templates.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhum template cadastrado.</div>}
+                      {templates.map(t => (
+                        <button key={t.id} onClick={() => handleApplyTemplate(t.conteudo)} className="w-full text-left p-3 border-b border-border/60 hover:bg-muted/60 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-semibold flex-1 truncate">{t.nome}</p>
+                            {t.categoria && <Badge variant="secondary" className="text-[9px]">{t.categoria}</Badge>}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">{fillTemplate(t.conteudo, templateVars)}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
 
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSendOrcamentoOpen(true)} title="Enviar orçamento">
-                <FileText className="h-4 w-4" />
-              </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSendOrcamentoOpen(true)} title="Enviar orçamento">
+                  <FileText className="h-4 w-4" />
+                </Button>
 
-              <Input
-                placeholder='Digite "/" para atalhos do playbook...'
-                value={msgInput}
-                onChange={e => setMsgInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === "/" && msgInput === "") { e.preventDefault(); setTemplatesOpen(true); return; }
-                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendInput(); }
-                }}
-                className="h-9 flex-1"
-              />
-              <Button size="icon" className="h-8 w-8" onClick={handleSendInput}><Send className="h-4 w-4" /></Button>
+                <Input
+                  placeholder='Digite "/" para atalhos do playbook...'
+                  value={msgInput}
+                  onChange={e => setMsgInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "/" && msgInput === "") { e.preventDefault(); setTemplatesOpen(true); return; }
+                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendInput(); }
+                  }}
+                  className={`h-9 flex-1 ${msgSuggestion ? "bg-accent/5 border-accent/30" : ""}`}
+                />
+                <Button size="icon" className="h-8 w-8" onClick={handleSendInput}><Send className="h-4 w-4" /></Button>
+              </div>
             </div>
           </div>
         ) : (
@@ -683,12 +722,18 @@ export default function WhatsAppInbox({
                 </div>
               </div>
               {cliente.orcamentosAtivos > 0 && (
-                <div className="text-[10px] p-2 rounded bg-orange-50 border border-orange-200 space-y-0.5">
+                <div className="text-[10px] p-2 rounded bg-orange-50 border border-orange-200 space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">Proposta #orc-087</span>
                     <span className="text-orange-700">👁 visualizada</span>
                   </div>
                   <p className="text-muted-foreground">R$ 8.900 · 3 marcas · sem resposta há 2d</p>
+                  <button
+                    onClick={cobrarProposta}
+                    className="w-full mt-1 flex items-center justify-center gap-1 rounded bg-orange-600 text-white text-[10px] font-semibold py-1 hover:bg-orange-700 transition-colors"
+                  >
+                    <Bell className="h-3 w-3" /> Cobrar agora
+                  </button>
                 </div>
               )}
             </div>
