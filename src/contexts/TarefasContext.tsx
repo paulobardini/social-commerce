@@ -22,12 +22,25 @@ export interface CompromissoExt extends Compromisso {
   lembrete?: number; // minutos antes (0 = sem lembrete)
 }
 
+interface ConcluirPayload {
+  resultado?: string;
+  proximo?: {
+    titulo: string;
+    tipo?: TarefaCRM360["tipo"];
+    vencimento?: string;
+    hora?: string;
+    prioridade?: TarefaCRM360["prioridade"];
+  };
+}
+
 interface TarefasContextType {
   tarefas: TarefaExt[];
   compromissos: CompromissoExt[];
   addTarefa: (t: Omit<TarefaExt, "id">) => TarefaExt;
   updateTarefa: (id: string, patch: Partial<TarefaExt>) => void;
   toggleConcluida: (id: string) => void;
+  concluirAcao: (id: string, payload?: ConcluirPayload) => TarefaExt | null; // loop do método
+  adiarDias: (id: string, dias: number) => void;
   updateCompromisso: (id: string, patch: Partial<CompromissoExt>) => void;
 }
 
