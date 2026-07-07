@@ -62,7 +62,7 @@ function horaSugerida(afterHora: string): string {
 
 export default function AgendaPage() {
   const navigate = useNavigate();
-  const { compromissos, tarefas } = useTarefas();
+  const { compromissos, tarefas, toggleConcluida } = useTarefas();
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week");
   const [selectedDay, setSelectedDay] = useState("14/04/2026");
   const [novoOpen, setNovoOpen] = useState(false);
