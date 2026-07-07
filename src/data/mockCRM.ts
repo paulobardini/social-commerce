@@ -90,6 +90,19 @@ export const etapasCanonicas: { id: EtapaCanonica; nome: string; cor: string; li
   { id: "perdida", nome: "Perdida", cor: "#ef4444", limiteDias: 9999 },
 ];
 
+// Helpers de título de oportunidade
+// - getDemanda: apenas a demanda (usar em contextos com cliente visível: kanban, listas com coluna de cliente)
+// - getTituloCompleto: "demanda · cliente" (usar em breadcrumb do detalhe, busca global, notificações)
+export const getDemanda = (nome: string, clienteNome?: string): string => {
+  if (!clienteNome) return nome;
+  const escaped = clienteNome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return nome.replace(new RegExp(`\\s*[–\\-·]\\s*${escaped}\\s*$`), "").trim() || nome;
+};
+export const getTituloCompleto = (nome: string, clienteNome?: string): string => {
+  const demanda = getDemanda(nome, clienteNome);
+  return clienteNome ? `${demanda} · ${clienteNome}` : demanda;
+};
+
 export const etapaToCanonica: Record<OportunidadeEtapa, EtapaCanonica> = {
   novo_lead: "novo_lead",
   contato_iniciado: "qualificando",
