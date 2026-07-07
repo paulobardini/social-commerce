@@ -164,7 +164,7 @@ export function TarefasProvider({ children }: { children: ReactNode }) {
       }
       if (existing) {
         return prev.map(c => c.id === existing.id ? {
-          ...c, titulo: t.titulo, data: t.vencimento, hora: t.hora,
+          ...c, titulo: t.titulo, data: t.vencimento, hora: t.hora, tipo: t.tipo,
           clienteId: t.clienteId, clienteNome: t.clienteNome,
           oportunidadeId: t.oportunidadeId, descricao: t.descricao,
         } : c);
@@ -172,7 +172,7 @@ export function TarefasProvider({ children }: { children: ReactNode }) {
       const compId = `agt-${t.id}-${Date.now()}`;
       return [...prev, {
         id: compId, titulo: t.titulo, clienteId: t.clienteId, clienteNome: t.clienteNome,
-        oportunidadeId: t.oportunidadeId, tipo: "follow_up", data: t.vencimento, hora: t.hora,
+        oportunidadeId: t.oportunidadeId, tipo: t.tipo, data: t.vencimento, hora: t.hora,
         duracao: "30min", responsavel: t.responsavel, descricao: t.descricao,
         status: "agendado", origem: "tarefa", tarefaId: t.id,
       }];
