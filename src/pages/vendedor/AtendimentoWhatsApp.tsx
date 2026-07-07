@@ -96,6 +96,7 @@ export default function AtendimentoWhatsApp() {
       topSlot={topSlot}
       titulo="WhatsApp · Atendimento"
       mostrarSetor
+      modoMetodo={false}
     />
   );
 }
