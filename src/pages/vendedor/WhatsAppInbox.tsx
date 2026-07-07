@@ -432,13 +432,13 @@ export default function WhatsAppInbox({
               <Input placeholder="Buscar conversa..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-8 text-xs" />
             </div>
 
-            {/* Tipos */}
-            <div className="flex gap-0.5 overflow-x-auto">
+            {/* Linha 1: Tipos (scroll horizontal, nunca truncar) */}
+            <div className="flex gap-1 overflow-x-auto -mx-1 px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {tipoTabs.map(t => (
                 <button
                   key={t.id}
                   onClick={() => setTipo(t.id)}
-                  className={`text-[10px] px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap transition-colors ${
+                  className={`shrink-0 text-[10px] px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap transition-colors ${
                     tipo === t.id ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
@@ -448,18 +448,18 @@ export default function WhatsAppInbox({
               ))}
             </div>
 
-            {/* Estado + view mode */}
-            <div className="flex items-center justify-between gap-1">
-              <div className="flex gap-1">
+            {/* Linha 2: Estado (esquerda) + toggle Método/Recentes (direita) */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex gap-1 overflow-x-auto -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {([
                   { key: "todas" as EstadoFiltro, label: "Todas" },
                   { key: "nao_lida" as EstadoFiltro, label: "Não lidas" },
-                  { key: "aguardando" as EstadoFiltro, label: "Aguard." },
+                  { key: "aguardando" as EstadoFiltro, label: "Aguardando" },
                 ]).map(f => (
                   <button
                     key={f.key}
                     onClick={() => setEstado(f.key)}
-                    className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                    className={`shrink-0 whitespace-nowrap text-[10px] px-2 py-0.5 rounded border transition-colors ${
                       estado === f.key ? "bg-accent text-accent-foreground border-accent" : "border-border text-muted-foreground hover:border-accent/40"
                     }`}
                   >
@@ -468,12 +468,12 @@ export default function WhatsAppInbox({
                 ))}
               </div>
               {modoMetodo && (
-                <div className="flex bg-muted rounded p-0.5">
+                <div className="flex bg-muted rounded p-0.5 shrink-0">
                   {(["metodo", "recentes"] as ViewMode[]).map(v => (
                     <button
                       key={v}
                       onClick={() => setViewMode(v)}
-                      className={`text-[9px] px-1.5 py-0.5 rounded transition-colors ${
+                      className={`text-[9px] px-1.5 py-0.5 rounded transition-colors whitespace-nowrap ${
                         viewMode === v ? "bg-background text-foreground font-semibold" : "text-muted-foreground"
                       }`}
                     >
