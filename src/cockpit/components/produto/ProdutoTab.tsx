@@ -9,7 +9,8 @@ import { repIdsNoEscopo } from "../../lib/escopo";
 import { SectionCard } from "../SectionCard";
 import { KpiCard } from "../KpiCard";
 import { AbcCurve } from "../AbcCurve";
-import { HeatmapMesRep } from "../HeatmapMesRep";
+import { MarcaNichoHeatmap } from "./MarcaNichoHeatmap";
+import type { Nicho } from "../../data/seed";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell,
 } from "recharts";
@@ -132,16 +133,18 @@ export function ProdutoTab() {
     }).sort((a, b) => b.pct - a.pct);
   }, [seed, repIds]);
 
+  const NICHOS_ORD: Nicho[] = ["Infantil", "Adulto", "Fitness", "Moda Praia", "Casual", "Multimarcas"];
   const heatMarcaNicho = useMemo(() => {
-    const nichos = ["Boutique", "Multimarca", "Atacadista", "E-commerce", "Rede", "Franquia"];
-    return seed.marcas.map(m => ({
-      rep: m.nome,
-      cells: nichos.map(n => {
+    return seed.marcas.map(m => {
+      const cells = NICHOS_ORD.map(n => {
         const contasNicho = new Set(seed.contas.filter(c => c.nicho === n && repIds.has(c.repId)).map(c => c.id));
-        const v = seed.pedidos.filter(p => p.marcaId === m.id && contasNicho.has(p.contaId)).reduce((s, p) => s + p.valor, 0);
-        return { mes: n.slice(0, 3), valor: v };
-      }),
-    }));
+        const valor = seed.pedidos.filter(p => p.marcaId === m.id && contasNicho.has(p.contaId)).reduce((s, p) => s + p.valor, 0);
+        const clientes = new Set(seed.pedidos.filter(p => p.marcaId === m.id && contasNicho.has(p.contaId)).map(p => p.contaId)).size;
+        return { nicho: n, valor, clientes };
+      });
+      const total = cells.reduce((s, c) => s + c.valor, 0);
+      return { marcaId: m.id, marcaNome: m.nome, cells, total };
+    }).sort((a, b) => b.total - a.total);
   }, [seed, repIds]);
 
   const abcProduto = useMemo(() => {
@@ -199,11 +202,11 @@ export function ProdutoTab() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-3">
-        <KpiCard label="Faturamento" value={fmtBRLc(kpiP.faturamento.atual)} delta={showDelta(kpiP.faturamento.delta) ? { pct: kpiP.faturamento.delta } : undefined} icon={<DollarSign className="h-3.5 w-3.5" />} />
-        <KpiCard label="Marcas ativas" value={fmtNum(kpiP.marcasAtivas.atual)} delta={showDelta(kpiP.marcasAtivas.delta) ? { pct: kpiP.marcasAtivas.delta } : undefined} icon={<Layers className="h-3.5 w-3.5" />} />
-        <KpiCard label="Ticket por marca" value={fmtBRLc(kpiP.ticketMarca.atual)} delta={showDelta(kpiP.ticketMarca.delta) ? { pct: kpiP.ticketMarca.delta } : undefined} />
-        <KpiCard label="Marca líder" value={<span className="text-base">{kpiP.marcaLider}</span>} />
-        <KpiCard label="Itens/pedido" value={kpiP.itensPorPedido.atual.toFixed(1).replace(".", ",")} delta={showDelta(kpiP.itensPorPedido.delta) ? { pct: kpiP.itensPorPedido.delta } : undefined} icon={<Package className="h-3.5 w-3.5" />} />
+        <KpiCard label="Faturamento" value={fmtBRLc(kpiP.faturamento.atual)} delta={showDelta(kpiP.faturamento.delta) ? { pct: kpiP.faturamento.delta } : undefined} icon={<DollarSign className="h-3.5 w-3.5" />} tooltip="Soma dos pedidos fechados no período." />
+        <KpiCard label="Marcas com venda" value={fmtNum(kpiP.marcasAtivas.atual)} delta={showDelta(kpiP.marcasAtivas.delta) ? { pct: kpiP.marcasAtivas.delta } : undefined} icon={<Layers className="h-3.5 w-3.5" />} tooltip="Quantas marcas tiveram ao menos 1 pedido no período." />
+        <KpiCard label="Ticket médio por marca" value={fmtBRLc(kpiP.ticketMarca.atual)} delta={showDelta(kpiP.ticketMarca.delta) ? { pct: kpiP.ticketMarca.delta } : undefined} tooltip="Faturamento dividido pelo número de marcas com venda." />
+        <KpiCard label="Marca líder" value={<span className="text-base">{kpiP.marcaLider}</span>} tooltip="Marca com maior faturamento no período." />
+        <KpiCard label="Peças por pedido" value={kpiP.itensPorPedido.atual.toFixed(1).replace(".", ",")} delta={showDelta(kpiP.itensPorPedido.delta) ? { pct: kpiP.itensPorPedido.delta } : undefined} icon={<Package className="h-3.5 w-3.5" />} tooltip="Média de peças (itens) por pedido no período." />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -217,7 +220,7 @@ export function ProdutoTab() {
             </BarChart>
           </ResponsiveContainer>
         </SectionCard>
-        <SectionCard title="Penetração de marca" subtitle="% da base que compra cada marca">
+        <SectionCard title="Quantos clientes compram cada marca" subtitle="% da carteira que já comprou a marca">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={penetracao} layout="vertical">
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
@@ -229,13 +232,21 @@ export function ProdutoTab() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Marca × Nicho" subtitle="Heatmap de receita">
-        <HeatmapMesRep data={heatMarcaNicho} />
+      <SectionCard title="Marca × Nicho" subtitle="Onde cada marca vende mais — receita por combinação (escala por linha)">
+        <MarcaNichoHeatmap
+          rows={heatMarcaNicho}
+          nichos={NICHOS_ORD}
+          onCellClick={(marcaId, nicho) => {
+            const marca = seed.marcas.find(m => m.id === marcaId)?.nome ?? marcaId;
+            toast.info(`${marca} · ${nicho} — abrir lista de clientes (em breve).`);
+          }}
+        />
       </SectionCard>
 
-      <SectionCard title="Curva ABC de produtos">
+      <SectionCard title="Concentração de receita por produto" subtitle="Poucos produtos concentram a maior parte do faturamento — a linha mostra o acumulado (%)">
         <AbcCurve data={abcProduto} labelKey={(t: { id: string }) => t.id.toUpperCase()} />
       </SectionCard>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="Top 10 produtos">

@@ -12,7 +12,7 @@ function mulberry32(seed: number) {
   };
 }
 
-export type Nicho = "Boutique" | "Multimarca" | "Atacadista" | "E-commerce" | "Rede" | "Franquia";
+export type Nicho = "Infantil" | "Adulto" | "Fitness" | "Moda Praia" | "Casual" | "Multimarcas";
 export type Etapa = "novo_lead" | "em_negociacao" | "proposta_enviada" | "orcamento_aprovado" | "ganha" | "perdida";
 export type TipoAtendimento = "visita" | "ligacao" | "whatsapp";
 export type TipoMeta = "faturamento" | "positivacao" | "cobertura" | "novos" | "reativacao";
@@ -78,7 +78,19 @@ const MARCAS: Marca[] = [
   { id: "m9", nome: "Animale",      categorias: ["Festa", "Premium", "Acessórios"] },
 ];
 const COLECOES = ["Verão 25", "Inverno 25", "Resort 25", "Básicos"];
-const NICHOS: Nicho[] = ["Boutique", "Multimarca", "Atacadista", "E-commerce", "Rede", "Franquia"];
+const NICHOS: Nicho[] = ["Infantil", "Adulto", "Fitness", "Moda Praia", "Casual", "Multimarcas"];
+// Nicho forte por marca — enviesa a geração para dar contraste real ao heatmap Marca × Nicho.
+const MARCA_NICHO_FORTE: Record<string, Nicho[]> = {
+  m1: ["Infantil"],
+  m2: ["Adulto", "Casual"],
+  m3: ["Infantil", "Casual"],
+  m4: ["Fitness"],
+  m5: ["Moda Praia"],
+  m6: ["Casual", "Adulto"],
+  m7: ["Adulto", "Multimarcas"],
+  m8: ["Casual", "Adulto"],
+  m9: ["Adulto"],
+};
 const CIDADES = [
   ["São Paulo", "SP"], ["Rio de Janeiro", "RJ"], ["Belo Horizonte", "MG"], ["Curitiba", "PR"],
   ["Porto Alegre", "RS"], ["Florianópolis", "SC"], ["Salvador", "BA"], ["Recife", "PE"],
@@ -140,7 +152,9 @@ export function buildSeed(): Seed {
       for (let p = 0; p < nPedidos; p++) {
         const dias = p === 0 ? ancora : ancora + rand(15, 350);
         if (dias > 730) continue;
-        const marca = pick(MARCAS);
+        // 70% dos pedidos vêm de uma marca cujo nicho forte bate com o nicho do cliente.
+        const marcasCompativeis = MARCAS.filter(mm => (MARCA_NICHO_FORTE[mm.id] ?? []).includes(conta.nicho));
+        const marca = (rng() < 0.7 && marcasCompativeis.length > 0) ? pick(marcasCompativeis) : pick(MARCAS);
         pedidos.push({
           id: `p${++pidx}`,
           contaId: conta.id,

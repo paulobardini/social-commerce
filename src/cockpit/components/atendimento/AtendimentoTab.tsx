@@ -62,12 +62,12 @@ export function AtendimentoTab() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
-        <KpiCard label="Cobertura" value={fmtPct(kpiA.cobertura.atual)} delta={showDelta(kpiA.cobertura.delta) ? { pct: kpiA.cobertura.delta } : undefined} icon={<Activity className="h-3.5 w-3.5" />} />
-        <KpiCard label="Atendimentos" value={fmtNum(kpiA.nAtendimentos.atual)} delta={showDelta(kpiA.nAtendimentos.delta) ? { pct: kpiA.nAtendimentos.delta } : undefined} />
-        <KpiCard label="Conv. Lead→Cliente" value={fmtPct(kpiA.txConversao.atual)} delta={showDelta(kpiA.txConversao.delta) ? { pct: kpiA.txConversao.delta } : undefined} />
-        <KpiCard label="Ciclo de vendas" value={fmtDias(kpiA.ciclo.atual)} />
-        <KpiCard label="Win rate" value={fmtPct(kpiA.winRate.atual)} icon={<Target className="h-3.5 w-3.5" />} />
-        <KpiCard label="Pipeline R$" value={fmtBRLc(kpiA.pipelineRS.atual)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+        <KpiCard label="Cobertura" value={fmtPct(kpiA.cobertura.atual)} delta={showDelta(kpiA.cobertura.delta) ? { pct: kpiA.cobertura.delta } : undefined} icon={<Activity className="h-3.5 w-3.5" />} tooltip="% da carteira que recebeu ao menos 1 atendimento no período." />
+        <KpiCard label="Atendimentos" value={fmtNum(kpiA.nAtendimentos.atual)} delta={showDelta(kpiA.nAtendimentos.delta) ? { pct: kpiA.nAtendimentos.delta } : undefined} tooltip="Visitas, ligações e conversas de WhatsApp registradas no período." />
+        <KpiCard label="Leads que viraram cliente" value={fmtPct(kpiA.txConversao.atual)} delta={showDelta(kpiA.txConversao.delta) ? { pct: kpiA.txConversao.delta } : undefined} tooltip="De cada 100 leads atendidos, quantos fizeram o primeiro pedido no período." />
+        <KpiCard label="Tempo médio até fechar" value={fmtDias(kpiA.ciclo.atual)} tooltip="Dias entre a abertura da oportunidade e o pedido fechado." />
+        <KpiCard label="Aproveitamento de propostas" value={fmtPct(kpiA.winRate.atual)} icon={<Target className="h-3.5 w-3.5" />} tooltip="De cada 10 propostas enviadas, quantas viraram pedido." />
+        <KpiCard label="Em negociação" value={fmtBRLc(kpiA.pipelineRS.atual)} icon={<DollarSign className="h-3.5 w-3.5" />} tooltip="Soma das propostas em aberto (ainda sem pedido nem perda registrada)." />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -100,7 +100,7 @@ export function AtendimentoTab() {
             </BarChart>
           </ResponsiveContainer>
         </SectionCard>
-        <SectionCard title="Win rate por representante">
+        <SectionCard title="Aproveitamento de propostas por representante">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={winRep} layout="vertical">
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />

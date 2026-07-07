@@ -83,9 +83,9 @@ function RepDrawer({ rep, open, onOpenChange }: { rep: Representante | null; ope
             <div className="grid grid-cols-2 gap-2">
               <KpiCard label="Meta do mês" value={fmtBRLc(dados.meta)} />
               <KpiCard label="Realizado" value={fmtBRLc(dados.realizado)} hint={dados.meta > 0 ? `${fmtPct((dados.realizado / dados.meta) * 100, 0)} atingido` : "—"} />
-              <KpiCard label="Pace" value={`${rep.pace}%`} />
-              <KpiCard label="Cobertura" value={`${rep.cobertura}%`} hint={`${rep.coberturaDelta >= 0 ? "+" : ""}${rep.coberturaDelta}pp vs mês ant.`} />
-              <KpiCard label="Pipeline aberto" value={fmtBRLc(dados.pipeline)} />
+              <KpiCard label="Pace" value={`${rep.pace}%`} tooltip="Ritmo do rep: no fim do mês, ele bate 100% da meta se seguir no ritmo atual." />
+              <KpiCard label="Cobertura" value={`${rep.cobertura}%`} hint={`${rep.coberturaDelta >= 0 ? "+" : ""}${rep.coberturaDelta}pp vs mês ant.`} tooltip="% da carteira dele que recebeu atendimento no mês." />
+              <KpiCard label="Em negociação" value={fmtBRLc(dados.pipeline)} tooltip="Valor das propostas em aberto (ainda sem pedido nem perda)." />
               <KpiCard label="Ações pendentes" value={fmtNum(acoesAtrasadas)} hint="fila do vendedor" />
             </div>
 
@@ -348,7 +348,7 @@ export function TimeMetasTab() {
                 <th className="text-right">Pace</th>
                 <th className="text-right">Cobertura</th>
                 <th className="text-right">Em risco</th>
-                <th className="text-right">Pipeline</th>
+                <th className="text-right">Em negociação</th>
                 <th className="text-right">Positivação</th>
                 <th className="text-right pr-2">Detalhes</th>
               </tr>
