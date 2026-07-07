@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import {
   mockOportunidades, mockAtividades,
-  etapasCanonicas, etapaToCanonica, canonicaToBase, probabilidadeAutoPorCanonica,
+  etapasCanonicas, etapaToCanonica, canonicaToBase, probabilidadeAutoPorCanonica, getDemanda, getTituloCompleto,
   type Oportunidade, type EtapaCanonica,
 } from "@/data/mockCRM";
 import { mockOrcamentos } from "@/data/mockVendedor";
