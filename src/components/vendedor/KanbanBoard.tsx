@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { GripVertical, User, Zap, AlertTriangle, MessageCircle, ShoppingBag, Reply, FileText } from "lucide-react";
+import { GripVertical, User, Zap, AlertTriangle, MessageCircle, ShoppingBag, Reply, FileText, RotateCcw, PackageCheck } from "lucide-react";
 import {
   mockOportunidades,
   etapasCanonicas,
@@ -40,19 +40,16 @@ const orcStatusChip: Record<string, { label: string; cls: string }> = {
   recusado: { label: "recusado", cls: "bg-red-100 text-red-700 border-red-200" },
 };
 
-function idadeDemanda(op: Oportunidade): string {
-  // heurística mock — usa últimaInteracao dd/mm/yyyy
-  try {
-    const [d, m, y] = op.ultimaInteracao.split("/").map(Number);
-    const dt = new Date(y, m - 1, d);
-    const diff = Math.floor((Date.now() - dt.getTime()) / 86400000);
-    if (diff <= 0) return "hoje";
-    if (diff === 1) return "há 1d";
-    return `há ${diff}d`;
-  } catch { return op.ultimaInteracao; }
+function idadeLabel(dias: number): string {
+  if (dias <= 0) return "hoje";
+  if (dias === 1) return "há 1d";
+  return `há ${dias}d`;
 }
 
 function acaoContextual(op: Oportunidade, canon: EtapaCanonica) {
+  if (canon === "ganha") return { label: "Abrir pedido", icon: PackageCheck, kind: "pedido" as const };
+  if (canon === "perdida") return { label: "Reabrir demanda", icon: RotateCcw, kind: "reabrir" as const };
+
   const orcs = mockOrcamentos.filter(o => op.orcamentoIds.includes(o.id));
   if (canon === "novo_lead" || canon === "qualificando" || orcs.length === 0) {
     return { label: "Montar cesta", icon: ShoppingBag, kind: "cesta" as const };
