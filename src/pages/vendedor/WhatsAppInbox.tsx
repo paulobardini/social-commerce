@@ -13,7 +13,7 @@ import {
   Zap, Check, CheckCheck, Play, Settings, AlertCircle, Flame,
   Heart, LifeBuoy, ArrowRight, SkipForward, Users, UserX, Store,
   RefreshCcw, Merge, Contact, QrCode, LogOut, Sparkles, Link2,
-  Package, TrendingUp,
+  Package, TrendingUp, X, Bell,
 } from "lucide-react";
 import {
   mockConversas, mockMensagens, mockClientes360, type Mensagem, type Conversa,
