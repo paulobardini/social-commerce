@@ -1,13 +1,19 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Search, MessageCircle, Phone, Send, Paperclip, CheckSquare, Target,
   Clock, User, ExternalLink, MapPin, FileText, Calendar, ChevronLeft,
-  Zap, Check, CheckCheck,
+  Zap, Check, CheckCheck, Play, Settings, AlertCircle, Flame,
+  Heart, LifeBuoy, ArrowRight, SkipForward, Users, UserX, Store,
+  RefreshCcw, Merge, Contact, QrCode, LogOut, Sparkles, Link2,
+  Package, TrendingUp,
 } from "lucide-react";
 import {
   mockConversas, mockMensagens, mockClientes360, type Mensagem, type Conversa,
@@ -16,21 +22,28 @@ import { useMessageTemplates, fillTemplate } from "@/contexts/MessageTemplatesCo
 import { SendOrcamentoModal } from "@/components/vendedor/SendOrcamentoModal";
 import { useToast } from "@/hooks/use-toast";
 import { getConversaSetor, setorDot, setorLabels } from "@/data/mockAtendimento";
-import type { ReactNode } from "react";
+import { saudeCliente, valor12m, formatBRL, diasSemContato } from "@/lib/carteiraMetodo";
 
-type TabKey = "" | "nao_lida" | "aguardando" | "sem_resposta";
-
-// MOCK: "agora" usado para calcular tempo decorrido sem resposta.
-// Em produção, usar Date.now().
+// MOCK: "agora" para tempo decorrido — usar Date.now() em produção.
 const NOW = new Date("2026-04-13T15:00:00");
 
-// Parsea horário "HH:MM" combinado com a data ("DD/MM/YYYY", "Ontem" ou "DD/MM").
+type TipoConversa = "clientes" | "sem_vinculo" | "grupos" | "outros";
+type EstadoFiltro = "todas" | "nao_lida" | "aguardando";
+type ViewMode = "metodo" | "recentes";
+type BucketId = "voce_deve" | "negociacao" | "resgates" | "em_dia";
+
+const BUCKETS: { id: BucketId; label: string; dot: string; bg: string; icon: any }[] = [
+  { id: "voce_deve",  label: "Você deve resposta",  dot: "bg-red-500",    bg: "bg-red-50/60",    icon: AlertCircle },
+  { id: "negociacao", label: "Negociação em jogo", dot: "bg-orange-500", bg: "bg-orange-50/60", icon: Flame },
+  { id: "resgates",   label: "Resgates do dia",    dot: "bg-yellow-500", bg: "bg-yellow-50/60", icon: LifeBuoy },
+  { id: "em_dia",     label: "Em dia",             dot: "bg-emerald-500",bg: "bg-transparent",  icon: Heart },
+];
+
 function parseMensagemDate(data: string, horario: string): Date {
   const [h, mi] = horario.split(":").map(Number);
   let d = new Date(NOW);
-  if (data === "Ontem") {
-    d.setDate(d.getDate() - 1);
-  } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
+  if (data === "Ontem") { d.setDate(d.getDate() - 1); }
+  else if (/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
     const [dd, mm, yy] = data.split("/").map(Number);
     d = new Date(yy, mm - 1, dd);
   } else if (/^\d{2}\/\d{2}$/.test(data)) {
@@ -42,54 +55,81 @@ function parseMensagemDate(data: string, horario: string): Date {
 }
 
 function formatTempoDecorrido(date: Date): string {
-  const diffMs = NOW.getTime() - date.getTime();
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (hours < 1) return "agora";
-  if (hours < 24) return `há ${hours}h`;
-  const days = Math.floor(hours / 24);
-  return days === 1 ? "há 1 dia" : `há ${days} dias`;
+  const diff = NOW.getTime() - date.getTime();
+  const h = Math.floor(diff / 3600000);
+  if (h < 1) return "agora";
+  if (h < 24) return `há ${h}h`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? "há 1 dia" : `há ${d} dias`;
 }
 
-// Retorna a última mensagem da conversa, se for do cliente e tiver >4h sem resposta.
 function semRespostaInfo(conversaId: string): { tempo: string; horas: number } | null {
   const msgs = mockMensagens[conversaId] || [];
   if (msgs.length === 0) return null;
   const last = msgs[msgs.length - 1];
   if (last.remetente !== "cliente") return null;
   const dt = parseMensagemDate(last.data, last.horario);
-  const horas = (NOW.getTime() - dt.getTime()) / (1000 * 60 * 60);
-  if (horas < 4) return null;
+  const horas = (NOW.getTime() - dt.getTime()) / 3600000;
+  if (horas < 2) return null;
   return { tempo: formatTempoDecorrido(dt), horas };
 }
 
-// Indicador de status da mensagem (estilo WhatsApp).
 function StatusIcon({ status }: { status?: Mensagem["status"] }) {
-  if (!status || status === "enviado") {
-    return <Check className="h-3 w-3 inline-block" />;
-  }
-  if (status === "entregue") {
-    return <CheckCheck className="h-3 w-3 inline-block" />;
-  }
-  // lido — azul (API do WhatsApp pode não retornar; nesse caso usar 'entregue')
+  if (!status || status === "enviado") return <Check className="h-3 w-3 inline-block" />;
+  if (status === "entregue")           return <CheckCheck className="h-3 w-3 inline-block" />;
   return <CheckCheck className="h-3 w-3 inline-block text-blue-400" />;
 }
 
+// Playbook por situação
+function sugestaoPlaybook(cliente: any, conv: Conversa): { titulo: string; mensagem: string; icone: any } {
+  const nome = cliente?.nomeFantasia || conv.clienteNome;
+  const marca = cliente?.marcasInteresse?.[0] || "coleção";
+  const saude = cliente ? saudeCliente(cliente) : "ativo";
+  const semResp = semRespostaInfo(conv.id);
+  if (semResp) return {
+    titulo: "Retomar conversa",
+    icone: AlertCircle,
+    mensagem: `Oi ${nome}, tudo bem? Retomando nossa conversa — consegue me dar um retorno hoje? Posso ajudar em algo?`,
+  };
+  if (cliente?.orcamentosAtivos > 0) return {
+    titulo: "Cobrar proposta parada",
+    icone: FileText,
+    mensagem: `Oi ${nome}, passando aqui para saber se conseguiu analisar a proposta. Qualquer ajuste posso rodar rapidinho. Segue o link: https://nextil.app/proposta/orc-1`,
+  };
+  if (saude === "risco") return {
+    titulo: "Resgate — em risco",
+    icone: LifeBuoy,
+    mensagem: `${nome}, faz um tempinho que não conversamos! Acabou de chegar a nova coleção da ${marca}. Quer que eu monte uma sugestão de reposição pra você?`,
+  };
+  if (cliente?.status === "reativacao" || cliente?.status === "inativo") return {
+    titulo: "Reativação",
+    icone: Sparkles,
+    mensagem: `Oi ${nome}! Nova coleção da ${marca} chegou e lembrei de você. Posso te mandar 3 sugestões que casam com o seu perfil?`,
+  };
+  if (cliente?.pedidosRealizados === 0) return {
+    titulo: "Primeiro contato",
+    icone: Users,
+    mensagem: `Olá ${nome}! Aqui é o Paulo da NEXTIL. Vi que você tem interesse em ${marca}. Posso te apresentar as condições e a coleção nova?`,
+  };
+  return {
+    titulo: "Follow-up cordial",
+    icone: MessageCircle,
+    mensagem: `Oi ${nome}, tudo certo por aí? Passando pra saber se posso te ajudar em algo esta semana.`,
+  };
+}
+
 interface WhatsAppInboxProps {
-  /** Filtro extra aplicado ANTES da busca/tabs (ex.: por setor do atendente) */
   conversasFiltro?: (c: Conversa) => boolean;
-  /** Conteúdo extra renderizado acima da lista de conversas (perfil bar, chips de setor, etc.) */
   topSlot?: ReactNode;
-  /** Título exibido no header da lista (default: "WhatsApp") */
   titulo?: string;
-  /** Mostrar o dot colorido do setor em cada conversa */
   mostrarSetor?: boolean;
+  /** Ativa o modo Método (fila estratégica). Default true. */
+  modoMetodo?: boolean;
 }
 
 export default function WhatsAppInbox({
-  conversasFiltro,
-  topSlot,
-  titulo = "WhatsApp",
-  mostrarSetor = false,
+  conversasFiltro, topSlot, titulo = "WhatsApp",
+  mostrarSetor = false, modoMetodo = true,
 }: WhatsAppInboxProps = {}) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -103,37 +143,87 @@ export default function WhatsAppInbox({
   const [selectedId, setSelectedId] = useState<string>(conversasBase[0]?.id || "");
   const [search, setSearch] = useState("");
   const [msgInput, setMsgInput] = useState("");
-  const [tab, setTab] = useState<TabKey>("");
+  const [tipo, setTipo] = useState<TipoConversa>("clientes");
+  const [estado, setEstado] = useState<EstadoFiltro>("todas");
+  const [viewMode, setViewMode] = useState<ViewMode>("metodo");
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [sendOrcamentoOpen, setSendOrcamentoOpen] = useState(false);
+  const [trabalharOpen, setTrabalharOpen] = useState(false);
+  const [trabalharIdx, setTrabalharIdx] = useState(0);
+  const [gestorVer, setGestorVer] = useState(true);
+  const [semVinculoIgnored, setSemVinculoIgnored] = useState(false);
 
-  // Mensagens locais por conversa (para enviar templates / orçamentos / texto).
-  // Mock: persistido só em memória.
   const [extraMessages, setExtraMessages] = useState<Record<string, Mensagem[]>>({});
 
-  const filtered = useMemo(() => conversasBase.filter(c => {
-    if (search && !c.clienteNome.toLowerCase().includes(search.toLowerCase())) return false;
-    if (tab === "nao_lida" && c.naoLidas === 0) return false;
-    if (tab === "aguardando" && c.status !== "aguardando_resposta") return false;
-    if (tab === "sem_resposta" && !semRespostaInfo(c.id)) return false;
-    return true;
-  }), [search, tab, conversasBase]);
+  // ---------- Classificação em buckets do método ----------
+  function bucketDe(conv: Conversa): BucketId {
+    if (semRespostaInfo(conv.id)) return "voce_deve";
+    const cli = mockClientes360.find(c => c.id === conv.clienteId);
+    if (cli && (cli.orcamentosAtivos > 0 || cli.oportunidadesAbertas > 0)) return "negociacao";
+    if (cli && (cli.status === "em_risco" || cli.status === "inativo" || cli.status === "reativacao")) return "resgates";
+    return "em_dia";
+  }
 
-  const semRespostaCount = useMemo(
-    () => conversasBase.filter(c => semRespostaInfo(c.id)).length,
-    [conversasBase]
-  );
+  function motivoEstrategico(conv: Conversa): string {
+    const cli = mockClientes360.find(c => c.id === conv.clienteId);
+    const sem = semRespostaInfo(conv.id);
+    if (sem) return `aguardando você ${sem.tempo}`;
+    if (cli?.orcamentosAtivos && cli.orcamentosAtivos > 0) return `proposta enviada · aguardando retorno`;
+    if (cli?.oportunidadesAbertas && cli.oportunidadesAbertas > 0) return `${cli.oportunidadesAbertas} oportunidade${cli.oportunidadesAbertas > 1 ? "s" : ""} em aberto`;
+    if (cli?.status === "em_risco") return `sem compra há ${diasSemContato(cli.ultimoContato)}d — resgatar`;
+    if (cli?.status === "inativo" || cli?.status === "reativacao") return `reativar — ${diasSemContato(cli.ultimoContato)}d sem compra`;
+    return conv.ultimaMensagem;
+  }
+
+  // Aplica tipo + estado + busca (usado para métricas base)
+  const conversasVisiveis = useMemo(() => {
+    if (tipo !== "clientes") return []; // grupos/outros/sem_vinculo — todos mock 0
+    return conversasBase.filter(c => {
+      if (search && !c.clienteNome.toLowerCase().includes(search.toLowerCase())) return false;
+      if (estado === "nao_lida" && c.naoLidas === 0) return false;
+      if (estado === "aguardando" && c.status !== "aguardando_resposta") return false;
+      return true;
+    });
+  }, [conversasBase, tipo, estado, search]);
+
+  const grouped = useMemo(() => {
+    const g: Record<BucketId, Conversa[]> = { voce_deve: [], negociacao: [], resgates: [], em_dia: [] };
+    conversasVisiveis.forEach(c => { g[bucketDe(c)].push(c); });
+    // negociação: por valor
+    g.negociacao.sort((a, b) => {
+      const va = valor12m(mockClientes360.find(x => x.id === a.clienteId)!);
+      const vb = valor12m(mockClientes360.find(x => x.id === b.clienteId)!);
+      return vb - va;
+    });
+    return g;
+  }, [conversasVisiveis]);
+
+  const filaOrdenada: Conversa[] = useMemo(() => {
+    return [...grouped.voce_deve, ...grouped.negociacao, ...grouped.resgates];
+  }, [grouped]);
+
+  // ---------- Métricas do dia ----------
+  const metricas = useMemo(() => {
+    const hojeStr = "13/04/2026";
+    const cobertosHoje = conversasBase.filter(c => {
+      const msgs = mockMensagens[c.id] || [];
+      return msgs.some(m => m.remetente === "vendedor" && m.data === hojeStr);
+    }).length + Object.keys(extraMessages).length;
+    const propostasCobradas = conversasBase.filter(c => {
+      const cli = mockClientes360.find(x => x.id === c.clienteId);
+      return cli && cli.orcamentosAtivos > 0;
+    }).length;
+    const aguardandoVoce = conversasBase.filter(c => semRespostaInfo(c.id)).length;
+    return { cobertosHoje, propostasCobradas, aguardandoVoce };
+  }, [conversasBase, extraMessages]);
 
   const selected = conversasBase.find(c => c.id === selectedId);
   const baseMensagens = selected ? mockMensagens[selected.id] || [] : [];
-  const mensagens = selected
-    ? [...baseMensagens, ...(extraMessages[selected.id] || [])]
-    : [];
+  const mensagens = selected ? [...baseMensagens, ...(extraMessages[selected.id] || [])] : [];
   const cliente = selected ? mockClientes360.find(c => c.id === selected.clienteId) : null;
 
   const totalNaoLidas = conversasBase.reduce((s, c) => s + c.naoLidas, 0);
 
-  // Variáveis disponíveis para templates a partir do cliente selecionado
   const templateVars = {
     nome: cliente?.nomeFantasia || selected?.clienteNome || "",
     produto: cliente?.interessePrincipal || "",
@@ -146,129 +236,293 @@ export default function WhatsAppInbox({
     const horario = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
     const data = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
     const newMsg: Mensagem = {
-      id: `mlocal_${Date.now()}`,
-      conversaId: selected.id,
-      remetente: "vendedor",
-      texto,
-      horario,
-      data,
-      lida: false,
-      status: "enviado",
+      id: `mlocal_${Date.now()}`, conversaId: selected.id, remetente: "vendedor",
+      texto, horario, data, lida: false, status: "enviado",
     };
-    setExtraMessages(prev => ({
-      ...prev,
-      [selected.id]: [...(prev[selected.id] || []), newMsg],
-    }));
+    setExtraMessages(prev => ({ ...prev, [selected.id]: [...(prev[selected.id] || []), newMsg] }));
   }
-
-  function handleSendInput() {
-    if (!msgInput.trim()) return;
-    appendMessage(msgInput.trim());
-    setMsgInput("");
-  }
-
+  function handleSendInput() { if (!msgInput.trim()) return; appendMessage(msgInput.trim()); setMsgInput(""); }
   function handleApplyTemplate(content: string) {
     setMsgInput(prev => (prev ? prev + "\n" : "") + fillTemplate(content, templateVars));
     setTemplatesOpen(false);
   }
-
   function handleSendOrcamento(o: { id: string; nome: string; valorTotal: number | null; status: string }) {
-    const valor = o.valorTotal != null
-      ? `R$ ${o.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-      : "valor a confirmar";
-    const texto = `Segue o orçamento ${o.nome}:\n📄 Valor total: ${valor}\nStatus: ${o.status}\n🔗 https://nextil.app/orcamento/${o.id}`;
-    appendMessage(texto);
+    const valor = o.valorTotal != null ? `R$ ${o.valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "valor a confirmar";
+    appendMessage(`Segue o orçamento ${o.nome}:\n📄 Valor total: ${valor}\nStatus: ${o.status}\n🔗 https://nextil.app/proposta/${o.id}`);
     toast({ title: "Orçamento enviado pelo chat" });
   }
+  function usarSugestao() {
+    if (!selected) return;
+    const s = sugestaoPlaybook(cliente, selected);
+    setMsgInput(s.mensagem);
+    toast({ title: `Sugestão aplicada: ${s.titulo}` });
+  }
+
+  // ---------- Trabalhar fila ----------
+  function abrirFila() {
+    if (filaOrdenada.length === 0) { toast({ title: "Fila zerada 🎉", description: "Sem prioridades pendentes." }); return; }
+    setTrabalharIdx(0);
+    setTrabalharOpen(true);
+  }
+  function proximo() {
+    if (trabalharIdx + 1 >= filaOrdenada.length) {
+      setTrabalharOpen(false);
+      toast({ title: `Fila zerada 🎉 · ${filaOrdenada.length} clientes cobertos` });
+    } else {
+      setTrabalharIdx(i => i + 1);
+    }
+  }
+  const filaAtual = trabalharOpen ? filaOrdenada[trabalharIdx] : null;
+  const filaAtualCliente = filaAtual ? mockClientes360.find(c => c.id === filaAtual.clienteId) : null;
+  const filaAtualSugestao = filaAtual ? sugestaoPlaybook(filaAtualCliente, filaAtual) : null;
+
+  const filaAtualEnviar = () => {
+    if (!filaAtual || !filaAtualSugestao) return;
+    const now = new Date();
+    const horario = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const data = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
+    setExtraMessages(prev => ({
+      ...prev,
+      [filaAtual.id]: [...(prev[filaAtual.id] || []), {
+        id: `mfila_${Date.now()}`, conversaId: filaAtual.id, remetente: "vendedor",
+        texto: filaAtualSugestao.mensagem, horario, data, lida: false, status: "enviado",
+      }],
+    }));
+    toast({ title: `Enviado para ${filaAtual.clienteNome}` });
+    proximo();
+  };
+
+  // ---------- Render ----------
+  const tipoTabs: { id: TipoConversa; label: string; count: number; icon: any }[] = [
+    { id: "clientes",    label: "Clientes",     count: conversasBase.length, icon: Users },
+    { id: "sem_vinculo", label: "Sem vínculo",  count: semVinculoIgnored ? 0 : 1, icon: UserX },
+    { id: "grupos",      label: "Grupos",       count: 0, icon: Store },
+    { id: "outros",      label: "Outros",       count: 0, icon: Contact },
+  ];
+
+  const renderConversa = (conv: Conversa) => {
+    const cli = mockClientes360.find(c => c.id === conv.clienteId);
+    const saude = cli ? saudeCliente(cli) : null;
+    const saudeColor = saude === "risco" ? "bg-red-500" : saude === "atencao" ? "bg-yellow-500" : "bg-emerald-500";
+    return (
+      <button
+        key={conv.id}
+        onClick={() => setSelectedId(conv.id)}
+        className={`w-full flex items-start gap-2.5 p-2.5 text-left transition-colors border-b border-border/50 ${
+          selectedId === conv.id ? "bg-accent/5 border-l-2 border-l-accent" : "hover:bg-muted/50"
+        }`}
+      >
+        <div className="relative shrink-0">
+          <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
+            <span className="text-xs font-bold text-green-700">{conv.clienteNome[0]}</span>
+          </div>
+          {saude && <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${saudeColor} border-2 border-card`} title={`Saúde: ${saude}`} />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              {mostrarSetor && (
+                <span title={setorLabels[getConversaSetor(conv.id)]} className={`h-2 w-2 rounded-full shrink-0 ${setorDot[getConversaSetor(conv.id)]}`} />
+              )}
+              <p className={`text-xs truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
+            </div>
+            <span className="text-[10px] text-muted-foreground shrink-0">{conv.ultimaHora}</span>
+          </div>
+          <p className="text-[11px] truncate mt-0.5 text-muted-foreground italic">
+            {modoMetodo ? motivoEstrategico(conv) : conv.ultimaMensagem}
+          </p>
+        </div>
+        {conv.naoLidas > 0 && (
+          <Badge className="h-4 min-w-4 px-1 flex items-center justify-center text-[9px] bg-green-500 shrink-0">{conv.naoLidas}</Badge>
+        )}
+      </button>
+    );
+  };
 
   return (
     <>
       <div className="flex h-[calc(100vh-56px)] overflow-hidden">
-        {/* Left - Conversations list */}
-        <div className={`${selectedId && selected ? "hidden md:flex" : "flex"} w-full md:w-[320px] border-r border-border flex-col bg-card shrink-0`}>
+        {/* LEFT */}
+        <div className={`${selectedId && selected ? "hidden md:flex" : "flex"} w-full md:w-[340px] border-r border-border flex-col bg-card shrink-0`}>
           {topSlot && <div className="border-b border-border">{topSlot}</div>}
+
+          {/* Header + ⚙ */}
           <div className="p-3 border-b border-border space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-heading font-bold flex items-center gap-2">
                 <MessageCircle className="h-4 w-4 text-green-600" /> {titulo}
                 {totalNaoLidas > 0 && <Badge className="h-5 text-[10px]">{totalNaoLidas}</Badge>}
               </h2>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" title="Ferramentas">
+                    <Settings className="h-3.5 w-3.5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-56 p-1">
+                  {[
+                    { icon: RefreshCcw, label: "Atualizar sincronização" },
+                    { icon: Merge, label: "Unificar duplicadas" },
+                    { icon: Contact, label: "Carregar contatos" },
+                    { icon: QrCode, label: "Conectar via QR" },
+                    { icon: LogOut, label: "Sair do WhatsApp" },
+                  ].map(a => (
+                    <button
+                      key={a.label}
+                      onClick={() => toast({ title: a.label })}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs hover:bg-muted"
+                    >
+                      <a.icon className="h-3.5 w-3.5 text-muted-foreground" /> {a.label}
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
             </div>
+
+            {/* Faixa do método */}
+            {modoMetodo && (
+              <div className="rounded-lg border border-accent/30 bg-gradient-to-br from-accent/5 to-transparent p-2 space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Hoje via Whats</p>
+                <div className="grid grid-cols-3 gap-1 text-center">
+                  <button className="p-1 rounded hover:bg-muted transition-colors">
+                    <div className="text-sm font-bold font-heading text-emerald-600">{metricas.cobertosHoje}</div>
+                    <div className="text-[9px] text-muted-foreground leading-tight">cobertos</div>
+                  </button>
+                  <button className="p-1 rounded hover:bg-muted transition-colors">
+                    <div className="text-sm font-bold font-heading text-orange-600">{metricas.propostasCobradas}</div>
+                    <div className="text-[9px] text-muted-foreground leading-tight">propostas ativas</div>
+                  </button>
+                  <button onClick={() => setEstado("todas")} className="p-1 rounded hover:bg-muted transition-colors">
+                    <div className="text-sm font-bold font-heading text-red-600">{metricas.aguardandoVoce}</div>
+                    <div className="text-[9px] text-muted-foreground leading-tight">te aguardam</div>
+                  </button>
+                </div>
+                <Button size="sm" className="w-full h-7 text-[11px] gap-1" onClick={abrirFila}>
+                  <Play className="h-3 w-3" /> Trabalhar fila ({filaOrdenada.length})
+                </Button>
+              </div>
+            )}
+
+            {/* Busca */}
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input placeholder="Buscar conversa..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-8 text-xs" />
             </div>
-            <div className="flex gap-1 flex-wrap">
-              {([
-                { key: "" as TabKey, label: "Todas" },
-                { key: "nao_lida" as TabKey, label: "Não lidas" },
-                { key: "aguardando" as TabKey, label: "Aguardando" },
-                { key: "sem_resposta" as TabKey, label: "Sem resposta", count: semRespostaCount },
-              ]).map(f => (
+
+            {/* Tipos */}
+            <div className="flex gap-0.5 overflow-x-auto">
+              {tipoTabs.map(t => (
                 <button
-                  key={f.key}
-                  onClick={() => setTab(f.key)}
-                  className={`text-[10px] px-2 py-1 rounded-full border transition-colors flex items-center gap-1 ${tab === f.key ? "bg-accent text-accent-foreground border-accent" : "border-border text-muted-foreground hover:border-accent/40"}`}
+                  key={t.id}
+                  onClick={() => setTipo(t.id)}
+                  className={`text-[10px] px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap transition-colors ${
+                    tipo === t.id ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
+                  }`}
                 >
-                  {f.label}
-                  {"count" in f && f.count !== undefined && f.count > 0 && (
-                    <span className={`text-[9px] px-1 rounded-full ${tab === f.key ? "bg-accent-foreground/20" : "bg-muted"}`}>{f.count}</span>
-                  )}
+                  <t.icon className="h-2.5 w-2.5" /> {t.label}
+                  {t.count > 0 && <span className={`text-[9px] px-1 rounded-full ${tipo === t.id ? "bg-background/20" : "bg-muted"}`}>{t.count}</span>}
                 </button>
               ))}
             </div>
+
+            {/* Estado + view mode */}
+            <div className="flex items-center justify-between gap-1">
+              <div className="flex gap-1">
+                {([
+                  { key: "todas" as EstadoFiltro, label: "Todas" },
+                  { key: "nao_lida" as EstadoFiltro, label: "Não lidas" },
+                  { key: "aguardando" as EstadoFiltro, label: "Aguard." },
+                ]).map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setEstado(f.key)}
+                    className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                      estado === f.key ? "bg-accent text-accent-foreground border-accent" : "border-border text-muted-foreground hover:border-accent/40"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              {modoMetodo && (
+                <div className="flex bg-muted rounded p-0.5">
+                  {(["metodo", "recentes"] as ViewMode[]).map(v => (
+                    <button
+                      key={v}
+                      onClick={() => setViewMode(v)}
+                      className={`text-[9px] px-1.5 py-0.5 rounded transition-colors ${
+                        viewMode === v ? "bg-background text-foreground font-semibold" : "text-muted-foreground"
+                      }`}
+                    >
+                      {v === "metodo" ? "Método" : "Recentes"}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Lista */}
           <div className="flex-1 overflow-y-auto">
-            {filtered.length === 0 && (
+            {/* Banner de vinculação (mock) */}
+            {tipo === "sem_vinculo" && !semVinculoIgnored && (
+              <div className="m-2 p-2.5 rounded-lg border border-orange-200 bg-orange-50/60 space-y-2">
+                <div className="flex items-start gap-2">
+                  <Link2 className="h-3.5 w-3.5 text-orange-600 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold">Vincular a AGK Atacado?</p>
+                    <p className="text-[10px] text-muted-foreground">Telefone (47) 99123-... encontrado no CRM</p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" className="h-6 text-[10px] flex-1" onClick={() => { toast({ title: "Vinculado a AGK Atacado" }); setSemVinculoIgnored(true); }}>Vincular</Button>
+                  <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => setSemVinculoIgnored(true)}>Não é este</Button>
+                  <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => { toast({ title: "Criar cliente" }); setSemVinculoIgnored(true); }}>Criar</Button>
+                </div>
+                <button className="text-[10px] text-muted-foreground underline w-full text-left" onClick={() => setSemVinculoIgnored(true)}>
+                  Marcar como não-CRM
+                </button>
+              </div>
+            )}
+
+            {tipo !== "clientes" && tipo !== "sem_vinculo" && (
+              <div className="text-center py-12 px-4 text-xs text-muted-foreground">
+                <div className="mx-auto h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-2">
+                  <Users className="h-4 w-4 opacity-50" />
+                </div>
+                {tipo === "grupos" ? "Nenhum grupo — grupos não entram na fila do método." : "Nenhuma conversa não-CRM (fábricas, equipe interna)."}
+              </div>
+            )}
+
+            {tipo === "clientes" && conversasVisiveis.length === 0 && (
               <div className="text-center py-12 text-xs text-muted-foreground">Nenhuma conversa nesta aba</div>
             )}
-            {filtered.map(conv => {
-              const semResp = tab === "sem_resposta" ? semRespostaInfo(conv.id) : null;
-              return (
-                <button
-                  key={conv.id}
-                  onClick={() => setSelectedId(conv.id)}
-                  className={`w-full flex items-start gap-3 p-3 text-left transition-colors border-b border-border/50 ${
-                    selectedId === conv.id ? "bg-accent/5 border-l-2 border-l-accent" : "hover:bg-muted/50"
-                  }`}
-                >
-                  <div className="relative shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <span className="text-sm font-bold text-green-700">{conv.clienteNome[0]}</span>
-                    </div>
-                    {conv.online && <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-card" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {mostrarSetor && (
-                          <span
-                            title={setorLabels[getConversaSetor(conv.id)]}
-                            className={`h-2 w-2 rounded-full shrink-0 ${setorDot[getConversaSetor(conv.id)]}`}
-                          />
-                        )}
-                        <p className={`text-sm truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
+
+            {tipo === "clientes" && viewMode === "metodo" && conversasVisiveis.length > 0 && (
+              <>
+                {BUCKETS.map(b => {
+                  const items = grouped[b.id];
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={b.id} className={b.bg}>
+                      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/60 sticky top-0 bg-inherit backdrop-blur-sm z-10">
+                        <span className={`h-1.5 w-1.5 rounded-full ${b.dot}`} />
+                        <b.icon className="h-3 w-3 text-muted-foreground" />
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/80 flex-1">{b.label}</p>
+                        <span className="text-[10px] font-semibold text-muted-foreground">{items.length}</span>
                       </div>
-                      {semResp ? (
-                        <span className="text-[10px] text-orange-600 font-medium shrink-0 flex items-center gap-0.5">
-                          <Clock className="h-2.5 w-2.5" /> {semResp.tempo}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground shrink-0 ml-1">{conv.ultimaHora}</span>
-                      )}
+                      {items.map(renderConversa)}
                     </div>
-                    <p className={`text-xs truncate mt-0.5 ${conv.naoLidas > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>{conv.ultimaMensagem}</p>
-                  </div>
-                  {conv.naoLidas > 0 && (
-                    <Badge className="h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-green-500 shrink-0">{conv.naoLidas}</Badge>
-                  )}
-                </button>
-              );
-            })}
+                  );
+                })}
+              </>
+            )}
+
+            {tipo === "clientes" && viewMode === "recentes" && conversasVisiveis.map(renderConversa)}
           </div>
         </div>
 
-        {/* Center - Chat */}
+        {/* CENTER */}
         {selected ? (
           <div className={`${!selectedId || !selected ? "hidden md:flex" : "flex"} flex-1 flex-col min-w-0`}>
             <div className="h-14 border-b border-border flex items-center px-4 gap-3 bg-card shrink-0">
@@ -285,82 +539,85 @@ export default function WhatsAppInbox({
                 <p className="text-sm font-semibold truncate">{selected.clienteNome}</p>
                 <p className="text-[10px] text-muted-foreground">{selected.online ? "Online" : "Offline"}{cliente ? ` · ${cliente.cidade}/${cliente.estado}` : ""}</p>
               </div>
-              <div className="hidden sm:flex gap-1 shrink-0">
-                <Button variant="ghost" size="sm" className="text-xs"><CheckSquare className="h-3.5 w-3.5 mr-1" /> Tarefa</Button>
-                <Button variant="ghost" size="sm" className="text-xs"><Target className="h-3.5 w-3.5 mr-1" /> Oportunidade</Button>
-                <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate(`/vendedor/360/${selected.clienteId}`)}>
-                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> 360
+              {modoMetodo && cliente && (
+                <Button variant="outline" size="sm" className="text-xs gap-1" onClick={usarSugestao}>
+                  <Sparkles className="h-3.5 w-3.5 text-accent" /> Sugestão
                 </Button>
-              </div>
+              )}
+              <label className="hidden sm:flex items-center gap-1 text-[10px] text-muted-foreground cursor-pointer">
+                <input type="checkbox" checked={gestorVer} onChange={e => setGestorVer(e.target.checked)} className="h-3 w-3" />
+                Gestor pode ver
+              </label>
             </div>
+
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[hsl(var(--background))]">
               {mensagens.length > 0 && (
                 <div className="flex justify-center"><span className="text-[10px] text-muted-foreground bg-muted px-3 py-1 rounded-full">{mensagens[0]?.data}</span></div>
               )}
               {mensagens.map(m => {
-                const isVendedor = m.remetente === "vendedor";
-                // Mock: se backend não informou status, assume 'entregue' para enviadas
-                const status = m.status ?? (isVendedor ? (m.lida ? "lido" : "entregue") : undefined);
+                const isV = m.remetente === "vendedor";
+                const status = m.status ?? (isV ? (m.lida ? "lido" : "entregue") : undefined);
                 return (
-                  <div key={m.id} className={`flex ${isVendedor ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[65%] px-3 py-2 rounded-xl text-sm ${
-                      isVendedor ? "bg-accent text-accent-foreground rounded-br-sm" : "bg-card border border-border rounded-bl-sm"
-                    }`}>
+                  <div key={m.id} className={`flex ${isV ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[65%] px-3 py-2 rounded-xl text-sm ${isV ? "bg-accent text-accent-foreground rounded-br-sm" : "bg-card border border-border rounded-bl-sm"}`}>
                       <p className="whitespace-pre-line">{m.texto}</p>
-                      <p className={`text-[10px] mt-1 text-right flex items-center justify-end gap-1 ${isVendedor ? "text-accent-foreground/70" : "text-muted-foreground"}`}>
+                      <p className={`text-[10px] mt-1 text-right flex items-center justify-end gap-1 ${isV ? "text-accent-foreground/70" : "text-muted-foreground"}`}>
                         <span>{m.horario}</span>
-                        {isVendedor && <StatusIcon status={status} />}
+                        {isV && <StatusIcon status={status} />}
                       </p>
                     </div>
                   </div>
                 );
               })}
+              {/* Chip inline: evento do sistema (mock) */}
+              {cliente && cliente.orcamentosAtivos > 0 && (
+                <div className="flex justify-center">
+                  <span className="text-[10px] bg-orange-50 border border-orange-200 text-orange-700 px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <FileText className="h-3 w-3" /> Proposta enviada · 👁 lojista visualizou ontem
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="min-h-14 border-t border-border flex items-center gap-2 px-3 py-2 bg-card shrink-0">
+
+            <div className="min-h-14 border-t border-border flex items-center gap-1.5 px-3 py-2 bg-card shrink-0">
               <Button variant="ghost" size="icon" className="h-8 w-8"><Paperclip className="h-4 w-4" /></Button>
 
-              {/* Templates ⚡ */}
               <Popover open={templatesOpen} onOpenChange={setTemplatesOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Templates de mensagem">
-                    <Zap className="h-4 w-4 text-accent" />
-                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Templates de mensagem (/)"><Zap className="h-4 w-4 text-accent" /></Button>
                 </PopoverTrigger>
                 <PopoverContent side="top" align="start" className="w-[340px] p-0">
                   <div className="p-3 border-b border-border flex items-center justify-between">
-                    <p className="text-sm font-semibold flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-accent" /> Templates</p>
-                    <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => { setTemplatesOpen(false); navigate("/vendedor/configuracoes/templates"); }}>
-                      Gerenciar
-                    </Button>
+                    <p className="text-sm font-semibold flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-accent" /> Templates do playbook</p>
+                    <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => { setTemplatesOpen(false); navigate("/vendedor/configuracoes/templates"); }}>Gerenciar</Button>
                   </div>
                   <div className="max-h-[320px] overflow-y-auto">
-                    {templates.length === 0 && (
-                      <div className="p-6 text-center text-xs text-muted-foreground">Nenhum template cadastrado.</div>
-                    )}
+                    {templates.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhum template cadastrado.</div>}
                     {templates.map(t => (
-                      <button
-                        key={t.id}
-                        onClick={() => handleApplyTemplate(t.conteudo)}
-                        className="w-full text-left p-3 border-b border-border/60 hover:bg-muted/60 transition-colors"
-                      >
+                      <button key={t.id} onClick={() => handleApplyTemplate(t.conteudo)} className="w-full text-left p-3 border-b border-border/60 hover:bg-muted/60 transition-colors">
                         <div className="flex items-center gap-2">
                           <p className="text-xs font-semibold flex-1 truncate">{t.nome}</p>
                           {t.categoria && <Badge variant="secondary" className="text-[9px]">{t.categoria}</Badge>}
                         </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">
-                          {fillTemplate(t.conteudo, templateVars)}
-                        </p>
+                        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">{fillTemplate(t.conteudo, templateVars)}</p>
                       </button>
                     ))}
                   </div>
                 </PopoverContent>
               </Popover>
 
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSendOrcamentoOpen(true)} title="Enviar orçamento">
+                <FileText className="h-4 w-4" />
+              </Button>
+
               <Input
-                placeholder="Digite uma mensagem..."
+                placeholder='Digite "/" para atalhos do playbook...'
                 value={msgInput}
                 onChange={e => setMsgInput(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendInput(); } }}
+                onKeyDown={e => {
+                  if (e.key === "/" && msgInput === "") { e.preventDefault(); setTemplatesOpen(true); return; }
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendInput(); }
+                }}
                 className="h-9 flex-1"
               />
               <Button size="icon" className="h-8 w-8" onClick={handleSendInput}><Send className="h-4 w-4" /></Button>
@@ -375,62 +632,143 @@ export default function WhatsAppInbox({
           </div>
         )}
 
-        {/* Right - Client panel */}
+        {/* RIGHT — Mini-360 */}
         {selected && cliente && (
-          <div className="hidden lg:block w-[280px] border-l border-border bg-card overflow-y-auto shrink-0">
+          <div className="hidden lg:block w-[300px] border-l border-border bg-card overflow-y-auto shrink-0">
             <div className="p-4 text-center border-b border-border">
-              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
+              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2 relative">
                 <span className="text-2xl font-bold text-green-700">{cliente.nomeFantasia[0]}</span>
+                {(() => {
+                  const s = saudeCliente(cliente);
+                  const c = s === "risco" ? "bg-red-500" : s === "atencao" ? "bg-yellow-500" : "bg-emerald-500";
+                  return <div className={`absolute bottom-0 right-0 h-4 w-4 rounded-full ${c} border-2 border-card`} />;
+                })()}
               </div>
               <p className="text-sm font-semibold">{cliente.nomeFantasia}</p>
               <p className="text-[10px] text-muted-foreground">{cliente.documento}</p>
+              <div className="flex justify-center gap-1 mt-2">
+                <Badge variant="outline" className="text-[9px] capitalize">{cliente.status.replace("_", " ")}</Badge>
+                <Badge variant="secondary" className="text-[9px]">{formatBRL(valor12m(cliente))} · 12m</Badge>
+              </div>
             </div>
 
-            <div className="p-4 space-y-3 border-b border-border">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground"><User className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{cliente.representante}</span></div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground"><Phone className="h-3.5 w-3.5 shrink-0" /> <span>{cliente.whatsapp}</span></div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground"><MapPin className="h-3.5 w-3.5 shrink-0" /> <span>{cliente.cidade}/{cliente.estado}</span></div>
+            {/* Próxima ação */}
+            {modoMetodo && (
+              <div className="p-3 border-b border-border bg-accent/5">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Próxima ação</p>
+                <p className="text-xs font-medium">{cliente.proximaAcao}</p>
+                <Button size="sm" variant="outline" className="w-full h-7 text-[10px] mt-2 gap-1" onClick={usarSugestao}>
+                  <Sparkles className="h-3 w-3 text-accent" /> Aplicar sugestão do playbook
+                </Button>
+              </div>
+            )}
+
+            <div className="p-3 space-y-2 border-b border-border">
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><User className="h-3 w-3 shrink-0" /><span className="truncate">{cliente.representante}</span></div>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Phone className="h-3 w-3 shrink-0" /><span>{cliente.whatsapp}</span></div>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" /><span>{cliente.cidade}/{cliente.estado}</span></div>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Clock className="h-3 w-3 shrink-0" /><span>Último contato: {cliente.ultimoContato}</span></div>
             </div>
 
-            <div className="p-4 space-y-2 border-b border-border">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Comercial</p>
+            <div className="p-3 space-y-2 border-b border-border">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Em jogo</p>
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-muted/50 rounded-lg p-2 text-center">
                   <p className="text-lg font-bold font-heading text-purple-600">{cliente.oportunidadesAbertas}</p>
                   <p className="text-[9px] text-muted-foreground">Oportunidades</p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-2 text-center">
-                  <p className="text-lg font-bold font-heading text-green-600">{cliente.pedidosRealizados}</p>
-                  <p className="text-[9px] text-muted-foreground">Pedidos</p>
+                  <p className="text-lg font-bold font-heading text-orange-600">{cliente.orcamentosAtivos}</p>
+                  <p className="text-[9px] text-muted-foreground">Propostas</p>
                 </div>
               </div>
-              <div className="text-xs space-y-1.5 pt-1">
-                <div className="flex justify-between"><span className="text-muted-foreground">Nicho</span><span className="font-medium">{cliente.nicho === "infantil" ? "Infantil" : cliente.nicho === "adulto" ? "Adulto" : cliente.nicho === "fitness" ? "Fitness" : "Multimarcas"}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Interesse</span><span className="font-medium truncate ml-2 max-w-[120px] text-right">{cliente.interessePrincipal}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Último contato</span><span className="font-medium">{cliente.ultimoContato}</span></div>
-              </div>
+              {cliente.orcamentosAtivos > 0 && (
+                <div className="text-[10px] p-2 rounded bg-orange-50 border border-orange-200 space-y-0.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">Proposta #orc-087</span>
+                    <span className="text-orange-700">👁 visualizada</span>
+                  </div>
+                  <p className="text-muted-foreground">R$ 8.900 · 3 marcas · sem resposta há 2d</p>
+                </div>
+              )}
             </div>
 
-            <div className="p-4 space-y-1.5">
-              <Button variant="default" size="sm" className="w-full text-xs justify-start" onClick={() => setSendOrcamentoOpen(true)}>
+            <div className="p-3 space-y-1.5">
+              <Button variant="default" size="sm" className="w-full text-xs justify-start h-8" onClick={() => setSendOrcamentoOpen(true)}>
                 <FileText className="h-3.5 w-3.5 mr-2" /> Enviar orçamento
               </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start" onClick={() => navigate(`/vendedor/360/${cliente.id}`)}>
-                <ExternalLink className="h-3.5 w-3.5 mr-2" /> Abrir Nextil 360
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
+                <Package className="h-3.5 w-3.5 mr-2" /> Montar cesta
               </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
+                <TrendingUp className="h-3.5 w-3.5 mr-2" /> Registrar atendimento
+              </Button>
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
                 <Target className="h-3.5 w-3.5 mr-2" /> Criar oportunidade
               </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
                 <CheckSquare className="h-3.5 w-3.5 mr-2" /> Criar tarefa
               </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start">
-                <Calendar className="h-3.5 w-3.5 mr-2" /> Agendar compromisso
+              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
+                <Calendar className="h-3.5 w-3.5 mr-2" /> Enviar material
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full text-xs justify-start h-8 text-muted-foreground" onClick={() => navigate(`/vendedor/360/${cliente.id}`)}>
+                <ExternalLink className="h-3.5 w-3.5 mr-2" /> Abrir 360 completo
               </Button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Modal: Trabalhar fila */}
+      <Dialog open={trabalharOpen} onOpenChange={setTrabalharOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="shrink-0 p-4 border-b border-border">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Play className="h-4 w-4 text-accent" /> Trabalhando a fila
+              <Badge variant="secondary" className="ml-auto text-[10px]">{trabalharIdx + 1} de {filaOrdenada.length}</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          {filaAtual && filaAtualCliente && filaAtualSugestao && (
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex items-center gap-3 pb-3 border-b border-border">
+                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <span className="text-lg font-bold text-green-700">{filaAtual.clienteNome[0]}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold">{filaAtual.clienteNome}</p>
+                  <p className="text-[10px] text-muted-foreground">{filaAtualCliente.cidade}/{filaAtualCliente.estado} · {formatBRL(valor12m(filaAtualCliente))} em 12m</p>
+                </div>
+                <Badge variant="outline" className="text-[9px] capitalize">{filaAtualCliente.status.replace("_", " ")}</Badge>
+              </div>
+
+              <div className="p-3 rounded-lg bg-orange-50 border border-orange-200">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-orange-700 mb-1">Motivo</p>
+                <p className="text-xs">{motivoEstrategico(filaAtual)}</p>
+              </div>
+
+              <div className="p-3 rounded-lg bg-accent/5 border border-accent/30 space-y-2">
+                <div className="flex items-center gap-2">
+                  <filaAtualSugestao.icone className="h-3.5 w-3.5 text-accent" />
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-accent">Playbook · {filaAtualSugestao.titulo}</p>
+                </div>
+                <textarea
+                  key={filaAtual.id}
+                  defaultValue={filaAtualSugestao.mensagem}
+                  className="w-full text-xs p-2 rounded border border-border bg-background min-h-[100px] resize-none"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="shrink-0 p-3 border-t border-border flex-row gap-2">
+            <Button variant="ghost" size="sm" onClick={proximo} className="gap-1"><SkipForward className="h-3.5 w-3.5" /> Pular</Button>
+            <Button variant="outline" size="sm" onClick={() => { if (filaAtual) { setSelectedId(filaAtual.id); setTrabalharOpen(false); } }}>Abrir conversa</Button>
+            <Button size="sm" onClick={filaAtualEnviar} className="ml-auto gap-1">
+              Enviar e próxima <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {selected && (
         <SendOrcamentoModal
