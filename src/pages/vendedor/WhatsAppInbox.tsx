@@ -206,15 +206,17 @@ export default function WhatsAppInbox({
   // ---------- Métricas do dia ----------
   const metricas = useMemo(() => {
     const hojeStr = "13/04/2026";
-    const cobertosHoje = conversasBase.filter(c => {
-      const msgs = mockMensagens[c.id] || [];
+    // Somente conversas de CLIENTES (grupos/outros/sem_vinculo ficam fora)
+    const clientesConvs = conversasBase.filter(c => mockClientes360.some(x => x.id === c.clienteId));
+    const cobertosHoje = clientesConvs.filter(c => {
+      const msgs = [...(mockMensagens[c.id] || []), ...(extraMessages[c.id] || [])];
       return msgs.some(m => m.remetente === "vendedor" && m.data === hojeStr);
-    }).length + Object.keys(extraMessages).length;
-    const propostasCobradas = conversasBase.filter(c => {
+    }).length;
+    const propostasCobradas = clientesConvs.filter(c => {
       const cli = mockClientes360.find(x => x.id === c.clienteId);
       return cli && cli.orcamentosAtivos > 0;
     }).length;
-    const aguardandoVoce = conversasBase.filter(c => semRespostaInfo(c.id)).length;
+    const aguardandoVoce = clientesConvs.filter(c => semRespostaInfo(c.id)).length;
     return { cobertosHoje, propostasCobradas, aguardandoVoce };
   }, [conversasBase, extraMessages]);
 
