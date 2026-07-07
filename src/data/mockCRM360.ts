@@ -491,9 +491,22 @@ export const nichoLabels: Record<Nicho, string> = {
 export const temperaturaColors: Record<string, string> = {
   quente: "text-red-500", morna: "text-yellow-500", fria: "text-blue-400",
 };
+// Lista canônica de tipos de AÇÃO (item 2 da unificação Tarefas/Agenda).
+// Ligação · Reunião · Visita · Follow-up · Retorno de orçamento · Apresentação · Outros.
+export const tipoAcaoLabels: Record<string, string> = {
+  ligacao: "Ligação",
+  reuniao: "Reunião",
+  visita: "Visita",
+  follow_up: "Follow-up",
+  retorno_orcamento: "Retorno de orçamento",
+  apresentacao: "Apresentação",
+  outros: "Outros",
+};
+// Legado — inclui tudo (canônico + antigos) para renderização de dados existentes.
 export const tipoTarefaLabels: Record<string, string> = {
-  ligacao: "Ligação", follow_up: "Follow-up", visita: "Visita", reuniao: "Reunião", retorno_proposta: "Retorno de proposta", cobranca_resposta: "Cobrança de resposta", pos_venda: "Pós-venda",
+  ...tipoAcaoLabels,
+  retorno_proposta: "Retorno de proposta",
+  cobranca_resposta: "Cobrança de resposta",
+  pos_venda: "Pós-venda",
 };
-export const tipoCompromissoLabels: Record<string, string> = {
-  ligacao: "Ligação", reuniao: "Reunião", visita: "Visita", follow_up: "Follow-up", retorno_orcamento: "Retorno de orçamento", apresentacao: "Apresentação comercial",
-};
+export const tipoCompromissoLabels: Record<string, string> = tipoAcaoLabels;
