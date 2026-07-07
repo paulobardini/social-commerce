@@ -204,7 +204,7 @@ const App = () => (
                 <Route path="/vendedor/relatorios" element={<LayoutRoute><RelatoriosCentral /></LayoutRoute>} />
                 <Route path="/vendedor/relatorios/novo" element={<LayoutRoute><ReportBuilder /></LayoutRoute>} />
                 <Route path="/vendedor/relatorios/:id" element={<LayoutRoute><RelatorioViewer /></LayoutRoute>} />
-                <Route path="/vendedor/insights" element={<LayoutRoute><InsightsPage /></LayoutRoute>} />
+                <Route path="/vendedor/insights" element={<Navigate to="/vendedor/dashboard-gerencial?tab=decisoes" replace />} />
                 <Route path="/vendedor/visoes-salvas" element={<LayoutRoute><VisoesSalvasPage /></LayoutRoute>} />
 
                 {/* Nextil Inteligência de Mercado */}
