@@ -510,7 +510,7 @@ export default function Cliente360Page() {
                       </div>
                       <Badge variant={t.prioridade === "alta" ? "destructive" : "secondary"} className="text-[9px] shrink-0">{t.prioridade}</Badge>
                     </div>
-                  )) : (
+                  );}) : (
                     <div className="text-center py-6">
                       <p className="text-xs text-muted-foreground mb-2">Nenhuma tarefa pendente</p>
                       <Button size="sm" variant="outline"><Plus className="h-3 w-3 mr-1" /> Criar tarefa</Button>
