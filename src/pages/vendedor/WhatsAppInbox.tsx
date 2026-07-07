@@ -303,7 +303,7 @@ export default function WhatsAppInbox({
   const renderConversa = (conv: Conversa) => {
     const cli = mockClientes360.find(c => c.id === conv.clienteId);
     const saude = cli ? saudeCliente(cli) : null;
-    const saudeColor = saude === "risco" ? "bg-red-500" : saude === "atencao" ? "bg-yellow-500" : "bg-emerald-500";
+    const saudeColor = saude === "risco" ? "bg-red-500" : saude === "inativo" ? "bg-yellow-500" : "bg-emerald-500";
     return (
       <button
         key={conv.id}
@@ -640,7 +640,7 @@ export default function WhatsAppInbox({
                 <span className="text-2xl font-bold text-green-700">{cliente.nomeFantasia[0]}</span>
                 {(() => {
                   const s = saudeCliente(cliente);
-                  const c = s === "risco" ? "bg-red-500" : s === "atencao" ? "bg-yellow-500" : "bg-emerald-500";
+                  const c = s === "risco" ? "bg-red-500" : s === "inativo" ? "bg-yellow-500" : "bg-emerald-500";
                   return <div className={`absolute bottom-0 right-0 h-4 w-4 rounded-full ${c} border-2 border-card`} />;
                 })()}
               </div>
