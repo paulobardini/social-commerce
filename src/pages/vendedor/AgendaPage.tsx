@@ -121,12 +121,8 @@ export default function AgendaPage() {
     if (t.clienteId) {
       setConcluirId(t.id);
     } else {
-      // sem cliente: conclui direto
-      // usamos toggleConcluida via ConcluirAcaoModal? mais simples: navegar para tarefas.
-      // implementamos direto acessando o helper do contexto seria ideal, mas concluirAcao existe:
-      // sem cliente, disparar modal ainda é útil? per requisito, "se tem cliente". Aqui: fallback direto.
-      // Reaproveita concluirAcao com payload vazio via useTarefas (import faltaria); manter simples:
-      toast.info("Ação concluída");
+      toggleConcluida(t.id);
+      toast.success("Ação concluída");
     }
   };
 
