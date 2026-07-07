@@ -35,6 +35,7 @@ import {
   calcularSaude, saudeLabel, saudeColor, saudeDot, type SaudeStatus,
   SAUDE_LIMIARES,
 } from "@/lib/saudeCliente";
+import { statusDerivado } from "@/lib/acoes";
 import {
   ESTAGIOS, valor12m, formatBRL, estagioAtual, loadOverrides,
 } from "@/lib/carteiraMetodo";
