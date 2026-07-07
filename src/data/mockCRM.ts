@@ -489,13 +489,19 @@ mockOportunidades.forEach(op => {
     };
   }
 
-  // dias na etapa (mock a partir de ultimaInteracao)
+  // dias na etapa (mock) — distribuir 0-12 dias com alguns estourados
   if (op.diasNaEtapa === undefined) {
-    try {
-      const [d, m, y] = op.ultimaInteracao.split("/").map(Number);
-      const dt = new Date(y, m - 1, d);
-      op.diasNaEtapa = Math.max(0, Math.floor((Date.now() - dt.getTime()) / 86400000));
-    } catch { op.diasNaEtapa = 0; }
+    const hash = op.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+    // maioria em 0-6d, alguns em 8-14d, poucos estourados (>15d) para demonstrar alerta
+    const base = hash % 17; // 0..16
+    op.diasNaEtapa = base;
+  }
+
+  // Consistência: "Em proposta" (proposta_construcao / orcamento_enviado) exige orçamento vinculado.
+  const canon = etapaToCanonica[op.etapa];
+  if (canon === "em_proposta" && op.orcamentoIds.length === 0) {
+    // rebaixa para Qualificando enquanto não houver orçamento
+    op.etapa = "em_qualificacao";
   }
 });
 
