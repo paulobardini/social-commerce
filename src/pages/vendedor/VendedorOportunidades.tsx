@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
-  mockOportunidades, etapaMap, etapaCorMap, type TagCRM, type OportunidadeEtapa, type Oportunidade,
+  mockOportunidades, type TagCRM, type Oportunidade,
+  etapasCanonicas, etapaToCanonica, type EtapaCanonica,
 } from "@/data/mockCRM";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
@@ -25,11 +26,6 @@ function industriaDe(op: Oportunidade): string {
   const idx = Math.abs(op.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % industriaPool.length;
   return industriaPool[idx];
 }
-
-const etapasOrdem: OportunidadeEtapa[] = [
-  "novo_lead", "contato_iniciado", "em_qualificacao", "proposta_construcao",
-  "orcamento_enviado", "em_negociacao", "ganho", "perdido",
-];
 
 export default function VendedorOportunidades() {
   const navigate = useNavigate();
@@ -60,11 +56,11 @@ export default function VendedorOportunidades() {
 
   const activeFilterCount = filterTags.length + (filterPrioridade ? 1 : 0) + filterIndustrias.length;
 
-  const grupos = useMemo(() => etapasOrdem.map(etapa => ({
-    etapa,
-    cor: etapaCorMap[etapa],
-    nome: etapaMap[etapa],
-    ops: filtered.filter(o => o.etapa === etapa),
+  const grupos = useMemo(() => etapasCanonicas.map(e => ({
+    etapa: e.id,
+    cor: e.cor,
+    nome: e.nome,
+    ops: filtered.filter(o => etapaToCanonica[o.etapa] === e.id),
   })), [filtered]);
 
   const industriaLabel = filterIndustrias.length === 0
