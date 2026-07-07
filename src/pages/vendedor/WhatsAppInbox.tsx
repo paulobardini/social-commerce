@@ -244,9 +244,20 @@ export default function WhatsAppInbox({
     };
     setExtraMessages(prev => ({ ...prev, [selected.id]: [...(prev[selected.id] || []), newMsg] }));
   }
-  function handleSendInput() { if (!msgInput.trim()) return; appendMessage(msgInput.trim()); setMsgInput(""); }
+  function handleSendInput() {
+    if (!msgInput.trim()) return;
+    if (msgSuggestion && msgInput.trim() === msgSuggestion.original.trim()) {
+      // MOCK: métrica futura de eficácia do playbook — sugestão enviada sem edição
+      toast({ title: "Sugestão do playbook usada", description: msgSuggestion.titulo });
+    }
+    appendMessage(msgInput.trim());
+    setMsgInput("");
+    setMsgSuggestion(null);
+  }
   function handleApplyTemplate(content: string) {
-    setMsgInput(prev => (prev ? prev + "\n" : "") + fillTemplate(content, templateVars));
+    const filled = fillTemplate(content, templateVars);
+    setMsgInput(prev => (prev ? prev + "\n" : "") + filled);
+    setMsgSuggestion(null);
     setTemplatesOpen(false);
   }
   function handleSendOrcamento(o: { id: string; nome: string; valorTotal: number | null; status: string }) {
@@ -258,7 +269,16 @@ export default function WhatsAppInbox({
     if (!selected) return;
     const s = sugestaoPlaybook(cliente, selected);
     setMsgInput(s.mensagem);
+    setMsgSuggestion({ titulo: s.titulo, original: s.mensagem });
     toast({ title: `Sugestão aplicada: ${s.titulo}` });
+  }
+  function cobrarProposta() {
+    if (!selected) return;
+    const nome = cliente?.nomeFantasia || selected.clienteNome;
+    const texto = `Oi ${nome}, tudo bem? Passando aqui só pra saber se conseguiu dar uma olhada na proposta que te enviei. Qualquer ajuste eu rodo rapidinho por aqui. 🙌`;
+    setMsgInput(texto);
+    setMsgSuggestion({ titulo: "Cobrar proposta parada", original: texto });
+    toast({ title: "Template de cobrança carregado no composer" });
   }
 
   // ---------- Trabalhar fila ----------
