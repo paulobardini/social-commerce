@@ -602,48 +602,64 @@ export default function WhatsAppInbox({
               )}
             </div>
 
-            <div className="min-h-14 border-t border-border flex items-center gap-1.5 px-3 py-2 bg-card shrink-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8"><Paperclip className="h-4 w-4" /></Button>
+            <div className="border-t border-border bg-card shrink-0">
+              {msgSuggestion && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 border-b border-accent/20">
+                  <Sparkles className="h-3 w-3 text-accent shrink-0" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">Sugestão do playbook</span>
+                  <span className="text-[10px] text-muted-foreground truncate">· {msgSuggestion.titulo}</span>
+                  <button
+                    onClick={() => { setMsgSuggestion(null); setMsgInput(""); }}
+                    className="ml-auto h-5 w-5 rounded flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
+                    title="Descartar sugestão"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              <div className="min-h-14 flex items-center gap-1.5 px-3 py-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8"><Paperclip className="h-4 w-4" /></Button>
 
-              <Popover open={templatesOpen} onOpenChange={setTemplatesOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Templates de mensagem (/)"><Zap className="h-4 w-4 text-accent" /></Button>
-                </PopoverTrigger>
-                <PopoverContent side="top" align="start" className="w-[340px] p-0">
-                  <div className="p-3 border-b border-border flex items-center justify-between">
-                    <p className="text-sm font-semibold flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-accent" /> Templates do playbook</p>
-                    <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => { setTemplatesOpen(false); navigate("/vendedor/configuracoes/templates"); }}>Gerenciar</Button>
-                  </div>
-                  <div className="max-h-[320px] overflow-y-auto">
-                    {templates.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhum template cadastrado.</div>}
-                    {templates.map(t => (
-                      <button key={t.id} onClick={() => handleApplyTemplate(t.conteudo)} className="w-full text-left p-3 border-b border-border/60 hover:bg-muted/60 transition-colors">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-semibold flex-1 truncate">{t.nome}</p>
-                          {t.categoria && <Badge variant="secondary" className="text-[9px]">{t.categoria}</Badge>}
-                        </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">{fillTemplate(t.conteudo, templateVars)}</p>
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                <Popover open={templatesOpen} onOpenChange={setTemplatesOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Templates de mensagem (/)"><Zap className="h-4 w-4 text-accent" /></Button>
+                  </PopoverTrigger>
+                  <PopoverContent side="top" align="start" className="w-[340px] p-0">
+                    <div className="p-3 border-b border-border flex items-center justify-between">
+                      <p className="text-sm font-semibold flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-accent" /> Templates do playbook</p>
+                      <Button variant="ghost" size="sm" className="text-[10px] h-6" onClick={() => { setTemplatesOpen(false); navigate("/vendedor/configuracoes/templates"); }}>Gerenciar</Button>
+                    </div>
+                    <div className="max-h-[320px] overflow-y-auto">
+                      {templates.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhum template cadastrado.</div>}
+                      {templates.map(t => (
+                        <button key={t.id} onClick={() => handleApplyTemplate(t.conteudo)} className="w-full text-left p-3 border-b border-border/60 hover:bg-muted/60 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-semibold flex-1 truncate">{t.nome}</p>
+                            {t.categoria && <Badge variant="secondary" className="text-[9px]">{t.categoria}</Badge>}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">{fillTemplate(t.conteudo, templateVars)}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
 
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSendOrcamentoOpen(true)} title="Enviar orçamento">
-                <FileText className="h-4 w-4" />
-              </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSendOrcamentoOpen(true)} title="Enviar orçamento">
+                  <FileText className="h-4 w-4" />
+                </Button>
 
-              <Input
-                placeholder='Digite "/" para atalhos do playbook...'
-                value={msgInput}
-                onChange={e => setMsgInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === "/" && msgInput === "") { e.preventDefault(); setTemplatesOpen(true); return; }
-                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendInput(); }
-                }}
-                className="h-9 flex-1"
-              />
-              <Button size="icon" className="h-8 w-8" onClick={handleSendInput}><Send className="h-4 w-4" /></Button>
+                <Input
+                  placeholder='Digite "/" para atalhos do playbook...'
+                  value={msgInput}
+                  onChange={e => setMsgInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "/" && msgInput === "") { e.preventDefault(); setTemplatesOpen(true); return; }
+                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendInput(); }
+                  }}
+                  className={`h-9 flex-1 ${msgSuggestion ? "bg-accent/5 border-accent/30" : ""}`}
+                />
+                <Button size="icon" className="h-8 w-8" onClick={handleSendInput}><Send className="h-4 w-4" /></Button>
+              </div>
             </div>
           </div>
         ) : (
