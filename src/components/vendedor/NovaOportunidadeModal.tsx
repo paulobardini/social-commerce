@@ -194,34 +194,53 @@ export function NovaOportunidadeModal({ open, onOpenChange, briefingInicial, cli
             </div>
           </div>
 
-          {/* Título e valor derivados */}
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs font-medium">Título (gerado do briefing)</Label>
-              <Input
-                value={titulo}
-                onChange={e => setTituloEdit(e.target.value)}
-                className="mt-1"
-              />
-              {tituloEdit !== null && (
-                <button type="button" onClick={() => setTituloEdit(null)} className="text-[10px] text-accent mt-1 flex items-center gap-1">
-                  <X className="h-2.5 w-2.5" /> restaurar automático
-                </button>
-              )}
+          {/* Preview ao vivo + edição */}
+          <div className="rounded-lg border-2 border-dashed border-accent/30 bg-accent/5 p-3 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-accent">Gerado ao vivo</p>
+                <p className="text-sm font-semibold text-foreground mt-0.5 break-words">{tituloAuto}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Valor: <span className="font-semibold text-foreground">
+                    {valorAuto > 0 ? `R$ ${valorAuto.toLocaleString("pt-BR")}` : "— preencha faixa + qtde"}
+                  </span>
+                  {valorAuto > 0 && faixaMin && faixaMax && quantidade && (
+                    <span className="ml-1">
+                      (média R$ {((Number(faixaMin) + Number(faixaMax)) / 2).toFixed(0)} × {quantidade})
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-            <div>
-              <Label className="text-xs font-medium">Valor estimado (calculado)</Label>
-              <div className="flex items-center gap-2 mt-1">
+
+            <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3 pt-2 border-t border-accent/20">
+              <div>
+                <Label className="text-[10px] font-medium text-muted-foreground">Título (editável)</Label>
+                <Input
+                  value={titulo}
+                  onChange={e => setTituloEdit(e.target.value)}
+                  className="mt-1 h-8 text-sm"
+                  placeholder={tituloAuto}
+                />
+                {tituloEdit !== null && tituloEdit !== tituloAuto && (
+                  <button type="button" onClick={() => setTituloEdit(null)} className="text-[10px] text-accent mt-1 flex items-center gap-1 hover:underline">
+                    <X className="h-2.5 w-2.5" /> restaurar automático
+                  </button>
+                )}
+              </div>
+              <div>
+                <Label className="text-[10px] font-medium text-muted-foreground">Valor R$ (editável)</Label>
                 <Input
                   type="number"
                   value={valor}
                   onChange={e => setValorEdit(e.target.value)}
-                  placeholder="0,00"
+                  className="mt-1 h-8 text-sm"
+                  placeholder={valorAuto > 0 ? String(valorAuto) : "0"}
                 />
-                {valorAuto > 0 && valorEdit === null && (
-                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                    ≈ média × qtde
-                  </span>
+                {valorEdit !== null && valorAuto > 0 && Number(valorEdit) !== valorAuto && (
+                  <button type="button" onClick={() => setValorEdit(null)} className="text-[10px] text-accent mt-1 flex items-center gap-1 hover:underline">
+                    <X className="h-2.5 w-2.5" /> restaurar automático
+                  </button>
                 )}
               </div>
             </div>
