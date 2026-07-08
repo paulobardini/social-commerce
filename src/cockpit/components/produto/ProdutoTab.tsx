@@ -279,7 +279,7 @@ export function ProdutoTab() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Marcas sem giro por representante" subtitle="Criar campanha de push envia ações sugeridas idempotentes para a fila dos reps" id="marcas-sem-giro">
+      <div id="marcas-sem-giro"><SectionCard title="Marcas sem giro por representante" subtitle="Criar campanha de push envia ações sugeridas idempotentes para a fila dos reps">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE]">
