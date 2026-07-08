@@ -205,6 +205,8 @@ export function ProdutoTab() {
 
   return (
     <div className="space-y-4">
+      <InsightsStrip pilar="Produto" insights={insights} />
+
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-3">
         <KpiCard label="Faturamento" value={fmtBRLc(kpiP.faturamento.atual)} delta={showDelta(kpiP.faturamento.delta) ? { pct: kpiP.faturamento.delta } : undefined} icon={<DollarSign className="h-3.5 w-3.5" />} tooltip="Soma dos pedidos fechados no período." />
         <KpiCard label="Marcas com venda" value={fmtNum(kpiP.marcasAtivas.atual)} delta={showDelta(kpiP.marcasAtivas.delta) ? { pct: kpiP.marcasAtivas.delta } : undefined} icon={<Layers className="h-3.5 w-3.5" />} tooltip="Quantas marcas tiveram ao menos 1 pedido no período." />
@@ -213,7 +215,7 @@ export function ProdutoTab() {
         <KpiCard label="Peças por pedido" value={kpiP.itensPorPedido.atual.toFixed(1).replace(".", ",")} delta={showDelta(kpiP.itensPorPedido.delta) ? { pct: kpiP.itensPorPedido.delta } : undefined} icon={<Package className="h-3.5 w-3.5" />} tooltip="Média de peças (itens) por pedido no período." />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="faturamento-marca" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="Faturamento por marca">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={faturPorMarca} layout="vertical">
@@ -247,9 +249,11 @@ export function ProdutoTab() {
         />
       </SectionCard>
 
-      <SectionCard title="Concentração de receita por produto" subtitle="Poucos produtos concentram a maior parte do faturamento — a linha mostra o acumulado (%)">
-        <AbcCurve data={abcProduto} labelKey={(t: { id: string }) => t.id.toUpperCase()} />
-      </SectionCard>
+      <div id="concentracao-produto">
+        <SectionCard title="Concentração de receita por produto" subtitle="Poucos produtos concentram a maior parte do faturamento — a linha mostra o acumulado (%)">
+          <AbcCurve data={abcProduto} labelKey={(t: { id: string }) => t.id.toUpperCase()} />
+        </SectionCard>
+      </div>
 
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
