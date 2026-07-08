@@ -20,6 +20,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useTarefas } from "@/contexts/TarefasContext";
+import { SolicitarPlanoModal } from "./SolicitarPlanoModal";
+import { PlanosEmAndamento } from "./PlanosEmAndamento";
+import type { PlanoTipo } from "@/lib/planos";
 
 const gestorId = "gestor-atual"; // mock
 
