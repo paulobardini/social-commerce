@@ -1,14 +1,14 @@
 // Representantes — hub do gestor sobre o time.
-// Absorve Time & Metas (aba padrão: Visão geral com desvio table + rankings + Gestão de metas)
-// e Planos de recuperação (loop de cobrança).
+// 3 abas: Visão geral · Metas · Planos de recuperação
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CockpitTopbar } from "@/cockpit/components/CockpitTopbar";
 import { TimeMetasTab } from "@/cockpit/components/time/TimeMetasTab";
+import { AcompanhamentoMetas } from "@/cockpit/components/metas/AcompanhamentoMetas";
 import { PlanosEmAndamento } from "@/cockpit/components/decisoes/PlanosEmAndamento";
 import { usePlanos } from "@/contexts/PlanosContext";
 
-type TabKey = "visao" | "planos";
+type TabKey = "visao" | "metas" | "planos";
 
 export default function RepresentantesPage() {
   const [tab, setTab] = useState<TabKey>("visao");
@@ -22,7 +22,10 @@ export default function RepresentantesPage() {
         <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)} className="space-y-4">
           <TabsList className="bg-white border border-[#E7E9EE] p-1 h-auto">
             <TabsTrigger value="visao" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">
-              Visão geral &amp; metas
+              Visão geral
+            </TabsTrigger>
+            <TabsTrigger value="metas" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">
+              Metas
             </TabsTrigger>
             <TabsTrigger value="planos" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white relative">
               Planos de recuperação
@@ -35,6 +38,7 @@ export default function RepresentantesPage() {
           </TabsList>
 
           <TabsContent value="visao" className="mt-0"><TimeMetasTab /></TabsContent>
+          <TabsContent value="metas" className="mt-0"><AcompanhamentoMetas /></TabsContent>
           <TabsContent value="planos" className="mt-0"><PlanosEmAndamento /></TabsContent>
         </Tabs>
       </div>
