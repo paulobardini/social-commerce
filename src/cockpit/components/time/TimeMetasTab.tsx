@@ -205,17 +205,17 @@ export function TimeMetasTab() {
     })).sort((a, b) => a.rep.pace - b.rep.pace);
   }, [reps, classificadas, seed]);
 
-  // Rankings
+  // Rankings — usa metaDoRepNoMes (precedência V2 → legado publicado → seed)
   const rankingAting = useMemo(() => {
     return reps.map(r => {
-      const meta = metasPublicadas[`${r.id}:${mesKey}`]
-        ?? seed.metas.find(m => m.repId === r.id && m.tipo === "faturamento" && m.mes === mesKey)?.valor
-        ?? 1;
+      const seedMeta = seed.metas.find(m => m.repId === r.id && m.tipo === "faturamento" && m.mes === mesAtual)?.valor;
+      const { valor } = metaDoRepNoMes(metasV2, metasPublicadas, r.id, mesAtual, escopo, seedMeta);
+      const meta = valor || 1;
       const inicioMes = new Date(seed.hoje.getFullYear(), seed.hoje.getMonth(), 1);
       const real = seed.pedidos.filter(p => p.repId === r.id && p.data >= inicioMes).reduce((s, p) => s + p.valor, 0);
       return { rep: r, meta, real, pct: (real / meta) * 100 };
     }).sort((a, b) => b.pct - a.pct);
-  }, [reps, seed, metasPublicadas, mesKey]);
+  }, [reps, seed, metasPublicadas, metasV2, mesAtual, escopo]);
 
   // Ritmo diário útil: corrige distorção do "mês incompleto vs mês fechado".
   const rankingEvol = useMemo(() => {
