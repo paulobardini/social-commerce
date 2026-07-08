@@ -279,7 +279,7 @@ export function ProdutoTab() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Marcas sem giro por representante" subtitle="Criar campanha de push envia ações sugeridas idempotentes para a fila dos reps">
+      <SectionCard title="Marcas sem giro por representante" subtitle="Criar campanha de push envia ações sugeridas idempotentes para a fila dos reps" id="marcas-sem-giro">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE]">
@@ -326,7 +326,7 @@ export function ProdutoTab() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Cross-sell · Expansão de marcas" subtitle="Clientes com apenas 1 marca comprada — candidatos a expansão">
+      <SectionCard title="Cross-sell · Expansão de marcas" subtitle="Clientes com apenas 1 marca comprada — candidatos a expansão" id="cross-sell">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE]">
