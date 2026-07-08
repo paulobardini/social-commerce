@@ -3,20 +3,18 @@ import { useCockpit } from "../../contexts/CockpitContext";
 import { repsNoEscopo } from "../../lib/escopo";
 import { nivelDesvio, desvioClasse, type DesvioNivel } from "../../lib/desvio";
 import { classificarTudo } from "../../lib/classificar";
-import { fmtBRL, fmtBRLc, fmtPct, fmtNum, NX } from "../../styles/tokens";
+import { fmtBRLc, fmtPct, fmtNum } from "../../styles/tokens";
 import { SectionCard } from "../SectionCard";
 import { KpiCard } from "../KpiCard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
-import { ArrowDown, ArrowUp, Minus, MessageCircle, PlusCircle, Users, Target, TrendingUp } from "lucide-react";
+import { ArrowDown, ArrowUp, Minus, MessageCircle, PlusCircle, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useTarefas } from "@/contexts/TarefasContext";
 import { usePlanos } from "@/contexts/PlanosContext";
+import { evolucaoRitmoDiario, metaDoRepNoMes, busDaysDecorridos, busDaysInMonth } from "../../lib/metasCalc";
+import { mesKey } from "../../data/metasV2";
 import type { Representante } from "../../data/seed";
 
 // ------------------------------------------------------------------
