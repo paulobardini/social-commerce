@@ -90,12 +90,12 @@ export function AtendimentoTab() {
           {motivos.length === 0
             ? <p className="text-xs nx-muted py-8 text-center">Sem oportunidades perdidas neste escopo</p>
             : <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie data={motivos.map(m => ({ nome: m.motivo, valor: m.qtd }))} dataKey="valor" nameKey="nome" outerRadius={80} label={{ fontSize: 10 }}>
-                    {motivos.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
-                </PieChart>
+                <BarChart data={motivos.map(m => ({ motivo: m.motivo, qtd: m.qtd }))} layout="vertical" margin={{ left: 10, right: 20 }}>
+                  <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+                  <YAxis type="category" dataKey="motivo" tick={{ fontSize: 11 }} width={130} />
+                  <Tooltip formatter={(v: number) => `${v} oportunidade(s)`} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                  <Bar dataKey="qtd" fill={NX.primary} radius={[0, 4, 4, 0]} />
+                </BarChart>
               </ResponsiveContainer>
           }
         </SectionCard>
