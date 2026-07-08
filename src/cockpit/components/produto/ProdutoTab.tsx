@@ -324,9 +324,9 @@ export function ProdutoTab() {
             </tbody>
           </table>
         </div>
-      </SectionCard>
+      </SectionCard></div>
 
-      <SectionCard title="Cross-sell · Expansão de marcas" subtitle="Clientes com apenas 1 marca comprada — candidatos a expansão" id="cross-sell">
+      <div id="cross-sell"><SectionCard title="Cross-sell · Expansão de marcas" subtitle="Clientes com apenas 1 marca comprada — candidatos a expansão">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE]">
