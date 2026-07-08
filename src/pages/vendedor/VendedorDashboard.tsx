@@ -643,6 +643,11 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
         repId={repId}
         onCriar={(t) => { addTarefa(t); toast.success("Ação criada"); }}
       />
+      <ResponderPlanoModal
+        plano={planoResponderId ? planos.find(p => p.id === planoResponderId) ?? null : null}
+        open={!!planoResponderId}
+        onOpenChange={(b) => { if (!b) setPlanoResponderId(null); }}
+      />
     </div>
   );
 }
