@@ -44,7 +44,7 @@ function Cell({ nivel, children }: { nivel: DesvioNivel; children: React.ReactNo
 // DRAWER — mini-painel do rep
 // ------------------------------------------------------------------
 function RepDrawer({ rep, open, onOpenChange }: { rep: Representante | null; open: boolean; onOpenChange: (b: boolean) => void }) {
-  const { seed, range, previousRange, diasAtivo, diasPerdido, metasPublicadas } = useCockpit();
+  const { seed, escopo, range, previousRange, diasAtivo, diasPerdido, metasPublicadas, metasV2 } = useCockpit();
   const { tarefas, addTarefa } = useTarefas();
   const { getPlanosDoRep } = usePlanos();
 
@@ -59,12 +59,11 @@ function RepDrawer({ rep, open, onOpenChange }: { rep: Representante | null; ope
     const pipeline = opsAbertas.reduce((s, o) => s + o.valor, 0);
     const inicioMes = new Date(seed.hoje.getFullYear(), seed.hoje.getMonth(), 1);
     const realizado = seed.pedidos.filter(p => p.repId === rep.id && p.data >= inicioMes).reduce((s, p) => s + p.valor, 0);
-    const mesKey = `${seed.hoje.getFullYear()}-${String(seed.hoje.getMonth() + 1).padStart(2, "0")}`;
-    const metaPublicada = metasPublicadas[`${rep.id}:${mesKey}`];
-    const metaLegada = seed.metas.find(m => m.repId === rep.id && m.tipo === "faturamento" && m.mes === mesKey)?.valor ?? 0;
-    const meta = metaPublicada ?? metaLegada;
+    const mesAtual = mesKey(seed.hoje);
+    const seedMeta = seed.metas.find(m => m.repId === rep.id && m.tipo === "faturamento" && m.mes === mesAtual)?.valor;
+    const { valor: meta } = metaDoRepNoMes(metasV2, metasPublicadas, rep.id, mesAtual, escopo, seedMeta);
     return { classificadas, opsAbertas, pipeline, realizado, meta };
-  }, [rep, seed, range, diasAtivo, diasPerdido, metasPublicadas]);
+  }, [rep, seed, range, diasAtivo, diasPerdido, metasPublicadas, metasV2, escopo]);
 
   if (!rep) return null;
 
