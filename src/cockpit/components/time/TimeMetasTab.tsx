@@ -48,6 +48,7 @@ function Cell({ nivel, children }: { nivel: DesvioNivel; children: React.ReactNo
 function RepDrawer({ rep, open, onOpenChange }: { rep: Representante | null; open: boolean; onOpenChange: (b: boolean) => void }) {
   const { seed, range, previousRange, diasAtivo, diasPerdido, metasPublicadas } = useCockpit();
   const { tarefas, addTarefa } = useTarefas();
+  const { getPlanosDoRep } = usePlanos();
 
   const dados = useMemo(() => {
     if (!rep) return null;
