@@ -12,7 +12,7 @@ export function TopClientesRank({ classificadas, representantes }: Props) {
   const navigate = useNavigate();
   const comValor = classificadas.filter(c => c.valor12m > 0).sort((a, b) => b.valor12m - a.valor12m);
   const total = comValor.reduce((s, c) => s + c.valor12m, 0) || 1;
-  const top20 = comValor.slice(0, 20);
+  const top20 = comValor.slice(0, 10);
   const somaTop20 = top20.reduce((s, c) => s + c.valor12m, 0);
   const pctTop20 = (somaTop20 / total) * 100;
   const pctBase = comValor.length > 0 ? (20 / comValor.length) * 100 : 0;
