@@ -172,10 +172,10 @@ function formatBRDate(d: Date): string {
 // TAB
 // ------------------------------------------------------------------
 export function TimeMetasTab() {
-  const { seed, escopo, range, diasAtivo, diasPerdido, metasPublicadas } = useCockpit();
+  const { seed, escopo, range, diasAtivo, diasPerdido, metasPublicadas, metasV2 } = useCockpit();
 
   const reps = useMemo(() => repsNoEscopo(seed, escopo), [seed, escopo]);
-  const mesKey = `${seed.hoje.getFullYear()}-${String(seed.hoje.getMonth() + 1).padStart(2, "0")}`;
+  const mesAtual = mesKey(seed.hoje);
 
   const classificadas = useMemo(
     () => classificarTudo(seed.contas, seed.pedidos, range, diasAtivo, diasPerdido, seed.hoje),
