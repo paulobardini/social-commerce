@@ -317,7 +317,9 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
   opsRep: Oportunidade[];
 }) {
   const { tarefas, addTarefa, toggleConcluida } = useTarefas();
+  const { planos } = usePlanos();
   const [openReg, setOpenReg] = useState<{ item: ItemUnificado } | null>(null);
+  const [planoResponderId, setPlanoResponderId] = useState<string | null>(null);
   const [openQuick, setOpenQuick] = useState(false);
   const [filtro, setFiltro] = useState<FiltroFila>("todos");
   const [dismissedAlerta, setDismissedAlerta] = useState<Set<string>>(new Set());
