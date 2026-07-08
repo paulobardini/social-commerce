@@ -295,13 +295,18 @@ export function TimeMetasTab() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Ranking · Evolução (vs mês anterior)">
+        <SectionCard
+          title={mesIncompleto ? "Ranking · Evolução (ritmo diário útil)" : "Ranking · Evolução (vs mês anterior)"}
+          subtitle={mesIncompleto ? "Mês vigente incompleto — compara receita/dia útil corrido vs. mês fechado" : undefined}
+        >
           <div className="space-y-1.5">
             {rankingEvol.map((r, i) => (
               <div key={r.rep.id} className="flex items-center gap-2 p-2 rounded hover:bg-[#F6F7F9]">
                 <span className="text-[10px] nx-muted w-4">{i + 1}.</span>
                 <span className="text-xs nx-text font-medium flex-1">{r.rep.nome}</span>
-                <span className="text-[11px] nx-num nx-muted">{fmtBRLc(r.atual)}</span>
+                <span className="text-[11px] nx-num nx-muted" title={mesIncompleto ? `Ritmo atual R$/dia útil vs mês anterior` : undefined}>
+                  {mesIncompleto ? `${fmtBRLc(r.ritmoAtual)}/du` : fmtBRLc(r.atual)}
+                </span>
                 <span className={`text-[11px] font-medium flex items-center gap-0.5 ${r.delta > 0 ? "text-emerald-600" : r.delta < 0 ? "text-rose-600" : "nx-muted"}`}>
                   {r.delta > 0 ? <ArrowUp className="h-3 w-3" /> : r.delta < 0 ? <ArrowDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
                   {fmtPct(Math.abs(r.delta), 0)}
@@ -313,7 +318,7 @@ export function TimeMetasTab() {
       </div>
 
       <RepDrawer rep={drawerRep} open={!!drawerRep} onOpenChange={(b) => !b && setDrawerRep(null)} />
-      <MetasWizardModal open={wizardOpen} onOpenChange={setWizardOpen} />
+    </div>
     </div>
   );
 }
