@@ -14,6 +14,9 @@ export interface TarefaExt extends TarefaCRM360 {
   recorrenciaIntervaloDias?: number; // usado quando "personalizada"
   compromissoId?: string; // vínculo bidirecional com a Agenda
   recorrenciaPaiId?: string; // referência à tarefa original (quando regenerada)
+  planoId?: string; // vínculo com um PlanoRecuperacao (gestor→rep)
+  planoCompromissoId?: string; // compromisso específico dentro do plano
+  solicitadoPor?: string; // nome do gestor quando a ação vem de um plano
 }
 
 export interface CompromissoExt extends Compromisso {
