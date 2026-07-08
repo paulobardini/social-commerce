@@ -448,7 +448,19 @@ export function DecisoesTab() {
         }
       </section>
 
+      {/* e) PLANOS EM ANDAMENTO (loop de cobrança) */}
+      <PlanosEmAndamento />
+
       <DecisaoModal item={modalItem} decisao={modalDecisao} open={modalOpen} onOpenChange={setModalOpen} />
+      <SolicitarPlanoModal
+        open={planoModal.open}
+        onOpenChange={(b) => setPlanoModal(prev => ({ ...prev, open: b }))}
+        tipo={planoModal.tipo}
+        repId={planoModal.repId}
+        repNome={planoModal.repNome}
+        contexto={planoModal.contexto}
+        sugestaoNota={planoModal.sugestaoNota}
+      />
     </div>
   );
 }
