@@ -118,6 +118,8 @@ export function ProdutoTab() {
   const { seed, escopo, range, previousRange, comparar, diasAtivo, diasPerdido } = useCockpit();
   const repIds = useMemo(() => repIdsNoEscopo(seed, escopo), [seed, escopo]);
 
+  const insights = useMemo(() => insightsProduto(seed, escopo, range, previousRange), [seed, escopo, range, previousRange]);
+
   const kpiP = useMemo(() => kpisProduto(seed, range, previousRange, { diasAtivo: 60, diasPerdido: 180, repId: "todos" }), [seed, range, previousRange]);
   const noEscopoPedidos = useMemo(() => kpiP.pedidosPeriodo.filter(p => repIds.has(p.repId)), [kpiP, repIds]);
 
