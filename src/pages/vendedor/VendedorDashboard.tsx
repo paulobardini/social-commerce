@@ -1052,6 +1052,7 @@ function MetasView({ kpiM, hist6m, metaRef, kpiC }: {
 
   return (
     <>
+      <PreviaProximoMes />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <SectionCard className="lg:col-span-1" title="Minha meta de faturamento" subtitle={`Meta ${fmtBRL(kpiM.metaFaturamento)}`}>
           <Gauge value={kpiM.atingimento} label="Atingimento" size={220} />
@@ -1071,6 +1072,9 @@ function MetasView({ kpiM, hist6m, metaRef, kpiC }: {
           <KpiCard label="Reativação" value={fmtPct(reatPct, 0)} hint={reatFalta > 0 ? `faltam ${reatFalta} clientes` : "meta batida"} />
         </div>
       </div>
+
+      <MetasPorDimensao />
+
       <SectionCard title="Meu histórico" subtitle="Faturamento últimos 6 meses · linha tracejada = meta mensal">
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={hist6m}>
@@ -1086,6 +1090,135 @@ function MetasView({ kpiM, hist6m, metaRef, kpiC }: {
     </>
   );
 }
+
+// ============ METAS POR DIMENSÃO (vendedor) ============
+// Cards das metas dimensionais publicadas que atingem o rep atual.
+// Fonte única: metasV2 (rascunhos NUNCA aparecem para o vendedor).
+function MetasPorDimensao() {
+  const { seed, escopo, metasV2, repId } = useCockpit();
+  const repIdReal = repId === "todos" ? seed.representantes[0]?.id : repId;
+  if (!repIdReal) return null;
+  const mesAtual = `${seed.hoje.getFullYear()}-${String(seed.hoje.getMonth() + 1).padStart(2, "0")}`;
+
+  const metas = metasV2.filter(m =>
+    m.periodo === mesAtual
+    && m.status === "publicada"
+    && m.escopo === escopo
+    && m.dimensao !== "geral"
+    && (!m.rateio || m.rateio.some(r => r.repId === repIdReal && r.valor > 0)),
+  );
+
+  if (metas.length === 0) return null;
+
+  return (
+    <SectionCard title="Metas por dimensão" subtitle="Marca · Coleção · Nicho — mesmas metas do gestor, sua parcela">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {metas.map(m => {
+          const alvo = m.rateio?.find(r => r.repId === repIdReal)?.valor ?? m.valorAgregado;
+          const [y, mn] = m.periodo.split("-").map(Number);
+          const inicio = new Date(y, mn - 1, 1);
+          const fim = new Date(y, mn, 1);
+
+          let pedidosFiltrados = seed.pedidos.filter(p => p.repId === repIdReal && p.data >= inicio && p.data < fim);
+          if (m.dimensao === "marca") {
+            const marca = seed.marcas.find(x => x.nome === m.alvoId);
+            if (marca) pedidosFiltrados = pedidosFiltrados.filter(p => p.marcaId === marca.id);
+            else pedidosFiltrados = [];
+          }
+          if (m.dimensao === "colecao") pedidosFiltrados = pedidosFiltrados.filter(p => p.colecao === m.alvoId);
+          if (m.dimensao === "nicho") {
+            const contasNicho = new Set(seed.contas.filter(c => c.nicho === m.alvoId).map(c => c.id));
+            pedidosFiltrados = pedidosFiltrados.filter(p => contasNicho.has(p.contaId));
+          }
+          const realizado = pedidosFiltrados.reduce((s, p) => s + p.valor, 0);
+          const pct = alvo > 0 ? (realizado / alvo) * 100 : 0;
+
+          // Veredito por ritmo diário útil
+          const decorridos = Math.max(1, busDaysUntil(seed.hoje, seed.hoje));
+          const totalUteis = Math.max(1, busDaysInMonth(seed.hoje));
+          const restantes = Math.max(1, totalUteis - decorridos);
+          const paceProj = (realizado / decorridos) * totalUteis;
+          const pctProj = alvo > 0 ? (paceProj / alvo) * 100 : 0;
+          const gap = Math.max(0, alvo - realizado);
+          const rsDia = gap / restantes;
+
+          const cor = pctProj >= 100 ? "bg-emerald-500" : pctProj >= 85 ? "bg-amber-500" : "bg-rose-500";
+          const corTexto = pctProj >= 100 ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+            : pctProj >= 85 ? "text-amber-800 bg-amber-50 border-amber-200"
+              : "text-rose-800 bg-rose-50 border-rose-200";
+          const dimBadge = m.dimensao === "marca"
+            ? "bg-sky-100 text-sky-800 border-sky-300"
+            : m.dimensao === "colecao"
+              ? "bg-violet-100 text-violet-800 border-violet-300"
+              : "bg-amber-100 text-amber-800 border-amber-300";
+          const dimLabel = m.dimensao === "marca" ? "Marca" : m.dimensao === "colecao" ? "Coleção" : "Nicho";
+
+          return (
+            <div key={m.id} className="nx-card p-3 space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className={`text-[10px] ${dimBadge}`}>{dimLabel}</Badge>
+                <span className="text-sm font-semibold nx-text">{m.alvoId}</span>
+                <span className="text-[11px] nx-muted ml-auto nx-num">{fmtBRLc(realizado)} / {fmtBRLc(alvo)}</span>
+              </div>
+              <div className="h-2 rounded-full bg-[#F1F3F8] overflow-hidden">
+                <div className={`h-full ${cor}`} style={{ width: `${Math.min(100, pct)}%` }} />
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="nx-muted">Realizado {Math.round(pct)}%</span>
+                <span className="font-medium nx-text">Pace {Math.round(pctProj)}%</span>
+              </div>
+              <div className={`text-[11px] px-2 py-1.5 rounded border ${corTexto}`}>
+                {pctProj >= 100 ? "No ritmo para bater a meta" : `Precisa de ${fmtBRLc(rsDia)}/dia útil`}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+}
+
+// ============ PRÉVIA DO PRÓXIMO MÊS (publicada apenas) ============
+// Rascunhos são invisíveis ao vendedor por regra. Só mostra se já publicou.
+function PreviaProximoMes() {
+  const { seed, escopo, metasV2, repId } = useCockpit();
+  const repIdReal = repId === "todos" ? seed.representantes[0]?.id : repId;
+  const [aberto, setAberto] = useState(false);
+  if (!repIdReal) return null;
+  const proxD = new Date(seed.hoje.getFullYear(), seed.hoje.getMonth() + 1, 1);
+  const proxMes = `${proxD.getFullYear()}-${String(proxD.getMonth() + 1).padStart(2, "0")}`;
+  const mesAtual = `${seed.hoje.getFullYear()}-${String(seed.hoje.getMonth() + 1).padStart(2, "0")}`;
+
+  const proxGeral = metasV2.find(m => m.periodo === proxMes && m.dimensao === "geral" && m.escopo === escopo && m.status === "publicada");
+  if (!proxGeral) return null;
+  const parcela = proxGeral.rateio?.find(r => r.repId === repIdReal)?.valor ?? 0;
+  if (parcela === 0) return null;
+  const parcelaAtual = metasV2.find(m => m.periodo === mesAtual && m.dimensao === "geral" && m.escopo === escopo)?.rateio?.find(r => r.repId === repIdReal)?.valor ?? 0;
+  const delta = parcelaAtual > 0 ? Math.round(((parcela - parcelaAtual) / parcelaAtual) * 100) : null;
+  const meses = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  const label = `${meses[proxD.getMonth()]} ${proxD.getFullYear()}`;
+
+  return (
+    <Collapsible open={aberto} onOpenChange={setAberto}>
+      <div className="nx-card px-3 py-2 flex items-center gap-2 text-xs bg-[#EEF2FF] border-[#C7D2FE]">
+        <Sparkles className="h-3.5 w-3.5 text-[#2D3A8C]" />
+        <span className="nx-text">
+          Meta de <strong>{label}</strong> já publicada: <strong className="nx-num">{fmtBRL(parcela)}</strong>
+          {delta !== null && <span className={`ml-1 ${delta > 0 ? "text-emerald-700" : delta < 0 ? "text-rose-700" : "nx-muted"}`}>({delta > 0 ? "+" : ""}{delta}%)</span>}
+        </span>
+        <CollapsibleTrigger className="ml-auto text-[11px] text-[#2D3A8C] hover:underline">
+          {aberto ? "Ocultar" : "Ver detalhes"}
+        </CollapsibleTrigger>
+      </div>
+      <CollapsibleContent>
+        <div className="nx-card px-3 py-2 mt-1 text-[11px] nx-muted">
+          Planejamento antecipado do gestor. Você começa a ser cobrado por essa meta no dia 1 do próximo mês.
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 
 // ============ LISTA DE CLIENTES ============
 function ListaClientes({ classificadas, initialStatus }: { classificadas: ReturnType<typeof classificarTudo>; initialStatus?: string }) {
