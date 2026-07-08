@@ -16,6 +16,7 @@ import {
 import { ArrowDown, ArrowUp, Minus, MessageCircle, PlusCircle, Users, Target, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useTarefas } from "@/contexts/TarefasContext";
+import { usePlanos } from "@/contexts/PlanosContext";
 import type { Representante } from "../../data/seed";
 
 // ------------------------------------------------------------------
