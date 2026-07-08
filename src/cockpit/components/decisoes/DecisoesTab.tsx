@@ -20,6 +20,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useTarefas } from "@/contexts/TarefasContext";
+import { SolicitarPlanoModal } from "./SolicitarPlanoModal";
+import { PlanosEmAndamento } from "./PlanosEmAndamento";
+import type { PlanoTipo } from "@/lib/planos";
 
 const gestorId = "gestor-atual"; // mock
 
@@ -234,7 +237,8 @@ function addDays(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDat
 export function DecisoesTab() {
   const { seed, escopo, range, previousRange, diasAtivo, diasPerdido } = useCockpit();
   const navigate = useNavigate();
-  const { addTarefa } = useTarefas();
+
+
 
   const [modalItem, setModalItem] = useState<AprovacaoItem | null>(null);
   const [modalDecisao, setModalDecisao] = useState<DecisaoTipo>("aprovado");
@@ -257,21 +261,29 @@ export function DecisoesTab() {
     setModalItem(item); setModalDecisao(dec); setModalOpen(true);
   };
 
-  const cobrarPlanoRep = (repNome: string, clienteNome: string, clienteId: string) => {
-    addTarefa({
-      titulo: `Plano de resgate: ${clienteNome}`,
-      descricao: `Gestor solicitou plano de ação. Cliente-chave prestes a virar perdido.`,
-      tipo: "follow_up",
-      clienteId, clienteNome,
-      prioridade: "alta",
-      vencimento: formatBRDate(addDays(new Date(), 1)),
-      responsavel: repNome,
-      status: "pendente",
-      origem: "sistema",
-      recorrencia: "nenhuma",
+  // Estado do modal SolicitarPlano
+  const [planoModal, setPlanoModal] = useState<{
+    open: boolean; tipo: PlanoTipo; repId: string; repNome: string;
+    contexto: { clienteId?: string; clienteNome?: string; valor?: number; pace?: number; coberturaDelta?: number };
+    sugestaoNota: string;
+  }>({ open: false, tipo: "cliente_risco", repId: "", repNome: "", contexto: {}, sugestaoNota: "" });
+
+  const abrirPlanoClienteRisco = (repId: string, repNome: string, clienteId: string, clienteNome: string, valor: number, diasRest: number) => {
+    setPlanoModal({
+      open: true, tipo: "cliente_risco", repId, repNome,
+      contexto: { clienteId, clienteNome, valor },
+      sugestaoNota: `${clienteNome} · R$ ${(valor/1000).toFixed(0)}k · ${diasRest}d para virar perdido — qual o plano?`,
     });
-    toast.success(`Ação criada para ${repNome} — cobrança de plano registrada.`);
   };
+
+  const abrirPlanoRitmo = (repId: string, repNome: string, pace: number, coberturaDelta: number) => {
+    setPlanoModal({
+      open: true, tipo: "ritmo", repId, repNome,
+      contexto: { pace, coberturaDelta },
+      sugestaoNota: `${repNome.split(" ")[0]}, o pace está em ${pace}% e a cobertura ${coberturaDelta >= 0 ? "+" : ""}${coberturaDelta}pp — preciso do seu plano de recuperação para os próximos 15 dias.`,
+    });
+  };
+
 
   return (
     <div className="space-y-6">
@@ -329,14 +341,18 @@ export function DecisoesTab() {
                     </div>
                     <AlertTriangle className={`h-4 w-4 shrink-0 ${severidade === "critico" ? "text-rose-500" : "text-amber-500"}`} />
                   </div>
-                  <div className="flex gap-1.5 mt-2">
+                  <div className="flex flex-wrap gap-1.5 mt-2">
                     <Button size="sm" variant="outline" className="h-7 text-[11px]"
-                      onClick={() => window.open(`https://wa.me/`, "_blank")}>
+                      onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${rep.nome.split(" ")[0]}, vi que o pace está em ${rep.pace}%. Vamos alinhar?`)}`, "_blank")}>
                       <MessageCircle className="h-3 w-3 mr-1" /> WhatsApp
                     </Button>
                     <Button size="sm" variant="outline" className="h-7 text-[11px]"
                       onClick={() => navigate(`/vendedor/representantes/${rep.id}`)}>
                       <Users className="h-3 w-3 mr-1" /> Ver carteira
+                    </Button>
+                    <Button size="sm" className="h-7 text-[11px] bg-[#2D3A8C] hover:bg-[#243078]"
+                      onClick={() => abrirPlanoRitmo(rep.id, rep.nome, rep.pace, rep.coberturaDelta)}>
+                      Solicitar plano de recuperação
                     </Button>
                   </div>
                 </div>
@@ -379,7 +395,7 @@ export function DecisoesTab() {
                       </td>
                       <td className="text-right px-3">
                         <Button size="sm" variant="outline" className="h-7 text-[10px]"
-                          onClick={() => cobrarPlanoRep(item.repNome, item.cliente.conta.razao, item.cliente.conta.id)}>
+                          onClick={() => abrirPlanoClienteRisco(item.cliente.conta.repId, item.repNome, item.cliente.conta.id, item.cliente.conta.razao, item.valor12m, item.diasRestantes)}>
                           Cobrar plano do rep
                         </Button>
                       </td>
@@ -433,7 +449,19 @@ export function DecisoesTab() {
         }
       </section>
 
+      {/* e) PLANOS EM ANDAMENTO (loop de cobrança) */}
+      <PlanosEmAndamento />
+
       <DecisaoModal item={modalItem} decisao={modalDecisao} open={modalOpen} onOpenChange={setModalOpen} />
+      <SolicitarPlanoModal
+        open={planoModal.open}
+        onOpenChange={(b) => setPlanoModal(prev => ({ ...prev, open: b }))}
+        tipo={planoModal.tipo}
+        repId={planoModal.repId}
+        repNome={planoModal.repNome}
+        contexto={planoModal.contexto}
+        sugestaoNota={planoModal.sugestaoNota}
+      />
     </div>
   );
 }

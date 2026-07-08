@@ -16,6 +16,7 @@ import {
 import { ArrowDown, ArrowUp, Minus, MessageCircle, PlusCircle, Users, Target, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useTarefas } from "@/contexts/TarefasContext";
+import { usePlanos } from "@/contexts/PlanosContext";
 import type { Representante } from "../../data/seed";
 
 // ------------------------------------------------------------------
@@ -47,6 +48,7 @@ function Cell({ nivel, children }: { nivel: DesvioNivel; children: React.ReactNo
 function RepDrawer({ rep, open, onOpenChange }: { rep: Representante | null; open: boolean; onOpenChange: (b: boolean) => void }) {
   const { seed, range, previousRange, diasAtivo, diasPerdido, metasPublicadas } = useCockpit();
   const { tarefas, addTarefa } = useTarefas();
+  const { getPlanosDoRep } = usePlanos();
 
   const dados = useMemo(() => {
     if (!rep) return null;
@@ -99,6 +101,37 @@ function RepDrawer({ rep, open, onOpenChange }: { rep: Representante | null; ope
                 ))}
               </div>
             </SectionCard>
+
+            {(() => {
+              const planosRep = getPlanosDoRep(rep.id);
+              const cumpridos = planosRep.filter(p => p.status === "concluido").length;
+              const andamento = planosRep.filter(p => p.status === "ativo" || p.status === "aguardando_resposta").length;
+              const escalados = planosRep.filter(p => p.status === "escalado").length;
+              return (
+                <SectionCard title="Histórico de planos" subtitle="Solicitados pelo gestor — dado de gestão de performance">
+                  {planosRep.length === 0 ? (
+                    <p className="text-[11px] nx-muted">Nenhum plano solicitado a este rep.</p>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-4 gap-2 text-center mb-2">
+                        <div className="p-2 rounded bg-[#F6F7F9]"><p className="text-[10px] uppercase nx-muted">Total</p><p className="text-lg font-semibold nx-num">{planosRep.length}</p></div>
+                        <div className="p-2 rounded bg-emerald-50"><p className="text-[10px] uppercase text-emerald-700">Cumpridos</p><p className="text-lg font-semibold nx-num text-emerald-700">{cumpridos}</p></div>
+                        <div className="p-2 rounded bg-sky-50"><p className="text-[10px] uppercase text-sky-700">Andamento</p><p className="text-lg font-semibold nx-num text-sky-700">{andamento}</p></div>
+                        <div className="p-2 rounded bg-rose-50"><p className="text-[10px] uppercase text-rose-700">Escalados</p><p className="text-lg font-semibold nx-num text-rose-700">{escalados}</p></div>
+                      </div>
+                      <ul className="space-y-1">
+                        {planosRep.slice(-5).reverse().map(p => (
+                          <li key={p.id} className="text-[11px] flex justify-between border-b border-[#F1F3F8] py-1">
+                            <span className="nx-text truncate">{p.tipo === "cliente_risco" ? p.contexto.clienteNome : "Ritmo"}</span>
+                            <span className="nx-muted">{p.status}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </SectionCard>
+              );
+            })()}
 
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" className="flex-1 min-w-[140px]"

@@ -30,6 +30,8 @@ import { AlertTriangle, Flame, MessageCircle, ChevronDown, ChevronRight, Phone, 
 import { toast } from "sonner";
 import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
 import { useTarefas, type TarefaExt } from "@/contexts/TarefasContext";
+import { ResponderPlanoModal } from "@/components/vendedor/ResponderPlanoModal";
+import { usePlanos } from "@/contexts/PlanosContext";
 import type { Oportunidade } from "@/cockpit/data/seed";
 
 // ============ HELPERS ============
@@ -283,6 +285,8 @@ interface ItemUnificado {
   saudeBadge?: { label: string; classe: string };
   chipUrgencia?: { label: string; classe: string };
   temOrcamento?: boolean;
+  planoId?: string;
+  solicitadoPor?: string;
   ordem: number;
 }
 
@@ -313,7 +317,9 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
   opsRep: Oportunidade[];
 }) {
   const { tarefas, addTarefa, toggleConcluida } = useTarefas();
+  const { planos } = usePlanos();
   const [openReg, setOpenReg] = useState<{ item: ItemUnificado } | null>(null);
+  const [planoResponderId, setPlanoResponderId] = useState<string | null>(null);
   const [openQuick, setOpenQuick] = useState(false);
   const [filtro, setFiltro] = useState<FiltroFila>("todos");
   const [dismissedAlerta, setDismissedAlerta] = useState<Set<string>>(new Set());
@@ -358,18 +364,21 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
       .forEach((t, idx) => {
         lista.push({
           key: `tar-${t.id}`,
-          grupo: "agendado",
+          grupo: t.planoId ? "urgente" : "agendado",
           origem: "tarefa",
           tarefaId: t.id,
           contaId: t.clienteId,
           oportunidadeId: t.oportunidadeId,
-          cliente: t.clienteNome || "Cliente",
-          inicial: (t.clienteNome || "?").slice(0, 1).toUpperCase(),
+          cliente: t.clienteNome || (t.planoId ? "Plano do gestor" : "Cliente"),
+          inicial: (t.clienteNome || "G").slice(0, 1).toUpperCase(),
           motivo: `${t.titulo}${t.hora ? ` · ${t.hora}` : ""}`,
           hora: t.hora,
           metaLinha: t.oportunidadeNome ? `Oport.: ${t.oportunidadeNome}` : t.descricao,
           temOrcamento: !!t.oportunidadeId,
-          ordem: idx,
+          planoId: t.planoId,
+          solicitadoPor: t.solicitadoPor,
+          chipUrgencia: t.planoId ? { label: "Solicitado pelo gestor", classe: "bg-purple-600 text-white" } : undefined,
+          ordem: t.planoId ? -1 : idx,
         });
       });
 
@@ -390,12 +399,16 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
         tarefaId: t.id,
         contaId: t.clienteId,
         oportunidadeId: t.oportunidadeId,
-        cliente: t.clienteNome || "Cliente",
-        inicial: (t.clienteNome || "?").slice(0, 1).toUpperCase(),
+        cliente: t.clienteNome || (t.planoId ? "Plano do gestor" : "Cliente"),
+        inicial: (t.clienteNome || "G").slice(0, 1).toUpperCase(),
         motivo: `${t.titulo} · vencida há ${atraso}d`,
         metaLinha: t.oportunidadeNome ? `Oport.: ${t.oportunidadeNome}` : t.descricao,
-        chipUrgencia: { label: `Vencida ${atraso}d`, classe: "bg-rose-600 text-white" },
+        chipUrgencia: t.planoId
+          ? { label: `Solicitado pelo gestor · ${atraso}d`, classe: "bg-purple-700 text-white" }
+          : { label: `Vencida ${atraso}d`, classe: "bg-rose-600 text-white" },
         temOrcamento: !!t.oportunidadeId,
+        planoId: t.planoId,
+        solicitadoPor: t.solicitadoPor,
         ordem: 1000 + atraso,
       });
     });
@@ -506,7 +519,10 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
 
   const mostrar = (g: Grupo) => filtro === "todos" || filtro === g;
 
-  const registrarAcao = (item: ItemUnificado) => setOpenReg({ item });
+  const registrarAcao = (item: ItemUnificado) => {
+    if (item.planoId) { setPlanoResponderId(item.planoId); return; }
+    setOpenReg({ item });
+  };
 
   const concluirItem = (item: ItemUnificado, proximaData?: string, nota?: string) => {
     if (item.tarefaId) {
@@ -626,6 +642,11 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
         seed={seed}
         repId={repId}
         onCriar={(t) => { addTarefa(t); toast.success("Ação criada"); }}
+      />
+      <ResponderPlanoModal
+        plano={planoResponderId ? planos.find(p => p.id === planoResponderId) ?? null : null}
+        open={!!planoResponderId}
+        onOpenChange={(b) => { if (!b) setPlanoResponderId(null); }}
       />
     </div>
   );

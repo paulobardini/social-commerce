@@ -1,134 +1,123 @@
-# Painel Comercial · Gestor — Posto de Comando (v2)
 
-Redesenho de `src/pages/vendedor/DashboardGerencial.tsx` em 5 abas orientadas a decisão, com escopo hierárquico (Nacional/Regional) e MARCA como dimensão principal. A tela Insights é **fundida** em "Decisões" para eliminar duas verdades.
+# Loop de Cobrança Gestor ↔ Representante
 
-## Arquitetura
+Nova entidade **PlanoRecuperacao** unificando "Cobrar plano" (clientes em risco) e "Time fora do ritmo", com resposta estruturada do rep, acompanhamento automático por ações reais e escalada por SLA.
 
-```text
-┌─ CockpitTopbar (estendido) ─────────────────────────────────┐
-│ Escopo: [Nacional ▾]  Período: [30d ▾ Comparar]             │
-│ (Regional: escopo travado na região do usuário)             │
-├─────────────────────────────────────────────────────────────┤
-│ Tabs: Decisões · Time & Metas · Carteira · Atendimento · Produto │
-└─────────────────────────────────────────────────────────────┘
+## 1. Modelo e persistência
+
+**Novo arquivo:** `src/contexts/PlanosContext.tsx`
+```ts
+type PlanoTipo = "cliente_risco" | "ritmo";
+type PlanoStatus = "aguardando_resposta" | "ativo" | "concluido" | "escalado" | "cancelado";
+
+interface Compromisso {
+  id: string;
+  tipo: "cobrir_clientes" | "resgatar_cliente" | "enviar_proposta" | "visita";
+  descricao: string;      // "Cobrir 15 clientes da região Sul"
+  alvo?: number;          // 15 (para cobertura)
+  clienteId?: string;     // para resgatar/visita
+  prazo: string;          // DD/MM/YYYY
+  progresso: number;      // 0..1 calculado por atendimentos
+  concluido: boolean;
+}
+
+interface PlanoRecuperacao {
+  id: string;
+  repId: string;
+  repNome: string;
+  tipo: PlanoTipo;
+  contexto: {
+    clienteId?: string; clienteNome?: string; valor?: number;
+    pace?: number; coberturaDelta?: number;
+  };
+  notaGestor: string;
+  solicitadoEm: string;   // ISO
+  prazoResposta: string;  // ISO (+24h úteis)
+  respondidoEm?: string;
+  status: PlanoStatus;
+  compromissos: Compromisso[];
+  log: Array<{ ts: string; autor: "gestor"|"rep"|"sistema"; texto: string }>;
+  encerradoEm?: string;
+  notaEncerramento?: string;
+}
 ```
+Persistência `localStorage["planos:v1"]`. Registrado em `App.tsx` dentro dos providers do vendedor.
 
-- Escopo é global: filtra reps (por região) e propaga em todos os KPIs.
-- Período some apenas em **Decisões** (fila = agora).
-- `useVendedorPerfil` ganha `regiao?: string`. Gestor regional entra travado.
+## 2. Lado do gestor — disparo
 
-## Aba 1 — Decisões (padrão)
+Editar `src/cockpit/components/decisoes/DecisoesTab.tsx`:
 
-Fila do gestor em 4 blocos. Cada card: motivo explícito + valor em jogo + ação de 1 clique.
+- **Novo modal `SolicitarPlanoModal`** (`src/cockpit/components/decisoes/SolicitarPlanoModal.tsx`): campo nota pré-preenchida do contexto ("Atacado Bella · R$ 150k · 5d p/ virar perdido — qual o plano?"). Cria Plano + Ação `origem:"sistema"` na fila do rep.
+- Botão "Cobrar plano do rep" (Clientes-chave em risco) → abre esse modal com `tipo:"cliente_risco"`.
+- **Terceira ação em Time fora do ritmo:** `[Solicitar plano de recuperação]` (`tipo:"ritmo"`, contexto com pace/cobertura).
+- Botão WhatsApp abre link com mensagem sugerida montada do contexto ("Sérgio, vi que o pace está em 41%…"). Coexiste com o plano formal.
 
-### a) Aprovações pendentes — fluxo comercial completo
+## 3. Bloco "Planos em andamento" (aba Decisões)
 
-Tudo que **NÃO é fast-track** entra na fila, categorizado por `motivo`:
+Novo componente `src/cockpit/components/decisoes/PlanosEmAndamento.tsx`:
 
-| Motivo | Condição | Ações |
-|---|---|---|
-| `fora_da_politica` | `desconto > politica.maxDesconto` ∨ `qtd < minimo` | Aprovar · Reprovar · Devolver com ajuste |
-| `credito_cliente_novo` | cliente sem histórico OU status ≠ ativo (janela 2d da política) | Aprovar crédito · Reprovar · Solicitar docs |
-| `aguardando_estoque` | itens sem cobertura de estoque | **Notificar quando disponível** · Ver alternativas · Cancelar |
+- Cards com rep · motivo · lista de compromissos com **barra de progresso alimentada por ações reais** · prazo · badge de status.
+- Ações: `[Ver detalhe]` `[Reforçar no Whats]` `[Encerrar]` (com nota).
+- Card fica **vermelho** quando `status:"escalado"` (sem resposta > 24h úteis) com CTAs `[Chamar no Whats]` `[Reatribuir cliente]` `[Deixar registrado]`.
+- Alerta parcial quando compromissos vencidos ("2 de 3 compromissos atrasados").
+- Rodapé com métricas do loop em linguagem simples: "o time responde em média em 6h · 8 de 10 planos cumpridos".
 
-Fast-track (dentro da política + cliente ativo + estoque OK) passa direto e **não aparece** aqui.
+## 4. Lado do rep — resposta
 
-**Auditoria (`aprovacoesLog[]`):** toda decisão grava `{ orcamentoId, motivo, decisao, gestorId, timestamp, nota }` — mesmo padrão do `metasLog`. Persistido no `CockpitContext` + localStorage.
+- **Ação destacada** no Painel do rep (bloco "Urgente", badge "Solicitado pelo gestor", cor própria). Adicionar variação em `VendedorDashboard.tsx` / lista de ações urgentes: quando `tarefa.origem === "sistema"` E `tarefa.planoId` presente, renderizar com destaque roxo.
+- Novo modal `src/components/vendedor/ResponderPlanoModal.tsx`:
+  - Diagnóstico curto (1 linha).
+  - 1 a 3 compromissos: select (`cobrir_clientes|resgatar_cliente|enviar_proposta|visita`) + campos contextuais (N clientes / cliente / prazo).
+  - **Sugestões automáticas** por contexto: `cliente_risco` sugere "Resgatar agora" + "Visita em 7d"; `ritmo` sugere "Cobrir N clientes em 5d" + "Enviar proposta cliente-chave".
+  - Mobile: layout compacto com sugestões prontas em 2 toques.
+- Salvar → cada compromisso vira Ação encadeada no `TarefasContext` com `origem:"plano"`, `planoId`, `compromissoId`. Plano → `status:"ativo"`.
 
-**Devolver com ajuste fecha o loop:** além de mudar o status do orçamento, cria uma Ação no `TarefasContext` com `origem:"sistema"`, `clienteId` e nota do gestor ("Gestor devolveu: reduzir desconto para 30% ou atingir mínimo"). A ação aparece imediatamente na fila do rep.
+## 5. Acompanhamento automático (`src/lib/planos.ts`)
 
-### b) Time fora do ritmo
-Reps com `pace<80%` ∨ cobertura em queda (Δ ≤ -10pp) ∨ sem acesso >7d. Motivo textual + [WhatsApp] [Ver carteira].
+Selectors puros que recomputam o progresso a partir das ações concluídas do rep dentro da janela do plano:
 
-### c) Clientes-chave em risco
-Clientes classe A com saúde `risco` ∨ `perdido_iminente`. Mostra rep responsável. [Cobrar plano do rep] cria Ação `origem:"sistema"` para o rep com contexto do cliente.
+- `cobrir_clientes`: `min(1, contagem_atendimentos_distintos / alvo)`.
+- `resgatar_cliente`: `1` se houver atendimento concluído para `clienteId` após `solicitadoEm`.
+- `enviar_proposta`: `1` se tarefa `follow_up` concluída para o cliente.
+- `visita`: `1` se tarefa `visita` concluída após `solicitadoEm`.
 
-### d) Negócios grandes parados
-Oportunidades/orçamentos com `valor > R$ 20k` e sem movimento há >7d. Link para negociação.
+## 6. Encerramento
 
-**Anti-ruído:** se ≥60% dos reps disparam o mesmo alerta, colapsa em 1 insight estrutural ("carteira inativa média do time em 31%") em vez de N cards iguais.
+Hook `usePlanosAutoclose` roda no provider a cada mount + change:
 
-**Redirect:** `/vendedor/insights` → `/vendedor/dashboard-gerencial?tab=decisoes`.
+- `cliente_risco`: encerra `concluido` quando cliente sai do risco (status ≠ `inativo` OU tem atendimento positivo).
+- `ritmo`: `concluido` quando `pace ≥ 80%` por 2 semanas (mock: usa `repPace2sem` do seed) OU todos compromissos concluídos.
+- Manual: sempre exige nota.
 
-## Aba 2 — Time & Metas
+## 7. Escalada por SLA
 
-### Tabela de reps orientada a desvio (com regra corrigida)
+Selector `escalarSePendente(plano, agora)`: se `status === "aguardando_resposta"` e `agora > prazoResposta` (24h úteis), promove para `escalado` e registra no log. Cards escalados destacados em vermelho no bloco.
 
-Colunas: Pace % · Cobertura · Em risco · Pipeline · Positivação.
+## 8. Rastreabilidade
 
-**Regra de coloração (`desvio.ts` recebe `target?`):**
-- **Se há alvo definido** (pace vs 100%, cobertura vs meta) → cor vs. alvo. Um time inteiro bom fica todo verde; um time inteiro ruim, todo vermelho — a verdade aparece.
-- **Se não há alvo** (pipeline em R$) → cai para desvio vs. média (fallback).
+- **360 do cliente** (`ClienteAtendimentoTab` / timeline): quando `tipo:"cliente_risco"`, plotar eventos "Gestor solicitou plano · Rep comprometeu resgate até 12/05" e progresso.
+- **RepDrawer** de Time & Metas (`src/cockpit/components/time/TimeMetasTab.tsx` → drawer): nova aba/seção "Histórico de planos" com contagem total, cumpridos, em andamento, escalados.
 
-Ordenação padrão: pior pace primeiro. Row-click abre `RepDrawer` com o mini-painel do MÉTODO do rep (fila, giro, funil, metas) usando os **mesmos helpers** do `VendedorDashboard` (fonte única). Ações: WhatsApp · Criar tarefa · Redistribuir.
+## 9. Métricas do loop
 
-### Gestão de Metas — `MetasWizardModal`
+Selector `metricasLoop(planos)`: tempo médio de resposta, % cumpridos. Renderizado no rodapé de "Planos em andamento" em texto natural.
 
-1. Meta agregada da marca/região no mês (R$).
-2. Rateio sugerido por rep (proporcional a `historico_12m + carteira_total`) — editável linha a linha, com histórico de atingimento ao lado.
-3. **Validação de soma em tempo real:** rodapé mostra `"Rateado R$ 148k de R$ 160k — faltam R$ 12k"` (ou "sobram"). Botão Publicar bloqueado quando `soma ≠ meta`, ou pede confirmação explícita ("Publicar com soma R$ 12k abaixo da meta agregada?").
-4. Metas secundárias por rep: positivação, cobertura, novos, reativação.
-5. Alterar em mês corrente → confirmação + entrada em `metasLog[]`.
-6. **Publicar notifica os reps:** a nova meta aparece no painel do vendedor no mesmo instante (fonte única via context compartilhado).
-7. **Escopo regional:** wizard lista apenas reps da região do gestor (aplicado em `escopo.ts::repsNoEscopo`).
+## Arquivos
 
-### Rankings
-Ranking por atingimento (mantido) + ranking de evolução (Δ mês vs mês anterior). Cada linha tem ação.
+**Novos**
+- `src/contexts/PlanosContext.tsx`
+- `src/lib/planos.ts` (selectors puros: progresso, escalada, métricas)
+- `src/cockpit/components/decisoes/SolicitarPlanoModal.tsx`
+- `src/cockpit/components/decisoes/PlanosEmAndamento.tsx`
+- `src/cockpit/components/decisoes/EncerrarPlanoModal.tsx`
+- `src/components/vendedor/ResponderPlanoModal.tsx`
 
-## Aba 3 — Carteira (enxugada)
+**Editados**
+- `src/App.tsx` — envolve rotas do vendedor com `<PlanosProvider>`.
+- `src/cockpit/components/decisoes/DecisoesTab.tsx` — troca `cobrarPlanoRep` pelo modal; adiciona ação em Time fora do ritmo; renderiza `<PlanosEmAndamento>`.
+- `src/cockpit/components/time/TimeMetasTab.tsx` — histórico de planos no drawer.
+- `src/pages/vendedor/VendedorDashboard.tsx` — badge/cor especial para ações com `planoId`; abre `ResponderPlanoModal` no clique.
+- `src/contexts/TarefasContext.tsx` — campos opcionais `planoId`, `compromissoId` em `TarefaExt`.
+- `src/components/atendimento/ClienteAtendimentoTab.tsx` (ou timeline do 360) — eventos de plano na timeline do cliente.
 
-**Mantém:** SaudeCarteiraBar, AgingBars, RfvHeatmap, AbcCurve, Waterfall movimento, Funil retenção.
-**Remove:** StatusDonut, KPIs com "0,0%", gráficos vazios (empty state honesto).
-**Adiciona:** todo gráfico clicável → `ListaClientesDrawer` com filtro aplicado + coluna Representante.
-
-## Aba 4 — Atendimento
-
-- KPIs: cobertura por rep, atendimentos, conversão lead→cliente, ciclo de vendas, win rate por rep, motivos de perda (agregado dos `motivoPerda` estruturados).
-- **Tickets integrados** (`mockAtendimento`): contadores por setor (SAC · Cobrança · Financeiro · Logística) com aging, destacando urgentes/estourados. Link para o kanban.
-
-## Aba 5 — Produto (por MARCA)
-
-**Mantém:** faturamento/penetração de marca, marca×nicho (heatmap), ABC produtos, top/bottom, marcas sem giro por rep, recompra por coleção, ticket por categoria.
-
-**Adiciona:**
-
-- **`CampanhaPushModal` com idempotência.** Gera Ações `origem:"sistema"` na fila dos reps envolvidos, seguindo a **mesma regra das sugeridas do sistema**: chave `clienteId + motivo` (ex: `push_marca_malwee`), dispensáveis, entram no bloco SUGERIDO do rep. Rodar duas campanhas iguais **não duplica** a fila — a segunda faz upsert (atualiza texto se mudou, ignora se idêntica).
-- **Cross-sell drill-down.** Clientes com só 1 marca → lista de marcas candidatas (cabem no nicho). Cada linha vira [Criar oportunidade] que **pré-preenche o briefing estruturado** (mesmo modelo de `NovaOportunidadeModal`): `demanda`, `marca`, `nichoCliente`, `clienteId`, `origem:"cross_sell"`. Nunca abre vazio.
-
-## Padrões transversais
-
-- **Fonte única:** KPIs de rep vêm dos mesmos helpers (`carteiraMetodo`, `saudeCliente`, `acoes`) usados no painel do vendedor. Números batem entre telas.
-- **Formatação:** `fmtBRLc` → `R$ 9,1M`. Variação 0% oculta.
-- **Tooltip de cálculo** em todo KPI (`KpiCard` ganha `tooltip`).
-- **Mock com desvio realista:** `seed.representantes` com pace variado (112%, 94%, 76%, 58%, 41%), nunca idênticos.
-- **Mobile:** Decisões como tela principal (cards empilhados, ações grandes); demais abas empilhadas com scroll horizontal em tabelas.
-
-## Detalhes técnicos
-
-**Arquivos novos:**
-- `src/cockpit/components/EscopoSelector.tsx`
-- `src/cockpit/components/decisoes/AprovacoesBlock.tsx` (com switch por `motivo`), `TimeForaRitmoBlock.tsx`, `ClientesChaveRiscoBlock.tsx`, `NegociosParadosBlock.tsx`, `DecisaoCard.tsx`
-- `src/cockpit/components/time/RepTableDesvio.tsx`, `RepDrawer.tsx`, `MetasWizardModal.tsx` (com validação de soma), `RankingEvolucao.tsx`
-- `src/cockpit/components/carteira/ListaClientesDrawer.tsx`
-- `src/cockpit/components/produto/CampanhaPushModal.tsx`, `CrossSellDrillDown.tsx`
-- `src/cockpit/lib/decisoes.ts` — `filaAprovacoes` (categoriza por motivo), `repsForaRitmo`, `clientesChaveRisco`, `negociosParados`, `agregarAlertas`, `registrarAprovacao` (log)
-- `src/cockpit/lib/desvio.ts` — assinatura `corDesvio(valor, { target?, media })`: usa target quando presente, cai para média senão
-- `src/cockpit/lib/escopo.ts` — `repsNoEscopo(seed, perfil, escopo)`; aplicado inclusive no MetasWizard
-
-**Arquivos editados:**
-- `src/pages/vendedor/DashboardGerencial.tsx` — reescrita em 5 abas
-- `src/cockpit/contexts/CockpitContext.tsx` — adiciona `escopo`, `aprovacoesLog`, `metasLog`, `registrarAprovacao`, `publicarMetas` (com notificação/fonte única)
-- `src/cockpit/components/CockpitTopbar.tsx` — plugar `EscopoSelector`, ocultar período em Decisões
-- `src/cockpit/data/seed.ts` — reps com desvio realista + campo `regiao`; mock de orçamentos cobrindo os 3 motivos (política/crédito/estoque)
-- `src/components/vendedor/VendedorSidebar.tsx` — remove item Insights (ou aponta pra aba)
-- `src/App.tsx` — redirect `/vendedor/insights`
-- `src/hooks/useVendedorPerfil.ts` — adiciona `regiao?: string`
-- `src/components/vendedor/NovaOportunidadeModal.tsx` — aceita `briefingInicial` para pré-preenchimento (cross-sell)
-
-**Sem novas dependências.**
-
-## Fora de escopo
-
-- Backend/persistência real (segue mock + localStorage).
-- `VendedorDashboard` — só garantimos compartilhamento de helpers.
-- Módulos Marketing e Inteligência.
+Sem novas dependências. Mock data via localStorage seguindo o padrão do projeto.
