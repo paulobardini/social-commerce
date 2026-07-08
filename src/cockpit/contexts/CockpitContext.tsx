@@ -5,6 +5,27 @@ import type { AprovacaoLog, MetaLog } from "../lib/decisoes";
 import type { Escopo } from "../lib/escopo";
 import { escopoPermitido } from "../lib/escopo";
 import { useVendedorPerfilCtx } from "@/hooks/useVendedorPerfil";
+import type { MetaV2, MetaSecundarias, RateioRep } from "../data/metasV2";
+
+interface DuplicarMesArgs {
+  origem: string;
+  destinos: string[];
+  ajustePct: number;
+  sobrescreverPublicadas: boolean;
+}
+
+interface SalvarMetaArgs {
+  id?: string;                    // se vier, atualiza
+  periodo: string;
+  dimensao: MetaV2["dimensao"];
+  alvoId: string | null;
+  valorAgregado: number;
+  rateio?: RateioRep[];
+  metasSecundarias?: MetaSecundarias;
+  escopo: string;
+  gestorId: string;
+  publicar?: boolean;             // publica na mesma operação
+}
 
 interface CockpitContextValue {
   // período
@@ -36,7 +57,16 @@ interface CockpitContextValue {
   aprovacoesLog: AprovacaoLog[];
   registrarAprovacao: (log: Omit<AprovacaoLog, "id" | "timestamp">) => void;
   metasLog: MetaLog[];
-  metasPublicadas: Record<string, number>; // key: `${repId}:${mes}`
+
+  // Metas V2 (multidimensional + meses futuros) — FONTE PRINCIPAL
+  metasV2: MetaV2[];
+  salvarMeta: (m: SalvarMetaArgs) => MetaV2;
+  publicarMetaV2: (id: string, gestorId: string) => void;
+  removerMetaV2: (id: string) => void;
+  duplicarMes: (args: DuplicarMesArgs) => void;
+
+  // LEGADO (fallback temporário até 2026-Q3) — só usar via helpers metasCalc
+  metasPublicadas: Record<string, number>;
   publicarMetas: (payload: {
     mes: string;
     escopoAlvo: string;
@@ -46,7 +76,7 @@ interface CockpitContextValue {
     gestorId: string;
   }) => void;
 
-  // campanhas de push idempotentes (chave motivo → última execução)
+  // campanhas de push idempotentes
   campanhasPush: Record<string, { criadaEm: string; texto: string }>;
   registrarCampanhaPush: (chave: string, texto: string) => void;
 
@@ -56,7 +86,7 @@ interface CockpitContextValue {
 
 const Ctx = createContext<CockpitContextValue | null>(null);
 
-const STORAGE = "cockpit:cfg:v2";
+const STORAGE = "cockpit:cfg:v3";
 interface StoredCfg {
   diasAtivo?: number;
   diasPerdido?: number;
@@ -64,6 +94,7 @@ interface StoredCfg {
   metasLog?: MetaLog[];
   metasPublicadas?: Record<string, number>;
   campanhasPush?: Record<string, { criadaEm: string; texto: string }>;
+  metasV2?: MetaV2[];
 }
 
 function loadCfg(): StoredCfg {
@@ -72,6 +103,9 @@ function loadCfg(): StoredCfg {
 function saveCfg(cfg: StoredCfg) {
   try { localStorage.setItem(STORAGE, JSON.stringify(cfg)); } catch { /* noop */ }
 }
+
+function ts() { return new Date().toISOString(); }
+function newId() { return `mv2-${Date.now()}-${Math.floor(Math.random() * 1e5)}`; }
 
 export function CockpitProvider({ children }: { children: ReactNode }) {
   const seed = useMemo(() => buildSeed(), []);
@@ -89,10 +123,11 @@ export function CockpitProvider({ children }: { children: ReactNode }) {
   const [metasLog, setMetasLog] = useState<MetaLog[]>(stored.metasLog ?? []);
   const [metasPublicadas, setMetasPublicadas] = useState<Record<string, number>>(stored.metasPublicadas ?? {});
   const [campanhasPush, setCampanhasPush] = useState<Record<string, { criadaEm: string; texto: string }>>(stored.campanhasPush ?? {});
+  const [metasV2, setMetasV2] = useState<MetaV2[]>(stored.metasV2 ?? []);
 
   useEffect(() => {
-    saveCfg({ diasAtivo, diasPerdido, aprovacoesLog, metasLog, metasPublicadas, campanhasPush });
-  }, [diasAtivo, diasPerdido, aprovacoesLog, metasLog, metasPublicadas, campanhasPush]);
+    saveCfg({ diasAtivo, diasPerdido, aprovacoesLog, metasLog, metasPublicadas, campanhasPush, metasV2 });
+  }, [diasAtivo, diasPerdido, aprovacoesLog, metasLog, metasPublicadas, campanhasPush, metasV2]);
 
   const setEscopo = useCallback((e: Escopo) => setEscopoState(escopoPermitido(perfil, e)), [perfil]);
   const escopo = escopoPermitido(perfil, escopoState);
@@ -117,6 +152,109 @@ export function CockpitProvider({ children }: { children: ReactNode }) {
     }]);
   }, []);
 
+  // ==== Metas V2 ====
+  const salvarMeta = useCallback((args: SalvarMetaArgs): MetaV2 => {
+    let saved!: MetaV2;
+    setMetasV2(prev => {
+      const idx = args.id ? prev.findIndex(m => m.id === args.id) : -1;
+      const base: MetaV2 = idx >= 0 ? prev[idx] : {
+        id: newId(),
+        periodo: args.periodo,
+        dimensao: args.dimensao,
+        alvoId: args.alvoId,
+        valorAgregado: 0,
+        status: "rascunho",
+        escopo: args.escopo,
+        log: [{ ts: ts(), gestorId: args.gestorId, evento: "criada" }],
+      };
+      const delta = args.valorAgregado - base.valorAgregado;
+      const atualizada: MetaV2 = {
+        ...base,
+        valorAgregado: args.valorAgregado,
+        rateio: args.rateio,
+        metasSecundarias: args.metasSecundarias,
+        alvoId: args.alvoId,
+        dimensao: args.dimensao,
+        periodo: args.periodo,
+        escopo: args.escopo,
+        log: [
+          ...base.log,
+          idx >= 0
+            ? { ts: ts(), gestorId: args.gestorId, evento: "atualizada" as const, delta }
+            : null,
+          args.publicar ? { ts: ts(), gestorId: args.gestorId, evento: "publicada" as const } : null,
+        ].filter(Boolean) as MetaV2["log"],
+        status: args.publicar ? "publicada" : base.status,
+      };
+      saved = atualizada;
+      const next = prev.slice();
+      if (idx >= 0) next[idx] = atualizada; else next.push(atualizada);
+      return next;
+    });
+    return saved;
+  }, []);
+
+  const publicarMetaV2 = useCallback((id: string, gestorId: string) => {
+    setMetasV2(prev => prev.map(m => m.id === id
+      ? { ...m, status: "publicada", log: [...m.log, { ts: ts(), gestorId, evento: "publicada" }] }
+      : m,
+    ));
+  }, []);
+
+  const removerMetaV2 = useCallback((id: string) => {
+    setMetasV2(prev => prev.filter(m => m.id !== id));
+  }, []);
+
+  const duplicarMes = useCallback((args: DuplicarMesArgs) => {
+    const { origem, destinos, ajustePct, sobrescreverPublicadas } = args;
+    setMetasV2(prev => {
+      const daOrigem = prev.filter(m => m.periodo === origem);
+      if (!daOrigem.length) return prev;
+      const fator = 1 + (ajustePct / 100);
+      const next = prev.slice();
+      for (const destino of destinos) {
+        for (const src of daOrigem) {
+          const doDestinoMesmoAlvo = next.findIndex(m =>
+            m.periodo === destino && m.dimensao === src.dimensao && m.alvoId === src.alvoId && m.escopo === src.escopo,
+          );
+          if (doDestinoMesmoAlvo >= 0 && next[doDestinoMesmoAlvo].status === "publicada" && !sobrescreverPublicadas) {
+            continue;
+          }
+          const novo: MetaV2 = {
+            id: newId(),
+            periodo: destino,
+            dimensao: src.dimensao,
+            alvoId: src.alvoId,
+            valorAgregado: Math.round(src.valorAgregado * fator),
+            rateio: src.rateio?.map(r => ({ repId: r.repId, valor: Math.round(r.valor * fator) })),
+            metasSecundarias: src.metasSecundarias,
+            status: "rascunho",
+            escopo: src.escopo,
+            log: [{
+              ts: ts(),
+              gestorId: "gestor-atual",
+              evento: "duplicada_de",
+              detalhe: `Duplicada de ${origem} (ajuste ${ajustePct}%)`,
+            }],
+          };
+          if (doDestinoMesmoAlvo >= 0) {
+            const antigo = next[doDestinoMesmoAlvo];
+            novo.log.push({
+              ts: ts(),
+              gestorId: "gestor-atual",
+              evento: "substituida_via_duplicacao",
+              detalhe: `Substituiu meta ${antigo.status} anterior (${antigo.id}) via duplicação de ${origem}`,
+            });
+            next[doDestinoMesmoAlvo] = novo;
+          } else {
+            next.push(novo);
+          }
+        }
+      }
+      return next;
+    });
+  }, []);
+
   const registrarCampanhaPush = useCallback((chave: string, texto: string) => {
     setCampanhasPush(prev => ({ ...prev, [chave]: { criadaEm: new Date().toISOString(), texto } }));
   }, []);
@@ -135,7 +273,9 @@ export function CockpitProvider({ children }: { children: ReactNode }) {
     resetClassificacao: () => { setDiasAtivoState(60); setDiasPerdidoState(180); },
     repId, setRepId,
     aprovacoesLog, registrarAprovacao,
-    metasLog, metasPublicadas, publicarMetas,
+    metasLog,
+    metasV2, salvarMeta, publicarMetaV2, removerMetaV2, duplicarMes,
+    metasPublicadas, publicarMetas,
     campanhasPush, registrarCampanhaPush,
     seed,
   };
