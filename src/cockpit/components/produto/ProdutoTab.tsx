@@ -10,6 +10,8 @@ import { SectionCard } from "../SectionCard";
 import { KpiCard } from "../KpiCard";
 import { AbcCurve } from "../AbcCurve";
 import { MarcaNichoHeatmap } from "./MarcaNichoHeatmap";
+import { InsightsStrip } from "../InsightsStrip";
+import { insightsProduto } from "../../lib/insights";
 import type { Nicho } from "../../data/seed";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell,
