@@ -279,6 +279,7 @@ const App = () => (
             </RecomendacoesProvider>
             </PedidosProvider>
             </RemindersProvider>
+            </PlanosProvider>
             </TarefasProvider>
             </MessageTemplatesProvider>
             </MetasProvider>
