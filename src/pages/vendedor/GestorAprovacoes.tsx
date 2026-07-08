@@ -1,7 +1,8 @@
 // Tela Aprovações · Análise comercial (submenu do gestor).
 // Fila (fora_da_politica · credito · estoque) + Histórico auditável.
-// Ordenada por espera DESC. Aprovação fora_da_politica > R$ 20k pede confirmação.
-import { useMemo, useState } from "react";
+// Navegação completa: busca, filtros por rep e valor, ordenação, agrupamento e contador.
+// Cada decisão gera consequência estruturada no lado do rep (Tarefa dedicada).
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CockpitTopbar } from "@/cockpit/components/CockpitTopbar";
 import { useCockpit } from "@/cockpit/contexts/CockpitContext";
@@ -15,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -26,7 +28,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  CheckCircle2, RotateCcw, XCircle, Bell, FileText, Search,
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  CheckCircle2, RotateCcw, XCircle, Bell, FileText, Search, ChevronDown, ChevronRight, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTarefas } from "@/contexts/TarefasContext";
@@ -35,6 +40,8 @@ import type { MotivoAprovacao } from "@/cockpit/data/seed";
 const gestorId = "gestor-atual";
 
 type DecisaoTipo = "aprovado" | "reprovado" | "devolvido" | "solicitar_docs" | "cancelado";
+type FaixaValor = "todos" | "ate10k" | "10a25k" | "25kplus";
+type Ordenacao = "espera" | "valor" | "rep";
 
 const filtroMotivos: { key: "todas" | MotivoAprovacao; label: string }[] = [
   { key: "todas", label: "Todas" },
@@ -43,12 +50,21 @@ const filtroMotivos: { key: "todas" | MotivoAprovacao; label: string }[] = [
   { key: "aguardando_estoque", label: "Estoque" },
 ];
 
+const faixasValor: { key: FaixaValor; label: string; min: number; max: number }[] = [
+  { key: "todos",   label: "Todos valores", min: 0,      max: Infinity },
+  { key: "ate10k",  label: "Até R$ 10k",    min: 0,      max: 10000 },
+  { key: "10a25k",  label: "R$ 10k a 25k",  min: 10000,  max: 25000 },
+  { key: "25kplus", label: "Acima de R$ 25k", min: 25000, max: Infinity },
+];
+
 function formatBRDate(d: Date): string {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
 function addDays(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
 
-function AprovacaoCard({ item, onDecidir }: { item: AprovacaoItem; onDecidir: (a: AprovacaoItem, d: DecisaoTipo) => void }) {
+function AprovacaoCard({ item, onDecidir, removing }: {
+  item: AprovacaoItem; onDecidir: (a: AprovacaoItem, d: DecisaoTipo) => void; removing?: boolean;
+}) {
   const navigate = useNavigate();
   const { registrarAprovacao } = useCockpit();
 
@@ -62,7 +78,7 @@ function AprovacaoCard({ item, onDecidir }: { item: AprovacaoItem; onDecidir: (a
   };
 
   return (
-    <div className={`nx-card px-3 py-2.5 ${borda}`}>
+    <div className={`nx-card px-3 py-2.5 ${borda} transition-all duration-300 ${removing ? "opacity-0 scale-95 -translate-x-4" : "opacity-100"}`}>
       <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -130,9 +146,71 @@ function AprovacaoCard({ item, onDecidir }: { item: AprovacaoItem; onDecidir: (a
   );
 }
 
+// ============ Consequência no lado do REP ============
+// Cria Tarefa contextualizada com base na decisão do gestor. Origem "sistema"
+// + observacao carregando "Gestor: <nota>" para o rep saber quem cobrou.
+function criarTarefaParaRep(
+  addTarefa: ReturnType<typeof useTarefas>["addTarefa"],
+  item: AprovacaoItem,
+  decisao: DecisaoTipo,
+  nota: string,
+) {
+  const hoje = new Date();
+  const dueIn = (n: number) => formatBRDate(addDays(hoje, n));
 
-function DecisaoModal({ item, decisao, open, onOpenChange }: {
-  item: AprovacaoItem | null; decisao: DecisaoTipo; open: boolean; onOpenChange: (b: boolean) => void;
+  const templates: Record<DecisaoTipo, { titulo: string; descricao: string; prioridade: "alta" | "media" | "baixa"; dias: number }> = {
+    aprovado: {
+      titulo: `Pedido aprovado · ${item.clienteNome}`,
+      descricao: `Orçamento ${item.id} (${fmtBRL(item.valor)}) foi aprovado pelo comercial. Confirmar entrada do pedido e comunicar o cliente no WhatsApp.`,
+      prioridade: "media",
+      dias: 1,
+    },
+    reprovado: {
+      titulo: `Orçamento reprovado · renegociar com ${item.clienteNome}`,
+      descricao: `${item.id} (${fmtBRL(item.valor)}) foi REPROVADO pelo comercial.\nMotivo do gestor: ${nota || "sem nota"}.\nRenegociar cesta ou avisar o cliente com nova proposta ANTES que ele descubra por outro canal.`,
+      prioridade: "alta",
+      dias: 1,
+    },
+    devolvido: {
+      titulo: `Ajustar orçamento ${item.id} · ${item.clienteNome}`,
+      descricao: `Gestor devolveu para ajuste. Exigência: ${nota || "conforme detalhes"}. Abrir a cesta em modo edição, atender o ajuste e reenviar — vai voltar para a fila do gestor com badge "2ª rodada".`,
+      prioridade: "alta",
+      dias: 2,
+    },
+    solicitar_docs: {
+      titulo: `Enviar documentação · ${item.clienteNome}`,
+      descricao: `Gestor pediu: ${nota || "documentação complementar"}.\nAnexar ou pedir ao cliente no WhatsApp. Sem docs em 5 dias úteis o SLA da pendência migra para o rep.`,
+      prioridade: "alta",
+      dias: 5,
+    },
+    cancelado: {
+      titulo: `Orçamento cancelado · ${item.clienteNome}`,
+      descricao: `${item.id} cancelado (${nota || "sem nota"}). Alinhar próximo passo com o cliente.`,
+      prioridade: "media",
+      dias: 1,
+    },
+  };
+
+  const t = templates[decisao];
+  addTarefa({
+    titulo: t.titulo,
+    descricao: t.descricao,
+    tipo: decisao === "solicitar_docs" ? "outros" : decisao === "aprovado" ? "pos_venda" : "retorno_orcamento",
+    clienteId: item.contaId,
+    clienteNome: item.clienteNome,
+    prioridade: t.prioridade,
+    vencimento: dueIn(t.dias),
+    responsavel: item.repNome,
+    status: "pendente",
+    origem: "sistema",
+    recorrencia: "nenhuma",
+    observacao: `Gestor · ${nota || "sem nota adicional"}`,
+  });
+}
+
+function DecisaoModal({ item, decisao, open, onOpenChange, onDecidido }: {
+  item: AprovacaoItem | null; decisao: DecisaoTipo; open: boolean;
+  onOpenChange: (b: boolean) => void; onDecidido: (orcId: string) => void;
 }) {
   const [nota, setNota] = useState("");
   const { registrarAprovacao } = useCockpit();
@@ -147,10 +225,17 @@ function DecisaoModal({ item, decisao, open, onOpenChange }: {
   };
   const placeholders: Record<DecisaoTipo, string> = {
     aprovado: "Nota opcional (contexto da aprovação)",
-    reprovado: "Motivo da reprovação (obrigatório)",
-    devolvido: 'Ajuste solicitado (ex: "Reduzir desconto para 30% ou atingir mínimo")',
-    solicitar_docs: "Quais documentos são necessários",
+    reprovado: "Motivo da reprovação (obrigatório) — o rep verá isso na Ação",
+    devolvido: 'Ajuste solicitado (ex: "Reduzir desconto para 30% ou atingir mínimo de R$ 15.000")',
+    solicitar_docs: "Quais documentos são necessários (ex: comprovante de endereço)",
     cancelado: "Motivo do cancelamento",
+  };
+  const consequencia: Record<DecisaoTipo, string> = {
+    aprovado: "Rep é notificado · card avança para 'Virou pedido' · evento na timeline do cliente",
+    reprovado: "Ação urgente na fila do rep com o motivo · rep renegocia ANTES do cliente saber",
+    devolvido: "Ação no rep abre a cesta em modo edição · quando reenviar, volta ao gestor com badge '2ª rodada'",
+    solicitar_docs: "Ação com upload no rep · docs recebidos = volta ao gestor mantendo idade original",
+    cancelado: "Cliente é notificado · card sai da fila",
   };
   const obrigatorio = decisao === "reprovado" || decisao === "devolvido";
 
@@ -158,17 +243,9 @@ function DecisaoModal({ item, decisao, open, onOpenChange }: {
     if (!item) return;
     if (obrigatorio && !nota.trim()) { toast.error("Nota obrigatória para esta decisão"); return; }
     registrarAprovacao({ orcamentoId: item.id, motivo: item.motivo, decisao, gestorId, nota: nota.trim() || undefined });
-    if (decisao === "devolvido") {
-      addTarefa({
-        titulo: `Ajustar orçamento ${item.id}`, descricao: `Gestor devolveu: ${nota.trim()}`,
-        tipo: "outros", clienteId: item.contaId, clienteNome: item.clienteNome,
-        prioridade: "alta", vencimento: formatBRDate(addDays(new Date(), 2)),
-        responsavel: item.repNome, status: "pendente", origem: "sistema", recorrencia: "nenhuma",
-      });
-      toast.success(`Devolvido — ação criada para ${item.repNome}`);
-    } else {
-      toast.success(`${titulo[decisao]} · registrado em auditoria`);
-    }
+    criarTarefaParaRep(addTarefa, item, decisao, nota.trim());
+    onDecidido(item.id);
+    toast.success(`${titulo[decisao]} · registrado · ação criada para ${item.repNome}`);
     setNota("");
     onOpenChange(false);
   };
@@ -189,7 +266,9 @@ function DecisaoModal({ item, decisao, open, onOpenChange }: {
                 Nota {obrigatorio && <span className="text-rose-500">*</span>}
               </label>
               <Textarea rows={3} value={nota} onChange={e => setNota(e.target.value)} placeholder={placeholders[decisao]} />
-              <p className="text-[10px] nx-muted mt-1">Toda decisão é registrada em log de auditoria.</p>
+            </div>
+            <div className="text-[11px] nx-muted bg-[#EEF2FF] border border-[#C7D2FE] rounded p-2">
+              <span className="font-semibold text-[#2D3A8C]">O que acontece:</span> {consequencia[decisao]}
             </div>
           </div>
         )}
@@ -281,23 +360,101 @@ function HistoricoTab() {
   );
 }
 
+const PAGE_SIZE = 15;
+
 export default function GestorAprovacoes() {
   const [params, setParams] = useSearchParams();
   const { seed, escopo } = useCockpit();
 
-  const aprovacoes = useMemo(() => filaAprovacoes(seed, escopo)
-    .slice().sort((a, b) => b.abertoDias - a.abertoDias), [seed, escopo]);
+  const aprovacoes = useMemo(() => filaAprovacoes(seed, escopo), [seed, escopo]);
 
-  const contagens = useMemo(() => {
-    const c: Record<string, number> = { todas: aprovacoes.length };
-    for (const m of ["fora_da_politica", "credito_cliente_novo", "aguardando_estoque"] as MotivoAprovacao[]) {
-      c[m] = aprovacoes.filter(a => a.motivo === m).length;
-    }
-    return c;
-  }, [aprovacoes]);
+  // ==== Navegação: busca, filtros, ordenação, agrupamento ====
+  const [q, setQ] = useState("");
+  const [repFiltro, setRepFiltro] = useState<string>("todos");
+  const [faixa, setFaixa] = useState<FaixaValor>("todos");
+  const [ordem, setOrdem] = useState<Ordenacao>("espera");
+  const [agrupar, setAgrupar] = useState(false);
+  const [visiveis, setVisiveis] = useState(PAGE_SIZE);
+  const [removendo, setRemovendo] = useState<Set<string>>(new Set());
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const filtroKey = (params.get("motivo") as "todas" | MotivoAprovacao) ?? "todas";
-  const filtradas = filtroKey === "todas" ? aprovacoes : aprovacoes.filter(a => a.motivo === filtroKey);
+
+  // Contadores por rep (dentro do escopo, independente dos demais filtros)
+  const contagensRep = useMemo(() => {
+    const m = new Map<string, { nome: string; total: number }>();
+    for (const a of aprovacoes) {
+      const cur = m.get(a.repId) ?? { nome: a.repNome, total: 0 };
+      cur.total++;
+      m.set(a.repId, cur);
+    }
+    return m;
+  }, [aprovacoes]);
+
+  // Contagens por motivo (respeitando busca/rep/faixa — para chips refletirem contexto)
+  const preFiltradas = useMemo(() => {
+    return aprovacoes.filter(a => {
+      if (repFiltro !== "todos" && a.repId !== repFiltro) return false;
+      const f = faixasValor.find(x => x.key === faixa)!;
+      if (a.valor < f.min || a.valor >= f.max) return false;
+      if (q.trim()) {
+        const s = q.trim().toLowerCase();
+        return a.id.toLowerCase().includes(s)
+            || a.clienteNome.toLowerCase().includes(s)
+            || a.repNome.toLowerCase().includes(s);
+      }
+      return true;
+    });
+  }, [aprovacoes, repFiltro, faixa, q]);
+
+  const contagensMotivo = useMemo(() => {
+    const c: Record<string, number> = { todas: preFiltradas.length };
+    for (const m of ["fora_da_politica", "credito_cliente_novo", "aguardando_estoque"] as MotivoAprovacao[]) {
+      c[m] = preFiltradas.filter(a => a.motivo === m).length;
+    }
+    return c;
+  }, [preFiltradas]);
+
+  // Fila final ordenada
+  const filtradas = useMemo(() => {
+    const arr = filtroKey === "todas" ? preFiltradas : preFiltradas.filter(a => a.motivo === filtroKey);
+    const sort = arr.slice();
+    if (ordem === "espera") sort.sort((a, b) => b.abertoDias - a.abertoDias);
+    else if (ordem === "valor") sort.sort((a, b) => b.valor - a.valor);
+    else if (ordem === "rep") sort.sort((a, b) => a.repNome.localeCompare(b.repNome) || b.valor - a.valor);
+    return sort;
+  }, [preFiltradas, filtroKey, ordem]);
+
+  // Reset page-size ao mudar filtro
+  useEffect(() => { setVisiveis(PAGE_SIZE); }, [q, repFiltro, faixa, filtroKey, ordem, agrupar]);
+
+  // Scroll infinito
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || agrupar) return;
+    const obs = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        setVisiveis(v => Math.min(v + PAGE_SIZE, filtradas.length));
+      }
+    }, { rootMargin: "200px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [filtradas.length, agrupar]);
+
+  const paginadas = agrupar ? filtradas : filtradas.slice(0, visiveis);
+
+  // Agrupamento por rep
+  const grupos = useMemo(() => {
+    if (!agrupar) return [];
+    const g = new Map<string, { nome: string; itens: AprovacaoItem[]; total: number }>();
+    for (const a of filtradas) {
+      const cur = g.get(a.repId) ?? { nome: a.repNome, itens: [], total: 0 };
+      cur.itens.push(a);
+      cur.total += a.valor;
+      g.set(a.repId, cur);
+    }
+    return Array.from(g.entries()).sort((a, b) => b[1].itens.length - a[1].itens.length);
+  }, [agrupar, filtradas]);
 
   const [modal, setModal] = useState<{ item: AprovacaoItem | null; decisao: DecisaoTipo; open: boolean }>({
     item: null, decisao: "aprovado", open: false,
@@ -313,13 +470,21 @@ export default function GestorAprovacoes() {
     setModal({ item, decisao, open: true });
   };
 
+  const onDecidido = (orcId: string) => {
+    // Anima saída antes do card sumir (o item continua no seed até o mock atualizar)
+    setRemovendo(prev => new Set(prev).add(orcId));
+  };
+
   const setMotivo = (k: string) => {
     const p = new URLSearchParams(params);
     if (k === "todas") p.delete("motivo"); else p.set("motivo", k);
     setParams(p, { replace: true });
   };
 
+  const setEscopoFiltro = <T,>(setter: (v: T) => void, val: T) => { setter(val); };
+
   const tabParam = params.get("aba") === "historico" ? "historico" : "fila";
+  const filtroAtivo = q || repFiltro !== "todos" || faixa !== "todos" || filtroKey !== "todas";
 
   return (
     <div className="nx-shell min-h-screen">
@@ -341,45 +506,150 @@ export default function GestorAprovacoes() {
             <TabsTrigger value="historico" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Histórico</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="fila" className="mt-4 space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {filtroMotivos.map(f => (
-                <button key={f.key} onClick={() => setMotivo(f.key)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-medium border transition ${
-                    filtroKey === f.key
-                      ? "bg-[#2D3A8C] text-white border-[#2D3A8C]"
-                      : "bg-white nx-text border-[#E7E9EE] hover:border-[#2D3A8C]"
-                  }`}>
-                  {f.label} ({contagens[f.key] ?? 0})
-                </button>
-              ))}
+          <TabsContent value="fila" className="mt-4 space-y-3">
+            {/* Barra de busca + filtros avançados */}
+            <div className="nx-card p-3 space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-1 min-w-[220px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por orçamento (orc-145), cliente ou representante..."
+                    value={q} onChange={e => setQ(e.target.value)} className="pl-9 h-9 text-xs"
+                  />
+                  {q && (
+                    <button onClick={() => setQ("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <Select value={repFiltro} onValueChange={(v) => setEscopoFiltro(setRepFiltro, v)}>
+                  <SelectTrigger className="h-9 w-[220px] text-xs"><SelectValue placeholder="Representante" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os representantes ({aprovacoes.length})</SelectItem>
+                    {Array.from(contagensRep.entries())
+                      .sort((a, b) => b[1].total - a[1].total)
+                      .map(([rid, info]) => (
+                        <SelectItem key={rid} value={rid}>{info.nome} ({info.total})</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={faixa} onValueChange={(v) => setEscopoFiltro(setFaixa, v as FaixaValor)}>
+                  <SelectTrigger className="h-9 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {faixasValor.map(f => <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+
+                <Select value={ordem} onValueChange={(v) => setEscopoFiltro(setOrdem, v as Ordenacao)}>
+                  <SelectTrigger className="h-9 w-[180px] text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="espera">Ordenar: Espera (padrão)</SelectItem>
+                    <SelectItem value="valor">Ordenar: Maior valor</SelectItem>
+                    <SelectItem value="rep">Ordenar: Representante A-Z</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div className="flex items-center gap-2 ml-auto">
+                  <span className="text-[11px] nx-muted">Agrupar por rep</span>
+                  <Switch checked={agrupar} onCheckedChange={setAgrupar} />
+                </div>
+              </div>
+
+              {/* Chips de motivo (contadores refletem busca+rep+faixa) */}
+              <div className="flex flex-wrap gap-2 items-center">
+                {filtroMotivos.map(f => (
+                  <button key={f.key} onClick={() => setMotivo(f.key)}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-medium border transition ${
+                      filtroKey === f.key
+                        ? "bg-[#2D3A8C] text-white border-[#2D3A8C]"
+                        : "bg-white nx-text border-[#E7E9EE] hover:border-[#2D3A8C]"
+                    }`}>
+                    {f.label} ({contagensMotivo[f.key] ?? 0})
+                  </button>
+                ))}
+
+                <div className="ml-auto flex items-center gap-3">
+                  <span className="text-[11px] nx-muted">
+                    Mostrando <span className="nx-text font-semibold">{agrupar ? filtradas.length : Math.min(visiveis, filtradas.length)}</span> de {aprovacoes.length}
+                    {filtroAtivo && filtradas.length !== aprovacoes.length && ` · ${filtradas.length} no filtro`}
+                  </span>
+                  {filtroAtivo && (
+                    <button
+                      onClick={() => { setQ(""); setRepFiltro("todos"); setFaixa("todos"); setMotivo("todas"); }}
+                      className="text-[11px] text-[#2D3A8C] hover:underline"
+                    >
+                      Limpar filtros
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
+            {/* Lista */}
             {filtradas.length === 0 ? (
               <div className="nx-card p-8 text-center">
                 <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                <p className="text-sm nx-muted">Nenhuma aprovação pendente neste filtro.</p>
+                <p className="text-sm nx-muted">
+                  {filtroAtivo ? "Nenhuma aprovação bate com os filtros atuais." : "Nenhuma aprovação pendente."}
+                </p>
               </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {filtradas.map(a => (
-                  <AprovacaoCard key={a.id} item={a} onDecidir={abrirDecisao} />
+            ) : agrupar ? (
+              <div className="space-y-3">
+                {grupos.map(([rid, grp]) => (
+                  <Collapsible key={rid} defaultOpen>
+                    <div className="nx-card">
+                      <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-[#F6F7F9] transition">
+                        <div className="flex items-center gap-2">
+                          <ChevronRight className="h-3.5 w-3.5 nx-muted transition-transform data-[state=open]:rotate-90" />
+                          <span className="text-sm font-semibold nx-text">{grp.nome}</span>
+                          <Badge variant="outline" className="text-[10px]">{grp.itens.length} pendências</Badge>
+                        </div>
+                        <span className="text-xs nx-muted">Subtotal <span className="nx-text font-semibold nx-num">{fmtBRL(grp.total)}</span></span>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="p-2 pt-0 space-y-2 border-t border-[#F1F3F8]">
+                          {grp.itens.map(a => (
+                            <AprovacaoCard key={a.id} item={a} onDecidir={abrirDecisao} removing={removendo.has(a.id)} />
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
                 ))}
               </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-2">
+                  {paginadas.map(a => (
+                    <AprovacaoCard key={a.id} item={a} onDecidir={abrirDecisao} removing={removendo.has(a.id)} />
+                  ))}
+                </div>
+                {visiveis < filtradas.length && (
+                  <div ref={sentinelRef} className="text-center py-4 text-[11px] nx-muted">
+                    Carregando mais... <button onClick={() => setVisiveis(v => Math.min(v + PAGE_SIZE, filtradas.length))} className="text-[#2D3A8C] hover:underline ml-2">ver mais</button>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
 
           <TabsContent value="historico" className="mt-4"><HistoricoTab /></TabsContent>
         </Tabs>
 
-        <DecisaoModal item={modal.item} decisao={modal.decisao} open={modal.open} onOpenChange={(b) => setModal(m => ({ ...m, open: b }))} />
+        <DecisaoModal
+          item={modal.item} decisao={modal.decisao} open={modal.open}
+          onOpenChange={(b) => setModal(m => ({ ...m, open: b }))}
+          onDecidido={onDecidido}
+        />
 
         <AlertDialog open={!!confirmacao} onOpenChange={(b) => !b && setConfirmacao(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Aprovar {fmtBRL(confirmacao?.item?.valor ?? 0)} fora da política?</AlertDialogTitle>
               <AlertDialogDescription>
-                Valor acima de R$ 20 mil exige confirmação. A decisão vai para o log de auditoria.
+                Valor acima de R$ 20 mil exige confirmação. A decisão vai para o log de auditoria e cria ação para o rep.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
