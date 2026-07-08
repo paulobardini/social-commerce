@@ -122,6 +122,7 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
   const location = useLocation();
   const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ Comercial: true, Gestão: true });
+  const badges = useBadgeCounts();
 
   const toggleSection = (title: string) => {
     setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -182,13 +183,14 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     const active = isPathActive(item.path, location.pathname);
+                    const badgeVal = item.badgeKey ? badges[item.badgeKey] : 0;
                     return (
                       <button
                         key={item.path + item.label}
                         onClick={() => navigate(item.path)}
                         title={collapsed ? item.label : undefined}
                         className={cn(
-                          "flex items-center rounded-lg text-[13px] font-medium transition-all duration-150",
+                          "relative flex items-center rounded-lg text-[13px] font-medium transition-all duration-150",
                           collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
                           active
                             ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -198,7 +200,18 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span className="truncate">{item.label}</span>}
+                        {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
+                        {badgeVal > 0 && (
+                          collapsed ? (
+                            <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                              {badgeVal > 9 ? "9+" : badgeVal}
+                            </span>
+                          ) : (
+                            <span className="h-4 min-w-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                              {badgeVal}
+                            </span>
+                          )
+                        )}
                       </button>
                     );
                   })}
