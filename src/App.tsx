@@ -60,6 +60,7 @@ import { AutomacoesProvider } from "@/contexts/AutomacoesContext";
 import { MetasProvider } from "@/contexts/MetasContext";
 import { MessageTemplatesProvider } from "@/contexts/MessageTemplatesContext";
 import { TarefasProvider } from "@/contexts/TarefasContext";
+import { PlanosProvider } from "@/contexts/PlanosContext";
 import { RemindersProvider } from "@/contexts/RemindersContext";
 import { StartAuthProvider } from "@/start/contexts/StartAuthContext";
 import { StartDataProvider } from "@/start/contexts/StartDataContext";
