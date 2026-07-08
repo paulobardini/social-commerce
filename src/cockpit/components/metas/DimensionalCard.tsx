@@ -1,8 +1,7 @@
 // DimensionalCard · card de acompanhamento de uma meta (geral ou dimensional).
 import type { MetaV2 } from "@/cockpit/data/metasV2";
-import { fmtBRL, fmtBRLc, fmtPct } from "@/cockpit/styles/tokens";
+import { fmtBRLc, fmtPct } from "@/cockpit/styles/tokens";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import type { VerditoMeta } from "@/cockpit/lib/metasCalc";
 
 const dimensaoLabel: Record<MetaV2["dimensao"], string> = {
