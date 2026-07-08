@@ -4,16 +4,21 @@ import {
   UserCog, MessageCircle, ClipboardList, CheckSquare, Calendar,
   Settings, Lightbulb, Tag, ChevronLeft, ChevronRight,
   FileText, ChevronDown, Sparkles, ShoppingCart, Radar, Brain, GitCompare, Truck, Layers, Headphones,
+  ShieldCheck,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useCockpit } from "@/cockpit/contexts/CockpitContext";
+import { usePlanos } from "@/contexts/PlanosContext";
+import { filaAprovacoes } from "@/cockpit/lib/decisoes";
 
 interface MenuItem {
   icon: any;
   label: string;
   path: string;
   highlight?: boolean;
+  badgeKey?: "aprovacoes" | "planos_escalados";
 }
 
 interface MenuSection {
@@ -50,13 +55,13 @@ const sections: MenuSection[] = [
     title: "Gestão",
     collapsible: true,
     items: [
-      { icon: BarChart3, label: "Gerencial", path: "/vendedor/dashboard-gerencial" },
+      { icon: BarChart3, label: "Painel Gestor", path: "/gestor/painel" },
+      { icon: ShieldCheck, label: "Aprovações", path: "/gestor/aprovacoes", badgeKey: "aprovacoes" },
+      { icon: UserCog, label: "Representantes", path: "/vendedor/representantes", badgeKey: "planos_escalados" },
       { icon: ShoppingCart, label: "Pedidos (Empresa)", path: "/vendedor/360/pedidos?escopo=empresa" },
       { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
-      { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
       { icon: Headphones, label: "Atendimento", path: "/vendedor/atendimento" },
       { icon: FileText, label: "Relatórios", path: "/vendedor/relatorios" },
-      { icon: Lightbulb, label: "Insights", path: "/vendedor/insights" },
       { icon: Tag, label: "Segmentações", path: "/vendedor/segmentacoes" },
     ],
   },
