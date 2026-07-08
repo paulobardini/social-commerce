@@ -141,6 +141,7 @@ const App = () => (
             <MetasProvider>
             <MessageTemplatesProvider>
             <TarefasProvider>
+            <PlanosProvider>
             <RemindersProvider>
             <PedidosProvider>
             <RecomendacoesProvider>
