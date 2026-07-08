@@ -395,12 +395,16 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
         tarefaId: t.id,
         contaId: t.clienteId,
         oportunidadeId: t.oportunidadeId,
-        cliente: t.clienteNome || "Cliente",
-        inicial: (t.clienteNome || "?").slice(0, 1).toUpperCase(),
+        cliente: t.clienteNome || (t.planoId ? "Plano do gestor" : "Cliente"),
+        inicial: (t.clienteNome || "G").slice(0, 1).toUpperCase(),
         motivo: `${t.titulo} · vencida há ${atraso}d`,
         metaLinha: t.oportunidadeNome ? `Oport.: ${t.oportunidadeNome}` : t.descricao,
-        chipUrgencia: { label: `Vencida ${atraso}d`, classe: "bg-rose-600 text-white" },
+        chipUrgencia: t.planoId
+          ? { label: `Solicitado pelo gestor · ${atraso}d`, classe: "bg-purple-700 text-white" }
+          : { label: `Vencida ${atraso}d`, classe: "bg-rose-600 text-white" },
         temOrcamento: !!t.oportunidadeId,
+        planoId: t.planoId,
+        solicitadoPor: t.solicitadoPor,
         ordem: 1000 + atraso,
       });
     });
