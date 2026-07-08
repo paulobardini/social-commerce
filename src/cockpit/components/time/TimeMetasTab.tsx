@@ -217,19 +217,19 @@ export function TimeMetasTab() {
     }).sort((a, b) => b.pct - a.pct);
   }, [reps, seed, metasPublicadas, mesKey]);
 
+  // Ritmo diário útil: corrige distorção do "mês incompleto vs mês fechado".
   const rankingEvol = useMemo(() => {
-    const inicioAtual = new Date(seed.hoje.getFullYear(), seed.hoje.getMonth(), 1);
-    const inicioAnterior = new Date(seed.hoje.getFullYear(), seed.hoje.getMonth() - 1, 1);
-    const fimAnterior = new Date(seed.hoje.getFullYear(), seed.hoje.getMonth(), 0);
+    const decorridos = Math.max(1, busDaysDecorridos(seed.hoje));
+    const totalUteis = Math.max(1, busDaysInMonth(seed.hoje));
+    const mesIncompleto = decorridos < totalUteis;
     return reps.map(r => {
-      const at = seed.pedidos.filter(p => p.repId === r.id && p.data >= inicioAtual).reduce((s, p) => s + p.valor, 0);
-      const an = seed.pedidos.filter(p => p.repId === r.id && p.data >= inicioAnterior && p.data <= fimAnterior).reduce((s, p) => s + p.valor, 0);
-      return { rep: r, delta: an > 0 ? ((at - an) / an) * 100 : 0, atual: at };
+      const ev = evolucaoRitmoDiario(seed, r.id);
+      return { rep: r, ...ev, mesIncompleto };
     }).sort((a, b) => b.delta - a.delta);
   }, [reps, seed]);
 
   const [drawerRep, setDrawerRep] = useState<Representante | null>(null);
-  const [wizardOpen, setWizardOpen] = useState(false);
+  const mesIncompleto = rankingEvol[0]?.mesIncompleto ?? false;
 
   return (
     <div className="space-y-4">
@@ -238,10 +238,8 @@ export function TimeMetasTab() {
           <h2 className="text-sm font-semibold nx-text">Time · {reps.length} representantes</h2>
           <p className="text-[11px] nx-muted">Colorido por desvio vs. alvo (pace/cobertura) ou média (pipeline/positivação).</p>
         </div>
-        <Button onClick={() => setWizardOpen(true)} className="bg-[#2D3A8C] hover:bg-[#243078]">
-          <Target className="h-4 w-4 mr-1.5" /> Gestão de metas
-        </Button>
       </div>
+
 
       <SectionCard title="Tabela por desvio" subtitle="Ordenado do pior pace primeiro">
         <div className="overflow-x-auto">
