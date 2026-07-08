@@ -4,16 +4,21 @@ import {
   UserCog, MessageCircle, ClipboardList, CheckSquare, Calendar,
   Settings, Lightbulb, Tag, ChevronLeft, ChevronRight,
   FileText, ChevronDown, Sparkles, ShoppingCart, Radar, Brain, GitCompare, Truck, Layers, Headphones,
+  ShieldCheck,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useCockpit } from "@/cockpit/contexts/CockpitContext";
+import { usePlanos } from "@/contexts/PlanosContext";
+import { filaAprovacoes } from "@/cockpit/lib/decisoes";
 
 interface MenuItem {
   icon: any;
   label: string;
   path: string;
   highlight?: boolean;
+  badgeKey?: "aprovacoes" | "planos_escalados";
 }
 
 interface MenuSection {
@@ -50,13 +55,13 @@ const sections: MenuSection[] = [
     title: "Gestão",
     collapsible: true,
     items: [
-      { icon: BarChart3, label: "Gerencial", path: "/vendedor/dashboard-gerencial" },
+      { icon: BarChart3, label: "Painel Gestor", path: "/gestor/painel" },
+      { icon: ShieldCheck, label: "Aprovações", path: "/gestor/aprovacoes", badgeKey: "aprovacoes" },
+      { icon: UserCog, label: "Representantes", path: "/vendedor/representantes", badgeKey: "planos_escalados" },
       { icon: ShoppingCart, label: "Pedidos (Empresa)", path: "/vendedor/360/pedidos?escopo=empresa" },
       { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
-      { icon: UserCog, label: "Representantes", path: "/vendedor/representantes" },
       { icon: Headphones, label: "Atendimento", path: "/vendedor/atendimento" },
       { icon: FileText, label: "Relatórios", path: "/vendedor/relatorios" },
-      { icon: Lightbulb, label: "Insights", path: "/vendedor/insights" },
       { icon: Tag, label: "Segmentações", path: "/vendedor/segmentacoes" },
     ],
   },
@@ -95,13 +100,29 @@ function isPathActive(path: string, currentPath: string): boolean {
   if (path === "/vendedor/representantes") return currentPath.startsWith("/vendedor/representantes");
   if (path === "/vendedor/whatsapp") return currentPath.startsWith("/vendedor/whatsapp");
   if (path === "/vendedor/relatorios") return currentPath.startsWith("/vendedor/relatorios");
+  if (path === "/gestor/painel") return currentPath.startsWith("/gestor/painel") || currentPath.startsWith("/vendedor/dashboard-gerencial");
+  if (path === "/gestor/aprovacoes") return currentPath.startsWith("/gestor/aprovacoes");
   return currentPath === path || currentPath.startsWith(path + "/");
+}
+
+function useBadgeCounts() {
+  try {
+    const { seed, escopo } = useCockpit();
+    const { planos } = usePlanos();
+    return {
+      aprovacoes: filaAprovacoes(seed, escopo).length,
+      planos_escalados: planos.filter(p => p.status === "escalado").length,
+    };
+  } catch {
+    return { aprovacoes: 0, planos_escalados: 0 };
+  }
 }
 
 export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ Comercial: true, Gestão: true });
+  const badges = useBadgeCounts();
 
   const toggleSection = (title: string) => {
     setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -162,13 +183,14 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     const active = isPathActive(item.path, location.pathname);
+                    const badgeVal = item.badgeKey ? badges[item.badgeKey] : 0;
                     return (
                       <button
                         key={item.path + item.label}
                         onClick={() => navigate(item.path)}
                         title={collapsed ? item.label : undefined}
                         className={cn(
-                          "flex items-center rounded-lg text-[13px] font-medium transition-all duration-150",
+                          "relative flex items-center rounded-lg text-[13px] font-medium transition-all duration-150",
                           collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
                           active
                             ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -178,7 +200,18 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span className="truncate">{item.label}</span>}
+                        {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
+                        {badgeVal > 0 && (
+                          collapsed ? (
+                            <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                              {badgeVal > 9 ? "9+" : badgeVal}
+                            </span>
+                          ) : (
+                            <span className="h-4 min-w-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                              {badgeVal}
+                            </span>
+                          )
+                        )}
                       </button>
                     );
                   })}

@@ -1,15 +1,18 @@
-// Atendimento: KPIs de execução + tickets por setor.
-import { useMemo } from "react";
+// Atendimento: Insights → KPIs → Gráficos. Sem cards individuais de rep (vão em Representantes).
+import { useMemo, useState } from "react";
 import { useCockpit } from "../../contexts/CockpitContext";
 import { kpisAtendimento } from "../../lib/kpis";
 import { funilOportunidades, motivosPerda } from "../../lib/funis";
-import { fmtBRLc, fmtNum, fmtPct, fmtDias, NX, CHART_PALETTE, STATUS_COLORS } from "../../styles/tokens";
+import { fmtBRLc, fmtNum, fmtPct, fmtDias, NX, STATUS_COLORS } from "../../styles/tokens";
 import { repIdsNoEscopo } from "../../lib/escopo";
 import { SectionCard } from "../SectionCard";
 import { KpiCard } from "../KpiCard";
 import { FunnelChart } from "../FunnelChart";
-import { Activity, Target, DollarSign, MessageCircle, AlertCircle } from "lucide-react";
-import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
+import { InsightsStrip } from "../InsightsStrip";
+import { insightsAtendimento } from "../../lib/insights";
+import { NegociosParadosDrawer } from "./NegociosParadosDrawer";
+import { Activity, Target, DollarSign, AlertCircle } from "lucide-react";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +30,9 @@ function agingDays(s: string) {
 export function AtendimentoTab() {
   const { seed, escopo, range, previousRange, comparar } = useCockpit();
   const navigate = useNavigate();
+  const [negociosOpen, setNegociosOpen] = useState(false);
+
+  const insights = useMemo(() => insightsAtendimento(seed, escopo, range), [seed, escopo, range]);
 
   const repIds = useMemo(() => repIdsNoEscopo(seed, escopo), [seed, escopo]);
   const kpiA = useMemo(() => kpisAtendimento(seed, range, previousRange, { diasAtivo: 60, diasPerdido: 180, repId: "todos" }), [seed, range, previousRange]);
@@ -61,6 +67,12 @@ export function AtendimentoTab() {
 
   return (
     <div className="space-y-4">
+      <InsightsStrip
+        pilar="Atendimento"
+        insights={insights}
+        onOpenDrawer={(k) => { if (k === "negocios_parados") setNegociosOpen(true); }}
+      />
+
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
         <KpiCard label="Cobertura" value={fmtPct(kpiA.cobertura.atual)} delta={showDelta(kpiA.cobertura.delta) ? { pct: kpiA.cobertura.delta } : undefined} icon={<Activity className="h-3.5 w-3.5" />} tooltip="% da carteira que recebeu ao menos 1 atendimento no período." />
         <KpiCard label="Atendimentos" value={fmtNum(kpiA.nAtendimentos.atual)} delta={showDelta(kpiA.nAtendimentos.delta) ? { pct: kpiA.nAtendimentos.delta } : undefined} tooltip="Visitas, ligações e conversas de WhatsApp registradas no período." />
@@ -78,12 +90,12 @@ export function AtendimentoTab() {
           {motivos.length === 0
             ? <p className="text-xs nx-muted py-8 text-center">Sem oportunidades perdidas neste escopo</p>
             : <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie data={motivos.map(m => ({ nome: m.motivo, valor: m.qtd }))} dataKey="valor" nameKey="nome" outerRadius={80} label={{ fontSize: 10 }}>
-                    {motivos.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
-                </PieChart>
+                <BarChart data={motivos.map(m => ({ motivo: m.motivo, qtd: m.qtd }))} layout="vertical" margin={{ left: 10, right: 20 }}>
+                  <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+                  <YAxis type="category" dataKey="motivo" tick={{ fontSize: 11 }} width={130} />
+                  <Tooltip formatter={(v: number) => `${v} oportunidade(s)`} contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }} />
+                  <Bar dataKey="qtd" fill={NX.primary} radius={[0, 4, 4, 0]} />
+                </BarChart>
               </ResponsiveContainer>
           }
         </SectionCard>
@@ -134,6 +146,8 @@ export function AtendimentoTab() {
           ))}
         </div>
       </SectionCard>
+
+      <NegociosParadosDrawer open={negociosOpen} onOpenChange={setNegociosOpen} />
     </div>
   );
 }

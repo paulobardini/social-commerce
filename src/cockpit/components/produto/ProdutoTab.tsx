@@ -10,6 +10,8 @@ import { SectionCard } from "../SectionCard";
 import { KpiCard } from "../KpiCard";
 import { AbcCurve } from "../AbcCurve";
 import { MarcaNichoHeatmap } from "./MarcaNichoHeatmap";
+import { InsightsStrip } from "../InsightsStrip";
+import { insightsProduto } from "../../lib/insights";
 import type { Nicho } from "../../data/seed";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell,
@@ -116,6 +118,8 @@ export function ProdutoTab() {
   const { seed, escopo, range, previousRange, comparar, diasAtivo, diasPerdido } = useCockpit();
   const repIds = useMemo(() => repIdsNoEscopo(seed, escopo), [seed, escopo]);
 
+  const insights = useMemo(() => insightsProduto(seed, escopo, range, previousRange), [seed, escopo, range, previousRange]);
+
   const kpiP = useMemo(() => kpisProduto(seed, range, previousRange, { diasAtivo: 60, diasPerdido: 180, repId: "todos" }), [seed, range, previousRange]);
   const noEscopoPedidos = useMemo(() => kpiP.pedidosPeriodo.filter(p => repIds.has(p.repId)), [kpiP, repIds]);
 
@@ -201,6 +205,8 @@ export function ProdutoTab() {
 
   return (
     <div className="space-y-4">
+      <InsightsStrip pilar="Produto" insights={insights} />
+
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-3">
         <KpiCard label="Faturamento" value={fmtBRLc(kpiP.faturamento.atual)} delta={showDelta(kpiP.faturamento.delta) ? { pct: kpiP.faturamento.delta } : undefined} icon={<DollarSign className="h-3.5 w-3.5" />} tooltip="Soma dos pedidos fechados no período." />
         <KpiCard label="Marcas com venda" value={fmtNum(kpiP.marcasAtivas.atual)} delta={showDelta(kpiP.marcasAtivas.delta) ? { pct: kpiP.marcasAtivas.delta } : undefined} icon={<Layers className="h-3.5 w-3.5" />} tooltip="Quantas marcas tiveram ao menos 1 pedido no período." />
@@ -209,7 +215,7 @@ export function ProdutoTab() {
         <KpiCard label="Peças por pedido" value={kpiP.itensPorPedido.atual.toFixed(1).replace(".", ",")} delta={showDelta(kpiP.itensPorPedido.delta) ? { pct: kpiP.itensPorPedido.delta } : undefined} icon={<Package className="h-3.5 w-3.5" />} tooltip="Média de peças (itens) por pedido no período." />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="faturamento-marca" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="Faturamento por marca">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={faturPorMarca} layout="vertical">
@@ -243,9 +249,11 @@ export function ProdutoTab() {
         />
       </SectionCard>
 
-      <SectionCard title="Concentração de receita por produto" subtitle="Poucos produtos concentram a maior parte do faturamento — a linha mostra o acumulado (%)">
-        <AbcCurve data={abcProduto} labelKey={(t: { id: string }) => t.id.toUpperCase()} />
-      </SectionCard>
+      <div id="concentracao-produto">
+        <SectionCard title="Concentração de receita por produto" subtitle="Poucos produtos concentram a maior parte do faturamento — a linha mostra o acumulado (%)">
+          <AbcCurve data={abcProduto} labelKey={(t: { id: string }) => t.id.toUpperCase()} />
+        </SectionCard>
+      </div>
 
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -271,7 +279,7 @@ export function ProdutoTab() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Marcas sem giro por representante" subtitle="Criar campanha de push envia ações sugeridas idempotentes para a fila dos reps">
+      <div id="marcas-sem-giro"><SectionCard title="Marcas sem giro por representante" subtitle="Criar campanha de push envia ações sugeridas idempotentes para a fila dos reps">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE]">
@@ -316,9 +324,9 @@ export function ProdutoTab() {
             </tbody>
           </table>
         </div>
-      </SectionCard>
+      </SectionCard></div>
 
-      <SectionCard title="Cross-sell · Expansão de marcas" subtitle="Clientes com apenas 1 marca comprada — candidatos a expansão">
+      <div id="cross-sell"><SectionCard title="Cross-sell · Expansão de marcas" subtitle="Clientes com apenas 1 marca comprada — candidatos a expansão">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="text-[10px] uppercase nx-muted border-b border-[#E7E9EE]">
@@ -366,7 +374,7 @@ export function ProdutoTab() {
             </tbody>
           </table>
         </div>
-      </SectionCard>
+      </SectionCard></div>
 
       {pushModalMarca && (
         <CampanhaPushModal

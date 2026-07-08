@@ -46,6 +46,7 @@ import RedistribuicaoPage from "./pages/vendedor/RedistribuicaoPage";
 import SegmentacoesPage from "./pages/vendedor/SegmentacoesPage";
 import FunilClientesConfigPage from "./pages/vendedor/FunilClientesConfigPage";
 import DashboardGerencial from "./pages/vendedor/DashboardGerencial";
+import GestorAprovacoes from "./pages/vendedor/GestorAprovacoes";
 import RelatoriosCentral from "./pages/vendedor/RelatoriosCentral";
 import ReportBuilder from "./pages/vendedor/ReportBuilder";
 import RelatorioViewer from "./pages/vendedor/RelatorioViewer";
@@ -202,12 +203,15 @@ const App = () => (
                 <Route path="/vendedor/representantes" element={<LayoutRoute><RepresentantesPage /></LayoutRoute>} />
                 <Route path="/vendedor/representantes/:id" element={<LayoutRoute><RepresentanteDetalhePage /></LayoutRoute>} />
                 <Route path="/vendedor/segmentacoes" element={<LayoutRoute><SegmentacoesPage /></LayoutRoute>} />
-                <Route path="/vendedor/dashboard-gerencial" element={<LayoutRoute><DashboardGerencial /></LayoutRoute>} />
+                <Route path="/vendedor/dashboard-gerencial" element={<Navigate to="/gestor/painel" replace />} />
+                <Route path="/gestor/painel" element={<LayoutRoute><DashboardGerencial /></LayoutRoute>} />
+                <Route path="/gestor/aprovacoes" element={<LayoutRoute><GestorAprovacoes /></LayoutRoute>} />
                 <Route path="/vendedor/relatorios" element={<LayoutRoute><RelatoriosCentral /></LayoutRoute>} />
                 <Route path="/vendedor/relatorios/novo" element={<LayoutRoute><ReportBuilder /></LayoutRoute>} />
                 <Route path="/vendedor/relatorios/:id" element={<LayoutRoute><RelatorioViewer /></LayoutRoute>} />
-                <Route path="/vendedor/insights" element={<Navigate to="/vendedor/dashboard-gerencial?tab=decisoes" replace />} />
+                <Route path="/vendedor/insights" element={<Navigate to="/gestor/aprovacoes" replace />} />
                 <Route path="/vendedor/visoes-salvas" element={<LayoutRoute><VisoesSalvasPage /></LayoutRoute>} />
+
 
                 {/* Nextil Inteligência de Mercado */}
                 <Route path="/inteligencia-mercado" element={<LayoutRoute><VisaoGeralIM /></LayoutRoute>} />
