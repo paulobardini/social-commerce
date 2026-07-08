@@ -17,6 +17,9 @@ import { Waterfall } from "../Waterfall";
 import { MapaCarteira, type FaixaValor, type SituacaoCol } from "./MapaCarteira";
 import { TopClientesRank } from "./TopClientesRank";
 import { FluxoCarteira } from "./FluxoCarteira";
+import { ClientesRiscoDrawer } from "./ClientesRiscoDrawer";
+import { InsightsStrip } from "../InsightsStrip";
+import { insightsCarteira } from "../../lib/insights";
 import { Users, RefreshCw } from "lucide-react";
 import { kpisCarteira } from "../../lib/kpis";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -63,6 +66,12 @@ function ListaClientesDrawer({ st, onClose }: { st: DrawerState | null; onClose:
 export function CarteiraTab() {
   const { seed, escopo, range, previousRange, diasAtivo, diasPerdido, comparar } = useCockpit();
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
+  const [riscoOpen, setRiscoOpen] = useState(false);
+
+  const insights = useMemo(
+    () => insightsCarteira(seed, escopo, range, diasAtivo, diasPerdido),
+    [seed, escopo, range, diasAtivo, diasPerdido],
+  );
 
   const repsIds = useMemo(() => repIdsNoEscopo(seed, escopo), [seed, escopo]);
   const contas = useMemo(() => seed.contas.filter(c => repsIds.has(c.repId)), [seed, repsIds]);
@@ -82,6 +91,12 @@ export function CarteiraTab() {
   return (
     <div className="space-y-4">
       <SaudeCarteiraBar />
+
+      <InsightsStrip
+        pilar="Carteira"
+        insights={insights}
+        onOpenDrawer={(k) => { if (k === "clientes_risco") setRiscoOpen(true); }}
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
         <KpiCard label="Total de clientes" value={fmtNum(kpiC.totalClientes.atual)}
@@ -139,18 +154,20 @@ export function CarteiraTab() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Mapa da carteira" subtitle="Onde está o valor e como ele está escorregando">
-        <MapaCarteira
-          classificadas={classificadas}
-          diasAtivo={diasAtivo}
-          diasPerdido={diasPerdido}
-          onCellClick={(faixa: FaixaValor, sit: SituacaoCol, arr) =>
-            setDrawer({ titulo: `Clientes ${faixa.toLowerCase()} · ${sit}`, contas: arr })
-          }
-        />
-      </SectionCard>
+      <div id="mapa-carteira">
+        <SectionCard title="Mapa da carteira" subtitle="Onde está o valor e como ele está escorregando">
+          <MapaCarteira
+            classificadas={classificadas}
+            diasAtivo={diasAtivo}
+            diasPerdido={diasPerdido}
+            onCellClick={(faixa: FaixaValor, sit: SituacaoCol, arr) =>
+              setDrawer({ titulo: `Clientes ${faixa.toLowerCase()} · ${sit}`, contas: arr })
+            }
+          />
+        </SectionCard>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="movimentacao" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="Movimentação da carteira" subtitle="Novos + recuperados − sem comprar há muito">
           <Waterfall data={waterfall} />
         </SectionCard>
@@ -160,6 +177,7 @@ export function CarteiraTab() {
       </div>
 
       <ListaClientesDrawer st={drawer} onClose={() => setDrawer(null)} />
+      <ClientesRiscoDrawer open={riscoOpen} onOpenChange={setRiscoOpen} />
     </div>
   );
 }
