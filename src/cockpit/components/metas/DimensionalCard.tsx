@@ -54,7 +54,9 @@ export function DimensionalCard({ meta, realizado, veredito, breakdownReps }: Pr
       </div>
 
       <div className="space-y-1">
-        <Progress value={Math.min(100, pctReal)} className="h-2" indicatorClassName={barClass} />
+        <div className="h-2 rounded-full bg-[#F1F3F8] overflow-hidden">
+          <div className={`h-full ${barClass}`} style={{ width: `${Math.min(100, pctReal)}%` }} />
+        </div>
         <div className="flex items-center justify-between text-[11px]">
           <span className="nx-muted">Realizado {fmtPct(pctReal, 0)}</span>
           <span className={`font-medium ${veredito.cor === "emerald" ? "text-emerald-700" : veredito.cor === "amber" ? "text-amber-700" : "text-rose-700"}`}>
