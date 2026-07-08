@@ -61,8 +61,8 @@ export default function CarteiraPage() {
   const inativos = clientes.filter(c => c.status === "inativo").length;
   const novos = clientes.filter(c => c.status === "novo").length;
 
-  // "Sem comprar há muito" = inativo + perdido (definição de método)
-  const semComprarHaMuito = clientes.filter(c => c.status === "inativo" || c.status === "perdido").length;
+  // "Sem comprar há muito" = inativo (não há "perdido" no schema de clientes 360)
+  const semComprarHaMuito = clientes.filter(c => c.status === "inativo").length;
   const comOportunidade = clientes.filter(c => c.oportunidadesAbertas > 0).length;
   const semOportunidade = clientes.filter(c => c.oportunidadesAbertas === 0).length;
   const pctAtivos = clientes.length > 0 ? Math.round((ativos / clientes.length) * 100) : 0;
