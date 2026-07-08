@@ -100,7 +100,22 @@ function isPathActive(path: string, currentPath: string): boolean {
   if (path === "/vendedor/representantes") return currentPath.startsWith("/vendedor/representantes");
   if (path === "/vendedor/whatsapp") return currentPath.startsWith("/vendedor/whatsapp");
   if (path === "/vendedor/relatorios") return currentPath.startsWith("/vendedor/relatorios");
+  if (path === "/gestor/painel") return currentPath.startsWith("/gestor/painel") || currentPath.startsWith("/vendedor/dashboard-gerencial");
+  if (path === "/gestor/aprovacoes") return currentPath.startsWith("/gestor/aprovacoes");
   return currentPath === path || currentPath.startsWith(path + "/");
+}
+
+function useBadgeCounts() {
+  try {
+    const { seed, escopo } = useCockpit();
+    const { planos } = usePlanos();
+    return {
+      aprovacoes: filaAprovacoes(seed, escopo).length,
+      planos_escalados: planos.filter(p => p.status === "escalado").length,
+    };
+  } catch {
+    return { aprovacoes: 0, planos_escalados: 0 };
+  }
 }
 
 export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
