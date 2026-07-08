@@ -62,73 +62,74 @@ function AprovacaoCard({ item, onDecidir }: { item: AprovacaoItem; onDecidir: (a
   };
 
   return (
-    <div className={`nx-card p-3 ${borda}`}>
-      <div className="flex items-start justify-between gap-3 mb-2">
+    <div className={`nx-card px-3 py-2.5 ${borda}`}>
+      <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <Badge className={`text-[10px] border ${motivoAprovacaoBadge[item.motivo]}`} variant="outline">
               {motivoAprovacaoLabel[item.motivo]}
             </Badge>
+            <span className="text-[11px] nx-muted font-mono">{item.id}</span>
             <span className={`text-[11px] ${item.abertoDias > 4 ? "text-rose-600 font-semibold" : item.abertoDias > 2 ? "text-amber-700 font-medium" : "nx-muted"}`}>
               há {item.abertoDias}d
             </span>
+            <span className="nx-num font-semibold nx-text text-sm ml-auto md:ml-2">{fmtBRL(item.valor)}</span>
           </div>
-          <p className="text-sm font-semibold nx-text mt-1">{item.detalhe}</p>
-          <p className="text-[11px] nx-muted mt-0.5">
-            {item.clienteNome} · {item.repNome} · <span className="nx-num font-medium nx-text">{fmtBRL(item.valor)}</span>
-          </p>
+          <p className="text-sm nx-text mt-1 truncate">{item.detalhe}</p>
+          <p className="text-[11px] nx-muted mt-0.5 truncate">{item.clienteNome} · {item.repNome}</p>
         </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-1.5">
-        {item.motivo === "fora_da_politica" && (
-          <>
-            <Button size="sm" className="h-8 md:h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700" onClick={() => onDecidir(item, "aprovado")}>
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar
-            </Button>
-            <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "devolvido")}>
-              <RotateCcw className="h-3 w-3 mr-1" /> Devolver com ajuste
-            </Button>
-            <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "reprovado")}>
-              <XCircle className="h-3 w-3 mr-1" /> Reprovar
-            </Button>
-          </>
-        )}
-        {item.motivo === "credito_cliente_novo" && (
-          <>
-            <Button size="sm" className="h-8 md:h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700" onClick={() => onDecidir(item, "aprovado")}>
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar crédito
-            </Button>
-            <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "solicitar_docs")}>
-              <FileText className="h-3 w-3 mr-1" /> Solicitar docs
-            </Button>
-            <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "reprovado")}>
-              <XCircle className="h-3 w-3 mr-1" /> Reprovar
-            </Button>
-          </>
-        )}
-        {item.motivo === "aguardando_estoque" && (
-          <>
-            <Button size="sm" className="h-8 md:h-7 text-[11px] bg-violet-600 hover:bg-violet-700" onClick={handleNotificarEstoque}>
-              <Bell className="h-3 w-3 mr-1" /> Notificar quando disponível
-            </Button>
-            <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => toast.info("Buscando produtos alternativos...")}>
-              Ver alternativas
-            </Button>
-            <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "cancelado")}>
-              Cancelar orçamento
-            </Button>
-          </>
-        )}
-        <button
-          className="text-[11px] text-[#2D3A8C] hover:underline ml-auto"
-          onClick={() => navigate(`/vendedor/orcamento-viewer?id=${item.id}`)}
-        >
-          Ver orçamento →
-        </button>
+        <div className="flex flex-wrap items-center gap-1.5 md:justify-end md:shrink-0">
+          {item.motivo === "fora_da_politica" && (
+            <>
+              <Button size="sm" className="h-8 md:h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700" onClick={() => onDecidir(item, "aprovado")}>
+                <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "devolvido")}>
+                <RotateCcw className="h-3 w-3 mr-1" /> Devolver
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "reprovado")}>
+                <XCircle className="h-3 w-3 mr-1" /> Reprovar
+              </Button>
+            </>
+          )}
+          {item.motivo === "credito_cliente_novo" && (
+            <>
+              <Button size="sm" className="h-8 md:h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700" onClick={() => onDecidir(item, "aprovado")}>
+                <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar crédito
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "solicitar_docs")}>
+                <FileText className="h-3 w-3 mr-1" /> Solicitar docs
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "reprovado")}>
+                <XCircle className="h-3 w-3 mr-1" /> Reprovar
+              </Button>
+            </>
+          )}
+          {item.motivo === "aguardando_estoque" && (
+            <>
+              <Button size="sm" className="h-8 md:h-7 text-[11px] bg-violet-600 hover:bg-violet-700" onClick={handleNotificarEstoque}>
+                <Bell className="h-3 w-3 mr-1" /> Notificar
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => toast.info("Buscando produtos alternativos...")}>
+                Alternativas
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]" onClick={() => onDecidir(item, "cancelado")}>
+                Cancelar
+              </Button>
+            </>
+          )}
+          <button
+            className="text-[11px] text-[#2D3A8C] hover:underline px-2"
+            onClick={() => navigate(`/vendedor/orcamento-viewer?id=${item.id}`)}
+          >
+            Ver →
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
 
 function DecisaoModal({ item, decisao, open, onOpenChange }: {
   item: AprovacaoItem | null; decisao: DecisaoTipo; open: boolean; onOpenChange: (b: boolean) => void;
@@ -360,7 +361,7 @@ export default function GestorAprovacoes() {
                 <p className="text-sm nx-muted">Nenhuma aprovação pendente neste filtro.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-2">
                 {filtradas.map(a => (
                   <AprovacaoCard key={a.id} item={a} onDecidir={abrirDecisao} />
                 ))}

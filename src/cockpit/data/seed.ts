@@ -222,7 +222,7 @@ export function buildSeed(): Seed {
     }
   }
 
-  // ORÇAMENTOS PENDENTES DE APROVAÇÃO — cobrindo os 3 motivos
+  // ORÇAMENTOS PENDENTES DE APROVAÇÃO — cobrindo os 3 motivos (fila realista ~50)
   const orcamentosPendentes: OrcamentoPendente[] = [
     { id: "orc-091", contaId: contas[3].id,  repId: "r1", valor: 14200, desconto: 35, minimoAtingido: false, abertoDias: 2, motivo: "fora_da_politica",     detalhe: "Desconto 35% sem mínimo atingido" },
     { id: "orc-104", contaId: contas[7].id,  repId: "r2", valor:  8900, desconto: 22, minimoAtingido: true,  abertoDias: 1, motivo: "fora_da_politica",     detalhe: "Desconto acima do teto (22%>18%)" },
@@ -232,6 +232,54 @@ export function buildSeed(): Seed {
     { id: "orc-133", contaId: contas[52].id, repId: "r3", valor: 21800, desconto:  0, minimoAtingido: true,  abertoDias: 3, motivo: "aguardando_estoque",   detalhe: "Grade 04-14 sem estoque · ETA marca 12/05" },
     { id: "orc-137", contaId: contas[68].id, repId: "r2", valor:  9250, desconto:  5, minimoAtingido: true,  abertoDias: 5, motivo: "aguardando_estoque",   detalhe: "Referência LZ-4412 sem previsão" },
   ];
+
+  // Gera fila adicional para simular volume de análise comercial (~43 itens extras)
+  const motivosPool: { motivo: OrcamentoPendente["motivo"]; detalhes: string[] }[] = [
+    { motivo: "fora_da_politica", detalhes: [
+      "Desconto acima do teto para categoria básicos",
+      "Bonificação fora do padrão trimestral",
+      "Prazo 45/75/105 sem aprovação de crédito",
+      "Frete CIF fora da política para região",
+      "Mix abaixo do mínimo com desconto pleno",
+      "Desconto cumulativo com campanha ativa",
+      "Preço fora do tabelado — cliente barganhou",
+    ]},
+    { motivo: "credito_cliente_novo", detalhes: [
+      "Cliente sem histórico — falta CNPJ ativo há 12m",
+      "Primeiro pedido — comprovante de endereço pendente",
+      "Análise Serasa em andamento",
+      "Cliente reativado após 24m — revisar limite",
+      "Sócio com restrição — aguardando esclarecimento",
+      "Loja física ainda não vistoriada",
+    ]},
+    { motivo: "aguardando_estoque", detalhes: [
+      "Referência sem estoque — ETA 15 dias",
+      "Grade incompleta (P e M zeradas)",
+      "Coleção anterior — sem reposição prevista",
+      "Cor específica sem previsão da fábrica",
+      "Item promocional esgotado — sugerir alternativa",
+    ]},
+  ];
+  let seqId = 138;
+  for (let i = 0; i < 43; i++) {
+    const bloco = pick(motivosPool);
+    const conta = pick(contas);
+    const rep = pick(REPS);
+    const isPolitica = bloco.motivo === "fora_da_politica";
+    const isEstoque = bloco.motivo === "aguardando_estoque";
+    orcamentosPendentes.push({
+      id: `orc-${seqId++}`,
+      contaId: conta.id,
+      repId: rep.id,
+      valor: isPolitica ? rand(5000, 45000) : isEstoque ? rand(8000, 30000) : rand(4000, 22000),
+      desconto: isPolitica ? rand(18, 38) : rand(0, 15),
+      minimoAtingido: Math.random() > 0.35,
+      abertoDias: rand(1, 6),
+      motivo: bloco.motivo,
+      detalhe: pick(bloco.detalhes),
+    });
+  }
+
 
   _cache = { representantes: REPS, marcas: MARCAS, contas, pedidos, atendimentos, oportunidades, metas, orcamentosPendentes, hoje };
   return _cache;
