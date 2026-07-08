@@ -340,14 +340,18 @@ export function DecisoesTab() {
                     </div>
                     <AlertTriangle className={`h-4 w-4 shrink-0 ${severidade === "critico" ? "text-rose-500" : "text-amber-500"}`} />
                   </div>
-                  <div className="flex gap-1.5 mt-2">
+                  <div className="flex flex-wrap gap-1.5 mt-2">
                     <Button size="sm" variant="outline" className="h-7 text-[11px]"
-                      onClick={() => window.open(`https://wa.me/`, "_blank")}>
+                      onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${rep.nome.split(" ")[0]}, vi que o pace está em ${rep.pace}%. Vamos alinhar?`)}`, "_blank")}>
                       <MessageCircle className="h-3 w-3 mr-1" /> WhatsApp
                     </Button>
                     <Button size="sm" variant="outline" className="h-7 text-[11px]"
                       onClick={() => navigate(`/vendedor/representantes/${rep.id}`)}>
                       <Users className="h-3 w-3 mr-1" /> Ver carteira
+                    </Button>
+                    <Button size="sm" className="h-7 text-[11px] bg-[#2D3A8C] hover:bg-[#243078]"
+                      onClick={() => abrirPlanoRitmo(rep.id, rep.nome, rep.pace, rep.coberturaDelta)}>
+                      Solicitar plano de recuperação
                     </Button>
                   </div>
                 </div>
