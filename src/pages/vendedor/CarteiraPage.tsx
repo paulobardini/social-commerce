@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { mockClientes360, nichoLabels, type Nicho, type StatusCliente } from "@/data/mockCRM360";
+import { mockClientes360, nichoLabels, type Nicho, type ClienteStatus } from "@/data/mockCRM360";
 import { mockRepresentantes } from "@/data/mockRepresentantes";
 import { Sparkline } from "@/components/vendedor/Sparkline";
 import { toast } from "sonner";
