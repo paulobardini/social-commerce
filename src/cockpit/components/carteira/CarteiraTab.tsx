@@ -149,7 +149,7 @@ export function CarteiraTab() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Clientes que sustentam a receita" subtitle="Top 20 clientes pelos últimos 12 meses">
+        <SectionCard title="Clientes que sustentam a receita" subtitle="Top 10 clientes pelos últimos 12 meses">
           <TopClientesRank classificadas={classificadas} representantes={seed.representantes} />
         </SectionCard>
       </div>
