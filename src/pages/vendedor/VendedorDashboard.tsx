@@ -283,6 +283,8 @@ interface ItemUnificado {
   saudeBadge?: { label: string; classe: string };
   chipUrgencia?: { label: string; classe: string };
   temOrcamento?: boolean;
+  planoId?: string;
+  solicitadoPor?: string;
   ordem: number;
 }
 
