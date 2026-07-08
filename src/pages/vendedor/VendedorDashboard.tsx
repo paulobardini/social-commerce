@@ -30,6 +30,8 @@ import { AlertTriangle, Flame, MessageCircle, ChevronDown, ChevronRight, Phone, 
 import { toast } from "sonner";
 import { useVendedorPerfil, podeRedistribuir } from "@/hooks/useVendedorPerfil";
 import { useTarefas, type TarefaExt } from "@/contexts/TarefasContext";
+import { ResponderPlanoModal } from "@/components/vendedor/ResponderPlanoModal";
+import { usePlanos } from "@/contexts/PlanosContext";
 import type { Oportunidade } from "@/cockpit/data/seed";
 
 // ============ HELPERS ============
