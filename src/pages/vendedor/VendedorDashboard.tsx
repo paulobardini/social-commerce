@@ -360,18 +360,21 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
       .forEach((t, idx) => {
         lista.push({
           key: `tar-${t.id}`,
-          grupo: "agendado",
+          grupo: t.planoId ? "urgente" : "agendado",
           origem: "tarefa",
           tarefaId: t.id,
           contaId: t.clienteId,
           oportunidadeId: t.oportunidadeId,
-          cliente: t.clienteNome || "Cliente",
-          inicial: (t.clienteNome || "?").slice(0, 1).toUpperCase(),
+          cliente: t.clienteNome || (t.planoId ? "Plano do gestor" : "Cliente"),
+          inicial: (t.clienteNome || "G").slice(0, 1).toUpperCase(),
           motivo: `${t.titulo}${t.hora ? ` · ${t.hora}` : ""}`,
           hora: t.hora,
           metaLinha: t.oportunidadeNome ? `Oport.: ${t.oportunidadeNome}` : t.descricao,
           temOrcamento: !!t.oportunidadeId,
-          ordem: idx,
+          planoId: t.planoId,
+          solicitadoPor: t.solicitadoPor,
+          chipUrgencia: t.planoId ? { label: "Solicitado pelo gestor", classe: "bg-purple-600 text-white" } : undefined,
+          ordem: t.planoId ? -1 : idx,
         });
       });
 
