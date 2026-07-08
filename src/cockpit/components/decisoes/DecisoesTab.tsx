@@ -237,7 +237,8 @@ function addDays(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDat
 export function DecisoesTab() {
   const { seed, escopo, range, previousRange, diasAtivo, diasPerdido } = useCockpit();
   const navigate = useNavigate();
-  const { addTarefa } = useTarefas();
+
+
 
   const [modalItem, setModalItem] = useState<AprovacaoItem | null>(null);
   const [modalDecisao, setModalDecisao] = useState<DecisaoTipo>("aprovado");
