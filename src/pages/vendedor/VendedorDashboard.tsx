@@ -519,7 +519,10 @@ function FilaAcao({ fila, seed, repId, opsRep }: {
 
   const mostrar = (g: Grupo) => filtro === "todos" || filtro === g;
 
-  const registrarAcao = (item: ItemUnificado) => setOpenReg({ item });
+  const registrarAcao = (item: ItemUnificado) => {
+    if (item.planoId) { setPlanoResponderId(item.planoId); return; }
+    setOpenReg({ item });
+  };
 
   const concluirItem = (item: ItemUnificado, proximaData?: string, nota?: string) => {
     if (item.tarefaId) {
