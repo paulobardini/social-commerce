@@ -30,12 +30,11 @@ function sparkPoints(label: string) {
 }
 
 // ---- Saúde: badge unificado (linguagem do método, sem "temperatura") ----
-const saudeBadge: Record<StatusCliente | "novo", { label: string; classe: string }> = {
+const saudeBadge: Record<ClienteStatus, { label: string; classe: string }> = {
   ativo:      { label: "Ativo",     classe: "bg-emerald-100 text-emerald-800 border-emerald-300" },
   em_risco:   { label: "Em risco",  classe: "bg-amber-100 text-amber-800 border-amber-300" },
   reativacao: { label: "Reativação",classe: "bg-sky-100 text-sky-800 border-sky-300" },
   inativo:    { label: "Inativo",   classe: "bg-slate-200 text-slate-700 border-slate-300" },
-  perdido:    { label: "Perdido",   classe: "bg-rose-100 text-rose-700 border-rose-300" },
   novo:       { label: "Novo",      classe: "bg-blue-100 text-blue-800 border-blue-300" },
 };
 
