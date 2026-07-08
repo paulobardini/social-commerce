@@ -260,21 +260,29 @@ export function DecisoesTab() {
     setModalItem(item); setModalDecisao(dec); setModalOpen(true);
   };
 
-  const cobrarPlanoRep = (repNome: string, clienteNome: string, clienteId: string) => {
-    addTarefa({
-      titulo: `Plano de resgate: ${clienteNome}`,
-      descricao: `Gestor solicitou plano de ação. Cliente-chave prestes a virar perdido.`,
-      tipo: "follow_up",
-      clienteId, clienteNome,
-      prioridade: "alta",
-      vencimento: formatBRDate(addDays(new Date(), 1)),
-      responsavel: repNome,
-      status: "pendente",
-      origem: "sistema",
-      recorrencia: "nenhuma",
+  // Estado do modal SolicitarPlano
+  const [planoModal, setPlanoModal] = useState<{
+    open: boolean; tipo: PlanoTipo; repId: string; repNome: string;
+    contexto: { clienteId?: string; clienteNome?: string; valor?: number; pace?: number; coberturaDelta?: number };
+    sugestaoNota: string;
+  }>({ open: false, tipo: "cliente_risco", repId: "", repNome: "", contexto: {}, sugestaoNota: "" });
+
+  const abrirPlanoClienteRisco = (repId: string, repNome: string, clienteId: string, clienteNome: string, valor: number, diasRest: number) => {
+    setPlanoModal({
+      open: true, tipo: "cliente_risco", repId, repNome,
+      contexto: { clienteId, clienteNome, valor },
+      sugestaoNota: `${clienteNome} · R$ ${(valor/1000).toFixed(0)}k · ${diasRest}d para virar perdido — qual o plano?`,
     });
-    toast.success(`Ação criada para ${repNome} — cobrança de plano registrada.`);
   };
+
+  const abrirPlanoRitmo = (repId: string, repNome: string, pace: number, coberturaDelta: number) => {
+    setPlanoModal({
+      open: true, tipo: "ritmo", repId, repNome,
+      contexto: { pace, coberturaDelta },
+      sugestaoNota: `${repNome.split(" ")[0]}, o pace está em ${pace}% e a cobertura ${coberturaDelta >= 0 ? "+" : ""}${coberturaDelta}pp — preciso do seu plano de recuperação para os próximos 15 dias.`,
+    });
+  };
+
 
   return (
     <div className="space-y-6">
