@@ -146,6 +146,8 @@ export function AtendimentoTab() {
           ))}
         </div>
       </SectionCard>
+
+      <NegociosParadosDrawer open={negociosOpen} onOpenChange={setNegociosOpen} />
     </div>
   );
 }
