@@ -394,7 +394,7 @@ export function DecisoesTab() {
                       </td>
                       <td className="text-right px-3">
                         <Button size="sm" variant="outline" className="h-7 text-[10px]"
-                          onClick={() => cobrarPlanoRep(item.repNome, item.cliente.conta.razao, item.cliente.conta.id)}>
+                          onClick={() => abrirPlanoClienteRisco(item.cliente.conta.repId, item.repNome, item.cliente.conta.id, item.cliente.conta.razao, item.valor12m, item.diasRestantes)}>
                           Cobrar plano do rep
                         </Button>
                       </td>
