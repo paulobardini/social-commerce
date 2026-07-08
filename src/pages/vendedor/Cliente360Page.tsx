@@ -225,6 +225,8 @@ export default function Cliente360Page() {
   const industriasFantasmas = industrias.filter(i => !i.vinculada);
 
   // Timeline unificada
+  const { getPlanosDoCliente } = usePlanos();
+  const planosDoCliente = getPlanosDoCliente(cliente.id);
   const timeline: TimelineItem[] = useMemo(() => {
     const eventos: TimelineItem[] = [...historicoAll];
     notas.forEach(n => eventos.push({ id: `nota-${n.id}`, tipo: "nota", descricao: n.texto, data: n.data, autor: n.autor }));
@@ -232,8 +234,30 @@ export default function Cliente360Page() {
       id: `tar-${t.id}`, tipo: "tarefa_concluida",
       descricao: `Tarefa concluída: ${t.titulo}`, data: t.vencimento, autor: t.responsavel,
     }));
+    planosDoCliente.forEach(p => {
+      const dataStr = new Date(p.solicitadoEm).toLocaleDateString("pt-BR");
+      eventos.push({
+        id: `plano-req-${p.id}`, tipo: "atendimento",
+        descricao: `Gestor solicitou plano de resgate`, data: dataStr, autor: "Gestor",
+        detalhes: p.notaGestor,
+      });
+      if (p.respondidoEm) {
+        eventos.push({
+          id: `plano-resp-${p.id}`, tipo: "atendimento",
+          descricao: `Rep respondeu com ${p.compromissos.length} compromissos`, data: new Date(p.respondidoEm).toLocaleDateString("pt-BR"), autor: p.repNome,
+          detalhes: p.diagnostico,
+        });
+      }
+      if (p.encerradoEm) {
+        eventos.push({
+          id: `plano-end-${p.id}`, tipo: "atendimento",
+          descricao: `Plano encerrado (${p.status})`, data: new Date(p.encerradoEm).toLocaleDateString("pt-BR"), autor: p.encerradoAuto ? "Sistema" : "Gestor",
+          detalhes: p.notaEncerramento,
+        });
+      }
+    });
     return eventos.sort((a, b) => (b.data > a.data ? 1 : -1));
-  }, [historicoAll, notas, tarefas]);
+  }, [historicoAll, notas, tarefas, planosDoCliente]);
 
   const timelineFiltrada = timeline.filter(e => {
     if (timelineFilter === "todos") return true;
