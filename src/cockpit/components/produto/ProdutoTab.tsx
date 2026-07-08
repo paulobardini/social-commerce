@@ -374,7 +374,7 @@ export function ProdutoTab() {
             </tbody>
           </table>
         </div>
-      </SectionCard>
+      </SectionCard></div>
 
       {pushModalMarca && (
         <CampanhaPushModal
