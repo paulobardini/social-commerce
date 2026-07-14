@@ -108,13 +108,14 @@ export default function LeadsAtendimentoPage() {
         .filter(c => etapaAlcancada(c, labelToKey) >= ORDEM_FLUXO.indexOf(key))
         .reduce((s, c) => s + (c.valorEstimado || 0), 0);
     return [
-      { label: "Leads recebidos", value: count("leads") + cardsPeriodo.filter(c => colIdToKey[c.colunaId] === "leads").length && count("leads") ? totalLeads : totalLeads },
+      { label: "Leads recebidos", value: totalLeads },
       { label: "Atendidos (1ª resposta)", value: count("atendimento") },
       { label: "Cadastrados", value: count("cadastro") },
       { label: "Qualificados", value: count("qualificacao"), money: valorPot("qualificacao") || undefined },
       { label: "Oportunidades", value: count("oportunidade"), money: valorPot("oportunidade") || undefined },
     ];
   }, [cardsPeriodo, labelToKey, colIdToKey, totalLeads]);
+
 
   // Origens — donut + tabela
   const porOrigem = useMemo(() => {
