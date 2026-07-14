@@ -110,8 +110,9 @@ export default function RelatoriosCentral() {
                           </div>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline" className="w-full mt-3 text-xs" onClick={() => navigate("/vendedor/relatorios/novo")}>
-                        Usar modelo
+                      <Button size="sm" variant="outline" className="w-full mt-3 text-xs"
+                        onClick={() => navigate(rp.id.startsWith("atd-") ? `/vendedor/relatorios/${rp.id}` : "/vendedor/relatorios/novo")}>
+                        {rp.id.startsWith("atd-") ? "Abrir relatório" : "Usar modelo"}
                       </Button>
                     </CardContent>
                   </Card>
