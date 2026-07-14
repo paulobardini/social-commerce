@@ -374,12 +374,54 @@ export default function WhatsAppInbox({
     toast({ title: "Template de cobrança carregado no composer" });
   }
 
-  // ---------- Trabalhar fila ----------
+  // ---------- Trabalhar fila (percorre pipeline: leads → fila → atendimento → cadastro) ----------
+  const FLUXO_KEYS = ["leads", "fila", "atendimento", "cadastro"] as const;
+
+  const filaOrdenadaPipeline = useMemo(() => {
+    const ids: string[] = [];
+    for (const key of FLUXO_KEYS) {
+      const col = colunas.find(c => c.key === key);
+      if (!col) continue;
+      const cardsDaCol = cards
+        .filter(c => c.colunaId === col.id && c.status !== "perdido")
+        .sort((a, b) => new Date(a.entradaColunaEm).getTime() - new Date(b.entradaColunaEm).getTime());
+      for (const card of cardsDaCol) {
+        const cid = conversaIdDoCardAC(card);
+        if (conversasBase.some(cv => cv.id === cid) && !ids.includes(cid)) ids.push(cid);
+      }
+    }
+    return ids;
+  }, [cards, colunas, conversasBase]);
+
   function abrirFila() {
-    if (filaOrdenada.length === 0) { toast({ title: "Fila zerada 🎉", description: "Sem prioridades pendentes." }); return; }
-    setTrabalharIdx(0);
-    setTrabalharOpen(true);
+    if (filaOrdenadaPipeline.length === 0) {
+      toast({ title: "Fila zerada 🎉", description: "Sem leads/atendimentos/cadastros pendentes." });
+      return;
+    }
+    setFilaQueue(filaOrdenadaPipeline);
+    setFilaIdx(0);
+    setFilaMode(true);
+    setSelectedId(filaOrdenadaPipeline[0]);
   }
+  function proximoNaFila() {
+    const next = filaIdx + 1;
+    if (next >= filaQueue.length) {
+      setFilaMode(false);
+      toast({ title: `Fila zerada 🎉 · ${filaQueue.length} conversas percorridas` });
+      return;
+    }
+    setFilaIdx(next);
+    setSelectedId(filaQueue[next]);
+  }
+  function anteriorNaFila() {
+    if (filaIdx === 0) return;
+    const prev = filaIdx - 1;
+    setFilaIdx(prev);
+    setSelectedId(filaQueue[prev]);
+  }
+  function sairDaFila() { setFilaMode(false); }
+
+  // (Legado) Modal "Trabalhar fila" — mantido para compatibilidade, não usado no fluxo atual
   function proximo() {
     if (trabalharIdx + 1 >= filaOrdenada.length) {
       setTrabalharOpen(false);
