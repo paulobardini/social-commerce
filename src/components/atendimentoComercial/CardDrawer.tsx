@@ -63,21 +63,27 @@ export function CardDrawer({ card, onClose }: { card: CardAC; onClose: () => voi
             <Row label="Última msg" value={card.ultimaMensagem || "—"} />
           </Section>
 
-          {/* Cadastro */}
-          <Section title="Cadastro">
-            <Row label="Nome" value={card.cadastro.nome ?? "—"} />
-            <Row label="CNPJ" value={card.cadastro.cnpj ?? "—"} />
-            <Row label="Cidade/UF" value={card.cadastro.cidade ? `${card.cadastro.cidade}/${card.cadastro.uf ?? "?"}` : "—"} />
-            <Row label="E-mail" value={card.cadastro.email ?? "—"} />
-            <Row label="Instagram" value={card.cadastro.instagram ?? "—"} />
-          </Section>
+          {/* Cadastro editável */}
+          {card.tag !== "carteira" && (
+            <Section title="Cadastro (edite para avançar automaticamente)">
+              <Edit label="Nome / razão social" value={card.cadastro.nome ?? ""} onChange={v => atualizarCadastro(card.id, { nome: v })} />
+              <Edit label="CNPJ" value={card.cadastro.cnpj ?? ""} onChange={v => atualizarCadastro(card.id, { cnpj: v })} />
+              <div className="grid grid-cols-2 gap-2">
+                <Edit label="Cidade" value={card.cadastro.cidade ?? ""} onChange={v => atualizarCadastro(card.id, { cidade: v })} />
+                <Edit label="UF" value={card.cadastro.uf ?? ""} onChange={v => atualizarCadastro(card.id, { uf: v })} />
+              </div>
+              <Edit label="E-mail" value={card.cadastro.email ?? ""} onChange={v => atualizarCadastro(card.id, { email: v })} />
+              <Edit label="Instagram" value={card.cadastro.instagram ?? ""} onChange={v => atualizarCadastro(card.id, { instagram: v })} />
+            </Section>
+          )}
 
-          {/* Qualificação */}
+          {/* Qualificação editável */}
           <Section title="Qualificação">
-            <Row label="Nicho" value={card.qualificacao.nicho ?? "—"} />
-            <Row label="Marcas" value={card.qualificacao.marcas?.join(", ") ?? "—"} />
-            <Row label="Volume" value={card.qualificacao.volume ?? "—"} />
-            <Row label="Frequência" value={card.qualificacao.frequencia ?? "—"} />
+            {config.perguntasQualificacao.map(p => (
+              <Edit key={p.key} label={p.label}
+                value={(card.qualificacao as any)[p.key] ?? ""}
+                onChange={v => atualizarQualificacao(card.id, { [p.key]: v } as any)} />
+            ))}
           </Section>
 
           {/* Gerar oportunidade */}
