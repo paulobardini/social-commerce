@@ -293,7 +293,11 @@ export default function WhatsAppInbox({
     lida: selectedCard.naoLidas === 0,
   }] : [];
   const mensagens = selected ? [...baseMensagens, ...cardMensagens, ...(extraMessages[selected.id] || [])] : [];
-  const cliente = selected ? mockClientes360.find(c => c.id === selected.clienteId) : null;
+  // Se o card associado é um lead sem clienteId, não resolvemos cliente do CRM
+  // (evita mostrar dados de um cliente existente com mesmo telefone).
+  const cliente = selected && !(selectedCard && !selectedCard.clienteId)
+    ? mockClientes360.find(c => c.id === selected.clienteId) || null
+    : null;
 
   const totalNaoLidas = conversasBase.reduce((s, c) => s + c.naoLidas, 0);
 
