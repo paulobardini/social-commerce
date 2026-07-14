@@ -625,7 +625,7 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
     setColunas, setConfig,
     distribuirManual, distribuirRodizio, redistribuirCard,
     setVendedores, togglePausaVendedor,
-    registrarEventoConversa, resolverConflito,
+    registrarEventoConversa, resolverConflito, enviarMensagemMarketing,
   }), [cards, colunas, config, inbox, vendedores, conflitos, cardsPorColuna, colunaByKey, slaEstourado, diasParado, estagnado, cardDaConversa, conversaDoCard, cardByTelefone, registrarEventoConversa]);
 
   return <AtendimentoComercialContext.Provider value={value}>{children}</AtendimentoComercialContext.Provider>;
