@@ -181,6 +181,15 @@ export const mockCardsACSeed: CardAC[] = [
   mkCard({ id: "c15", colunaId: "col-atend", nome: "TotKids Store", telefone: "+55 84 99800-5522", tag: "lead", origem: "instagram", vendedorId: "v-lucas",
     ultimaMensagem: "Vamos conversar", ultimaInteracao: hoursAgo(30), chegouEm: daysAgo(2), entradaColunaEm: daysAgo(2), naoLidas: 0 }),
 
+  // Só telefone — vendedor ainda descobrindo quem é
+  mkCard({ id: "c15b", colunaId: "col-atend", nome: "+55 11 97733-2288", telefone: "+55 11 97733-2288", tag: "lead", origem: "whats_direto", vendedorId: "v-paulo",
+    ultimaMensagem: "Oi, é a Nextil? Vi vocês no Instagram", ultimaInteracao: hoursAgo(2), chegouEm: hoursAgo(2), entradaColunaEm: hoursAgo(2), naoLidas: 1 }),
+  mkCard({ id: "c15c", colunaId: "col-atend", nome: "+55 21 98844-5511", telefone: "+55 21 98844-5511", tag: "lead", origem: "whats_direto", vendedorId: "v-paulo",
+    ultimaMensagem: "Boa tarde, tenho interesse no catálogo", ultimaInteracao: hoursAgo(8), chegouEm: hoursAgo(20), entradaColunaEm: hoursAgo(20), naoLidas: 0 }),
+  mkCard({ id: "c15d", colunaId: "col-atend", nome: "+55 47 99001-8822", telefone: "+55 47 99001-8822", tag: "lead", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", vendedorId: "v-marina",
+    ultimaMensagem: "Vim pelo anúncio", ultimaInteracao: hoursAgo(5), chegouEm: hoursAgo(30), entradaColunaEm: hoursAgo(30), naoLidas: 2 }),
+
+
   // Em Cadastro (4)
   mkCard({ id: "c16", colunaId: "col-cad", nome: "Alemão Vestuário", telefone: "+55 51 98800-7788", tag: "lead", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", vendedorId: "v-paulo",
     ultimaMensagem: "Aqui vai meu CNPJ: 22.333.444/0001-55", ultimaInteracao: hoursAgo(4), chegouEm: daysAgo(4), entradaColunaEm: hoursAgo(4), naoLidas: 0, conversaId: "conv5",
