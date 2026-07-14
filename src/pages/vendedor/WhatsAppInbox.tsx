@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -140,7 +140,32 @@ export default function WhatsAppInbox({
     [conversasFiltro]
   );
 
-  const [selectedId, setSelectedId] = useState<string>(conversasBase[0]?.id || "");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const telefoneParam = searchParams.get("telefone");
+  const initialSelectedId = useMemo(() => {
+    if (telefoneParam) {
+      const digits = telefoneParam.replace(/\D/g, "");
+      const match = conversasBase.find(c => {
+        const cli = mockClientes360.find(x => x.id === c.clienteId);
+        const w = (cli?.whatsapp || cli?.telefone || "").replace(/\D/g, "");
+        return w && digits && (w === digits || w.endsWith(digits) || digits.endsWith(w));
+      });
+      if (match) return match.id;
+    }
+    return conversasBase[0]?.id || "";
+  }, [telefoneParam, conversasBase]);
+  const [selectedId, setSelectedId] = useState<string>(initialSelectedId);
+  useEffect(() => {
+    if (telefoneParam && initialSelectedId) {
+      setSelectedId(initialSelectedId);
+      // limpa o parâmetro após aplicar
+      const next = new URLSearchParams(searchParams);
+      next.delete("telefone");
+      next.delete("cardId");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [telefoneParam, initialSelectedId]);
   const [search, setSearch] = useState("");
   const [msgInput, setMsgInput] = useState("");
   const [msgSuggestion, setMsgSuggestion] = useState<{ titulo: string; original: string } | null>(null);

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
 import { CardAtendimento } from "@/components/atendimentoComercial/CardAtendimento";
 import { CardDrawer } from "@/components/atendimentoComercial/CardDrawer";
@@ -15,6 +16,7 @@ export default function AtendimentoComercial() {
   const perfil = useVendedorPerfil();
   const isGestor = perfil === "gestor" || perfil === "admin" || perfil === "gestor_regional";
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [busca, setBusca] = useState("");
   const [filtroTag, setFiltroTag] = useState<TagCard | "todas">("todas");
   const [filtroOrigem, setFiltroOrigem] = useState<OrigemLead | "todas">("todas");
@@ -127,7 +129,8 @@ export default function AtendimentoComercial() {
               </div>
               <div className="flex flex-col gap-2 min-h-[60px]">
                 {items.map(c => (
-                  <CardAtendimento key={c.id} card={c} onClick={() => setSelected(c)}
+                  <CardAtendimento key={c.id} card={c}
+                    onClick={() => navigate(`/vendedor/whatsapp?telefone=${encodeURIComponent(c.telefone)}&cardId=${c.id}`)}
                     onDragStart={() => setDragId(c.id)} />
                 ))}
                 {items.length === 0 && <p className="text-[10px] text-muted-foreground text-center py-6">Vazio</p>}
