@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
 import { tagLabels, tagBadge, origemLabels, motivosPerda, horasDesde } from "@/data/mockAtendimentoComercial";
+import { PerdaQualificadaForm } from "./PerdaQualificadaForm";
 import {
   AlertTriangle, Check, ChevronRight, Sparkles, Zap, ShieldAlert,
   Target, X, RotateCcw, Play, MessageCircle, Pencil, Store, Clock,
@@ -258,12 +259,14 @@ export function PainelAtendimentoWpp({ conversaId, clienteId, clienteNome, telef
           )}
 
           {isPerdido && (
-            <div className="rounded-md border border-rose-300 bg-rose-50 p-2 flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-rose-800">Perdido: {card.motivoPerda}</p>
-                {card.motivoPerdaTexto && <p className="text-[10px] text-rose-700 truncate">{card.motivoPerdaTexto}</p>}
+            <div className="rounded-md border border-rose-300 bg-rose-50 p-2 flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold text-rose-800">Perdido: {card.perda?.motivo || card.motivoPerda}</p>
+                {card.perda?.subMotivo && <p className="text-[10px] text-rose-700">↳ {card.perda.subMotivo}</p>}
+                {(card.perda?.explicacao || card.motivoPerdaTexto) && <p className="text-[10px] text-rose-700 italic mt-0.5 line-clamp-2">{card.perda?.explicacao || card.motivoPerdaTexto}</p>}
+                {card.perda?.retomarEm && <p className="text-[10px] text-amber-700 mt-0.5">🗓 Retomar em {new Date(card.perda.retomarEm).toLocaleDateString("pt-BR")}</p>}
               </div>
-              <button onClick={() => reabrirCard(card.id)} className="text-[10px] font-semibold px-2 py-1 rounded border border-rose-300 text-rose-700 hover:bg-white inline-flex items-center gap-1">
+              <button onClick={() => reabrirCard(card.id)} className="text-[10px] font-semibold px-2 py-1 rounded border border-rose-300 text-rose-700 hover:bg-white inline-flex items-center gap-1 shrink-0">
                 <RotateCcw className="h-3 w-3" /> Reabrir
               </button>
             </div>
@@ -403,39 +406,20 @@ export function PainelAtendimentoWpp({ conversaId, clienteId, clienteNome, telef
             ) : (
               <div className="w-full space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-bold uppercase text-rose-700">Motivo da perda</p>
-                  <button onClick={() => { setOpenPerda(false); setMotivoSel(""); setMotivoTxt(""); }} className="text-muted-foreground hover:text-foreground">
+                  <p className="text-[10px] font-bold uppercase text-rose-700">Perda qualificada</p>
+                  <button onClick={() => setOpenPerda(false)} className="text-muted-foreground hover:text-foreground">
                     <X className="h-3 w-3" />
                   </button>
                 </div>
-                <div className="max-h-32 overflow-y-auto space-y-1">
-                  {(config.motivosPerda || motivosPerda).map(m => (
-                    <button
-                      key={m}
-                      onClick={() => setMotivoSel(m)}
-                      className={`w-full text-left text-[10px] px-2 py-1 rounded border ${motivoSel === m ? "border-rose-400 bg-rose-50 text-rose-800" : "border-border text-muted-foreground hover:border-rose-200"}`}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-                {motivoSel === "Outros" && (
-                  <textarea
-                    value={motivoTxt} onChange={e => setMotivoTxt(e.target.value)} rows={2}
-                    placeholder="Descreva (obrigatório)"
-                    className="w-full text-[10px] p-1.5 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
-                )}
-                <button
-                  disabled={!motivoSel || (motivoSel === "Outros" && !motivoTxt.trim())}
-                  onClick={() => {
-                    marcarPerda(card.id, motivoSel, motivoSel === "Outros" ? motivoTxt.trim() : undefined);
-                    setOpenPerda(false); setMotivoSel(""); setMotivoTxt("");
+                <PerdaQualificadaForm
+                  tree={config.motivosPerdaTree}
+                  compact
+                  onCancel={() => setOpenPerda(false)}
+                  onConfirm={(perda) => {
+                    marcarPerda(card.id, perda);
+                    setOpenPerda(false);
                   }}
-                  className="w-full text-[10px] font-medium px-2 py-1 rounded bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-40"
-                >
-                  Confirmar perda
-                </button>
+                />
               </div>
             )}
           </div>

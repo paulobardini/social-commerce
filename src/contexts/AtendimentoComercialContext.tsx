@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode, useCallback, useRef } from "react";
 import {
-  CardAC, ColunaAC, ConfigAtendimento, ConversaCentral,
+  CardAC, ColunaAC, ConfigAtendimento, ConversaCentral, PerdaQualificada, CampanhaRenutricao, MarketingStatus,
   loadCardsAC, saveCardsAC, loadColunasAC, saveColunasAC,
   loadConfigAC, saveConfigAC, loadInboxAC, saveInboxAC,
   loadVendedoresAC, saveVendedoresAC, mockVendedoresAC,
@@ -36,10 +36,13 @@ interface Ctx {
   cardByTelefone: (telefone: string) => CardAC | undefined;
 
   // mutations
-  moverCard: (cardId: string, colunaDestinoId: string, meta?: { motivo?: string; motivoTexto?: string }) => { ok: boolean; erro?: string };
+  moverCard: (cardId: string, colunaDestinoId: string, meta?: { motivo?: string; motivoTexto?: string; perda?: Omit<PerdaQualificada, "registradoEm"> }) => { ok: boolean; erro?: string };
   atualizarCadastro: (cardId: string, patch: Partial<CardAC["cadastro"]>) => void;
   atualizarQualificacao: (cardId: string, patch: Partial<CardAC["qualificacao"]>) => void;
-  marcarPerda: (cardId: string, motivo: string, texto?: string) => void;
+  marcarPerda: (cardId: string, perda: Omit<PerdaQualificada, "registradoEm">) => void;
+  moverParaRenutricao: (cardId: string, campanha: CampanhaRenutricao) => void;
+  arquivarCard: (cardId: string) => void;
+  reativarMarketing: (cardId: string) => void;
   gerarOportunidade: (cardId: string, valor: number) => void;
   reabrirCard: (cardId: string) => void;
   criarLead: (input: { nome: string; telefone: string; origem: CardAC["origem"]; campanha?: string; vendedorId?: string; tag?: CardAC["tag"]; conversaId?: string; clienteId?: string }) => CardAC;
@@ -147,8 +150,22 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
     if (card.status === "conflito") return { ok: false, erro: "Card em conflito, aguarde decisão do gestor" };
 
     if (destino.key === "perdido") {
-      if (!meta?.motivo) return { ok: false, erro: "Motivo de perda obrigatório" };
-      setCards(prev => prev.map(c => c.id === cardId ? { ...c, colunaId: destino.id, status: "perdido", motivoPerda: meta.motivo, motivoPerdaTexto: meta.motivoTexto, entradaColunaEm: new Date().toISOString(), historico: [...c.historico, { at: new Date().toISOString(), msg: `Marcado como perdido: ${meta.motivo}` }] } : c));
+      // Aceita perda qualificada (Fase 10) OU legado {motivo, motivoTexto}
+      const perdaObj: PerdaQualificada | undefined = meta?.perda
+        ? { ...meta.perda, registradoEm: new Date().toISOString() }
+        : (meta?.motivo ? { motivo: meta.motivo, explicacao: meta.motivoTexto || meta.motivo, registradoEm: new Date().toISOString() } : undefined);
+      if (!perdaObj) return { ok: false, erro: "Motivo de perda obrigatório" };
+      setCards(prev => prev.map(c => c.id === cardId ? {
+        ...c,
+        colunaId: destino.id,
+        status: "perdido",
+        motivoPerda: perdaObj.motivo,
+        motivoPerdaTexto: perdaObj.explicacao,
+        perda: perdaObj,
+        marketingStatus: "ativo" as MarketingStatus,
+        entradaColunaEm: new Date().toISOString(),
+        historico: [...c.historico, { at: new Date().toISOString(), msg: `Marcado como perdido: ${perdaObj.motivo}${perdaObj.subMotivo ? ` → ${perdaObj.subMotivo}` : ""}` }],
+      } : c));
       return { ok: true };
     }
 
@@ -296,10 +313,39 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
     }));
   };
 
-  const marcarPerda: Ctx["marcarPerda"] = (cardId, motivo, texto) => {
+  const marcarPerda: Ctx["marcarPerda"] = (cardId, perda) => {
     const colPerd = colunas.find(c => c.key === "perdido");
     if (!colPerd) return;
-    moverCard(cardId, colPerd.id, { motivo, motivoTexto: texto });
+    moverCard(cardId, colPerd.id, { perda });
+  };
+
+  const moverParaRenutricao: Ctx["moverParaRenutricao"] = (cardId, campanha) => {
+    setCards(prev => prev.map(c => c.id === cardId ? {
+      ...c,
+      marketingStatus: "renutricao" as MarketingStatus,
+      campanhaRenutricao: campanha,
+      historico: [...c.historico, { at: new Date().toISOString(), msg: `Movido para renutrição: ${campanha.nome}` }],
+    } : c));
+    toast({ title: "Card enviado para renutrição", description: campanha.nome });
+  };
+
+  const arquivarCard: Ctx["arquivarCard"] = (cardId) => {
+    setCards(prev => prev.map(c => c.id === cardId ? {
+      ...c,
+      marketingStatus: "arquivado" as MarketingStatus,
+      campanhaRenutricao: undefined,
+      historico: [...c.historico, { at: new Date().toISOString(), msg: "Arquivado pelo marketing" }],
+    } : c));
+    toast({ title: "Card arquivado" });
+  };
+
+  const reativarMarketing: Ctx["reativarMarketing"] = (cardId) => {
+    setCards(prev => prev.map(c => c.id === cardId ? {
+      ...c,
+      marketingStatus: "ativo" as MarketingStatus,
+      campanhaRenutricao: undefined,
+      historico: [...c.historico, { at: new Date().toISOString(), msg: "Reativado no marketing (removido de renutrição/arquivo)" }],
+    } : c));
   };
 
   const gerarOportunidade: Ctx["gerarOportunidade"] = (cardId, valor) => {
@@ -312,7 +358,22 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
   const reabrirCard: Ctx["reabrirCard"] = (cardId) => {
     const colFila = colunas.find(c => c.key === "fila");
     if (!colFila) return;
-    setCards(prev => prev.map(c => c.id === cardId ? { ...c, colunaId: colFila.id, status: "ativo", entradaColunaEm: new Date().toISOString(), historico: [...c.historico, { at: new Date().toISOString(), msg: `Card reaberto na Fila${c.motivoPerda ? ` (perda anterior: ${c.motivoPerda})` : ""}` }] } : c));
+    setCards(prev => prev.map(c => {
+      if (c.id !== cardId) return c;
+      const eraRenutricao = c.marketingStatus === "renutricao";
+      return {
+        ...c,
+        colunaId: colFila.id,
+        status: "ativo",
+        marketingStatus: "ativo" as MarketingStatus,
+        campanhaRenutricao: undefined,
+        entradaColunaEm: new Date().toISOString(),
+        historico: [
+          ...c.historico,
+          { at: new Date().toISOString(), msg: `Card reaberto na Fila${c.perda ? ` (perda anterior: ${c.perda.motivo})` : c.motivoPerda ? ` (perda anterior: ${c.motivoPerda})` : ""}${eraRenutricao ? " — removido da renutrição" : ""}` },
+        ],
+      };
+    }));
     notif.push({
       tipo: "card_reaberto",
       titulo: "Card reaberto",
@@ -531,7 +592,7 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
     cards, colunas, config, inbox, vendedores, conflitos,
     cardsPorColuna, colunaByKey, slaEstourado, diasParado, estagnado,
     cardDaConversa, conversaDoCard, cardByTelefone,
-    moverCard, atualizarCadastro, atualizarQualificacao, marcarPerda, gerarOportunidade, reabrirCard, criarLead,
+    moverCard, atualizarCadastro, atualizarQualificacao, marcarPerda, moverParaRenutricao, arquivarCard, reativarMarketing, gerarOportunidade, reabrirCard, criarLead,
     setColunas, setConfig,
     distribuirManual, distribuirRodizio, redistribuirCard,
     setVendedores, togglePausaVendedor,

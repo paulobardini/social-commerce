@@ -111,8 +111,10 @@ export function CardDrawer({ card, onClose }: { card: CardAC; onClose: () => voi
           {card.status === "perdido" && (
             <div className="bg-rose-500/5 border border-rose-500/20 rounded-lg p-3">
               <p className="text-[10px] uppercase text-rose-700 font-semibold mb-1">Motivo da perda</p>
-              <p className="text-[12px] text-foreground">{card.motivoPerda}</p>
-              {card.motivoPerdaTexto && <p className="text-[11px] text-muted-foreground mt-1">{card.motivoPerdaTexto}</p>}
+              <p className="text-[12px] text-foreground">{card.perda?.motivo || card.motivoPerda}</p>
+              {card.perda?.subMotivo && <p className="text-[11px] text-rose-700 mt-0.5">↳ {card.perda.subMotivo}</p>}
+              {(card.perda?.explicacao || card.motivoPerdaTexto) && <p className="text-[11px] text-muted-foreground mt-1 italic">{card.perda?.explicacao || card.motivoPerdaTexto}</p>}
+              {card.perda?.retomarEm && <p className="text-[11px] text-amber-700 mt-1">🗓 Retomar em {new Date(card.perda.retomarEm).toLocaleDateString("pt-BR")}</p>}
               <button onClick={() => reabrirCard(card.id)} className="mt-2 text-[11px] px-2 py-1 rounded border border-border hover:bg-muted">Reabrir na Fila</button>
             </div>
           )}
@@ -156,10 +158,10 @@ export function CardDrawer({ card, onClose }: { card: CardAC; onClose: () => voi
 
       </aside>
 
-      <MotivoPerdaModal open={openPerda} motivos={config.motivosPerda} onClose={() => setOpenPerda(false)} onConfirm={(m, t) => {
+      <MotivoPerdaModal open={openPerda} tree={config.motivosPerdaTree} onClose={() => setOpenPerda(false)} onConfirm={(perda) => {
         setOpenPerda(false);
         const colPerd = colunas.find(c => c.key === "perdido");
-        if (colPerd) moverCard(card.id, colPerd.id, { motivo: m, motivoTexto: t });
+        if (colPerd) moverCard(card.id, colPerd.id, { perda });
       }} />
     </>
   );

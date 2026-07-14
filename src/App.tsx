@@ -125,6 +125,8 @@ import { AtendimentoComercialProvider } from "@/contexts/AtendimentoComercialCon
 import AtendimentoComercial from "./pages/vendedor/AtendimentoComercial";
 import AtendimentoConfigPage from "./pages/vendedor/AtendimentoConfigPage";
 import LeadsAtendimentoPage from "@/marketing/pages/LeadsAtendimentoPage";
+import WhatsAppCentralPage from "@/marketing/pages/WhatsAppCentralPage";
+import RelatoriosAtendimentoPage from "@/marketing/pages/RelatoriosAtendimentoPage";
 
 
 const queryClient = new QueryClient();
@@ -267,6 +269,8 @@ const App = () => (
                 <Route path="/marketing" element={<Navigate to="/marketing/dashboard" replace />} />
                 <Route path="/marketing/dashboard" element={<MarketingProviders><MarketingLayout><MarketingDashboard /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/leads-atendimento" element={<MarketingProviders><MarketingLayout><LeadsAtendimentoPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/whatsapp-central" element={<MarketingProviders><MarketingLayout><WhatsAppCentralPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/relatorios-atendimento" element={<MarketingProviders><MarketingLayout><RelatoriosAtendimentoPage /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/central-vendas" element={<MarketingProviders><MarketingLayout><CentralVendasPage /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/meta-ads" element={<MarketingProviders><MarketingLayout><MetaAdsHub /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/meta-ads/:id" element={<MarketingProviders><MarketingLayout><MetaCampaignDetail /></MarketingLayout></MarketingProviders>} />

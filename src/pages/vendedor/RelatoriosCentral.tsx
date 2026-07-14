@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { relatoriosSalvos, relatoriosProntos } from "@/data/mockAnalytics";
 import { useState } from "react";
+import { useVendedorPerfil } from "@/hooks/useVendedorPerfil";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const formatoIcons: Record<string, any> = {
@@ -25,10 +26,17 @@ const iconMap: Record<string, any> = {
 
 export default function RelatoriosCentral() {
   const navigate = useNavigate();
+  const perfil = useVendedorPerfil();
+  const isGestor = perfil === "gestor" || perfil === "admin" || perfil === "gestor_regional";
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("todos");
 
-  const filteredRels = relatoriosSalvos.filter(r => {
+  // Vendedor não vê categoria "Atendimento" (Fase 11)
+  const podeVerCategoria = (cat: string) => isGestor || cat !== "Atendimento";
+  const relatoriosSalvosVisiveis = relatoriosSalvos.filter(r => isGestor || !r.id.startsWith("atd-"));
+  const relatoriosProntosVisiveis = relatoriosProntos.filter(r => podeVerCategoria(r.categoria));
+
+  const filteredRels = relatoriosSalvosVisiveis.filter(r => {
     if (search && !r.nome.toLowerCase().includes(search.toLowerCase())) return false;
     if (tab === "favoritos" && !r.favorito) return false;
     if (tab === "compartilhados" && !r.compartilhado) return false;
@@ -84,7 +92,7 @@ export default function RelatoriosCentral() {
               <p className="text-sm text-muted-foreground">Modelos prontos para uso. Escolha um modelo para criar um relatório personalizado.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {relatoriosProntos.map(rp => {
+              {relatoriosProntosVisiveis.map(rp => {
                 const Icon = iconMap[rp.icone] || BarChart3;
                 return (
                   <Card key={rp.id} className="border border-border hover:border-accent/30 transition-colors">
@@ -102,8 +110,9 @@ export default function RelatoriosCentral() {
                           </div>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline" className="w-full mt-3 text-xs" onClick={() => navigate("/vendedor/relatorios/novo")}>
-                        Usar modelo
+                      <Button size="sm" variant="outline" className="w-full mt-3 text-xs"
+                        onClick={() => navigate(rp.id.startsWith("atd-") ? `/vendedor/relatorios/${rp.id}` : "/vendedor/relatorios/novo")}>
+                        {rp.id.startsWith("atd-") ? "Abrir relatório" : "Usar modelo"}
                       </Button>
                     </CardContent>
                   </Card>
