@@ -1,5 +1,6 @@
-import { Search, Bell, ShoppingBag, MessageCircle, Menu, LogOut } from "lucide-react";
+import { Search, Bell, ShoppingBag, MessageCircle, Menu, LogOut, UserCircle2 } from "lucide-react";
 import { useState } from "react";
+import { setPerfilAtivo, useVendedorPerfil, PerfilVendedor } from "@/hooks/useVendedorPerfil";
 import { useNavigate, useLocation } from "react-router-dom";
 import nextilLogo from "@/assets/nextil-logo.png";
 import nextilWordmark from "@/assets/nextil-wordmark.png";
