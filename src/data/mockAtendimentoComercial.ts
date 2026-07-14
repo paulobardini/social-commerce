@@ -324,3 +324,18 @@ export function tempoAgo(iso: string): string {
 export function horasDesde(iso: string): number {
   return (Date.now() - new Date(iso).getTime()) / (1000 * 3600);
 }
+
+// Investimento mensal por campanha (usado para calcular CPL na página Leads & Atendimento).
+// Somente campanhas pagas — origens orgânicas (whats_direto, whats_central, manual) ficam sem CPL.
+export const investimentoPorCampanha: Record<string, number> = {
+  "OI26 · Prospect Multimarcas": 12800,
+  "Retargeting Lookalike": 4200,
+  "Coleção Verão · Awareness": 6800,
+};
+
+// Investimento agregado por origem paga (fallback quando origem é paga mas sem campanha específica).
+export const investimentoPorOrigem: Record<string, number> = {
+  meta_ads: 23800,   // soma dos anúncios + boost
+  instagram: 3200,   // impulsionamentos orgânicos
+};
+

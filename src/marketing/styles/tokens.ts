@@ -51,3 +51,21 @@ export const channelColors: Record<MktChannel, string> = {
   indicacao: "#64748B",
   direto: "#94A3B8",
 };
+
+// Cores por origem do Atendimento Comercial (usadas na página Leads & Atendimento)
+export type OrigemAC = "meta_ads" | "instagram" | "whats_central" | "whats_direto" | "manual";
+export const origemACColors: Record<OrigemAC, string> = {
+  meta_ads: "#1877F2",       // azul Meta
+  instagram: "#C13584",      // rosa/roxo Instagram
+  whats_central: "#25D366",  // verde WhatsApp
+  whats_direto: "#0EA5A5",   // teal
+  manual: "#94A3B8",         // cinza
+};
+export const origemACLabels: Record<OrigemAC, string> = {
+  meta_ads: "Meta Ads",
+  instagram: "Instagram",
+  whats_central: "Whats central",
+  whats_direto: "Whats direto",
+  manual: "Manual",
+};
+
