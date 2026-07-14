@@ -653,13 +653,13 @@ export default function WhatsAppInbox({
               </button>
               <div className="relative">
                 <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
-                  <span className="text-sm font-bold text-green-700">{selected.clienteNome[0]}</span>
+                  <span className="text-sm font-bold text-green-700">{(selectedCard && !selectedCard.clienteId ? selectedCard.telefone : selected.clienteNome).replace(/\D/g, "") ? "#" : selected.clienteNome[0]}</span>
                 </div>
                 {selected.online && <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-card" />}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate">{selected.clienteNome}</p>
-                <p className="text-[10px] text-muted-foreground">{selected.online ? "Online" : "Offline"}{cliente ? ` · ${cliente.cidade}/${cliente.estado}` : ""}</p>
+                <p className="text-sm font-semibold truncate">{selectedCard && !selectedCard.clienteId ? selectedCard.telefone : selected.clienteNome}</p>
+                <p className="text-[10px] text-muted-foreground">{selected.online ? "Online" : "Offline"}{cliente ? ` · ${cliente.cidade}/${cliente.estado}` : selectedCard?.origem ? ` · ${selectedCard.origem.replace("_", " ")}` : ""}</p>
               </div>
               {modoMetodo && cliente && (
                 <Button variant="outline" size="sm" className="text-xs gap-1" onClick={usarSugestao}>
