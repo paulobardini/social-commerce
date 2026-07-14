@@ -63,6 +63,9 @@ interface Ctx {
   // gatilhos e conflito (Fase 7)
   registrarEventoConversa: (ev: EventoConversa) => void;
   resolverConflito: (conflitoId: string, decisao: "manter_dono" | "liberar_novo") => void;
+
+  // marketing pode enviar mensagem no whats central
+  enviarMensagemMarketing: (id: string, texto: string) => void;
 }
 
 const AtendimentoComercialContext = createContext<Ctx | null>(null);
@@ -552,6 +555,32 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
     toast({ title: "Conflito resolvido" });
   };
 
+  // ---- Envio de mensagem pelo Marketing no WhatsApp Central ----
+  const enviarMensagemMarketing: Ctx["enviarMensagemMarketing"] = (id, texto) => {
+    const t = texto.trim();
+    if (!t) return;
+    const at = new Date().toISOString();
+    // inbox (conversa não distribuída)
+    const conv = inbox.find(c => c.id === id);
+    if (conv) {
+      setInbox(prev => prev.map(c => c.id === id ? {
+        ...c,
+        ultimaMensagem: t,
+        mensagens: [...(c.mensagens || []), { at, from: "central", msg: t }],
+      } : c));
+      return;
+    }
+    // card distribuído
+    setCards(prev => prev.map(c => c.id === id ? {
+      ...c,
+      ultimaMensagem: t,
+      ultimaInteracao: at,
+      mensagensCentral: [...((c as any).mensagensCentral || []), { at, from: "central", msg: t }],
+      historico: [...c.historico, { at, msg: `Marketing enviou: ${t}` }],
+    } as CardAC : c));
+    toast({ title: "Mensagem enviada", description: "Vendedor será notificado no CRM." });
+  };
+
   // ---- Varredura periódica de SLA / estagnação (Fase 7.3) ----
   const slaSentRef = useRef<Set<string>>(new Set());
   const estagSentRef = useRef<Set<string>>(new Set());
@@ -596,7 +625,7 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
     setColunas, setConfig,
     distribuirManual, distribuirRodizio, redistribuirCard,
     setVendedores, togglePausaVendedor,
-    registrarEventoConversa, resolverConflito,
+    registrarEventoConversa, resolverConflito, enviarMensagemMarketing,
   }), [cards, colunas, config, inbox, vendedores, conflitos, cardsPorColuna, colunaByKey, slaEstourado, diasParado, estagnado, cardDaConversa, conversaDoCard, cardByTelefone, registrarEventoConversa]);
 
   return <AtendimentoComercialContext.Provider value={value}>{children}</AtendimentoComercialContext.Provider>;

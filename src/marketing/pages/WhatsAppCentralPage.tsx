@@ -2,13 +2,13 @@ import { useMemo, useState } from "react";
 import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
 import { origemLabels, tempoAgo, CardAC, ConversaCentral } from "@/data/mockAtendimentoComercial";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MessageCircle, Search, Clock, ArrowRightLeft, Shuffle, User } from "lucide-react";
+import { MessageCircle, Search, Clock, ArrowRightLeft, Shuffle, User, Send } from "lucide-react";
 import { origemACColors, origemACLabels, type OrigemAC } from "../styles/tokens";
 
 type Aba = "nao_distribuidas" | "distribuidas";
 
 export default function WhatsAppCentralPage() {
-  const { inbox, cards, vendedores, colunas, distribuirManual, distribuirRodizio } = useAtendimentoComercial();
+  const { inbox, cards, vendedores, colunas, distribuirManual, distribuirRodizio, enviarMensagemMarketing } = useAtendimentoComercial();
   const [aba, setAba] = useState<Aba>("nao_distribuidas");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -99,6 +99,7 @@ export default function WhatsAppCentralPage() {
               vendedores={vendedores}
               onDistribuirManual={(vid) => aba === "nao_distribuidas" && distribuirManual(selectedItem.id, vid)}
               onDistribuirRodizio={() => aba === "nao_distribuidas" && distribuirRodizio(selectedItem.id)}
+              onEnviarMensagem={(texto) => enviarMensagemMarketing(selectedItem.id, texto)}
               vendedorAtual={aba === "distribuidas" ? (selectedItem as CardAC).vendedorNome : undefined}
               etapaAtual={aba === "distribuidas" ? colunas.find(c => c.id === (selectedItem as CardAC).colunaId)?.label : undefined}
             />
@@ -110,20 +111,34 @@ export default function WhatsAppCentralPage() {
 }
 
 function ChatPane({
-  item, aba, vendedores, onDistribuirManual, onDistribuirRodizio, vendedorAtual, etapaAtual,
+  item, aba, vendedores, onDistribuirManual, onDistribuirRodizio, onEnviarMensagem, vendedorAtual, etapaAtual,
 }: {
   item: any;
   aba: Aba;
   vendedores: { id: string; nome: string; iniciais: string; cor: string; pausado: boolean }[];
   onDistribuirManual: (vid: string) => void;
   onDistribuirRodizio: () => void;
+  onEnviarMensagem: (texto: string) => void;
   vendedorAtual?: string;
   etapaAtual?: string;
 }) {
-  const mensagens: { at: string; from: "lead" | "central"; msg: string }[] =
-    item.mensagens || item.historico || [{ at: item.ultimaInteracao || item.chegouEm, from: "lead", msg: item.ultimaMensagem }];
+  const [texto, setTexto] = useState("");
+  const base: { at: string; from: "lead" | "central"; msg: string }[] =
+    item.mensagens ||
+    (item.historico
+      ? [{ at: item.ultimaInteracao || item.chegouEm, from: "lead" as const, msg: item.ultimaMensagem }]
+      : [{ at: item.ultimaInteracao || item.chegouEm, from: "lead" as const, msg: item.ultimaMensagem }]);
+  const extras: { at: string; from: "lead" | "central"; msg: string }[] = item.mensagensCentral || [];
+  const mensagens = [...base, ...extras].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
   const nome = item.nome;
   const telefone = item.telefone;
+
+  const enviar = () => {
+    const t = texto.trim();
+    if (!t) return;
+    onEnviarMensagem(t);
+    setTexto("");
+  };
 
   return (
     <>
@@ -158,24 +173,43 @@ function ChatPane({
         ))}
       </div>
 
-      {/* Barra inferior — só distribuir se não distribuída */}
-      <div className="shrink-0 px-4 py-3 border-t border-border bg-card">
-        {aba === "nao_distribuidas" ? (
-          <div className="flex items-center gap-2">
-            <p className="text-[11px] text-muted-foreground flex-1">
-              🔒 Marketing acompanha em leitura — respostas são feitas pelo vendedor no CRM.
-            </p>
-            <button onClick={onDistribuirRodizio}
-              className="text-[11px] inline-flex items-center gap-1 px-2.5 py-1.5 rounded border border-border hover:bg-muted">
-              <Shuffle className="h-3 w-3" /> Rodízio
-            </button>
-            <DistribuirPopover vendedores={vendedores} onPick={onDistribuirManual} />
-          </div>
-        ) : (
-          <p className="text-[11px] text-muted-foreground text-center">
-            Conversa em atendimento por <strong className="text-foreground">{vendedorAtual}</strong> · etapa <strong className="text-foreground">{etapaAtual}</strong>
+      {/* Ações de distribuição / status */}
+      {aba === "nao_distribuidas" ? (
+        <div className="shrink-0 px-4 py-2 border-t border-border bg-card flex items-center gap-2">
+          <p className="text-[11px] text-muted-foreground flex-1">
+            Marketing pode responder aqui até distribuir para um vendedor.
           </p>
-        )}
+          <button onClick={onDistribuirRodizio}
+            className="text-[11px] inline-flex items-center gap-1 px-2.5 py-1.5 rounded border border-border hover:bg-muted">
+            <Shuffle className="h-3 w-3" /> Rodízio
+          </button>
+          <DistribuirPopover vendedores={vendedores} onPick={onDistribuirManual} />
+        </div>
+      ) : (
+        <div className="shrink-0 px-4 py-2 border-t border-border bg-card">
+          <p className="text-[11px] text-muted-foreground text-center">
+            Em atendimento por <strong className="text-foreground">{vendedorAtual}</strong> · etapa <strong className="text-foreground">{etapaAtual}</strong> — mensagens do marketing aparecem no CRM do vendedor.
+          </p>
+        </div>
+      )}
+
+      {/* Composer do marketing */}
+      <div className="shrink-0 px-4 py-3 border-t border-border bg-card flex items-end gap-2">
+        <textarea
+          value={texto}
+          onChange={e => setTexto(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); } }}
+          rows={1}
+          placeholder="Escreva uma mensagem como Marketing…"
+          className="flex-1 resize-none bg-background border border-border rounded-lg px-3 py-2 text-[12px] focus:outline-none focus:ring-1 focus:ring-ring max-h-32"
+        />
+        <button
+          onClick={enviar}
+          disabled={!texto.trim()}
+          className="text-[12px] font-medium inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:opacity-90 disabled:opacity-40"
+        >
+          <Send className="h-3.5 w-3.5" /> Enviar
+        </button>
       </div>
     </>
   );
