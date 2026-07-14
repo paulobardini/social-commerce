@@ -11,6 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { relatoriosSalvos, relatoriosProntos } from "@/data/mockAnalytics";
 import { useState } from "react";
+import { useVendedorPerfil } from "@/hooks/useVendedorPerfil";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const formatoIcons: Record<string, any> = {
