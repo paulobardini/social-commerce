@@ -6,11 +6,12 @@ import { KpiCard } from "../components/KpiCard";
 import { FunnelChart } from "../components/FunnelChart";
 import { DonutChart } from "../components/DonutChart";
 import { formatBRL, formatBRLCompact, formatPct, formatNum, origemACColors, origemACLabels, type OrigemAC } from "../styles/tokens";
-import { investimentoPorCampanha, investimentoPorOrigem, type CardAC, type OrigemLead } from "@/data/mockAtendimentoComercial";
+import { investimentoPorCampanha, investimentoPorOrigem, type CardAC } from "@/data/mockAtendimentoComercial";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { TrendingUp, Users, DollarSign, Inbox, Plus, ArrowRightLeft, Search, Target, MessageCircle, Frown, AlertTriangle, Clock } from "lucide-react";
+import { Users, DollarSign, Inbox, Plus, ArrowRightLeft, Search, Target, MessageCircle, Frown, Clock } from "lucide-react";
+
 
 const ORDEM_FLUXO = ["leads", "fila", "atendimento", "cadastro", "qualificacao", "oportunidade"] as const;
 const ORIGENS_PAGAS: OrigemAC[] = ["meta_ads", "instagram"];
