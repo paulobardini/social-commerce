@@ -211,6 +211,9 @@ export default function WhatsAppInbox({
   const [sendOrcamentoOpen, setSendOrcamentoOpen] = useState(false);
   const [trabalharOpen, setTrabalharOpen] = useState(false);
   const [trabalharIdx, setTrabalharIdx] = useState(0);
+  const [filaMode, setFilaMode] = useState(false);
+  const [filaQueue, setFilaQueue] = useState<string[]>([]);
+  const [filaIdx, setFilaIdx] = useState(0);
   const [gestorVer, setGestorVer] = useState(true);
   const [semVinculoIgnored, setSemVinculoIgnored] = useState(false);
 
@@ -371,12 +374,54 @@ export default function WhatsAppInbox({
     toast({ title: "Template de cobrança carregado no composer" });
   }
 
-  // ---------- Trabalhar fila ----------
+  // ---------- Trabalhar fila (percorre pipeline: leads → fila → atendimento → cadastro) ----------
+  const FLUXO_KEYS = ["leads", "fila", "atendimento", "cadastro"] as const;
+
+  const filaOrdenadaPipeline = useMemo(() => {
+    const ids: string[] = [];
+    for (const key of FLUXO_KEYS) {
+      const col = colunas.find(c => c.key === key);
+      if (!col) continue;
+      const cardsDaCol = cards
+        .filter(c => c.colunaId === col.id && c.status !== "perdido")
+        .sort((a, b) => new Date(a.entradaColunaEm).getTime() - new Date(b.entradaColunaEm).getTime());
+      for (const card of cardsDaCol) {
+        const cid = conversaIdDoCardAC(card);
+        if (conversasBase.some(cv => cv.id === cid) && !ids.includes(cid)) ids.push(cid);
+      }
+    }
+    return ids;
+  }, [cards, colunas, conversasBase]);
+
   function abrirFila() {
-    if (filaOrdenada.length === 0) { toast({ title: "Fila zerada 🎉", description: "Sem prioridades pendentes." }); return; }
-    setTrabalharIdx(0);
-    setTrabalharOpen(true);
+    if (filaOrdenadaPipeline.length === 0) {
+      toast({ title: "Fila zerada 🎉", description: "Sem leads/atendimentos/cadastros pendentes." });
+      return;
+    }
+    setFilaQueue(filaOrdenadaPipeline);
+    setFilaIdx(0);
+    setFilaMode(true);
+    setSelectedId(filaOrdenadaPipeline[0]);
   }
+  function proximoNaFila() {
+    const next = filaIdx + 1;
+    if (next >= filaQueue.length) {
+      setFilaMode(false);
+      toast({ title: `Fila zerada 🎉 · ${filaQueue.length} conversas percorridas` });
+      return;
+    }
+    setFilaIdx(next);
+    setSelectedId(filaQueue[next]);
+  }
+  function anteriorNaFila() {
+    if (filaIdx === 0) return;
+    const prev = filaIdx - 1;
+    setFilaIdx(prev);
+    setSelectedId(filaQueue[prev]);
+  }
+  function sairDaFila() { setFilaMode(false); }
+
+  // (Legado) Modal "Trabalhar fila" — mantido para compatibilidade, não usado no fluxo atual
   function proximo() {
     if (trabalharIdx + 1 >= filaOrdenada.length) {
       setTrabalharOpen(false);
@@ -524,7 +569,7 @@ export default function WhatsAppInbox({
                   </button>
                 </div>
                 <Button size="sm" className="w-full h-7 text-[11px] gap-1" onClick={abrirFila}>
-                  <Play className="h-3 w-3" /> Trabalhar fila ({filaOrdenada.length})
+                  <Play className="h-3 w-3" /> Trabalhar fila ({filaOrdenadaPipeline.length})
                 </Button>
               </div>
             )}
@@ -651,6 +696,34 @@ export default function WhatsAppInbox({
         {/* CENTER */}
         {selected ? (
           <div className={`${!selectedId || !selected ? "hidden md:flex" : "flex"} flex-1 flex-col min-w-0`}>
+            {filaMode && (() => {
+              const cardAtual = cardDaConversa(selected.id);
+              const colAtual = cardAtual ? colunas.find(c => c.id === cardAtual.colunaId) : null;
+              return (
+                <div className="border-b border-accent/40 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent px-4 py-2 flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Play className="h-3.5 w-3.5 text-accent shrink-0" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-accent">Trabalhando fila</span>
+                    <Badge variant="secondary" className="text-[10px] shrink-0">{filaIdx + 1} de {filaQueue.length}</Badge>
+                    {colAtual && (
+                      <span className="text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded bg-background border border-border shrink-0">
+                        <span className={`h-1.5 w-1.5 rounded-full ${colAtual.cor}`} />
+                        <span className="font-semibold">{colAtual.label}</span>
+                      </span>
+                    )}
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7 text-[11px] gap-1" onClick={anteriorNaFila} disabled={filaIdx === 0}>
+                    <ChevronLeft className="h-3 w-3" /> Anterior
+                  </Button>
+                  <Button size="sm" className="h-7 text-[11px] gap-1" onClick={proximoNaFila}>
+                    Próxima <ArrowRight className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-[11px]" onClick={sairDaFila}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              );
+            })()}
             <div className="h-14 border-b border-border flex items-center px-4 gap-3 bg-card shrink-0">
               <button onClick={() => setSelectedId("")} className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg hover:bg-muted">
                 <ChevronLeft className="h-4 w-4" />
