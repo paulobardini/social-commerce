@@ -172,3 +172,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ label, value }: { label: string; value: string }) {
   return <div className="flex items-start justify-between gap-2 text-[12px]"><span className="text-muted-foreground shrink-0">{label}</span><span className="text-foreground text-right">{value}</span></div>;
 }
+function Edit({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="text-[10px] text-muted-foreground block mb-0.5">{label}</label>
+      <input value={value} onChange={e => onChange(e.target.value)}
+        className="w-full bg-background border border-border rounded-md px-2 py-1 text-[12px] focus:outline-none focus:ring-1 focus:ring-ring" />
+    </div>
+  );
+}
