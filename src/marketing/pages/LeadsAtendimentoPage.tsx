@@ -419,6 +419,9 @@ export default function LeadsAtendimentoPage() {
           </div>
         </div>
 
+        </>
+        )}
+
         <NovoLeadModal open={novoOpen} onClose={() => setNovoOpen(false)} />
       </div>
     </TooltipProvider>
