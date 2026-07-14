@@ -8,7 +8,7 @@ import { origemACColors, origemACLabels, type OrigemAC } from "../styles/tokens"
 type Aba = "nao_distribuidas" | "distribuidas";
 
 export default function WhatsAppCentralPage() {
-  const { inbox, cards, vendedores, colunas, distribuirManual, distribuirRodizio } = useAtendimentoComercial();
+  const { inbox, cards, vendedores, colunas, distribuirManual, distribuirRodizio, enviarMensagemMarketing } = useAtendimentoComercial();
   const [aba, setAba] = useState<Aba>("nao_distribuidas");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
