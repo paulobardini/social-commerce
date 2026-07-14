@@ -291,30 +291,23 @@ export default function LeadsAtendimentoPage() {
           </div>
         </div>
 
-        {/* Perdas por motivo */}
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Perdas por motivo</h2>
-          {porMotivo.length === 0 ? (
-            <p className="text-[12px] text-muted-foreground py-6 text-center">Nenhum lead perdido no período 🎉</p>
-          ) : (
-            <div className="space-y-2">
-              {porMotivo.map(({ motivo, qtd }) => {
-                const pct = (qtd / totalPerdas) * 100;
-                return (
-                  <div key={motivo}>
-                    <div className="flex items-center justify-between text-[11px] mb-1">
-                      <span className="text-foreground truncate pr-2">{motivo}</span>
-                      <span className="tabular-nums text-muted-foreground shrink-0">{qtd} · {formatPct(pct, 0)}</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-rose-500/70 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+        {/* (Perdas por motivo movidas para a aba "Perdidos" acima — drill-down completo) */}
+        {perdidos.length > 0 && (
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Frown className="h-4 w-4 text-rose-600" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">{perdidos.length} leads perdidos no período</p>
+                <p className="text-[11px] text-muted-foreground">Gestão completa (análise, renutrição, arquivamento) na aba "Perdidos".</p>
+              </div>
             </div>
-          )}
-        </div>
+            <button onClick={() => setVisao("perdidos")}
+              className="text-[12px] font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-muted">
+              Abrir aba
+            </button>
+          </div>
+        )}
+
 
         {/* Inbox */}
         <div className="bg-card border border-border rounded-xl p-4">
