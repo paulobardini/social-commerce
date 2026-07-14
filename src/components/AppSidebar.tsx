@@ -3,7 +3,7 @@ import {
   LayoutDashboard, BarChart3, Kanban, Users, Target, Briefcase,
   UserCog, MessageCircle, ClipboardList, CheckSquare, Calendar,
   Settings, Lightbulb, Tag, ChevronLeft, ChevronRight,
-  FileText, ChevronDown, Sparkles, ShoppingCart, Radar, Brain, GitCompare, Truck, Layers, Headphones,
+  FileText, ChevronDown, Sparkles, ShoppingCart, Radar, Brain, GitCompare, Truck, Layers, Headphones, Inbox,
   ShieldCheck,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -42,6 +42,7 @@ const sections: MenuSection[] = [
     collapsible: true,
     items: [
       { icon: LayoutDashboard, label: "Painel", path: "/vendedor/dashboard" },
+      { icon: Inbox, label: "Atendimento", path: "/vendedor/atendimento-comercial" },
       { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
       { icon: ShoppingCart, label: "Meus Pedidos", path: "/vendedor/360/pedidos" },
       { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
@@ -60,7 +61,7 @@ const sections: MenuSection[] = [
       { icon: UserCog, label: "Representantes", path: "/vendedor/representantes", badgeKey: "planos_escalados" },
       { icon: ShoppingCart, label: "Pedidos (Empresa)", path: "/vendedor/360/pedidos?escopo=empresa" },
       { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
-      { icon: Headphones, label: "Atendimento", path: "/vendedor/atendimento" },
+      { icon: Headphones, label: "Atendimento Setores", path: "/vendedor/atendimento" },
       { icon: FileText, label: "Relatórios", path: "/vendedor/relatorios" },
       { icon: Tag, label: "Segmentações", path: "/vendedor/segmentacoes" },
     ],

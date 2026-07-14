@@ -120,6 +120,10 @@ import LookbooksPage from "@/marketing/pages/LookbooksPage";
 import LookbookEditorPage from "@/marketing/pages/LookbookEditorPage";
 import LookbookPublicoPage from "@/marketing/pages/LookbookPublicoPage";
 import { CockpitProvider } from "@/cockpit/contexts/CockpitContext";
+import { AtendimentoComercialProvider } from "@/contexts/AtendimentoComercialContext";
+import AtendimentoComercial from "./pages/vendedor/AtendimentoComercial";
+import AtendimentoConfigPage from "./pages/vendedor/AtendimentoConfigPage";
+import LeadsAtendimentoPage from "@/marketing/pages/LeadsAtendimentoPage";
 
 const queryClient = new QueryClient();
 
@@ -154,6 +158,7 @@ const App = () => (
               <StartDataProvider>
               <StartCartProvider>
               <CockpitProvider>
+              <AtendimentoComercialProvider>
               <Routes>
                 {/* Bare pages (no sidebar/topbar) */}
                 <Route path="/login" element={<Login />} />
@@ -197,6 +202,8 @@ const App = () => (
                 <Route path="/vendedor/whatsapp" element={<FullHeightRoute><WhatsAppInbox /></FullHeightRoute>} />
                 <Route path="/vendedor/tarefas" element={<LayoutRoute><TarefasPage /></LayoutRoute>} />
                 <Route path="/vendedor/atendimento" element={<LayoutRoute><AtendimentoPage /></LayoutRoute>} />
+                <Route path="/vendedor/atendimento-comercial" element={<LayoutRoute><AtendimentoComercial /></LayoutRoute>} />
+                <Route path="/vendedor/configuracoes/atendimento" element={<LayoutRoute><AtendimentoConfigPage /></LayoutRoute>} />
                 <Route path="/vendedor/atendimento/whatsapp" element={<FullHeightRoute><AtendimentoWhatsApp /></FullHeightRoute>} />
                 <Route path="/vendedor/agenda" element={<LayoutRoute><AgendaPage /></LayoutRoute>} />
                 <Route path="/vendedor/carteira" element={<LayoutRoute><CarteiraPage /></LayoutRoute>} />
@@ -255,6 +262,7 @@ const App = () => (
                 {/* Módulo Marketing */}
                 <Route path="/marketing" element={<Navigate to="/marketing/dashboard" replace />} />
                 <Route path="/marketing/dashboard" element={<MarketingProviders><MarketingLayout><MarketingDashboard /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/leads-atendimento" element={<MarketingProviders><MarketingLayout><LeadsAtendimentoPage /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/central-vendas" element={<MarketingProviders><MarketingLayout><CentralVendasPage /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/meta-ads" element={<MarketingProviders><MarketingLayout><MetaAdsHub /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/meta-ads/:id" element={<MarketingProviders><MarketingLayout><MetaCampaignDetail /></MarketingLayout></MarketingProviders>} />
@@ -275,6 +283,7 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </AtendimentoComercialProvider>
               </CockpitProvider>
               </StartCartProvider>
               </StartDataProvider>

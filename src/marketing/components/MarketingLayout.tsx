@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Megaphone, GitBranch, BookOpen, Users2, Target, Plug, Settings, Sparkles, ArrowRightLeft, Flame } from "lucide-react";
+import { LayoutDashboard, Megaphone, GitBranch, BookOpen, Users2, Target, Plug, Settings, Sparkles, ArrowRightLeft, Flame, Inbox } from "lucide-react";
 import { useMarketing } from "../contexts/MarketingDataContext";
 import { useNotifications } from "../contexts/MarketingNotificationsContext";
 
 const navItems = [
   { to: "/marketing/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/marketing/leads-atendimento", icon: Inbox, label: "Leads & Atendimento" },
   { to: "/marketing/central-vendas", icon: Flame, label: "Central de Vendas", badge: "fila" as const },
   { to: "/marketing/meta-ads", icon: Sparkles, label: "Meta Ads", highlight: true },
   { to: "/marketing/atribuicao", icon: Target, label: "Atribuição" },
