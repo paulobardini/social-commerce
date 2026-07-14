@@ -120,10 +120,12 @@ import LookbooksPage from "@/marketing/pages/LookbooksPage";
 import LookbookEditorPage from "@/marketing/pages/LookbookEditorPage";
 import LookbookPublicoPage from "@/marketing/pages/LookbookPublicoPage";
 import { CockpitProvider } from "@/cockpit/contexts/CockpitContext";
+import { NotificacoesProvider } from "@/contexts/NotificacoesContext";
 import { AtendimentoComercialProvider } from "@/contexts/AtendimentoComercialContext";
 import AtendimentoComercial from "./pages/vendedor/AtendimentoComercial";
 import AtendimentoConfigPage from "./pages/vendedor/AtendimentoConfigPage";
 import LeadsAtendimentoPage from "@/marketing/pages/LeadsAtendimentoPage";
+
 
 const queryClient = new QueryClient();
 
@@ -158,7 +160,9 @@ const App = () => (
               <StartDataProvider>
               <StartCartProvider>
               <CockpitProvider>
+              <NotificacoesProvider>
               <AtendimentoComercialProvider>
+
               <Routes>
                 {/* Bare pages (no sidebar/topbar) */}
                 <Route path="/login" element={<Login />} />
@@ -284,7 +288,9 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </AtendimentoComercialProvider>
+              </NotificacoesProvider>
               </CockpitProvider>
+
               </StartCartProvider>
               </StartDataProvider>
               </StartAuthProvider>

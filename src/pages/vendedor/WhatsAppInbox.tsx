@@ -23,6 +23,9 @@ import { SendOrcamentoModal } from "@/components/vendedor/SendOrcamentoModal";
 import { useToast } from "@/hooks/use-toast";
 import { getConversaSetor, setorDot, setorLabels } from "@/data/mockAtendimento";
 import { saudeCliente, valor12m, formatBRL, diasSemContato } from "@/lib/carteiraMetodo";
+import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
+import { PainelAtendimentoWpp } from "@/components/atendimentoComercial/PainelAtendimentoWpp";
+
 
 // MOCK: "agora" para tempo decorrido — usar Date.now() em produção.
 const NOW = new Date("2026-04-13T15:00:00");
@@ -134,6 +137,7 @@ export default function WhatsAppInbox({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { templates } = useMessageTemplates();
+  const { cardDaConversa, colunas, registrarEventoConversa } = useAtendimentoComercial();
 
   const conversasBase = useMemo(
     () => (conversasFiltro ? mockConversas.filter(conversasFiltro) : mockConversas),
@@ -142,7 +146,17 @@ export default function WhatsAppInbox({
 
   const [searchParams, setSearchParams] = useSearchParams();
   const telefoneParam = searchParams.get("telefone");
+  const cardIdParam = searchParams.get("cardId");
   const initialSelectedId = useMemo(() => {
+    // 1) cardId → conversaId
+    if (cardIdParam) {
+      // buscamos no cards do context via helper indireto: cardDaConversa não serve; iteramos conversas
+      const cardConv = conversasBase.find(c => {
+        const card = cardDaConversa(c.id);
+        return card?.id === cardIdParam;
+      });
+      if (cardConv) return cardConv.id;
+    }
     if (telefoneParam) {
       const digits = telefoneParam.replace(/\D/g, "");
       const match = conversasBase.find(c => {
@@ -153,19 +167,19 @@ export default function WhatsAppInbox({
       if (match) return match.id;
     }
     return conversasBase[0]?.id || "";
-  }, [telefoneParam, conversasBase]);
+  }, [telefoneParam, cardIdParam, conversasBase, cardDaConversa]);
   const [selectedId, setSelectedId] = useState<string>(initialSelectedId);
   useEffect(() => {
-    if (telefoneParam && initialSelectedId) {
+    if ((telefoneParam || cardIdParam) && initialSelectedId) {
       setSelectedId(initialSelectedId);
-      // limpa o parâmetro após aplicar
       const next = new URLSearchParams(searchParams);
       next.delete("telefone");
       next.delete("cardId");
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [telefoneParam, initialSelectedId]);
+  }, [telefoneParam, cardIdParam, initialSelectedId]);
+
   const [search, setSearch] = useState("");
   const [msgInput, setMsgInput] = useState("");
   const [msgSuggestion, setMsgSuggestion] = useState<{ titulo: string; original: string } | null>(null);
@@ -268,7 +282,23 @@ export default function WhatsAppInbox({
       texto, horario, data, lida: false, status: "enviado",
     };
     setExtraMessages(prev => ({ ...prev, [selected.id]: [...(prev[selected.id] || []), newMsg] }));
+    // Fase 7.1 — gatilho de primeira resposta do vendedor
+    registrarEventoConversa({ tipo: "primeira_resposta_vendedor", conversaId: selected.id, texto });
   }
+
+  function simularMensagemRecebida() {
+    if (!selected) return;
+    const cli = mockClientes360.find(c => c.id === selected.clienteId);
+    registrarEventoConversa({
+      tipo: "mensagem_recebida",
+      conversaId: selected.id,
+      telefone: cli?.whatsapp || cli?.telefone,
+      nome: cli?.nomeFantasia || selected.clienteNome,
+      texto: "(simulado) Oi, cheguei aqui pelo WhatsApp!",
+    });
+    toast({ title: "Evento simulado", description: "Mensagem recebida registrada no context." });
+  }
+
   function handleSendInput() {
     if (!msgInput.trim()) return;
     if (msgSuggestion && msgInput.trim() === msgSuggestion.original.trim()) {
@@ -352,6 +382,8 @@ export default function WhatsAppInbox({
     const cli = mockClientes360.find(c => c.id === conv.clienteId);
     const saude = cli ? saudeCliente(cli) : null;
     const saudeColor = saude === "risco" ? "bg-red-500" : saude === "inativo" ? "bg-yellow-500" : "bg-emerald-500";
+    const cardAtivo = cardDaConversa(conv.id);
+    const colAtiva = cardAtivo ? colunas.find(cx => cx.id === cardAtivo.colunaId) : null;
     return (
       <button
         key={conv.id}
@@ -374,8 +406,17 @@ export default function WhatsAppInbox({
               )}
               <p className={`text-xs truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
             </div>
-            <span className="text-[10px] text-muted-foreground shrink-0">{conv.ultimaHora}</span>
+            <div className="flex items-center gap-1 shrink-0">
+              {colAtiva && (
+                <span title={`Atendimento: ${colAtiva.label}`} className="text-[9px] font-semibold px-1 rounded bg-muted text-foreground flex items-center gap-0.5">
+                  <span className={`h-1.5 w-1.5 rounded-full ${colAtiva.cor}`} />
+                  {colAtiva.label.split(" ")[0]}
+                </span>
+              )}
+              <span className="text-[10px] text-muted-foreground">{conv.ultimaHora}</span>
+            </div>
           </div>
+
           <p className="text-[11px] truncate mt-0.5 text-muted-foreground italic">
             {modoMetodo ? motivoEstrategico(conv) : conv.ultimaMensagem}
           </p>
@@ -696,98 +737,113 @@ export default function WhatsAppInbox({
           </div>
         )}
 
-        {/* RIGHT — Mini-360 */}
-        {selected && cliente && (
+        {/* RIGHT — Painel Atendimento + Mini-360 */}
+        {selected && (
           <div className="hidden lg:block w-[300px] border-l border-border bg-card overflow-y-auto shrink-0">
-            <div className="p-4 text-center border-b border-border">
-              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2 relative">
-                <span className="text-2xl font-bold text-green-700">{cliente.nomeFantasia[0]}</span>
-                {(() => {
-                  const s = saudeCliente(cliente);
-                  const c = s === "risco" ? "bg-red-500" : s === "inativo" ? "bg-yellow-500" : "bg-emerald-500";
-                  return <div className={`absolute bottom-0 right-0 h-4 w-4 rounded-full ${c} border-2 border-card`} />;
-                })()}
-              </div>
-              <p className="text-sm font-semibold">{cliente.nomeFantasia}</p>
-              <p className="text-[10px] text-muted-foreground">{cliente.documento}</p>
-              <div className="flex justify-center gap-1 mt-2">
-                <Badge variant="outline" className="text-[9px] capitalize">{cliente.status.replace("_", " ")}</Badge>
-                <Badge variant="secondary" className="text-[9px]">{formatBRL(valor12m(cliente))} · 12m</Badge>
-              </div>
-            </div>
+            {/* Painel Atendimento Comercial (Fase 6) — sempre exibido, gerencia próprio empty-state */}
+            <PainelAtendimentoWpp
+              conversaId={selected.id}
+              clienteId={cliente?.id}
+              clienteNome={cliente?.nomeFantasia || selected.clienteNome}
+              telefone={cliente?.whatsapp || cliente?.telefone}
+              appendMessage={appendMessage}
+              onSimularRecebida={simularMensagemRecebida}
+            />
 
-            {/* Próxima ação */}
-            {modoMetodo && (
-              <div className="p-3 border-b border-border bg-accent/5">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Próxima ação</p>
-                <p className="text-xs font-medium">{cliente.proximaAcao}</p>
-                <Button size="sm" variant="outline" className="w-full h-7 text-[10px] mt-2 gap-1" onClick={usarSugestao}>
-                  <Sparkles className="h-3 w-3 text-accent" /> Aplicar sugestão do playbook
-                </Button>
-              </div>
-            )}
-
-            <div className="p-3 space-y-2 border-b border-border">
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><User className="h-3 w-3 shrink-0" /><span className="truncate">{cliente.representante}</span></div>
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Phone className="h-3 w-3 shrink-0" /><span>{cliente.whatsapp}</span></div>
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" /><span>{cliente.cidade}/{cliente.estado}</span></div>
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Clock className="h-3 w-3 shrink-0" /><span>Último contato: {cliente.ultimoContato}</span></div>
-            </div>
-
-            <div className="p-3 space-y-2 border-b border-border">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Em jogo</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-muted/50 rounded-lg p-2 text-center">
-                  <p className="text-lg font-bold font-heading text-purple-600">{cliente.oportunidadesAbertas}</p>
-                  <p className="text-[9px] text-muted-foreground">Oportunidades</p>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-2 text-center">
-                  <p className="text-lg font-bold font-heading text-orange-600">{cliente.orcamentosAtivos}</p>
-                  <p className="text-[9px] text-muted-foreground">Propostas</p>
-                </div>
-              </div>
-              {cliente.orcamentosAtivos > 0 && (
-                <div className="text-[10px] p-2 rounded bg-orange-50 border border-orange-200 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">Proposta #orc-087</span>
-                    <span className="text-orange-700">👁 visualizada</span>
+            {cliente && (
+              <>
+                <div className="p-4 text-center border-b border-border">
+                  <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2 relative">
+                    <span className="text-2xl font-bold text-green-700">{cliente.nomeFantasia[0]}</span>
+                    {(() => {
+                      const s = saudeCliente(cliente);
+                      const c = s === "risco" ? "bg-red-500" : s === "inativo" ? "bg-yellow-500" : "bg-emerald-500";
+                      return <div className={`absolute bottom-0 right-0 h-4 w-4 rounded-full ${c} border-2 border-card`} />;
+                    })()}
                   </div>
-                  <p className="text-muted-foreground">R$ 8.900 · 3 marcas · sem resposta há 2d</p>
-                  <button
-                    onClick={cobrarProposta}
-                    className="w-full mt-1 flex items-center justify-center gap-1 rounded bg-orange-600 text-white text-[10px] font-semibold py-1 hover:bg-orange-700 transition-colors"
-                  >
-                    <Bell className="h-3 w-3" /> Cobrar agora
-                  </button>
+                  <p className="text-sm font-semibold">{cliente.nomeFantasia}</p>
+                  <p className="text-[10px] text-muted-foreground">{cliente.documento}</p>
+                  <div className="flex justify-center gap-1 mt-2">
+                    <Badge variant="outline" className="text-[9px] capitalize">{cliente.status.replace("_", " ")}</Badge>
+                    <Badge variant="secondary" className="text-[9px]">{formatBRL(valor12m(cliente))} · 12m</Badge>
+                  </div>
                 </div>
-              )}
-            </div>
 
-            <div className="p-3 space-y-1.5">
-              <Button variant="default" size="sm" className="w-full text-xs justify-start h-8" onClick={() => setSendOrcamentoOpen(true)}>
-                <FileText className="h-3.5 w-3.5 mr-2" /> Enviar orçamento
-              </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
-                <Package className="h-3.5 w-3.5 mr-2" /> Montar cesta
-              </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
-                <TrendingUp className="h-3.5 w-3.5 mr-2" /> Registrar atendimento
-              </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
-                <Target className="h-3.5 w-3.5 mr-2" /> Criar oportunidade
-              </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
-                <CheckSquare className="h-3.5 w-3.5 mr-2" /> Criar tarefa
-              </Button>
-              <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
-                <Calendar className="h-3.5 w-3.5 mr-2" /> Enviar material
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full text-xs justify-start h-8 text-muted-foreground" onClick={() => navigate(`/vendedor/360/${cliente.id}`)}>
-                <ExternalLink className="h-3.5 w-3.5 mr-2" /> Abrir 360 completo
-              </Button>
-            </div>
+                {/* Próxima ação */}
+                {modoMetodo && (
+                  <div className="p-3 border-b border-border bg-accent/5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Próxima ação</p>
+                    <p className="text-xs font-medium">{cliente.proximaAcao}</p>
+                    <Button size="sm" variant="outline" className="w-full h-7 text-[10px] mt-2 gap-1" onClick={usarSugestao}>
+                      <Sparkles className="h-3 w-3 text-accent" /> Aplicar sugestão do playbook
+                    </Button>
+                  </div>
+                )}
+
+                <div className="p-3 space-y-2 border-b border-border">
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><User className="h-3 w-3 shrink-0" /><span className="truncate">{cliente.representante}</span></div>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Phone className="h-3 w-3 shrink-0" /><span>{cliente.whatsapp}</span></div>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><MapPin className="h-3 w-3 shrink-0" /><span>{cliente.cidade}/{cliente.estado}</span></div>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Clock className="h-3 w-3 shrink-0" /><span>Último contato: {cliente.ultimoContato}</span></div>
+                </div>
+
+                <div className="p-3 space-y-2 border-b border-border">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Em jogo</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-muted/50 rounded-lg p-2 text-center">
+                      <p className="text-lg font-bold font-heading text-purple-600">{cliente.oportunidadesAbertas}</p>
+                      <p className="text-[9px] text-muted-foreground">Oportunidades</p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-2 text-center">
+                      <p className="text-lg font-bold font-heading text-orange-600">{cliente.orcamentosAtivos}</p>
+                      <p className="text-[9px] text-muted-foreground">Propostas</p>
+                    </div>
+                  </div>
+                  {cliente.orcamentosAtivos > 0 && (
+                    <div className="text-[10px] p-2 rounded bg-orange-50 border border-orange-200 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold">Proposta #orc-087</span>
+                        <span className="text-orange-700">👁 visualizada</span>
+                      </div>
+                      <p className="text-muted-foreground">R$ 8.900 · 3 marcas · sem resposta há 2d</p>
+                      <button
+                        onClick={cobrarProposta}
+                        className="w-full mt-1 flex items-center justify-center gap-1 rounded bg-orange-600 text-white text-[10px] font-semibold py-1 hover:bg-orange-700 transition-colors"
+                      >
+                        <Bell className="h-3 w-3" /> Cobrar agora
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3 space-y-1.5">
+                  <Button variant="default" size="sm" className="w-full text-xs justify-start h-8" onClick={() => setSendOrcamentoOpen(true)}>
+                    <FileText className="h-3.5 w-3.5 mr-2" /> Enviar orçamento
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
+                    <Package className="h-3.5 w-3.5 mr-2" /> Montar cesta
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
+                    <TrendingUp className="h-3.5 w-3.5 mr-2" /> Registrar atendimento
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
+                    <Target className="h-3.5 w-3.5 mr-2" /> Criar oportunidade
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
+                    <CheckSquare className="h-3.5 w-3.5 mr-2" /> Criar tarefa
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full text-xs justify-start h-8">
+                    <Calendar className="h-3.5 w-3.5 mr-2" /> Enviar material
+                  </Button>
+                  <Button variant="ghost" size="sm" className="w-full text-xs justify-start h-8 text-muted-foreground" onClick={() => navigate(`/vendedor/360/${cliente.id}`)}>
+                    <ExternalLink className="h-3.5 w-3.5 mr-2" /> Abrir 360 completo
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         )}
+
       </div>
 
       {/* Modal: Trabalhar fila */}

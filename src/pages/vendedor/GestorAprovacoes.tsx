@@ -35,7 +35,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTarefas } from "@/contexts/TarefasContext";
+import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
 import type { MotivoAprovacao } from "@/cockpit/data/seed";
+
 
 const gestorId = "gestor-atual";
 
@@ -281,7 +283,69 @@ function DecisaoModal({ item, decisao, open, onOpenChange, onDecidido }: {
   );
 }
 
+function ConflitosTab() {
+  const { conflitos, resolverConflito } = useAtendimentoComercial();
+  const pendentes = conflitos.filter(c => c.status === "pendente");
+  const historico = conflitos.filter(c => c.status !== "pendente").slice(0, 20);
+
+  if (conflitos.length === 0) {
+    return <div className="nx-card p-8 text-center"><CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" /><p className="text-sm nx-muted">Sem conflitos de lead.</p></div>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {pendentes.length === 0 && (
+        <div className="nx-card p-6 text-center"><CheckCircle2 className="h-6 w-6 text-emerald-500 mx-auto mb-2" /><p className="text-sm nx-muted">Nenhum conflito pendente.</p></div>
+      )}
+      {pendentes.map(cf => (
+        <div key={cf.id} className="nx-card px-3 py-2.5 border-l-4 border-l-amber-500">
+          <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="text-[10px] bg-amber-50 border-amber-200 text-amber-800">Conflito de lead</Badge>
+                <span className="text-[11px] nx-muted font-mono">{cf.id}</span>
+                <span className="text-[11px] nx-muted">{new Date(cf.criadoEm).toLocaleString("pt-BR")}</span>
+              </div>
+              <p className="text-sm nx-text mt-1 truncate">{cf.nomeLead} · {cf.telefone}{cf.cnpj ? ` · ${cf.cnpj}` : ""}</p>
+              <p className="text-[11px] nx-muted mt-0.5">
+                <span className="font-semibold">{cf.vendedorDonoNome}</span> (dono) × <span className="font-semibold">{cf.vendedorNovoNome}</span> (novo) — {cf.motivo}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 md:justify-end md:shrink-0">
+              <Button size="sm" className="h-8 md:h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700"
+                onClick={() => { resolverConflito(cf.id, "manter_dono"); toast.success(`Mantido com ${cf.vendedorDonoNome}`); }}>
+                <CheckCircle2 className="h-3 w-3 mr-1" /> Manter com dono da conta
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 md:h-7 text-[11px]"
+                onClick={() => { resolverConflito(cf.id, "liberar_novo"); toast.success(`Liberado para ${cf.vendedorNovoNome}`); }}>
+                Liberar para o novo
+              </Button>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {historico.length > 0 && (
+        <div className="pt-2">
+          <p className="text-[10px] uppercase font-semibold nx-muted mb-1.5">Últimos resolvidos</p>
+          <div className="space-y-1.5">
+            {historico.map(cf => (
+              <div key={cf.id} className="nx-card px-3 py-1.5 flex items-center gap-2">
+                <span className="text-[11px] nx-muted flex-1 truncate">
+                  {cf.nomeLead} · {cf.status === "resolvido_dono" ? `→ ${cf.vendedorDonoNome}` : `→ ${cf.vendedorNovoNome}`}
+                </span>
+                <span className="text-[10px] nx-muted">{cf.decidoEm ? new Date(cf.decidoEm).toLocaleString("pt-BR") : ""}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HistoricoTab() {
+
   const { aprovacoesLog, seed } = useCockpit();
   const [q, setQ] = useState("");
   const [filtroDec, setFiltroDec] = useState<string>("todas");
@@ -483,8 +547,10 @@ export default function GestorAprovacoes() {
 
   const setEscopoFiltro = <T,>(setter: (v: T) => void, val: T) => { setter(val); };
 
-  const tabParam = params.get("aba") === "historico" ? "historico" : "fila";
+  const tabParam = params.get("aba") === "historico" ? "historico" : params.get("aba") === "conflitos" ? "conflitos" : "fila";
   const filtroAtivo = q || repFiltro !== "todos" || faixa !== "todos" || filtroKey !== "todas";
+  const { conflitos } = useAtendimentoComercial();
+  const conflitosPendentes = conflitos.filter(c => c.status === "pendente").length;
 
   return (
     <div className="nx-shell min-h-screen">
@@ -492,19 +558,23 @@ export default function GestorAprovacoes() {
       <div className="px-4 md:px-6 py-4 space-y-4">
         <div>
           <p className="text-xs nx-muted">
-            Fora da política · crédito · estoque. Fast-track passa direto e não aparece aqui.
+            Fora da política · crédito · estoque · conflitos de lead. Fast-track passa direto e não aparece aqui.
           </p>
         </div>
 
         <Tabs value={tabParam} onValueChange={(v) => {
           const p = new URLSearchParams(params);
-          if (v === "historico") p.set("aba", "historico"); else p.delete("aba");
+          if (v === "fila") p.delete("aba"); else p.set("aba", v);
           setParams(p, { replace: true });
         }}>
           <TabsList className="bg-white border border-[#E7E9EE] p-1 h-auto">
             <TabsTrigger value="fila" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Fila</TabsTrigger>
+            <TabsTrigger value="conflitos" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">
+              Conflitos de lead{conflitosPendentes > 0 && ` (${conflitosPendentes})`}
+            </TabsTrigger>
             <TabsTrigger value="historico" className="text-xs data-[state=active]:bg-[#2D3A8C] data-[state=active]:text-white">Histórico</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="fila" className="mt-4 space-y-3">
             {/* Barra de busca + filtros avançados */}
@@ -635,7 +705,9 @@ export default function GestorAprovacoes() {
             )}
           </TabsContent>
 
+          <TabsContent value="conflitos" className="mt-4"><ConflitosTab /></TabsContent>
           <TabsContent value="historico" className="mt-4"><HistoricoTab /></TabsContent>
+
         </Tabs>
 
         <DecisaoModal
