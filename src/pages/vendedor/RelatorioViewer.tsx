@@ -70,8 +70,14 @@ export default function RelatorioViewer() {
           {relatorio.agrupamento && <Badge variant="outline" className="text-[9px]">Agrupado por: {relatorio.agrupamento}</Badge>}
         </div>
 
+        {/* Fase 11 — Relatórios de Atendimento (gestor) */}
+        {relatorio.id === "atd-desempenho" && <AtdDesempenhoView />}
+        {relatorio.id === "atd-funil" && <AtdFunilView />}
+        {relatorio.id === "atd-perdas" && <AtdPerdasView />}
+        {relatorio.id === "atd-sla" && <AtdSlaView />}
+
         {/* Report content by entity */}
-        {relatorio.entidade === "clientes" && (
+        {relatorio.entidade === "clientes" && !relatorio.id.startsWith("atd-") && (
           <Card className="border border-border">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
