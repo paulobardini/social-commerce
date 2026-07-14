@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
 import { CardAtendimento } from "@/components/atendimentoComercial/CardAtendimento";
 import { CardDrawer } from "@/components/atendimentoComercial/CardDrawer";
