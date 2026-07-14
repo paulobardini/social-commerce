@@ -16,6 +16,7 @@ export default function AtendimentoComercial() {
   const perfil = useVendedorPerfil();
   const isGestor = perfil === "gestor" || perfil === "admin" || perfil === "gestor_regional";
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [busca, setBusca] = useState("");
   const [filtroTag, setFiltroTag] = useState<TagCard | "todas">("todas");
   const [filtroOrigem, setFiltroOrigem] = useState<OrigemLead | "todas">("todas");
