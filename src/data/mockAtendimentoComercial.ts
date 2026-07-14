@@ -159,7 +159,7 @@ export const mockCardsACSeed: CardAC[] = [
 
   // Fila (5) — cliente ainda não teve primeira resposta
   mkCard({ id: "c6", colunaId: "col-fila", nome: "Rei das Crianças", telefone: "+55 31 98765-0011", tag: "lead", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", vendedorId: "v-paulo",
-    ultimaMensagem: "Bom dia! Vi o catálogo…", ultimaInteracao: hoursAgo(6), chegouEm: hoursAgo(6), entradaColunaEm: hoursAgo(6), naoLidas: 2, conversaId: "conv2", clienteId: "c9" }),
+    ultimaMensagem: "Bom dia! Vi o catálogo…", ultimaInteracao: hoursAgo(6), chegouEm: hoursAgo(6), entradaColunaEm: hoursAgo(6), naoLidas: 2, conversaId: "conv2" }),
   mkCard({ id: "c7", colunaId: "col-fila", nome: "Anjus Baby e Kids", telefone: "+55 31 99987-3300", tag: "reativacao", origem: "whats_central", vendedorId: "v-paulo",
     ultimaMensagem: "Olá, faz tempo que não conversamos. Tem novidades?", ultimaInteracao: hoursAgo(10), chegouEm: hoursAgo(10), entradaColunaEm: hoursAgo(10), naoLidas: 1, conversaId: "conv9", clienteId: "c13" }),
   mkCard({ id: "c8", colunaId: "col-fila", nome: "Boutique da Thay", telefone: "+55 41 99900-1122", tag: "carteira", origem: "whats_central", vendedorId: "v-paulo",
@@ -171,9 +171,9 @@ export const mockCardsACSeed: CardAC[] = [
 
   // Em Atendimento (5)
   mkCard({ id: "c11", colunaId: "col-atend", nome: "Milykids", telefone: "+55 47 98800-4411", tag: "lead", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", vendedorId: "v-paulo",
-    ultimaMensagem: "Paulo, sobre o orçamento…", ultimaInteracao: hoursAgo(24), chegouEm: daysAgo(3), entradaColunaEm: daysAgo(3), naoLidas: 1, conversaId: "conv3", clienteId: "c7" }),
+    ultimaMensagem: "Paulo, sobre o orçamento…", ultimaInteracao: hoursAgo(24), chegouEm: daysAgo(3), entradaColunaEm: daysAgo(3), naoLidas: 1, conversaId: "conv3" }),
   mkCard({ id: "c12", colunaId: "col-atend", nome: "Super Baby Store", telefone: "+55 11 97070-4488", tag: "lead", origem: "whats_central", vendedorId: "v-paulo",
-    ultimaMensagem: "Pode me enviar o catálogo?", ultimaInteracao: hoursAgo(20), chegouEm: daysAgo(2), entradaColunaEm: daysAgo(2), naoLidas: 0, conversaId: "conv7", clienteId: "c11" }),
+    ultimaMensagem: "Pode me enviar o catálogo?", ultimaInteracao: hoursAgo(20), chegouEm: daysAgo(2), entradaColunaEm: daysAgo(2), naoLidas: 0, conversaId: "conv7" }),
   mkCard({ id: "c13", colunaId: "col-atend", nome: "Estilo Kids", telefone: "+55 19 98122-6600", tag: "lead", origem: "meta_ads", campanha: "Coleção Verão · Awareness", vendedorId: "v-marina",
     ultimaMensagem: "Vou pensar e retorno", ultimaInteracao: hoursAgo(50), chegouEm: daysAgo(5), entradaColunaEm: daysAgo(5), naoLidas: 0 }),
   mkCard({ id: "c14", colunaId: "col-atend", nome: "Pimpolho Modas", telefone: "+55 48 98700-4433", tag: "carteira", origem: "whats_central", vendedorId: "v-paulo",
@@ -183,10 +183,10 @@ export const mockCardsACSeed: CardAC[] = [
 
   // Em Cadastro (4)
   mkCard({ id: "c16", colunaId: "col-cad", nome: "Alemão Vestuário", telefone: "+55 51 98800-7788", tag: "lead", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", vendedorId: "v-paulo",
-    ultimaMensagem: "Aqui vai meu CNPJ: 22.333.444/0001-55", ultimaInteracao: hoursAgo(4), chegouEm: daysAgo(4), entradaColunaEm: hoursAgo(4), naoLidas: 0, conversaId: "conv5", clienteId: "c3",
+    ultimaMensagem: "Aqui vai meu CNPJ: 22.333.444/0001-55", ultimaInteracao: hoursAgo(4), chegouEm: daysAgo(4), entradaColunaEm: hoursAgo(4), naoLidas: 0, conversaId: "conv5",
     cadastro: { nome: "Alemão Vestuário LTDA", cnpj: "22.333.444/0001-55", cidade: "Porto Alegre", uf: "RS" } }),
   mkCard({ id: "c17", colunaId: "col-cad", nome: "CJD Pozza", telefone: "+55 41 99900-1188", tag: "lead", origem: "whats_central", vendedorId: "v-paulo",
-    ultimaMensagem: "Pedido confirmado! Obrigado", ultimaInteracao: hoursAgo(12), chegouEm: daysAgo(6), entradaColunaEm: daysAgo(1), naoLidas: 0, conversaId: "conv8", clienteId: "c5",
+    ultimaMensagem: "Pedido confirmado! Obrigado", ultimaInteracao: hoursAgo(12), chegouEm: daysAgo(6), entradaColunaEm: daysAgo(1), naoLidas: 0, conversaId: "conv8",
     cadastro: { nome: "CJD Pozza ME", cnpj: "11.222.333/0001-44" } }),
   mkCard({ id: "c18", colunaId: "col-cad", nome: "Kids Elegantes", telefone: "+55 71 98800-9922", tag: "lead", origem: "meta_ads", campanha: "Coleção Verão · Awareness", vendedorId: "v-marina",
     ultimaMensagem: "Pode anotar o e-mail", ultimaInteracao: hoursAgo(3), chegouEm: daysAgo(3), entradaColunaEm: hoursAgo(3), naoLidas: 1, cadastro: { nome: "Kids Elegantes", cnpj: "33.444.555/0001-66", cidade: "Salvador", uf: "BA" } }),
@@ -195,7 +195,7 @@ export const mockCardsACSeed: CardAC[] = [
 
   // Em Qualificação (3)
   mkCard({ id: "c20", colunaId: "col-qual", nome: "Mega Atacado Infantil", telefone: "+55 62 98800-4433", tag: "lead", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", vendedorId: "v-paulo",
-    ultimaMensagem: "Perfeito! Vamos marcar reunião", ultimaInteracao: hoursAgo(6), chegouEm: daysAgo(8), entradaColunaEm: daysAgo(1), naoLidas: 0, valorEstimado: 45000, conversaId: "conv4", clienteId: "c4",
+    ultimaMensagem: "Perfeito! Vamos marcar reunião", ultimaInteracao: hoursAgo(6), chegouEm: daysAgo(8), entradaColunaEm: daysAgo(1), naoLidas: 0, valorEstimado: 45000, conversaId: "conv4",
     cadastro: { nome: "Mega Atacado Infantil LTDA", cnpj: "55.666.777/0001-88", cidade: "Goiânia", uf: "GO", email: "compras@megaatacado.com.br", instagram: "@megaatacado" },
     qualificacao: { nicho: "Infantil", marcas: ["Brandili"], volume: "R$ 30k–50k/mês", frequencia: "Mensal" } }),
   mkCard({ id: "c21", colunaId: "col-qual", nome: "Baby Universe", telefone: "+55 21 97088-6633", tag: "lead", origem: "whats_central", vendedorId: "v-marina",
