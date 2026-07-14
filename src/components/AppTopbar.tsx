@@ -98,6 +98,18 @@ export function AppTopbar({ onMenuToggle }: AppTopbarProps) {
         <div className="flex items-center gap-0.5 shrink-0">
           {isAuthenticated ? (
             <>
+              {/* Visualizar como (perfil) */}
+              <div className="hidden md:flex items-center gap-1 mr-1">
+                <UserCircle2 className="h-3.5 w-3.5 text-sidebar-foreground/70" />
+                <select value={perfil} onChange={e => trocarPerfil(e.target.value as PerfilVendedor)}
+                  title="Visualizar como"
+                  className="text-[10px] bg-sidebar border border-sidebar-border rounded px-1.5 py-0.5 text-sidebar-primary focus:outline-none">
+                  <option value="vendedor">Vendedor</option>
+                  <option value="gestor">Gestor</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
               <button
                 aria-label="Chat"
                 className="relative rounded-md p-1.5 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-sidebar-primary hidden md:flex"
