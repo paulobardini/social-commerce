@@ -61,7 +61,7 @@ const sections: MenuSection[] = [
       { icon: UserCog, label: "Representantes", path: "/vendedor/representantes", badgeKey: "planos_escalados" },
       { icon: ShoppingCart, label: "Pedidos (Empresa)", path: "/vendedor/360/pedidos?escopo=empresa" },
       { icon: Briefcase, label: "Carteira", path: "/vendedor/carteira" },
-      { icon: Headphones, label: "Atendimento", path: "/vendedor/atendimento" },
+      { icon: Headphones, label: "Atendimento Setores", path: "/vendedor/atendimento" },
       { icon: FileText, label: "Relatórios", path: "/vendedor/relatorios" },
       { icon: Tag, label: "Segmentações", path: "/vendedor/segmentacoes" },
     ],
