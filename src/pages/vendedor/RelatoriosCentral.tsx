@@ -92,7 +92,7 @@ export default function RelatoriosCentral() {
               <p className="text-sm text-muted-foreground">Modelos prontos para uso. Escolha um modelo para criar um relatório personalizado.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {relatoriosProntos.map(rp => {
+              {relatoriosProntosVisiveis.map(rp => {
                 const Icon = iconMap[rp.icone] || BarChart3;
                 return (
                   <Card key={rp.id} className="border border-border hover:border-accent/30 transition-colors">
