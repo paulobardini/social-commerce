@@ -129,7 +129,8 @@ export default function AtendimentoComercial() {
               </div>
               <div className="flex flex-col gap-2 min-h-[60px]">
                 {items.map(c => (
-                  <CardAtendimento key={c.id} card={c} onClick={() => setSelected(c)}
+                  <CardAtendimento key={c.id} card={c}
+                    onClick={() => navigate(`/vendedor/whatsapp?telefone=${encodeURIComponent(c.telefone)}&cardId=${c.id}`)}
                     onDragStart={() => setDragId(c.id)} />
                 ))}
                 {items.length === 0 && <p className="text-[10px] text-muted-foreground text-center py-6">Vazio</p>}
