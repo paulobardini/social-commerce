@@ -25,6 +25,7 @@ import { getConversaSetor, setorDot, setorLabels } from "@/data/mockAtendimento"
 import { saudeCliente, valor12m, formatBRL, diasSemContato } from "@/lib/carteiraMetodo";
 import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
 import { PainelAtendimentoWpp } from "@/components/atendimentoComercial/PainelAtendimentoWpp";
+import type { CardAC } from "@/data/mockAtendimentoComercial";
 
 
 // MOCK: "agora" para tempo decorrido — usar Date.now() em produção.
@@ -65,6 +66,18 @@ function formatTempoDecorrido(date: Date): string {
   const d = Math.floor(h / 24);
   return d === 1 ? "há 1 dia" : `há ${d} dias`;
 }
+
+const conversaIdDoCardAC = (card: CardAC) => card.conversaId || `ac-card-${card.id}`;
+
+const conversaDoCardAC = (card: CardAC): Conversa => ({
+  id: conversaIdDoCardAC(card),
+  clienteId: card.clienteId || `lead-${card.id}`,
+  clienteNome: card.nome || card.telefone,
+  ultimaMensagem: card.ultimaMensagem,
+  ultimaHora: formatTempoDecorrido(new Date(card.ultimaInteracao)),
+  naoLidas: card.naoLidas,
+  status: card.naoLidas > 0 ? "nao_lida" : "ativa",
+});
 
 function semRespostaInfo(conversaId: string): { tempo: string; horas: number } | null {
   const msgs = mockMensagens[conversaId] || [];
@@ -137,11 +150,19 @@ export default function WhatsAppInbox({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { templates } = useMessageTemplates();
-  const { cardDaConversa, colunas, registrarEventoConversa } = useAtendimentoComercial();
+  const { cardDaConversa, colunas, registrarEventoConversa, cards } = useAtendimentoComercial();
 
   const conversasBase = useMemo(
-    () => (conversasFiltro ? mockConversas.filter(conversasFiltro) : mockConversas),
-    [conversasFiltro]
+    () => {
+      const base = conversasFiltro ? mockConversas.filter(conversasFiltro) : mockConversas;
+      const idsBase = new Set(base.map(c => c.id));
+      const conversasDosCards = cards
+        .filter(card => card.status !== "perdido")
+        .filter(card => !idsBase.has(conversaIdDoCardAC(card)))
+        .map(conversaDoCardAC);
+      return [...base, ...conversasDosCards];
+    },
+    [conversasFiltro, cards]
   );
 
   const [searchParams, setSearchParams] = useSearchParams();
