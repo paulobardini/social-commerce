@@ -696,6 +696,34 @@ export default function WhatsAppInbox({
         {/* CENTER */}
         {selected ? (
           <div className={`${!selectedId || !selected ? "hidden md:flex" : "flex"} flex-1 flex-col min-w-0`}>
+            {filaMode && (() => {
+              const cardAtual = cardDaConversa(selected.id);
+              const colAtual = cardAtual ? colunas.find(c => c.id === cardAtual.colunaId) : null;
+              return (
+                <div className="border-b border-accent/40 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent px-4 py-2 flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <Play className="h-3.5 w-3.5 text-accent shrink-0" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-accent">Trabalhando fila</span>
+                    <Badge variant="secondary" className="text-[10px] shrink-0">{filaIdx + 1} de {filaQueue.length}</Badge>
+                    {colAtual && (
+                      <span className="text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded bg-background border border-border shrink-0">
+                        <span className={`h-1.5 w-1.5 rounded-full ${colAtual.cor}`} />
+                        <span className="font-semibold">{colAtual.label}</span>
+                      </span>
+                    )}
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7 text-[11px] gap-1" onClick={anteriorNaFila} disabled={filaIdx === 0}>
+                    <ChevronLeft className="h-3 w-3" /> Anterior
+                  </Button>
+                  <Button size="sm" className="h-7 text-[11px] gap-1" onClick={proximoNaFila}>
+                    Próxima <ArrowRight className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-[11px]" onClick={sairDaFila}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              );
+            })()}
             <div className="h-14 border-b border-border flex items-center px-4 gap-3 bg-card shrink-0">
               <button onClick={() => setSelectedId("")} className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg hover:bg-muted">
                 <ChevronLeft className="h-4 w-4" />
