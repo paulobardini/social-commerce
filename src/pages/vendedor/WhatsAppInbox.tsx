@@ -281,8 +281,18 @@ export default function WhatsAppInbox({
   }, [conversasBase, extraMessages]);
 
   const selected = conversasBase.find(c => c.id === selectedId);
+  const selectedCard = selected ? cardDaConversa(selected.id) : undefined;
   const baseMensagens = selected ? mockMensagens[selected.id] || [] : [];
-  const mensagens = selected ? [...baseMensagens, ...(extraMessages[selected.id] || [])] : [];
+  const cardMensagens: Mensagem[] = selected && selectedCard && baseMensagens.length === 0 ? [{
+    id: `m-${selected.id}-lead`,
+    conversaId: selected.id,
+    remetente: "cliente",
+    texto: selectedCard.ultimaMensagem || "Olá, tenho interesse em conhecer o catálogo.",
+    horario: new Date(selectedCard.ultimaInteracao).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    data: new Date(selectedCard.ultimaInteracao).toLocaleDateString("pt-BR"),
+    lida: selectedCard.naoLidas === 0,
+  }] : [];
+  const mensagens = selected ? [...baseMensagens, ...cardMensagens, ...(extraMessages[selected.id] || [])] : [];
   const cliente = selected ? mockClientes360.find(c => c.id === selected.clienteId) : null;
 
   const totalNaoLidas = conversasBase.reduce((s, c) => s + c.naoLidas, 0);
@@ -313,8 +323,8 @@ export default function WhatsAppInbox({
     registrarEventoConversa({
       tipo: "mensagem_recebida",
       conversaId: selected.id,
-      telefone: cli?.whatsapp || cli?.telefone,
-      nome: cli?.nomeFantasia || selected.clienteNome,
+      telefone: cli?.whatsapp || cli?.telefone || selectedCard?.telefone,
+      nome: cli?.nomeFantasia || selectedCard?.nome || selected.clienteNome,
       texto: "(simulado) Oi, cheguei aqui pelo WhatsApp!",
     });
     toast({ title: "Evento simulado", description: "Mensagem recebida registrada no context." });
@@ -350,7 +360,7 @@ export default function WhatsAppInbox({
   }
   function cobrarProposta() {
     if (!selected) return;
-    const nome = cliente?.nomeFantasia || selected.clienteNome;
+    const nome = cliente?.nomeFantasia || selectedCard?.nome || selected.clienteNome;
     const texto = `Oi ${nome}, tudo bem? Passando aqui só pra saber se conseguiu dar uma olhada na proposta que te enviei. Qualquer ajuste eu rodo rapidinho por aqui. 🙌`;
     setMsgInput(texto);
     setMsgSuggestion({ titulo: "Cobrar proposta parada", original: texto });
