@@ -158,6 +158,7 @@ const App = () => (
               <StartDataProvider>
               <StartCartProvider>
               <CockpitProvider>
+              <AtendimentoComercialProvider>
               <Routes>
                 {/* Bare pages (no sidebar/topbar) */}
                 <Route path="/login" element={<Login />} />
