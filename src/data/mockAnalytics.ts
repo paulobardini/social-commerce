@@ -141,6 +141,11 @@ export const relatoriosSalvos: RelatorioSalvo[] = [
   { id: "rel6", nome: "Performance mensal dos representantes", descricao: "Ranking consolidado de desempenho do time comercial", entidade: "representantes", formato: "tabela", autor: "Paulo Bardini", dataCriacao: "01/04/2026", dataAtualizacao: "13/04/2026", favorito: true, compartilhado: true, filtrosAplicados: ["Período: Abr/2026"] },
   { id: "rel7", nome: "Orçamentos em aberto por representante", descricao: "Orçamentos aguardando retorno agrupados por responsável", entidade: "orcamentos", formato: "tabela", autor: "Marina Oliveira", dataCriacao: "09/04/2026", dataAtualizacao: "13/04/2026", favorito: false, compartilhado: false, filtrosAplicados: ["Status: Em aberto"] },
   { id: "rel8", nome: "Mensagens sem resposta por cliente", descricao: "Conversas com tempo de espera acima do aceitável", entidade: "mensagens", formato: "tabela", autor: "Paulo Bardini", dataCriacao: "11/04/2026", dataAtualizacao: "13/04/2026", favorito: false, compartilhado: false, filtrosAplicados: ["Sem resposta: > 24h"] },
+  // Fase 11 — Atendimento (gestor)
+  { id: "atd-desempenho", nome: "Desempenho por vendedor (atendimento)", descricao: "SLA, tempos e conversão de cada vendedor no funil de atendimento", entidade: "mensagens", formato: "tabela", autor: "Sistema", dataCriacao: "13/04/2026", dataAtualizacao: "13/04/2026", favorito: false, compartilhado: true, filtrosAplicados: ["Período atual"] },
+  { id: "atd-funil", nome: "Funil de atendimento consolidado", descricao: "Passagem por etapas, tempo médio e identificação de gargalo", entidade: "mensagens", formato: "grafico_barras", autor: "Sistema", dataCriacao: "13/04/2026", dataAtualizacao: "13/04/2026", favorito: false, compartilhado: true, filtrosAplicados: ["Período atual"] },
+  { id: "atd-perdas", nome: "Perdas detalhadas (atendimento)", descricao: "Drill-down motivo → sub-motivo com cards e valor perdido", entidade: "mensagens", formato: "tabela", autor: "Sistema", dataCriacao: "13/04/2026", dataAtualizacao: "13/04/2026", favorito: false, compartilhado: true, filtrosAplicados: ["Período atual"] },
+  { id: "atd-sla", nome: "SLA e tempos de resposta", descricao: "Cobertura de SLA, evolução diária e estouros ativos", entidade: "mensagens", formato: "grafico_linha", autor: "Sistema", dataCriacao: "13/04/2026", dataAtualizacao: "13/04/2026", favorito: false, compartilhado: true, filtrosAplicados: ["Período atual"] },
 ];
 
 // Relatórios pré-construídos (biblioteca)
@@ -157,6 +162,11 @@ export const relatoriosProntos: RelatorioPronto[] = [
   { id: "rp10", nome: "Pedidos por nicho", descricao: "Volume e valor de pedidos segmentados por nicho de mercado", entidade: "Pedidos", formato: "Pizza", icone: "ShoppingBag", categoria: "Vendas" },
   { id: "rp11", nome: "Clientes com interesse em marca específica", descricao: "Filtra base por marca de interesse para ações direcionadas", entidade: "Clientes", formato: "Tabela", icone: "Tag", categoria: "Segmentação" },
   { id: "rp12", nome: "Conversão por representante", descricao: "Ranking de efetividade de fechamento por vendedor", entidade: "Representantes", formato: "Gráfico de barras", icone: "Award", categoria: "Performance" },
+  // Fase 11 — Atendimento
+  { id: "atd-desempenho", nome: "Desempenho por vendedor (atendimento)", descricao: "SLA, tempos e conversão por vendedor no funil de atendimento", entidade: "Atendimento", formato: "Tabela + KPI", icone: "Award", categoria: "Atendimento" },
+  { id: "atd-funil", nome: "Funil de atendimento consolidado", descricao: "Volume, tempos e gargalo do funil ponta a ponta", entidade: "Atendimento", formato: "Gráfico de barras", icone: "BarChart3", categoria: "Atendimento" },
+  { id: "atd-perdas", nome: "Perdas detalhadas", descricao: "Drill-down motivo → sub-motivo com valor perdido", entidade: "Atendimento", formato: "Tabela", icone: "AlertTriangle", categoria: "Atendimento" },
+  { id: "atd-sla", nome: "SLA e tempos de resposta", descricao: "Cobertura de SLA, série diária e estouros ativos", entidade: "Atendimento", formato: "Gráfico de linha", icone: "Clock", categoria: "Atendimento" },
 ];
 
 // Visões salvas
