@@ -63,6 +63,8 @@ export function AppTopbar({ onMenuToggle }: AppTopbarProps) {
   // Rotas do vendedor operam sempre em modo logado (mock — usuário vendedor).
   const isVendedorRoute = location.pathname.startsWith("/vendedor");
   const isAuthenticated = authFlag || isVendedorRoute;
+  const perfil = useVendedorPerfil();
+  const trocarPerfil = (p: PerfilVendedor) => { setPerfilAtivo(p); window.location.reload(); };
 
   return (
     <>
