@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { MotivoPerdaModal } from "./MotivoPerdaModal";
 
 export function CardDrawer({ card, onClose }: { card: CardAC; onClose: () => void }) {
-  const { colunas, moverCard, gerarOportunidade, reabrirCard, config, redistribuirCard, vendedores } = useAtendimentoComercial();
+  const { colunas, moverCard, gerarOportunidade, reabrirCard, config, redistribuirCard, vendedores, atualizarCadastro, atualizarQualificacao } = useAtendimentoComercial();
   const navigate = useNavigate();
   const [openPerda, setOpenPerda] = useState(false);
   const [valorOp, setValorOp] = useState<number>(card.valorEstimado ?? 20000);
