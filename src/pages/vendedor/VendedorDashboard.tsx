@@ -125,8 +125,10 @@ export default function VendedorDashboard() {
 
           {/* HOJE */}
           <TabsContent value="hoje" className="mt-0">
+            <AtendimentoFilaBlock />
             <FilaAcao fila={fila} seed={seed} repId={repIdEfetivo} opsRep={opsRep} />
           </TabsContent>
+
 
           {/* MINHA CARTEIRA */}
           <TabsContent value="carteira" className="space-y-4 mt-0">
@@ -1354,6 +1356,86 @@ function AlertaSemAtendimento({ repId, onVerClientes }: { repId: string; onVerCl
             </Button>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ Fase 7.4 — Bloco de itens do Atendimento Comercial ============
+import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
+import { ShieldAlert, Clock as ClockIcon, MessageSquare } from "lucide-react";
+import { useNavigate as useNavHook } from "react-router-dom";
+
+function AtendimentoFilaBlock() {
+  const { cards, colunas, slaEstourado, estagnado, conflitos, diasParado, config } = useAtendimentoComercial();
+  const nav = useNavHook();
+  const meuVendedorId = "v-paulo";
+
+  const meusCards = cards.filter(c => c.vendedorId === meuVendedorId && c.status !== "perdido");
+  const urgentes = meusCards.filter(c => slaEstourado(c) || estagnado(c) || c.status === "conflito");
+  const sugeridos = meusCards.filter(c => {
+    if (urgentes.includes(c)) return false;
+    const col = colunas.find(x => x.id === c.colunaId);
+    if (col?.key === "fila") return true;
+    if (col?.key === "qualificacao") {
+      const qtd = Object.values(c.qualificacao).filter(Boolean).length;
+      if (qtd < config.perguntasQualificacao.length) return true;
+    }
+    return false;
+  });
+  const conflitosMeus = conflitos.filter(cf => cf.status === "pendente" && (cf.vendedorNovoId === meuVendedorId || cf.vendedorDonoId === meuVendedorId));
+
+  if (urgentes.length + sugeridos.length + conflitosMeus.length === 0) return null;
+
+  const abrir = (cardId: string) => nav(`/vendedor/whatsapp?cardId=${cardId}`);
+
+  return (
+    <div className="nx-card p-3 mb-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <MessageSquare className="h-3.5 w-3.5 text-indigo-600" />
+        <p className="text-xs font-semibold nx-text">Atendimento Comercial</p>
+        <span className="text-[10px] nx-muted ml-auto">
+          {urgentes.length} urgente{urgentes.length !== 1 ? "s" : ""} · {sugeridos.length} sugerido{sugeridos.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+      <div className="space-y-1">
+        {urgentes.map(c => {
+          const isConf = c.status === "conflito";
+          const isSla = slaEstourado(c);
+          const isEst = estagnado(c);
+          const chip = isConf ? { label: "Conflito", cls: "bg-amber-500 text-white" }
+            : isSla ? { label: `SLA · ${config.slaHoras}h`, cls: "bg-rose-600 text-white" }
+            : { label: `${diasParado(c)}d parado`, cls: "bg-orange-500 text-white" };
+          const icon = isConf ? ShieldAlert : isSla ? AlertTriangle : ClockIcon;
+          const I = icon;
+          return (
+            <button key={c.id} onClick={() => abrir(c.id)} className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 border border-transparent hover:border-border">
+              <I className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-medium truncate">{c.nome}</p>
+                <p className="text-[10px] nx-muted truncate">
+                  {isConf ? "Aguardando gestor" : isSla ? "Aguarda 1ª resposta" : "Parado em Em Atendimento"}
+                </p>
+              </div>
+              <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${chip.cls}`}>{chip.label}</span>
+            </button>
+          );
+        })}
+        {sugeridos.slice(0, 5).map(c => {
+          const col = colunas.find(x => x.id === c.colunaId);
+          return (
+            <button key={c.id} onClick={() => abrir(c.id)} className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 border border-transparent hover:border-border">
+              <MessageSquare className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] truncate">{c.nome}</p>
+                <p className="text-[10px] nx-muted truncate">
+                  {col?.key === "fila" ? "Na Fila — dentro do SLA" : "Qualificação incompleta"}
+                </p>
+              </div>
+              <span className="text-[9px] text-muted-foreground">{col?.label}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -6,6 +6,10 @@ import nextilLogo from "@/assets/nextil-logo.png";
 import nextilWordmark from "@/assets/nextil-wordmark.png";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotificacoes, tipoNotifLabel, tipoNotifCor, tempoRelativo } from "@/contexts/NotificacoesContext";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
@@ -17,6 +21,7 @@ import {
   Target, Briefcase, UserCog, ClipboardList, CheckSquare, Calendar,
   BarChart3, Lightbulb, Tag,
 } from "lucide-react";
+
 
 const mobileMenuSections = [
   {
@@ -117,13 +122,8 @@ export function AppTopbar({ onMenuToggle }: AppTopbarProps) {
                 <MessageCircle className="h-4 w-4" />
                 <span className="absolute right-0.5 top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">3</span>
               </button>
-              <button
-                aria-label="Notificações"
-                className="relative rounded-md p-1.5 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute right-0.5 top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">7</span>
-              </button>
+              <NotifBell />
+
               <button
                 aria-label="Carrinho"
                 onClick={() => cart.setIsOpen(true)}
@@ -221,3 +221,67 @@ export function AppTopbar({ onMenuToggle }: AppTopbarProps) {
     </>
   );
 }
+
+function NotifBell() {
+  const navigate = useNavigate();
+  const { notificacoes, naoLidas, marcarLida, marcarTodasLidas } = useNotificacoes();
+  const [open, setOpen] = useState(false);
+
+  const go = (n: (typeof notificacoes)[number]) => {
+    marcarLida(n.id);
+    setOpen(false);
+    if (n.conversaId) navigate(`/vendedor/whatsapp?cardId=${n.cardId ?? ""}`);
+    else if (n.cardId) navigate(`/vendedor/atendimento-comercial`);
+    else if (n.tipo === "conflito_novo") navigate(`/gestor/aprovacoes`);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          aria-label="Notificações"
+          className="relative rounded-md p-1.5 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
+        >
+          <Bell className="h-4 w-4" />
+          {naoLidas > 0 && (
+            <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 px-0.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">
+              {naoLidas > 9 ? "9+" : naoLidas}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[340px] p-0">
+        <div className="p-2.5 border-b border-border flex items-center justify-between">
+          <p className="text-xs font-semibold">Notificações</p>
+          {notificacoes.length > 0 && (
+            <button onClick={marcarTodasLidas} className="text-[10px] text-muted-foreground hover:text-foreground underline">
+              Marcar todas como lidas
+            </button>
+          )}
+        </div>
+        <div className="max-h-[380px] overflow-y-auto">
+          {notificacoes.length === 0 && (
+            <div className="p-8 text-center text-xs text-muted-foreground">Sem notificações</div>
+          )}
+          {notificacoes.map(n => (
+            <button
+              key={n.id}
+              onClick={() => go(n)}
+              className={`w-full text-left px-3 py-2 border-b border-border/60 hover:bg-muted/50 transition-colors ${!n.lida ? "bg-accent/5" : ""}`}
+            >
+              <div className="flex items-start gap-2">
+                <Bell className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${tipoNotifCor[n.tipo]}`} />
+                <div className="min-w-0 flex-1">
+                  <p className={`text-[11px] truncate ${!n.lida ? "font-semibold" : "font-medium"}`}>{n.titulo}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{n.msg}</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5">{tipoNotifLabel[n.tipo]} · {tempoRelativo(n.at)}</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+

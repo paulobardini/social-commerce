@@ -2,7 +2,7 @@
 // Cards fluem de "Leads" até "Gerou Oportunidade" ou "Perdido".
 
 export type TagCard = "lead" | "reativacao" | "carteira";
-export type OrigemLead = "meta_ads" | "instagram" | "whats_central" | "manual";
+export type OrigemLead = "meta_ads" | "instagram" | "whats_central" | "whats_direto" | "manual";
 export type StatusCard = "ativo" | "conflito" | "perdido";
 
 export const tagLabels: Record<TagCard, string> = {
@@ -27,8 +27,10 @@ export const origemLabels: Record<OrigemLead, string> = {
   meta_ads: "Meta Ads",
   instagram: "Instagram",
   whats_central: "Whats central",
+  whats_direto: "Whats direto",
   manual: "Manual",
 };
+
 
 export interface ColunaAC {
   id: string;

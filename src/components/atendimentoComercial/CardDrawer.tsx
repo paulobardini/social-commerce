@@ -30,7 +30,16 @@ export function CardDrawer({ card, onClose }: { card: CardAC; onClose: () => voi
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-          {/* Etapa */}
+          {card.status === "conflito" && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-2 flex items-start gap-2">
+              <span className="text-amber-700 text-sm">⚠</span>
+              <div className="text-[12px] text-amber-800">
+                <p className="font-semibold">Card em conflito de duplicidade</p>
+                <p className="text-[11px]">Aguardando decisão do gestor em <a href="/gestor/aprovacoes" className="underline">Aprovações</a>.</p>
+              </div>
+            </div>
+          )}
+
           <div className="bg-muted/40 rounded-lg p-3">
             <p className="text-[10px] uppercase text-muted-foreground font-semibold mb-1">Etapa atual</p>
             <div className="flex items-center gap-2">
@@ -137,19 +146,14 @@ export function CardDrawer({ card, onClose }: { card: CardAC; onClose: () => voi
         </div>
 
         <div className="shrink-0 px-4 py-3 border-t border-border flex items-center gap-2">
-          {card.conversaId ? (
-            <button onClick={() => navigate("/vendedor/whatsapp")} className="flex-1 text-[12px] font-medium inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:opacity-90">
-              <MessageCircle className="h-4 w-4" /> Abrir no WhatsApp
-            </button>
-          ) : (
-            <button onClick={() => navigate("/vendedor/whatsapp")} className="flex-1 text-[12px] font-medium inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg border border-border hover:bg-muted">
-              <MessageCircle className="h-4 w-4" /> Ir ao WhatsApp
-            </button>
-          )}
+          <button onClick={() => navigate(`/vendedor/whatsapp?cardId=${card.id}`)} className="flex-1 text-[12px] font-medium inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:opacity-90">
+            <MessageCircle className="h-4 w-4" /> Abrir no WhatsApp
+          </button>
           {card.status !== "perdido" && (
             <button onClick={() => setOpenPerda(true)} className="text-[12px] px-3 py-2 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50">Marcar perda</button>
           )}
         </div>
+
       </aside>
 
       <MotivoPerdaModal open={openPerda} motivos={config.motivosPerda} onClose={() => setOpenPerda(false)} onConfirm={(m, t) => {
