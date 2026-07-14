@@ -263,6 +263,7 @@ const App = () => (
                 <Route path="/marketing" element={<Navigate to="/marketing/dashboard" replace />} />
                 <Route path="/marketing/dashboard" element={<MarketingProviders><MarketingLayout><MarketingDashboard /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/leads-atendimento" element={<MarketingProviders><MarketingLayout><LeadsAtendimentoPage /></MarketingLayout></MarketingProviders>} />
+                <Route path="/marketing/central-vendas" element={<MarketingProviders><MarketingLayout><CentralVendasPage /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/meta-ads" element={<MarketingProviders><MarketingLayout><MetaAdsHub /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/meta-ads/:id" element={<MarketingProviders><MarketingLayout><MetaCampaignDetail /></MarketingLayout></MarketingProviders>} />
                 <Route path="/marketing/atribuicao" element={<MarketingProviders><MarketingLayout><AtribuicaoPage /></MarketingLayout></MarketingProviders>} />
