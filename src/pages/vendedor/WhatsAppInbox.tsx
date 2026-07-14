@@ -410,11 +410,13 @@ export default function WhatsAppInbox({
   ];
 
   const renderConversa = (conv: Conversa) => {
+    const cardAtivo = cardDaConversa(conv.id);
     const cli = mockClientes360.find(c => c.id === conv.clienteId);
     const saude = cli ? saudeCliente(cli) : null;
     const saudeColor = saude === "risco" ? "bg-red-500" : saude === "inativo" ? "bg-yellow-500" : "bg-emerald-500";
-    const cardAtivo = cardDaConversa(conv.id);
     const colAtiva = cardAtivo ? colunas.find(cx => cx.id === cardAtivo.colunaId) : null;
+    const displayName = cardAtivo && !cardAtivo.clienteId ? cardAtivo.telefone : conv.clienteNome;
+    const avatarLabel = displayName.replace(/\D/g, "") ? "#" : displayName[0];
     return (
       <button
         key={conv.id}
@@ -425,7 +427,7 @@ export default function WhatsAppInbox({
       >
         <div className="relative shrink-0">
           <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
-            <span className="text-xs font-bold text-green-700">{conv.clienteNome[0]}</span>
+            <span className="text-xs font-bold text-green-700">{avatarLabel}</span>
           </div>
           {saude && <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${saudeColor} border-2 border-card`} title={`Saúde: ${saude}`} />}
         </div>
@@ -435,7 +437,7 @@ export default function WhatsAppInbox({
               {mostrarSetor && (
                 <span title={setorLabels[getConversaSetor(conv.id)]} className={`h-2 w-2 rounded-full shrink-0 ${setorDot[getConversaSetor(conv.id)]}`} />
               )}
-              <p className={`text-xs truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
+              <p className={`text-xs truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{displayName}</p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               {colAtiva && (
