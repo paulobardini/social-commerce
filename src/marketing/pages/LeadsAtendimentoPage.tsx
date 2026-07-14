@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Users, DollarSign, Inbox, Plus, ArrowRightLeft, Search, Target, MessageCircle, Frown, Clock } from "lucide-react";
+import { PerdidosSection } from "../components/PerdidosSection";
 
 
 const ORDEM_FLUXO = ["leads", "fila", "atendimento", "cadastro", "qualificacao", "oportunidade"] as const;
