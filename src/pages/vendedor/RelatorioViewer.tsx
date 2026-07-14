@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AtdDesempenhoView, AtdFunilView, AtdPerdasView, AtdSlaView } from "@/components/relatorios/AtendimentoReportViews";
 
 export default function RelatorioViewer() {
   const { id } = useParams();
