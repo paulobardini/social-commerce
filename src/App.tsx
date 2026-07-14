@@ -120,6 +120,10 @@ import LookbooksPage from "@/marketing/pages/LookbooksPage";
 import LookbookEditorPage from "@/marketing/pages/LookbookEditorPage";
 import LookbookPublicoPage from "@/marketing/pages/LookbookPublicoPage";
 import { CockpitProvider } from "@/cockpit/contexts/CockpitContext";
+import { AtendimentoComercialProvider } from "@/contexts/AtendimentoComercialContext";
+import AtendimentoComercial from "./pages/vendedor/AtendimentoComercial";
+import AtendimentoConfigPage from "./pages/vendedor/AtendimentoConfigPage";
+import LeadsAtendimentoPage from "@/marketing/pages/LeadsAtendimentoPage";
 
 const queryClient = new QueryClient();
 
