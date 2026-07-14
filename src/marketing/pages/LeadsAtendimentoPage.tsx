@@ -180,18 +180,39 @@ export default function LeadsAtendimentoPage() {
 
   const totalPerdas = perdidos.length;
 
+  const [visao, setVisao] = useState<"geral" | "perdidos">("geral");
+
   return (
     <TooltipProvider delayDuration={200}>
       <div className="space-y-5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-foreground">Leads & Atendimento</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Origens, distribuição e conversão do WhatsApp central.</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Origens, distribuição, conversão e gestão de perdidos do WhatsApp central.</p>
           </div>
           <button onClick={() => setNovoOpen(true)} className="text-[12px] font-medium inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90">
             <Plus className="h-3.5 w-3.5" /> Lead manual
           </button>
         </div>
+
+        {/* Abas principais */}
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1 w-fit">
+          {[
+            { k: "geral", label: "Visão geral" },
+            { k: "perdidos", label: `Perdidos (${perdidos.length})` },
+          ].map(t => (
+            <button key={t.k} onClick={() => setVisao(t.k as any)}
+              className={`text-[12px] font-medium px-3 py-1.5 rounded ${visao === t.k ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {visao === "perdidos" ? (
+          <PerdidosSection cardsPeriodo={cardsPeriodo} />
+        ) : (
+        <>
+
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
