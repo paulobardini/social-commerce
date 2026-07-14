@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
 import { origemLabels, tempoAgo, CardAC, ConversaCentral } from "@/data/mockAtendimentoComercial";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MessageCircle, Search, Clock, ArrowRightLeft, Shuffle, User } from "lucide-react";
+import { MessageCircle, Search, Clock, ArrowRightLeft, Shuffle, User, Send } from "lucide-react";
 import { origemACColors, origemACLabels, type OrigemAC } from "../styles/tokens";
 
 type Aba = "nao_distribuidas" | "distribuidas";
