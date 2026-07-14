@@ -42,6 +42,7 @@ const sections: MenuSection[] = [
     collapsible: true,
     items: [
       { icon: LayoutDashboard, label: "Painel", path: "/vendedor/dashboard" },
+      { icon: Inbox, label: "Atendimento", path: "/vendedor/atendimento-comercial" },
       { icon: Kanban, label: "Oportunidades", path: "/vendedor/oportunidades" },
       { icon: ShoppingCart, label: "Meus Pedidos", path: "/vendedor/360/pedidos" },
       { icon: ClipboardList, label: "Orçamentos", path: "/vendedor" },
