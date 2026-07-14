@@ -108,9 +108,14 @@ export default function AtendimentoComercial() {
       {/* Board */}
       <div className="flex gap-3 overflow-x-auto pb-2">
         {sortedCols.map(col => {
-          const items = cardsPorColunaF(col.id);
-          const valor = totalValor(col.id);
-          const tm = tempoMedio(col.id);
+          const allItems = cardsPorColunaF(col.id);
+          // Fase 10: coluna Perdido mostra só últimos 7 dias no Kanban do vendedor
+          const items = col.key === "perdido"
+            ? allItems.filter(c => horasDesde(c.entradaColunaEm) <= 7 * 24)
+            : allItems;
+          const totalHist = allItems.length;
+          const valor = items.reduce((s, c) => s + (c.valorEstimado ?? 0), 0);
+          const tm = items.length ? items.reduce((s, c) => s + horasDesde(c.entradaColunaEm), 0) / items.length : 0;
           return (
             <div key={col.id}
               onDragOver={e => e.preventDefault()}
@@ -127,6 +132,11 @@ export default function AtendimentoComercial() {
                 {valor > 0 && <span>R$ {(valor / 1000).toFixed(0)}k pot.</span>}
                 {tm > 0 && <span>{tm >= 24 ? `${(tm / 24).toFixed(1)}d médio` : `${tm.toFixed(0)}h médio`}</span>}
               </div>
+              {col.key === "perdido" && (
+                <p className="text-[9.5px] text-muted-foreground italic bg-background/50 border border-border rounded px-1.5 py-1 leading-tight">
+                  Últimos 7 dias · histórico completo ({totalHist}) gerenciado pelo <a href="/marketing/leads-atendimento" className="underline hover:text-foreground">marketing</a>
+                </p>
+              )}
               <div className="flex flex-col gap-2 min-h-[60px]">
                 {items.map(c => (
                   <CardAtendimento key={c.id} card={c}
@@ -143,10 +153,10 @@ export default function AtendimentoComercial() {
       {selected && <CardDrawer card={cards.find(c => c.id === selected.id)!} onClose={() => setSelected(null)} />}
       <NovoLeadModal open={novoOpen} onClose={() => setNovoOpen(false)} />
       <ColunasConfigModal open={configOpen} onClose={() => setConfigOpen(false)} />
-      <MotivoPerdaModal open={!!dropToPerdido} onClose={() => setDropToPerdido(null)} onConfirm={(m, t) => {
+      <MotivoPerdaModal open={!!dropToPerdido} onClose={() => setDropToPerdido(null)} onConfirm={(perda) => {
         if (dropToPerdido) {
           const colPerd = colunas.find(c => c.key === "perdido")!;
-          const r = moverCard(dropToPerdido, colPerd.id, { motivo: m, motivoTexto: t });
+          const r = moverCard(dropToPerdido, colPerd.id, { perda });
           if (!r.ok) toast({ title: "Erro", description: r.erro, variant: "destructive" });
         }
         setDropToPerdido(null);

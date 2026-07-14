@@ -71,19 +71,57 @@ export interface QualificacaoLead {
   sazonalidade?: string;
 }
 
-export const motivosPerda = [
-  "Sem resposta / sumiu",
-  "Preço / condições comerciais",
-  "Sem perfil / sem CNPJ",
-  "Já compra de concorrente",
-  "Pedido mínimo alto",
-  "Não trabalha com as marcas do portfólio",
-  "Prazo de entrega",
-  "Forma de pagamento / crédito negado",
-  "Fechou a loja / mudou de ramo",
-  "Momento errado (retomar futuramente)",
-  "Outros",
+// ===== Motivos de perda (árvore em 2 níveis — Fase 10) =====
+export interface MotivoPerdaNode {
+  motivo: string;
+  subMotivos: string[];
+}
+
+export const defaultMotivosPerdaTree: MotivoPerdaNode[] = [
+  { motivo: "Sem resposta / sumiu", subMotivos: ["nunca respondeu", "sumiu após proposta", "sumiu durante cadastro/qualificação"] },
+  { motivo: "Preço / condições comerciais", subMotivos: ["desconto insuficiente", "prazo de pagamento", "frete", "tabela acima do mercado"] },
+  { motivo: "Sem perfil / sem CNPJ", subMotivos: ["consumidor final", "CNPJ inativo/irregular", "fora do público-alvo"] },
+  { motivo: "Já compra de concorrente", subMotivos: ["contrato/fidelidade", "preço melhor", "relacionamento antigo"] },
+  { motivo: "Pedido mínimo alto", subMotivos: ["grade fechada grande demais", "capital de giro limitado"] },
+  { motivo: "Não trabalha com as marcas do portfólio", subMotivos: ["nicho incompatível", "já representa marca concorrente"] },
+  { motivo: "Prazo de entrega", subMotivos: ["precisa para data específica", "região com frete lento"] },
+  { motivo: "Forma de pagamento / crédito negado", subMotivos: ["crédito negado", "só compra consignado", "exige prazo não praticado"] },
+  { motivo: "Fechou a loja / mudou de ramo", subMotivos: ["fechou definitivo", "mudou de segmento"] },
+  { motivo: "Momento errado (retomar futuramente)", subMotivos: ["retomar em 30d", "retomar em 60d", "retomar em 90d", "retomar em próxima coleção"] },
+  { motivo: "Outros", subMotivos: [] },
 ];
+
+// Compat: lista simples de motivos derivada da árvore
+export const motivosPerda = defaultMotivosPerdaTree.map(m => m.motivo);
+
+export interface PerdaQualificada {
+  motivo: string;
+  subMotivo?: string;
+  explicacao: string;
+  retomarEm?: string; // ISO — quando o sub-motivo é "retomar em Xd"
+  registradoEm: string; // ISO
+}
+
+// Converte sub-motivo "retomar em 30d" → ISO date
+export function calcularRetomarEm(subMotivo?: string): string | undefined {
+  if (!subMotivo) return undefined;
+  const m = subMotivo.match(/retomar em (\d+)d/i);
+  if (m) {
+    const dias = parseInt(m[1], 10);
+    return new Date(Date.now() + dias * 86400000).toISOString();
+  }
+  if (/próxima colec/i.test(subMotivo)) {
+    return new Date(Date.now() + 90 * 86400000).toISOString();
+  }
+  return undefined;
+}
+
+export type MarketingStatus = "ativo" | "renutricao" | "arquivado";
+
+export interface CampanhaRenutricao {
+  nome: string;
+  data: string; // ISO
+}
 
 export interface CardAC {
   id: string;
@@ -107,11 +145,17 @@ export interface CardAC {
   cadastro: CadastroLead;
   qualificacao: QualificacaoLead;
   status: StatusCard;
+  // legado (compat)
   motivoPerda?: string;
   motivoPerdaTexto?: string;
+  // novo (Fase 10)
+  perda?: PerdaQualificada;
+  marketingStatus?: MarketingStatus;
+  campanhaRenutricao?: CampanhaRenutricao;
   emConflitoCom?: string; // vendedorId conflitante
   historico: { at: string; msg: string }[];
 }
+
 
 // vendedores ativos (subset de mockAtendentes/mockRepresentantes)
 export const mockVendedoresAC = [
@@ -225,13 +269,34 @@ export const mockCardsACSeed: CardAC[] = [
   mkCard({ id: "c25", colunaId: "col-op", nome: "Encanto Baby", telefone: "+55 51 97070-7799", tag: "lead", origem: "instagram", vendedorId: "v-lucas",
     ultimaMensagem: "Pedido enviado", ultimaInteracao: daysAgo(2), chegouEm: daysAgo(15), entradaColunaEm: daysAgo(3), naoLidas: 0, valorEstimado: 25000 }),
 
-  // Perdido (2)
-  mkCard({ id: "c26", colunaId: "col-perd", nome: "Só Baby", telefone: "+55 11 97077-8811", tag: "lead", origem: "meta_ads", vendedorId: "v-paulo",
+  // Perdido (5) — com perda qualificada (Fase 10)
+  mkCard({ id: "c26", colunaId: "col-perd", nome: "Só Baby", telefone: "+55 11 97077-8811", tag: "lead", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", vendedorId: "v-paulo",
     ultimaMensagem: "Vamos ficar com concorrente por ora", ultimaInteracao: daysAgo(5), chegouEm: daysAgo(20), entradaColunaEm: daysAgo(5), naoLidas: 0, status: "perdido",
-    motivoPerda: "Já compra de concorrente" }),
+    motivoPerda: "Já compra de concorrente",
+    perda: { motivo: "Já compra de concorrente", subMotivo: "preço melhor", explicacao: "Concorrente ofereceu 8% de desconto e prazo 60 dias — não conseguimos igualar.", registradoEm: daysAgo(5) },
+    marketingStatus: "renutricao",
+    campanhaRenutricao: { nome: "Nurture Concorrência OI26", data: daysAgo(3) } }),
   mkCard({ id: "c27", colunaId: "col-perd", nome: "Loja Miudinhos", telefone: "+55 31 98800-1120", tag: "lead", origem: "whats_central", vendedorId: "v-marina",
     ultimaMensagem: "Sumiu depois do primeiro contato", ultimaInteracao: daysAgo(10), chegouEm: daysAgo(25), entradaColunaEm: daysAgo(10), naoLidas: 0, status: "perdido",
-    motivoPerda: "Sem resposta / sumiu" }),
+    motivoPerda: "Sem resposta / sumiu",
+    perda: { motivo: "Sem resposta / sumiu", subMotivo: "nunca respondeu", explicacao: "Enviei 3 tentativas em dias diferentes, sem retorno.", registradoEm: daysAgo(10) },
+    marketingStatus: "ativo" }),
+  mkCard({ id: "c28", colunaId: "col-perd", nome: "Pequenos Reis", telefone: "+55 27 98800-9922", tag: "lead", origem: "instagram", vendedorId: "v-lucas",
+    ultimaMensagem: "Vou pensar e retorno em 30 dias", ultimaInteracao: daysAgo(3), chegouEm: daysAgo(12), entradaColunaEm: daysAgo(3), naoLidas: 0, status: "perdido",
+    motivoPerda: "Momento errado (retomar futuramente)",
+    perda: { motivo: "Momento errado (retomar futuramente)", subMotivo: "retomar em 30d", explicacao: "Vai fechar giro de estoque atual antes de trazer novas marcas.", retomarEm: new Date(Date.now() + 27 * 86400000).toISOString(), registradoEm: daysAgo(3) },
+    marketingStatus: "ativo" }),
+  mkCard({ id: "c29", colunaId: "col-perd", nome: "Baby Zero a Três", telefone: "+55 41 99700-8811", tag: "lead", origem: "meta_ads", campanha: "Retargeting Lookalike", vendedorId: "v-paulo",
+    ultimaMensagem: "Sem CNPJ ativo — só compra pessoa física", ultimaInteracao: daysAgo(15), chegouEm: daysAgo(28), entradaColunaEm: daysAgo(15), naoLidas: 0, status: "perdido",
+    motivoPerda: "Sem perfil / sem CNPJ",
+    perda: { motivo: "Sem perfil / sem CNPJ", subMotivo: "consumidor final", explicacao: "Cliente final querendo comprar 1-2 peças, não é loja.", registradoEm: daysAgo(15) },
+    marketingStatus: "arquivado" }),
+  mkCard({ id: "c30", colunaId: "col-perd", nome: "Loja Girassol", telefone: "+55 62 98800-4477", tag: "lead", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", vendedorId: "v-marina",
+    ultimaMensagem: "Pedido mínimo muito alto pra gente", ultimaInteracao: daysAgo(2), chegouEm: daysAgo(9), entradaColunaEm: daysAgo(2), naoLidas: 0, status: "perdido",
+    motivoPerda: "Pedido mínimo alto",
+    perda: { motivo: "Pedido mínimo alto", subMotivo: "grade fechada grande demais", explicacao: "Loja pequena — não gira grade fechada de 60 peças.", registradoEm: daysAgo(2) },
+    marketingStatus: "renutricao",
+    campanhaRenutricao: { nome: "Mini-grade OI26 Small", data: daysAgo(1) } }),
 ];
 
 // Inbox whats central — conversas ainda não distribuídas
@@ -244,21 +309,44 @@ export interface ConversaCentral {
   ultimaMensagem: string;
   chegouEm: string;
   historico: { at: string; from: "lead" | "central"; msg: string }[];
+  // Conversa completa (Fase 10.3) — usada pelo WhatsApp Central
+  mensagens?: { at: string; from: "lead" | "central"; msg: string }[];
 }
 
 export const mockConversasCentral: ConversaCentral[] = [
-  { id: "cc1", nome: "Loja Nova Prospect", telefone: "+55 11 98555-1111", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", ultimaMensagem: "Oi! Tenho loja em São Paulo, quero conhecer.", chegouEm: hoursAgo(0.5), historico: [
-    { at: hoursAgo(0.5), from: "lead", msg: "Oi! Tenho loja em São Paulo, quero conhecer." },
-  ]},
-  { id: "cc2", nome: "Menino & Menina Fashion", telefone: "+55 27 97777-2222", origem: "meta_ads", campanha: "Retargeting Lookalike", ultimaMensagem: "Vim pelo anúncio do reels. Faz atacado?", chegouEm: hoursAgo(1.2), historico: [
-    { at: hoursAgo(1.2), from: "lead", msg: "Vim pelo anúncio do reels. Faz atacado?" },
-    { at: hoursAgo(1.15), from: "central", msg: "Olá! Bem-vindo à Brandili. Vamos te direcionar a um consultor. Qual sua cidade?" },
-    { at: hoursAgo(1.1), from: "lead", msg: "Vitória — ES." },
-  ]},
-  { id: "cc3", nome: "Nininho Kids", telefone: "+55 41 97555-3333", origem: "instagram", ultimaMensagem: "Vim pelo insta @nextil, quero atacado", chegouEm: hoursAgo(2), historico: [
-    { at: hoursAgo(2), from: "lead", msg: "Vim pelo insta @nextil, quero atacado" },
-  ]},
+  { id: "cc1", nome: "Loja Nova Prospect", telefone: "+55 11 98555-1111", origem: "meta_ads", campanha: "OI26 · Prospect Multimarcas", ultimaMensagem: "Oi! Tenho loja em São Paulo, quero conhecer.", chegouEm: hoursAgo(0.5),
+    historico: [
+      { at: hoursAgo(0.5), from: "lead", msg: "Oi! Tenho loja em São Paulo, quero conhecer." },
+    ],
+    mensagens: [
+      { at: hoursAgo(0.5), from: "lead", msg: "Oi! Tenho loja em São Paulo, quero conhecer." },
+      { at: hoursAgo(0.48), from: "central", msg: "Olá! 👋 Bem-vindo(a) à Nextil. Pra te direcionar ao melhor consultor, me passa: sua cidade e se já tem CNPJ ativo?" },
+      { at: hoursAgo(0.42), from: "lead", msg: "São Paulo capital, CNPJ ativo há 4 anos." },
+      { at: hoursAgo(0.40), from: "central", msg: "Perfeito! Vou te direcionar agora ao Paulo, consultor da sua região. Um minuto." },
+    ]},
+  { id: "cc2", nome: "Menino & Menina Fashion", telefone: "+55 27 97777-2222", origem: "meta_ads", campanha: "Retargeting Lookalike", ultimaMensagem: "Vim pelo anúncio do reels. Faz atacado?", chegouEm: hoursAgo(1.2),
+    historico: [
+      { at: hoursAgo(1.2), from: "lead", msg: "Vim pelo anúncio do reels. Faz atacado?" },
+      { at: hoursAgo(1.15), from: "central", msg: "Olá! Bem-vindo à Brandili. Vamos te direcionar a um consultor. Qual sua cidade?" },
+      { at: hoursAgo(1.1), from: "lead", msg: "Vitória — ES." },
+    ],
+    mensagens: [
+      { at: hoursAgo(1.2), from: "lead", msg: "Vim pelo anúncio do reels. Faz atacado?" },
+      { at: hoursAgo(1.15), from: "central", msg: "Olá! Bem-vindo à Brandili. Vamos te direcionar a um consultor. Qual sua cidade?" },
+      { at: hoursAgo(1.1), from: "lead", msg: "Vitória — ES." },
+      { at: hoursAgo(1.08), from: "central", msg: "Legal! Você já tem loja física ou é e-commerce?" },
+      { at: hoursAgo(1.05), from: "lead", msg: "Física, 2 lojas — uma em Vitória e outra em Vila Velha." },
+    ]},
+  { id: "cc3", nome: "Nininho Kids", telefone: "+55 41 97555-3333", origem: "instagram", ultimaMensagem: "Vim pelo insta @nextil, quero atacado", chegouEm: hoursAgo(2),
+    historico: [
+      { at: hoursAgo(2), from: "lead", msg: "Vim pelo insta @nextil, quero atacado" },
+    ],
+    mensagens: [
+      { at: hoursAgo(2), from: "lead", msg: "Vim pelo insta @nextil, quero atacado" },
+      { at: hoursAgo(1.95), from: "central", msg: "Oi! Que bom te ver aqui. Me passa cidade e CNPJ pra encaminhar ao consultor certo." },
+    ]},
 ];
+
 
 // motivos / perguntas padrão
 export const perguntasQualificacaoDefault = [
@@ -272,15 +360,16 @@ export const perguntasQualificacaoDefault = [
 
 // Persistência simples via localStorage
 const LS_COLUNAS = "atendimento_comercial_colunas_v1";
-const LS_CARDS = "atendimento_comercial_cards_v3";
-const LS_CONFIG = "atendimento_comercial_config_v1";
-const LS_INBOX = "atendimento_comercial_inbox_v1";
+const LS_CARDS = "atendimento_comercial_cards_v4";
+const LS_CONFIG = "atendimento_comercial_config_v2";
+const LS_INBOX = "atendimento_comercial_inbox_v2";
 const LS_VENDEDORES = "atendimento_comercial_vendedores_v1";
 
 export interface ConfigAtendimento {
-  slaHoras: number; // primeira resposta
-  diasEstagnado: number; // Em Atendimento
-  motivosPerda: string[];
+  slaHoras: number;
+  diasEstagnado: number;
+  motivosPerda: string[]; // legado — mantido para compat
+  motivosPerdaTree: MotivoPerdaNode[]; // Fase 10
   perguntasQualificacao: { key: string; label: string }[];
 }
 
@@ -288,6 +377,7 @@ export const defaultConfigAC: ConfigAtendimento = {
   slaHoras: 4,
   diasEstagnado: 2,
   motivosPerda,
+  motivosPerdaTree: defaultMotivosPerdaTree,
   perguntasQualificacao: perguntasQualificacaoDefault,
 };
 
@@ -299,16 +389,14 @@ export const saveColunasAC = (c: ColunaAC[]) => localStorage.setItem(LS_COLUNAS,
 
 export const loadCardsAC = (): CardAC[] => {
   try {
-    // limpa versões anteriores
     ["atendimento_comercial_cards_v1", "atendimento_comercial_cards_v2", "atendimento_comercial_cards_v3"].forEach(k => localStorage.removeItem(k));
     const raw = localStorage.getItem(LS_CARDS);
     if (raw) {
       const parsed: CardAC[] = JSON.parse(raw);
-      // merge de seed: adiciona cards do seed que ainda não estão no storage (por id)
       const ids = new Set(parsed.map(c => c.id));
       const faltantes = mockCardsACSeed.filter(c => !ids.has(c.id));
-      if (faltantes.length > 0) return [...parsed, ...faltantes];
-      return parsed;
+      const base = faltantes.length > 0 ? [...parsed, ...faltantes] : parsed;
+      return base.map(c => c.status === "perdido" && !c.marketingStatus ? { ...c, marketingStatus: "ativo" as MarketingStatus } : c);
     }
   } catch {}
   return mockCardsACSeed;
@@ -316,13 +404,21 @@ export const loadCardsAC = (): CardAC[] => {
 export const saveCardsAC = (c: CardAC[]) => localStorage.setItem(LS_CARDS, JSON.stringify(c));
 
 export const loadConfigAC = (): ConfigAtendimento => {
-  try { const raw = localStorage.getItem(LS_CONFIG); if (raw) return { ...defaultConfigAC, ...JSON.parse(raw) }; } catch {}
+  try {
+    localStorage.removeItem("atendimento_comercial_config_v1");
+    const raw = localStorage.getItem(LS_CONFIG);
+    if (raw) return { ...defaultConfigAC, ...JSON.parse(raw) };
+  } catch {}
   return defaultConfigAC;
 };
 export const saveConfigAC = (c: ConfigAtendimento) => localStorage.setItem(LS_CONFIG, JSON.stringify(c));
 
 export const loadInboxAC = (): ConversaCentral[] => {
-  try { const raw = localStorage.getItem(LS_INBOX); if (raw) return JSON.parse(raw); } catch {}
+  try {
+    localStorage.removeItem("atendimento_comercial_inbox_v1");
+    const raw = localStorage.getItem(LS_INBOX);
+    if (raw) return JSON.parse(raw);
+  } catch {}
   return mockConversasCentral;
 };
 export const saveInboxAC = (c: ConversaCentral[]) => localStorage.setItem(LS_INBOX, JSON.stringify(c));
@@ -332,6 +428,7 @@ export const loadVendedoresAC = () => {
   return mockVendedoresAC;
 };
 export const saveVendedoresAC = (v: typeof mockVendedoresAC) => localStorage.setItem(LS_VENDEDORES, JSON.stringify(v));
+
 
 // utilidades
 export function tempoAgo(iso: string): string {
