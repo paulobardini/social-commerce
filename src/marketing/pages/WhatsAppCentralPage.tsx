@@ -99,6 +99,7 @@ export default function WhatsAppCentralPage() {
               vendedores={vendedores}
               onDistribuirManual={(vid) => aba === "nao_distribuidas" && distribuirManual(selectedItem.id, vid)}
               onDistribuirRodizio={() => aba === "nao_distribuidas" && distribuirRodizio(selectedItem.id)}
+              onEnviarMensagem={(texto) => enviarMensagemMarketing(selectedItem.id, texto)}
               vendedorAtual={aba === "distribuidas" ? (selectedItem as CardAC).vendedorNome : undefined}
               etapaAtual={aba === "distribuidas" ? colunas.find(c => c.id === (selectedItem as CardAC).colunaId)?.label : undefined}
             />
