@@ -569,7 +569,7 @@ export default function WhatsAppInbox({
                   </button>
                 </div>
                 <Button size="sm" className="w-full h-7 text-[11px] gap-1" onClick={abrirFila}>
-                  <Play className="h-3 w-3" /> Trabalhar fila ({filaOrdenada.length})
+                  <Play className="h-3 w-3" /> Trabalhar fila ({filaOrdenadaPipeline.length})
                 </Button>
               </div>
             )}
