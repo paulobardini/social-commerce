@@ -211,6 +211,9 @@ export default function WhatsAppInbox({
   const [sendOrcamentoOpen, setSendOrcamentoOpen] = useState(false);
   const [trabalharOpen, setTrabalharOpen] = useState(false);
   const [trabalharIdx, setTrabalharIdx] = useState(0);
+  const [filaMode, setFilaMode] = useState(false);
+  const [filaQueue, setFilaQueue] = useState<string[]>([]);
+  const [filaIdx, setFilaIdx] = useState(0);
   const [gestorVer, setGestorVer] = useState(true);
   const [semVinculoIgnored, setSemVinculoIgnored] = useState(false);
 
