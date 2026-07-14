@@ -298,7 +298,19 @@ export const loadColunasAC = (): ColunaAC[] => {
 export const saveColunasAC = (c: ColunaAC[]) => localStorage.setItem(LS_COLUNAS, JSON.stringify(c));
 
 export const loadCardsAC = (): CardAC[] => {
-  try { const raw = localStorage.getItem(LS_CARDS); if (raw) return JSON.parse(raw); } catch {}
+  try {
+    // limpa versões anteriores
+    ["atendimento_comercial_cards_v1", "atendimento_comercial_cards_v2", "atendimento_comercial_cards_v3"].forEach(k => localStorage.removeItem(k));
+    const raw = localStorage.getItem(LS_CARDS);
+    if (raw) {
+      const parsed: CardAC[] = JSON.parse(raw);
+      // merge de seed: adiciona cards do seed que ainda não estão no storage (por id)
+      const ids = new Set(parsed.map(c => c.id));
+      const faltantes = mockCardsACSeed.filter(c => !ids.has(c.id));
+      if (faltantes.length > 0) return [...parsed, ...faltantes];
+      return parsed;
+    }
+  } catch {}
   return mockCardsACSeed;
 };
 export const saveCardsAC = (c: CardAC[]) => localStorage.setItem(LS_CARDS, JSON.stringify(c));
