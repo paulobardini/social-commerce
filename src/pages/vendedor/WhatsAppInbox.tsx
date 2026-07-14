@@ -778,8 +778,8 @@ export default function WhatsAppInbox({
             <PainelAtendimentoWpp
               conversaId={selected.id}
               clienteId={cliente?.id}
-              clienteNome={cliente?.nomeFantasia || selected.clienteNome}
-              telefone={cliente?.whatsapp || cliente?.telefone}
+              clienteNome={cliente?.nomeFantasia || selectedCard?.nome || selected.clienteNome}
+              telefone={cliente?.whatsapp || cliente?.telefone || selectedCard?.telefone}
               appendMessage={appendMessage}
               onSimularRecebida={simularMensagemRecebida}
             />
