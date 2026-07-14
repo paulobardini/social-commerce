@@ -272,7 +272,7 @@ export const perguntasQualificacaoDefault = [
 
 // Persistência simples via localStorage
 const LS_COLUNAS = "atendimento_comercial_colunas_v1";
-const LS_CARDS = "atendimento_comercial_cards_v1";
+const LS_CARDS = "atendimento_comercial_cards_v2";
 const LS_CONFIG = "atendimento_comercial_config_v1";
 const LS_INBOX = "atendimento_comercial_inbox_v1";
 const LS_VENDEDORES = "atendimento_comercial_vendedores_v1";
