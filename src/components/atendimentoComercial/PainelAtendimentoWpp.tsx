@@ -447,11 +447,11 @@ export function PainelAtendimentoWpp({ conversaId, clienteId, clienteNome, telef
 
 // ---------- Sub-blocos ----------
 
-function FilaBloco({ card, onResponder, slaHoras }: { card: any; onResponder: () => void; slaHoras: number }) {
+function FilaBloco({ card, slaHoras }: { card: any; onResponder?: () => void; slaHoras: number }) {
   const horas = Math.max(0, Math.round(horasDesde(card.chegouEm)));
   const estourado = horas >= slaHoras;
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <div className="flex items-center gap-2">
         <Clock className={`h-3.5 w-3.5 ${estourado ? "text-rose-600" : "text-blue-600"}`} />
         <p className="text-[11px] text-foreground">
@@ -462,17 +462,12 @@ function FilaBloco({ card, onResponder, slaHoras }: { card: any; onResponder: ()
         </span>
       </div>
       <p className="text-[10px] text-muted-foreground">
-        Responder a mensagem move o card para <span className="font-medium">Em Atendimento</span> automaticamente.
+        Basta responder no chat abaixo — o card move para <span className="font-medium">Em Atendimento</span> automaticamente.
       </p>
-      <button
-        onClick={onResponder}
-        className="w-full text-[11px] font-medium inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90"
-      >
-        <MessageCircle className="h-3 w-3" /> Responder agora
-      </button>
     </div>
   );
 }
+
 
 function ClienteResumo({
   nome, cnpj, tag, onQualificar,
