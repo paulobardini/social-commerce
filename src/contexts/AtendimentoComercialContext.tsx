@@ -63,6 +63,9 @@ interface Ctx {
   // gatilhos e conflito (Fase 7)
   registrarEventoConversa: (ev: EventoConversa) => void;
   resolverConflito: (conflitoId: string, decisao: "manter_dono" | "liberar_novo") => void;
+
+  // marketing pode enviar mensagem no whats central
+  enviarMensagemMarketing: (id: string, texto: string) => void;
 }
 
 const AtendimentoComercialContext = createContext<Ctx | null>(null);
