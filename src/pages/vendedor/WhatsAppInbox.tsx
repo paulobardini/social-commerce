@@ -715,6 +715,7 @@ export default function WhatsAppInbox({
                 </Button>
 
                 <Input
+                  id="wpp-composer-input"
                   placeholder='Digite "/" para atalhos do playbook...'
                   value={msgInput}
                   onChange={e => setMsgInput(e.target.value)}
