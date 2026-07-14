@@ -474,7 +474,16 @@ function FilaBloco({ card, onResponder, slaHoras }: { card: any; onResponder: ()
   );
 }
 
-function ClienteResumo({ nome, cnpj, tag, onQualificar }: { nome: string; cnpj?: string; tag: string; onQualificar: () => void }) {
+function ClienteResumo({
+  nome, cnpj, tag, onQualificar,
+  ctaLabel = "Iniciar qualificação",
+  ctaIcon = "sparkles",
+  nota,
+}: {
+  nome: string; cnpj?: string; tag: string; onQualificar: () => void;
+  ctaLabel?: string; ctaIcon?: "sparkles" | "chat"; nota?: string;
+}) {
+  const notaPadrao = tag === "reativacao" ? "Cliente para reativar — cadastro dispensado" : "Cliente da carteira — cadastro dispensado";
   return (
     <div className="space-y-2">
       <div className="flex items-start gap-2">
@@ -484,14 +493,15 @@ function ClienteResumo({ nome, cnpj, tag, onQualificar }: { nome: string; cnpj?:
         <div className="min-w-0">
           <p className="text-[11px] font-semibold text-foreground truncate">{nome}</p>
           {cnpj && <p className="text-[10px] text-muted-foreground truncate">{cnpj}</p>}
-          <p className="text-[9px] text-emerald-700 mt-0.5">Cliente {tag === "reativacao" ? "para reativar" : "da carteira"} — cadastro dispensado</p>
+          <p className="text-[9px] text-emerald-700 mt-0.5">{nota ?? notaPadrao}</p>
         </div>
       </div>
       <button
         onClick={onQualificar}
         className="w-full text-[11px] font-medium inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90"
       >
-        <Sparkles className="h-3 w-3" /> Iniciar qualificação
+        {ctaIcon === "chat" ? <MessageCircle className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
+        {ctaLabel}
       </button>
     </div>
   );
