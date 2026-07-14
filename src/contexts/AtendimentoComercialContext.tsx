@@ -76,6 +76,7 @@ const MEU_VENDEDOR_ID = "v-paulo";
 // helpers de normalização
 const digits = (s?: string) => (s || "").replace(/\D/g, "");
 const normCNPJ = (s?: string) => digits(s);
+const conversaIdDoCard = (card: CardAC) => card.conversaId || `ac-card-${card.id}`;
 
 export function AtendimentoComercialProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -123,8 +124,11 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
 
   const estagnado = useCallback((c: CardAC) => diasParado(c) >= config.diasEstagnado, [diasParado, config.diasEstagnado]);
 
-  const cardDaConversa = useCallback((conversaId: string) => cards.find(c => c.conversaId === conversaId), [cards]);
-  const conversaDoCard = useCallback((cardId: string) => cards.find(c => c.id === cardId)?.conversaId, [cards]);
+  const cardDaConversa = useCallback((conversaId: string) => cards.find(c => conversaIdDoCard(c) === conversaId), [cards]);
+  const conversaDoCard = useCallback((cardId: string) => {
+    const card = cards.find(c => c.id === cardId);
+    return card ? conversaIdDoCard(card) : undefined;
+  }, [cards]);
   const cardByTelefone = useCallback((telefone: string) => {
     const d = digits(telefone);
     if (!d) return undefined;
@@ -405,7 +409,7 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
   // ---- Eventos de conversa (Fase 7.1) ----
   const registrarEventoConversa: Ctx["registrarEventoConversa"] = useCallback((ev) => {
     if (ev.tipo === "primeira_resposta_vendedor") {
-      const card = cardsRef.current.find(c => c.conversaId === ev.conversaId);
+      const card = cardsRef.current.find(c => conversaIdDoCard(c) === ev.conversaId);
       if (!card || card.status === "conflito") return;
       const col = colunas.find(x => x.id === card.colunaId);
       const colAtend = colunas.find(x => x.key === "atendimento");
@@ -421,7 +425,7 @@ export function AtendimentoComercialProvider({ children }: { children: ReactNode
     }
 
     if (ev.tipo === "mensagem_recebida") {
-      const card = cardsRef.current.find(c => c.conversaId === ev.conversaId);
+      const card = cardsRef.current.find(c => conversaIdDoCard(c) === ev.conversaId);
       // Card perdido → reabrir
       if (card && card.status === "perdido") {
         reabrirCard(card.id);

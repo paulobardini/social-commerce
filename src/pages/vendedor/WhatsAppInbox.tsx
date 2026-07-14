@@ -25,6 +25,7 @@ import { getConversaSetor, setorDot, setorLabels } from "@/data/mockAtendimento"
 import { saudeCliente, valor12m, formatBRL, diasSemContato } from "@/lib/carteiraMetodo";
 import { useAtendimentoComercial } from "@/contexts/AtendimentoComercialContext";
 import { PainelAtendimentoWpp } from "@/components/atendimentoComercial/PainelAtendimentoWpp";
+import type { CardAC } from "@/data/mockAtendimentoComercial";
 
 
 // MOCK: "agora" para tempo decorrido — usar Date.now() em produção.
@@ -65,6 +66,18 @@ function formatTempoDecorrido(date: Date): string {
   const d = Math.floor(h / 24);
   return d === 1 ? "há 1 dia" : `há ${d} dias`;
 }
+
+const conversaIdDoCardAC = (card: CardAC) => card.conversaId || `ac-card-${card.id}`;
+
+const conversaDoCardAC = (card: CardAC): Conversa => ({
+  id: conversaIdDoCardAC(card),
+  clienteId: card.clienteId || `lead-${card.id}`,
+  clienteNome: card.nome || card.telefone,
+  ultimaMensagem: card.ultimaMensagem,
+  ultimaHora: formatTempoDecorrido(new Date(card.ultimaInteracao)),
+  naoLidas: card.naoLidas,
+  status: card.naoLidas > 0 ? "nao_lida" : "ativa",
+});
 
 function semRespostaInfo(conversaId: string): { tempo: string; horas: number } | null {
   const msgs = mockMensagens[conversaId] || [];
@@ -137,11 +150,19 @@ export default function WhatsAppInbox({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { templates } = useMessageTemplates();
-  const { cardDaConversa, colunas, registrarEventoConversa } = useAtendimentoComercial();
+  const { cardDaConversa, colunas, registrarEventoConversa, cards } = useAtendimentoComercial();
 
   const conversasBase = useMemo(
-    () => (conversasFiltro ? mockConversas.filter(conversasFiltro) : mockConversas),
-    [conversasFiltro]
+    () => {
+      const base = conversasFiltro ? mockConversas.filter(conversasFiltro) : mockConversas;
+      const idsBase = new Set(base.map(c => c.id));
+      const conversasDosCards = cards
+        .filter(card => card.status !== "perdido")
+        .filter(card => !idsBase.has(conversaIdDoCardAC(card)))
+        .map(conversaDoCardAC);
+      return [...base, ...conversasDosCards];
+    },
+    [conversasFiltro, cards]
   );
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -260,8 +281,18 @@ export default function WhatsAppInbox({
   }, [conversasBase, extraMessages]);
 
   const selected = conversasBase.find(c => c.id === selectedId);
+  const selectedCard = selected ? cardDaConversa(selected.id) : undefined;
   const baseMensagens = selected ? mockMensagens[selected.id] || [] : [];
-  const mensagens = selected ? [...baseMensagens, ...(extraMessages[selected.id] || [])] : [];
+  const cardMensagens: Mensagem[] = selected && selectedCard && baseMensagens.length === 0 ? [{
+    id: `m-${selected.id}-lead`,
+    conversaId: selected.id,
+    remetente: "cliente",
+    texto: selectedCard.ultimaMensagem || "Olá, tenho interesse em conhecer o catálogo.",
+    horario: new Date(selectedCard.ultimaInteracao).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    data: new Date(selectedCard.ultimaInteracao).toLocaleDateString("pt-BR"),
+    lida: selectedCard.naoLidas === 0,
+  }] : [];
+  const mensagens = selected ? [...baseMensagens, ...cardMensagens, ...(extraMessages[selected.id] || [])] : [];
   const cliente = selected ? mockClientes360.find(c => c.id === selected.clienteId) : null;
 
   const totalNaoLidas = conversasBase.reduce((s, c) => s + c.naoLidas, 0);
@@ -292,8 +323,8 @@ export default function WhatsAppInbox({
     registrarEventoConversa({
       tipo: "mensagem_recebida",
       conversaId: selected.id,
-      telefone: cli?.whatsapp || cli?.telefone,
-      nome: cli?.nomeFantasia || selected.clienteNome,
+      telefone: cli?.whatsapp || cli?.telefone || selectedCard?.telefone,
+      nome: cli?.nomeFantasia || selectedCard?.nome || selected.clienteNome,
       texto: "(simulado) Oi, cheguei aqui pelo WhatsApp!",
     });
     toast({ title: "Evento simulado", description: "Mensagem recebida registrada no context." });
@@ -329,7 +360,7 @@ export default function WhatsAppInbox({
   }
   function cobrarProposta() {
     if (!selected) return;
-    const nome = cliente?.nomeFantasia || selected.clienteNome;
+    const nome = cliente?.nomeFantasia || selectedCard?.nome || selected.clienteNome;
     const texto = `Oi ${nome}, tudo bem? Passando aqui só pra saber se conseguiu dar uma olhada na proposta que te enviei. Qualquer ajuste eu rodo rapidinho por aqui. 🙌`;
     setMsgInput(texto);
     setMsgSuggestion({ titulo: "Cobrar proposta parada", original: texto });
@@ -379,11 +410,13 @@ export default function WhatsAppInbox({
   ];
 
   const renderConversa = (conv: Conversa) => {
+    const cardAtivo = cardDaConversa(conv.id);
     const cli = mockClientes360.find(c => c.id === conv.clienteId);
     const saude = cli ? saudeCliente(cli) : null;
     const saudeColor = saude === "risco" ? "bg-red-500" : saude === "inativo" ? "bg-yellow-500" : "bg-emerald-500";
-    const cardAtivo = cardDaConversa(conv.id);
     const colAtiva = cardAtivo ? colunas.find(cx => cx.id === cardAtivo.colunaId) : null;
+    const displayName = cardAtivo && !cardAtivo.clienteId ? cardAtivo.telefone : conv.clienteNome;
+    const avatarLabel = displayName.replace(/\D/g, "") ? "#" : displayName[0];
     return (
       <button
         key={conv.id}
@@ -394,7 +427,7 @@ export default function WhatsAppInbox({
       >
         <div className="relative shrink-0">
           <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
-            <span className="text-xs font-bold text-green-700">{conv.clienteNome[0]}</span>
+            <span className="text-xs font-bold text-green-700">{avatarLabel}</span>
           </div>
           {saude && <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${saudeColor} border-2 border-card`} title={`Saúde: ${saude}`} />}
         </div>
@@ -404,7 +437,7 @@ export default function WhatsAppInbox({
               {mostrarSetor && (
                 <span title={setorLabels[getConversaSetor(conv.id)]} className={`h-2 w-2 rounded-full shrink-0 ${setorDot[getConversaSetor(conv.id)]}`} />
               )}
-              <p className={`text-xs truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{conv.clienteNome}</p>
+              <p className={`text-xs truncate ${conv.naoLidas > 0 ? "font-bold" : "font-medium"}`}>{displayName}</p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               {colAtiva && (
@@ -620,13 +653,13 @@ export default function WhatsAppInbox({
               </button>
               <div className="relative">
                 <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
-                  <span className="text-sm font-bold text-green-700">{selected.clienteNome[0]}</span>
+                  <span className="text-sm font-bold text-green-700">{(selectedCard && !selectedCard.clienteId ? selectedCard.telefone : selected.clienteNome).replace(/\D/g, "") ? "#" : selected.clienteNome[0]}</span>
                 </div>
                 {selected.online && <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-card" />}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate">{selected.clienteNome}</p>
-                <p className="text-[10px] text-muted-foreground">{selected.online ? "Online" : "Offline"}{cliente ? ` · ${cliente.cidade}/${cliente.estado}` : ""}</p>
+                <p className="text-sm font-semibold truncate">{selectedCard && !selectedCard.clienteId ? selectedCard.telefone : selected.clienteNome}</p>
+                <p className="text-[10px] text-muted-foreground">{selected.online ? "Online" : "Offline"}{cliente ? ` · ${cliente.cidade}/${cliente.estado}` : selectedCard?.origem ? ` · ${selectedCard.origem.replace("_", " ")}` : ""}</p>
               </div>
               {modoMetodo && cliente && (
                 <Button variant="outline" size="sm" className="text-xs gap-1" onClick={usarSugestao}>
@@ -745,8 +778,8 @@ export default function WhatsAppInbox({
             <PainelAtendimentoWpp
               conversaId={selected.id}
               clienteId={cliente?.id}
-              clienteNome={cliente?.nomeFantasia || selected.clienteNome}
-              telefone={cliente?.whatsapp || cliente?.telefone}
+              clienteNome={cliente?.nomeFantasia || selectedCard?.nome || selected.clienteNome}
+              telefone={cliente?.whatsapp || cliente?.telefone || selectedCard?.telefone}
               appendMessage={appendMessage}
               onSimularRecebida={simularMensagemRecebida}
             />
