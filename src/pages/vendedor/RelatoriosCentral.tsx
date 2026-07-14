@@ -26,10 +26,17 @@ const iconMap: Record<string, any> = {
 
 export default function RelatoriosCentral() {
   const navigate = useNavigate();
+  const perfil = useVendedorPerfil();
+  const isGestor = perfil === "gestor" || perfil === "admin" || perfil === "gestor_regional";
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("todos");
 
-  const filteredRels = relatoriosSalvos.filter(r => {
+  // Vendedor não vê categoria "Atendimento" (Fase 11)
+  const podeVerCategoria = (cat: string) => isGestor || cat !== "Atendimento";
+  const relatoriosSalvosVisiveis = relatoriosSalvos.filter(r => isGestor || !r.id.startsWith("atd-"));
+  const relatoriosProntosVisiveis = relatoriosProntos.filter(r => podeVerCategoria(r.categoria));
+
+  const filteredRels = relatoriosSalvosVisiveis.filter(r => {
     if (search && !r.nome.toLowerCase().includes(search.toLowerCase())) return false;
     if (tab === "favoritos" && !r.favorito) return false;
     if (tab === "compartilhados" && !r.compartilhado) return false;
