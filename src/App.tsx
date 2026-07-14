@@ -125,6 +125,8 @@ import { AtendimentoComercialProvider } from "@/contexts/AtendimentoComercialCon
 import AtendimentoComercial from "./pages/vendedor/AtendimentoComercial";
 import AtendimentoConfigPage from "./pages/vendedor/AtendimentoConfigPage";
 import LeadsAtendimentoPage from "@/marketing/pages/LeadsAtendimentoPage";
+import WhatsAppCentralPage from "@/marketing/pages/WhatsAppCentralPage";
+import RelatoriosAtendimentoPage from "@/marketing/pages/RelatoriosAtendimentoPage";
 
 
 const queryClient = new QueryClient();
