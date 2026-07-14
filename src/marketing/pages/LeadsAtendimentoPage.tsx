@@ -230,31 +230,30 @@ export default function LeadsAtendimentoPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {porOrigem.map(o => (
-                    <>
-                      <tr key={o.origem} className="border-b border-border/50 hover:bg-muted/40">
-                        <td className="px-4 py-2.5">
-                          <span className="inline-flex items-center gap-2">
-                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: origemACColors[o.origem] }} />
-                            <span className="font-medium text-foreground">{origemACLabels[o.origem]}</span>
-                          </span>
-                        </td>
-                        <td className="px-2 py-2.5 text-right tabular-nums">{o.total}</td>
-                        <td className="px-2 py-2.5 text-right tabular-nums text-muted-foreground">{o.cpl > 0 ? formatBRL(o.cpl) : "—"}</td>
-                        <td className="px-2 py-2.5 text-right tabular-nums">{o.ops}</td>
-                        <td className="px-4 py-2.5 text-right tabular-nums font-medium text-foreground">{o.total > 0 ? formatPct(o.conv, 0) : "—"}</td>
+                  {porOrigem.flatMap(o => [
+                    <tr key={o.origem} className="border-b border-border/50 hover:bg-muted/40">
+                      <td className="px-4 py-2.5">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: origemACColors[o.origem] }} />
+                          <span className="font-medium text-foreground">{origemACLabels[o.origem]}</span>
+                        </span>
+                      </td>
+                      <td className="px-2 py-2.5 text-right tabular-nums">{o.total}</td>
+                      <td className="px-2 py-2.5 text-right tabular-nums text-muted-foreground">{o.cpl > 0 ? formatBRL(o.cpl) : "—"}</td>
+                      <td className="px-2 py-2.5 text-right tabular-nums">{o.ops}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums font-medium text-foreground">{o.total > 0 ? formatPct(o.conv, 0) : "—"}</td>
+                    </tr>,
+                    ...o.subs.map(s => (
+                      <tr key={`${o.origem}-${s.nome}`} className="border-b border-border/30 bg-muted/20">
+                        <td className="px-4 py-1.5 pl-10 text-muted-foreground">↳ {s.nome}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{s.total}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{s.cpl > 0 ? formatBRL(s.cpl) : "—"}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{s.ops}</td>
+                        <td className="px-4 py-1.5 text-right tabular-nums text-muted-foreground">{s.total > 0 ? formatPct((s.ops / s.total) * 100, 0) : "—"}</td>
                       </tr>
-                      {o.subs.map(s => (
-                        <tr key={`${o.origem}-${s.nome}`} className="border-b border-border/30 bg-muted/20">
-                          <td className="px-4 py-1.5 pl-10 text-muted-foreground">↳ {s.nome}</td>
-                          <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{s.total}</td>
-                          <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{s.cpl > 0 ? formatBRL(s.cpl) : "—"}</td>
-                          <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{s.ops}</td>
-                          <td className="px-4 py-1.5 text-right tabular-nums text-muted-foreground">{s.total > 0 ? formatPct((s.ops / s.total) * 100, 0) : "—"}</td>
-                        </tr>
-                      ))}
-                    </>
-                  ))}
+                    )),
+                  ])}
+
                   {porOrigem.length === 0 && (
                     <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhum lead no período</td></tr>
                   )}
