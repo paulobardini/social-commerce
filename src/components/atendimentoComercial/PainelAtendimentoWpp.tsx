@@ -273,9 +273,22 @@ export function PainelAtendimentoWpp({ conversaId, clienteId, clienteNome, telef
         {/* CORPO — só a etapa atual */}
         {!isPerdido && !conflitoAtivo && (
           <div className="border-t border-border/60 px-3 py-2.5">
-            {/* FILA */}
-            {etapaAtual === "fila" && (
+            {/* FILA — lead novo: SLA + responder */}
+            {etapaAtual === "fila" && !isCarteira && (
               <FilaBloco card={card} onResponder={focusComposer} slaHoras={config.slaHoras} />
+            )}
+
+            {/* FILA — carteira/reativação: é cliente conhecido, não é prospect */}
+            {etapaAtual === "fila" && isCarteira && (
+              <ClienteResumo
+                nome={card.cadastro.nome || card.nome}
+                cnpj={card.cadastro.cnpj}
+                tag={card.tag}
+                onQualificar={focusComposer}
+                ctaLabel="Responder agora"
+                ctaIcon="chat"
+                nota="Cliente conhecido — responder a mensagem já move para Em Atendimento."
+              />
             )}
 
             {/* ATENDIMENTO — carteira/reativação: resumo cliente + CTA qualificação */}
