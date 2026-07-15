@@ -305,10 +305,25 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
                 </div>
 
                 {/* Total */}
-                <div className="flex items-center justify-between py-2 border-t border-border">
-                  <span className="text-sm font-bold text-foreground">Total final</span>
-                  <span className="text-sm font-bold text-foreground">R$ {totalPrice.toFixed(2).replace(".", ",")}</span>
+                <div className="py-2 border-t border-border space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-foreground">Total atacado</span>
+                    <span className="text-sm font-bold text-foreground">{fmtBRL(totalPrice)}</span>
+                  </div>
+                  {preco.mostrarNoCard && preco.precoVenda > 0 && totalPieces > 0 && (
+                    <>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Venda projetada</span>
+                        <span className="font-semibold text-foreground">{fmtBRL(totalVenda)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Lucro projetado</span>
+                        <span className="font-semibold text-accent">{fmtBRL(totalLucro)}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
+
 
                 {/* Colors */}
                 <div className="flex gap-2 flex-wrap">
