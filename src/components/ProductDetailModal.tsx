@@ -68,11 +68,17 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
     setViewMode("center");
   }
 
+  // Preço de venda projetado (respeita hierarquia)
+  const preco = usePrecoVenda(product?.price ?? 0, brand.slug, product?.id);
+  const [editPrecoOpen, setEditPrecoOpen] = useState(false);
+
   if (!product) return null;
 
   const currentImages = product.variants[0]?.images || [];
   const totalPieces = Object.values(quantities).reduce((a, b) => a + b, 0);
   const totalPrice = totalPieces * selectedColors.length * product.price;
+  const totalVenda = totalPieces * selectedColors.length * preco.precoVenda;
+  const totalLucro = totalVenda - totalPrice;
 
   const handleDistribute = () => {
     const val = parseInt(distributeValue);
