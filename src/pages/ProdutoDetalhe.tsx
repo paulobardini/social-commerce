@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { getBrandBySlug, mockOpportunities, type Product } from "@/data/mockProducts";
-import { OpportunitiesSection } from "@/components/OpportunitiesSection";
+import { getBrandBySlug, type Product } from "@/data/mockProducts";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { FilterSheet, defaultFilters, countActiveFilters, type FilterState } from "@/components/FilterSheet";
 import { DiscountModal } from "@/components/DiscountModal";
+import { PrecoVendaBar } from "@/components/PrecoVendaBar";
+import { usePrecoVenda } from "@/hooks/usePrecoVenda";
 import { useCart } from "@/contexts/CartContext";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
