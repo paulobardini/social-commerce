@@ -412,3 +412,74 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
     </>
   );
 }
+
+function PrecoProdutoEditor({ productId, brandSlug }: { productId: string; brandSlug: string }) {
+  const preco = usePrecoVenda(0, brandSlug, productId);
+  const [modo, setModo] = useState<ModoPreco>(preco.regra.modo);
+  const [valor, setValor] = useState<string>(String(preco.regra.valor).replace(".", ","));
+
+  const salvar = () => {
+    const num = parseFloat(valor.replace(",", "."));
+    if (isNaN(num) || num <= 0) return;
+    const s = loadPrecificacao();
+    savePrecificacao({
+      ...s,
+      porProduto: {
+        ...s.porProduto,
+        [productId]: { modo, valor: num, arredondamento: preco.regra.arredondamento || "90" },
+      },
+    });
+  };
+
+  const resetar = () => {
+    const s = loadPrecificacao();
+    const porProduto = { ...s.porProduto };
+    delete porProduto[productId];
+    savePrecificacao({ ...s, porProduto });
+    setValor(String(preco.regra.valor).replace(".", ","));
+  };
+
+  return (
+    <div className="mt-2 rounded-lg border border-border bg-muted/30 p-2.5 space-y-2">
+      <p className="text-[10px] text-muted-foreground">
+        Origem atual: <span className="font-semibold text-foreground">
+          {preco.origem === "produto" ? "personalizado deste produto" : preco.origem === "marca" ? "definido para a marca" : "padrão global"}
+        </span>
+      </p>
+      <div className="flex items-center gap-1.5">
+        <div className="flex rounded-md border border-border p-0.5 text-[10px]">
+          <button
+            type="button"
+            onClick={() => setModo("markup")}
+            className={`px-2 h-6 rounded-sm font-medium ${modo === "markup" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            Markup
+          </button>
+          <button
+            type="button"
+            onClick={() => setModo("margem")}
+            className={`px-2 h-6 rounded-sm font-medium ${modo === "margem" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            Margem
+          </button>
+        </div>
+        <Input
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          className="h-7 flex-1 text-xs text-center"
+          placeholder={modo === "markup" ? "2,5" : "60"}
+        />
+        <Button size="sm" onClick={salvar} className="h-7 text-[11px]">Salvar</Button>
+        {preco.origem === "produto" && (
+          <button
+            onClick={resetar}
+            title="Voltar ao padrão"
+            className="h-7 w-7 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center shrink-0"
+          >
+            <RotateCcw className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
