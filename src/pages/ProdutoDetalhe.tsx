@@ -5,7 +5,6 @@ import { FilterSheet, defaultFilters, countActiveFilters, type FilterState } fro
 import { DiscountModal } from "@/components/DiscountModal";
 import { PrecoVendaBar } from "@/components/PrecoVendaBar";
 import { PrecoVendaLinha } from "@/components/PrecoVendaLinha";
-import { usePrecoVenda } from "@/hooks/usePrecoVenda";
 import { useCart } from "@/contexts/CartContext";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
