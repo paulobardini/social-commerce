@@ -16,6 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Product, Brand } from "@/data/mockProducts";
 import { useCart } from "@/contexts/CartContext";
+import { PrecoVendaLinha } from "@/components/PrecoVendaLinha";
+import { usePrecoVenda } from "@/hooks/usePrecoVenda";
+import { loadPrecificacao, savePrecificacao, fmtBRL, type ModoPreco } from "@/lib/precificacao";
+import { RotateCcw } from "lucide-react";
 
 interface ProductDetailModalProps {
   product: Product | null;
