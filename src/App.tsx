@@ -15,6 +15,7 @@ import Perfil from "./pages/Perfil";
 import Marcas from "./pages/Marcas";
 import MarcaDetalhe from "./pages/MarcaDetalhe";
 import ProdutoDetalhe from "./pages/ProdutoDetalhe";
+import PrecificacaoConfig from "./pages/PrecificacaoConfig";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
@@ -176,6 +177,7 @@ const App = () => (
                 <Route path="/" element={<LayoutRoute><Index /></LayoutRoute>} />
                 <Route path="/explorar" element={<LayoutRoute><Explorar /></LayoutRoute>} />
                 <Route path="/perfil" element={<LayoutRoute><Perfil /></LayoutRoute>} />
+                <Route path="/precificacao" element={<LayoutRoute><PrecificacaoConfig /></LayoutRoute>} />
                 <Route path="/marcas" element={<LayoutRoute><Marcas /></LayoutRoute>} />
                 <Route path="/marca/:slug" element={<LayoutRoute><MarcaDetalhe /></LayoutRoute>} />
                 <Route path="/marca/:slug/produtos" element={<LayoutRoute><ProdutoDetalhe /></LayoutRoute>} />
