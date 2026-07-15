@@ -1,6 +1,7 @@
-import { Grid3X3, Bookmark, Heart, Settings, Link as LinkIcon } from "lucide-react";
+import { Grid3X3, Bookmark, Heart, Settings, Link as LinkIcon, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 import concept1 from "@/assets/concept-1.jpg";
 import concept2 from "@/assets/concept-2.jpg";
@@ -55,6 +56,13 @@ const Perfil = () => {
                 <button className="px-5 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
                   Editar Perfil
                 </button>
+                <Link
+                  to="/precificacao"
+                  className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-sm font-medium hover:bg-secondary/80 transition-colors inline-flex items-center gap-1.5"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="hidden sm:inline">Minha precificação</span>
+                </Link>
                 <button className="p-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
                   <Settings className="h-5 w-5" />
                 </button>

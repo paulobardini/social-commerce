@@ -1,98 +1,82 @@
+## Objetivo
+Permitir que o lojista defina **markup/margem** e visualize o **preço de venda (sell-out)** de forma discreta nos cards e detalhada no modal, com hierarquia global → marca → produto. Também **remover a seção "Oportunidades"** da página `/marca/:slug/produtos`.
 
-# Plano — Fases 10 e 11 (Atendimento)
+## 1. Remover "Oportunidades" da página da marca
+- Em `src/pages/MarcaDetalhe.tsx`, remover o uso de `OpportunitiesSection` (import + render) apenas nessa página. O componente segue existindo para outras telas.
 
-Escopo 100% front-end, mocks + localStorage. Divido em duas fases sequenciais.
+## 2. Onde ele imputa a precificação
 
-## Fase 10 — Perda qualificada + devolução ao marketing + WhatsApp espelhado
+### A) Painel global — "Minha precificação"
+- Nova página `src/pages/PrecificacaoConfig.tsx` (rota `/precificacao`), com link no menu do usuário (AppTopbar/Perfil).
+- Conteúdo:
+  - **Padrão global**: toggle Markup (`x`) ou Margem (`%`) + valor.
+  - **Por marca**: lista das marcas com input próprio + botão "usar padrão".
+  - **Arredondamento** opcional: nenhum / `,90` / `,99` / inteiro.
+- Persistência em `localStorage` (novo `src/lib/precificacao.ts`), emitindo evento `precificacao:updated`.
 
-### 10.1 Perda qualificada em duas camadas
-- Em `mockAtendimentoComercial.ts`: `MOTIVOS_PERDA` vira árvore `{ motivo, subMotivos: string[] }`. Constante editável.
-- Card e histórico ganham `perda: { motivo, subMotivo, explicacao, retomarEm? }`.
-- Sub-motivos "retomar em Xd" → parseiam e gravam `retomarEm` (ISO date).
-- Aplicar em dois pontos com UI unificada:
-  - Painel inline do WhatsApp (Fase 9) — `PainelAtendimentoWpp`
-  - `MotivoPerdaModal` do Kanban
-- Ambos: select motivo → select sub-motivo dinâmico → textarea (mín 15 chars) — todos obrigatórios.
-- Página de configuração do gestor (`ConfigMotivosPerda`) passa a editar árvore de dois níveis.
+### B) Ajuste rápido na página da marca
+- Barra fina discreta acima do grid: `Sua precificação p/ Brandili: 2,5x` com um botão pequeno de editar (popover inline). Sem poluir; uma linha só.
 
-### 10.2 Devolução ao marketing
-- Novo estado por card: `marketingStatus: 'ativo' | 'renutricao' | 'arquivado'` + `campanhaRenutricao?: { nome, data }`.
-- Página **Leads & Atendimento** do marketing: nova aba **"Perdidos"** com sub-abas:
-  - **Análise** — substitui "Perdas por motivo" atual; tabela + gráfico drill-down motivo → sub-motivo; filtros período/vendedor/tag/origem.
-  - **Renutrição** — lista + ação "Mover para renutrição" (modal: nome campanha + data); cards com `retomarEm <= hoje` aparecem em "Sugeridos".
-  - **Arquivados** — ação "Arquivar"; some da renutrição mas permanece na análise.
-- Kanban do vendedor, coluna "Perdido": mostra apenas últimos 7 dias com nota "Gerenciados pelo marketing" + link.
-- Reentrada automática (Fase 7): mensagem recebida em card perdido/arquivado → volta pra Fila, `marketingStatus='ativo'`, log "Reaberto — removido da renutrição".
+### C) Ajuste por produto
+- Dentro do `ProductDetailModal`, seção "Preço de venda" com input individual + "voltar ao padrão da marca".
 
-### 10.3 WhatsApp central espelhado
-- Nova página **`/marketing/whatsapp-central`** (rota + item no `MarketingLayout`).
-- Layout 2 colunas reaproveitando estilo `WhatsAppInbox`: lista à esquerda, chat à direita.
-- Read-only: composer substituído por barra com **"Distribuir para vendedor"** (popover busca + rodízio, reaproveitar componente da Fase 9).
-- Abas: **Não distribuídas** (padrão) / **Distribuídas** (chip do vendedor + etapa atual do card).
-- Mock: enriquecer conversas do inbox central com `mensagens[]` (hoje só tem `ultimaMensagem`).
+## 3. Onde ele visualiza (regra anti-poluição no card)
 
-## Fase 11 — Relatórios
+### Card do produto
+- **Uma única linha adicional, discreta**, abaixo do preço de atacado:
+  ```
+  R$ 79,90                              (preço atacado, atual)
+  Venda R$ 199,90 · 2,5x                (12px, cor muted, sem ícone, sem badge)
+  ```
+- Sem badge colorido, sem caixa, sem borda — só texto secundário.
+- Se o lojista desativar o markup (valor = 0 ou toggle off no config), some completamente. Toggle "Mostrar preço de venda" fica no painel de precificação (default: ligado).
+- Respeita gating: sem PJ conectado não mostra nem atacado nem venda (mantém "Conecte-se…").
 
-### 11.1 Helpers compartilhados
-- Extrair `src/lib/atendimentoAnalytics.ts` com funções puras que consomem cards/histórico do `AtendimentoComercialContext`:
-  - `desempenhoPorVendedor(cards, periodo)`
-  - `funilConsolidado(cards, filtros)`
-  - `perdasDrilldown(cards, filtros)`
-  - `slaEvolucao(cards, periodo)`
-  - `origemCampanhaReceita(cards)`
-  - `funilRenutricao(cards)`
-  - `distribuicaoRodizio(cards)`
-  - `qualidadeLeadPorOrigem(cards)`
-- Painel Leads & Atendimento e Kanban migram para os helpers (mesma fonte).
+### `ProductDetailModal` (aqui pode detalhar mais)
+- Bloco de preço com: atacado, venda, **lucro por peça** e **margem efetiva**.
+- Input inline para simular markup/margem só daquele produto.
+- Total do pedido também mostra **venda projetada** e **lucro projetado**.
 
-### 11.2 Gestor — Central de Relatórios
-- Em `mockAnalytics.ts`, `relatoriosProntos`: nova categoria **"Atendimento"** com 4 relatórios:
-  1. Desempenho por vendedor (tabela + linha de total; destaque vermelho abaixo da média)
-  2. Funil de atendimento consolidado (funil + tempos + gargalo + estagnados 2d+)
-  3. Perdas detalhadas (drill-down motivo→sub-motivo→cards, gráfico por vendedor)
-  4. SLA e tempos de resposta (KPIs + linha diária + tabela vendedor + estouros ativos)
-- Renderização no `RelatorioViewer` existente; adicionar formatos que faltarem (drill-down table, funil com gargalo).
-- Filtro por perfil: vendedor não vê a categoria "Atendimento" (o perfil atual do vendedor filtra `relatoriosProntos`).
+## 4. Modelo de dados
 
-### 11.3 Marketing — nova página `/marketing/relatorios-atendimento`
-- Item novo no `MarketingLayout`.
-- 4 relatórios em abas usando `KpiCard`, `FunnelChart`, `DonutChart` do módulo:
-  1. Origem/campanha → receita (tabela + CPL + ROI mock)
-  2. Perdas e renutrição (funil perdidos→renutrição→reabertos→reconvertidos)
-  3. Distribuição e rodízio (tempo médio, rodízio vs manual, pausas)
-  4. Qualidade do lead por origem (% por etapa + ranking qualidade vs volume)
-- Export mock (botão download) em todos.
+```ts
+// src/lib/precificacao.ts
+type Modo = "markup" | "margem";
+interface RegraPreco {
+  modo: Modo;
+  valor: number;             // 2.5 (markup) ou 60 (margem %)
+  arredondamento?: "none" | "90" | "99" | "inteiro";
+}
+interface PrecificacaoState {
+  mostrarNoCard: boolean;                    // default true
+  global: RegraPreco;
+  porMarca: Record<string, RegraPreco>;
+  porProduto: Record<string, RegraPreco>;
+}
+```
+Helpers: `getRegra(slug, id)` (resolve hierarquia), `calcularVenda(custo, regra)`, `set/reset` por escopo.
 
-## Detalhes técnicos
+Fórmulas:
+- Markup → `venda = custo * markup`
+- Margem → `venda = custo / (1 - margem/100)`
+- Lucro `= venda - custo`; margem efetiva `= (venda - custo)/venda`.
 
-**Arquivos principais a criar/editar**
+## 5. Arquivos
 
-- `src/data/mockAtendimentoComercial.ts` — árvore `MOTIVOS_PERDA`, campos `perda`, `marketingStatus`, `campanhaRenutricao`, mensagens do inbox central
-- `src/contexts/AtendimentoComercialContext.tsx` — ações `registrarPerda`, `moverParaRenutricao`, `arquivarCard`, `reabrirCard`; reentrada automática já existente ganha limpeza de marketing
-- `src/components/atendimentoComercial/PainelAtendimentoWpp.tsx` — form de perda qualificada
-- `src/components/atendimentoComercial/MotivoPerdaModal.tsx` — mesmo form (extrair `PerdaQualificadaForm` reutilizável)
-- `src/pages/gestor/ConfigMotivosPerda.tsx` — editor de dois níveis
-- `src/pages/marketing/LeadsAtendimento.tsx` — nova aba "Perdidos" com sub-abas Análise/Renutrição/Arquivados
-- `src/pages/marketing/WhatsAppCentral.tsx` — novo (layout 2 col read-only + distribuir)
-- `src/layouts/MarketingLayout.tsx` — itens "WhatsApp Central" e "Relatórios"
-- `src/pages/marketing/RelatoriosAtendimento.tsx` — novo (4 relatórios em abas)
-- `src/lib/atendimentoAnalytics.ts` — helpers puros
-- `src/data/mockAnalytics.ts` — categoria "Atendimento" nos `relatoriosProntos`
-- `src/pages/vendedor/RelatorioViewer.tsx` — suporte a drill-down/funil-com-gargalo se faltar
-- `src/pages/vendedor/RelatoriosCentral.tsx` — filtro por perfil (vendedor não vê "Atendimento")
+**Criar**
+- `src/lib/precificacao.ts`
+- `src/hooks/usePrecoVenda.ts` → `{ precoVenda, regra, origem, lucro, margemEfetiva }`
+- `src/pages/PrecificacaoConfig.tsx`
+- `src/components/PrecoVendaBar.tsx` (barra discreta na página da marca)
 
-**Persistência**
+**Editar**
+- `src/pages/MarcaDetalhe.tsx` — remover `OpportunitiesSection`; adicionar `PrecoVendaBar`; passar preço de venda ao card.
+- Card de produto usado nessa página — acrescentar a linha "Venda R$ … · Nx" (texto muted).
+- `src/components/ProductDetailModal.tsx` — bloco expandido com input, lucro, totais projetados.
+- `src/App.tsx` — rota `/precificacao`.
+- Menu/AppTopbar — link "Minha precificação".
 
-- Novos campos entram na versão de localStorage; bumpar chave (`cards_v4`) e manter merge com seed.
-
-**Ordem de execução**
-
-1. Modelagem: tipos + mocks + helpers analytics
-2. Fase 10.1 perda qualificada (form + config gestor)
-3. Fase 10.2 devolução marketing (aba Perdidos + reentrada)
-4. Fase 10.3 WhatsApp Central
-5. Fase 11.1 helpers migrados no painel existente
-6. Fase 11.2 relatórios gestor
-7. Fase 11.3 relatórios marketing
-
-Cada passo valida via `tsgo` + inspeção de rota chave. Sem mudanças em backend/business logic fora do escopo do prompt.
+## Fora de escopo
+- Regras por categoria/gênero.
+- Impostos por NCM.
+- Persistência em backend.

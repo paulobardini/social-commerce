@@ -31,6 +31,7 @@ const mobileMenuSections = [
       { icon: Compass, label: "Explorar", path: "/explorar" },
       { icon: Star, label: "Marcas", path: "/marcas" },
       { icon: User, label: "Perfil", path: "/perfil" },
+      { icon: Tag, label: "Minha precificação", path: "/precificacao" },
     ],
   },
   {

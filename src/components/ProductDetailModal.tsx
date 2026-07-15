@@ -16,6 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Product, Brand } from "@/data/mockProducts";
 import { useCart } from "@/contexts/CartContext";
+import { PrecoVendaLinha } from "@/components/PrecoVendaLinha";
+import { usePrecoVenda } from "@/hooks/usePrecoVenda";
+import { loadPrecificacao, savePrecificacao, fmtBRL, type ModoPreco } from "@/lib/precificacao";
+import { RotateCcw } from "lucide-react";
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -64,11 +68,17 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
     setViewMode("center");
   }
 
+  // Preço de venda projetado (respeita hierarquia)
+  const preco = usePrecoVenda(product?.price ?? 0, brand.slug, product?.id);
+  const [editPrecoOpen, setEditPrecoOpen] = useState(false);
+
   if (!product) return null;
 
   const currentImages = product.variants[0]?.images || [];
   const totalPieces = Object.values(quantities).reduce((a, b) => a + b, 0);
   const totalPrice = totalPieces * selectedColors.length * product.price;
+  const totalVenda = totalPieces * selectedColors.length * preco.precoVenda;
+  const totalLucro = totalVenda - totalPrice;
 
   const handleDistribute = () => {
     const val = parseInt(distributeValue);
@@ -188,9 +198,33 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
                 {/* Product info */}
                 <div className="px-4 py-3">
                   <h2 className="text-sm font-bold text-foreground leading-snug">{product.name}</h2>
-                  <p className="text-lg font-bold text-foreground mt-1">
-                    R$ {product.price.toFixed(2).replace(".", ",")}
-                  </p>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <p className="text-lg font-bold text-foreground">
+                      R$ {product.price.toFixed(2).replace(".", ",")}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground">atacado</span>
+                  </div>
+
+                  {/* Bloco de preço de venda projetado */}
+                  {preco.mostrarNoCard && preco.precoVenda > 0 && (
+                    <PrecoVendaLinha
+                      precoAtacado={product.price}
+                      brandSlug={brand.slug}
+                      productId={product.id}
+                      variant="modal"
+                    />
+                  )}
+
+                  {/* Ajuste individual do preço de venda */}
+                  <button
+                    onClick={() => setEditPrecoOpen(!editPrecoOpen)}
+                    className="mt-2 text-[11px] text-accent hover:underline inline-flex items-center gap-1"
+                  >
+                    {editPrecoOpen ? "Fechar" : "Ajustar meu preço de venda para este produto"}
+                  </button>
+                  {editPrecoOpen && (
+                    <PrecoProdutoEditor productId={product.id} brandSlug={brand.slug} />
+                  )}
 
                   <button onClick={() => setDescOpen(!descOpen)} className="flex items-center justify-between w-full py-2 mt-2 border-t border-border">
                     <span className="text-xs font-semibold text-foreground">Descrição</span>
@@ -271,10 +305,25 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
                 </div>
 
                 {/* Total */}
-                <div className="flex items-center justify-between py-2 border-t border-border">
-                  <span className="text-sm font-bold text-foreground">Total final</span>
-                  <span className="text-sm font-bold text-foreground">R$ {totalPrice.toFixed(2).replace(".", ",")}</span>
+                <div className="py-2 border-t border-border space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-foreground">Total atacado</span>
+                    <span className="text-sm font-bold text-foreground">{fmtBRL(totalPrice)}</span>
+                  </div>
+                  {preco.mostrarNoCard && preco.precoVenda > 0 && totalPieces > 0 && (
+                    <>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Venda projetada</span>
+                        <span className="font-semibold text-foreground">{fmtBRL(totalVenda)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Lucro projetado</span>
+                        <span className="font-semibold text-accent">{fmtBRL(totalLucro)}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
+
 
                 {/* Colors */}
                 <div className="flex gap-2 flex-wrap">
@@ -361,5 +410,76 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
         </div>
       </motion.div>
     </>
+  );
+}
+
+function PrecoProdutoEditor({ productId, brandSlug }: { productId: string; brandSlug: string }) {
+  const preco = usePrecoVenda(0, brandSlug, productId);
+  const [modo, setModo] = useState<ModoPreco>(preco.regra.modo);
+  const [valor, setValor] = useState<string>(String(preco.regra.valor).replace(".", ","));
+
+  const salvar = () => {
+    const num = parseFloat(valor.replace(",", "."));
+    if (isNaN(num) || num <= 0) return;
+    const s = loadPrecificacao();
+    savePrecificacao({
+      ...s,
+      porProduto: {
+        ...s.porProduto,
+        [productId]: { modo, valor: num, arredondamento: preco.regra.arredondamento || "90" },
+      },
+    });
+  };
+
+  const resetar = () => {
+    const s = loadPrecificacao();
+    const porProduto = { ...s.porProduto };
+    delete porProduto[productId];
+    savePrecificacao({ ...s, porProduto });
+    setValor(String(preco.regra.valor).replace(".", ","));
+  };
+
+  return (
+    <div className="mt-2 rounded-lg border border-border bg-muted/30 p-2.5 space-y-2">
+      <p className="text-[10px] text-muted-foreground">
+        Origem atual: <span className="font-semibold text-foreground">
+          {preco.origem === "produto" ? "personalizado deste produto" : preco.origem === "marca" ? "definido para a marca" : "padrão global"}
+        </span>
+      </p>
+      <div className="flex items-center gap-1.5">
+        <div className="flex rounded-md border border-border p-0.5 text-[10px]">
+          <button
+            type="button"
+            onClick={() => setModo("markup")}
+            className={`px-2 h-6 rounded-sm font-medium ${modo === "markup" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            Markup
+          </button>
+          <button
+            type="button"
+            onClick={() => setModo("margem")}
+            className={`px-2 h-6 rounded-sm font-medium ${modo === "margem" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            Margem
+          </button>
+        </div>
+        <Input
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          className="h-7 flex-1 text-xs text-center"
+          placeholder={modo === "markup" ? "2,5" : "60"}
+        />
+        <Button size="sm" onClick={salvar} className="h-7 text-[11px]">Salvar</Button>
+        {preco.origem === "produto" && (
+          <button
+            onClick={resetar}
+            title="Voltar ao padrão"
+            className="h-7 w-7 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center shrink-0"
+          >
+            <RotateCcw className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
