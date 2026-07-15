@@ -4,6 +4,7 @@ import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { FilterSheet, defaultFilters, countActiveFilters, type FilterState } from "@/components/FilterSheet";
 import { DiscountModal } from "@/components/DiscountModal";
 import { PrecoVendaBar } from "@/components/PrecoVendaBar";
+import { PrecoVendaLinha } from "@/components/PrecoVendaLinha";
 import { usePrecoVenda } from "@/hooks/usePrecoVenda";
 import { useCart } from "@/contexts/CartContext";
 import { useState, useMemo } from "react";
