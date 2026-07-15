@@ -198,9 +198,33 @@ export function ProductDetailModal({ product, brand, onClose, onFindSimilar, ope
                 {/* Product info */}
                 <div className="px-4 py-3">
                   <h2 className="text-sm font-bold text-foreground leading-snug">{product.name}</h2>
-                  <p className="text-lg font-bold text-foreground mt-1">
-                    R$ {product.price.toFixed(2).replace(".", ",")}
-                  </p>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <p className="text-lg font-bold text-foreground">
+                      R$ {product.price.toFixed(2).replace(".", ",")}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground">atacado</span>
+                  </div>
+
+                  {/* Bloco de preço de venda projetado */}
+                  {preco.mostrarNoCard && preco.precoVenda > 0 && (
+                    <PrecoVendaLinha
+                      precoAtacado={product.price}
+                      brandSlug={brand.slug}
+                      productId={product.id}
+                      variant="modal"
+                    />
+                  )}
+
+                  {/* Ajuste individual do preço de venda */}
+                  <button
+                    onClick={() => setEditPrecoOpen(!editPrecoOpen)}
+                    className="mt-2 text-[11px] text-accent hover:underline inline-flex items-center gap-1"
+                  >
+                    {editPrecoOpen ? "Fechar" : "Ajustar meu preço de venda para este produto"}
+                  </button>
+                  {editPrecoOpen && (
+                    <PrecoProdutoEditor productId={product.id} brandSlug={brand.slug} />
+                  )}
 
                   <button onClick={() => setDescOpen(!descOpen)} className="flex items-center justify-between w-full py-2 mt-2 border-t border-border">
                     <span className="text-xs font-semibold text-foreground">Descrição</span>
