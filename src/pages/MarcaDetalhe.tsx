@@ -102,7 +102,7 @@ const MarcaDetalhe = () => {
                 {isConnected ? (
                   <>
                     <Button
-                      onClick={() => navigate(`/marca/${slug}/produtos`)}
+                      onClick={() => navigate(`/marca/${slug}/colecoes`)}
                       className="w-full md:w-auto"
                     >
                       Ver Produtos
