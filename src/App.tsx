@@ -181,6 +181,7 @@ const App = () => (
                 <Route path="/precificacao" element={<LayoutRoute><PrecificacaoConfig /></LayoutRoute>} />
                 <Route path="/marcas" element={<LayoutRoute><Marcas /></LayoutRoute>} />
                 <Route path="/marca/:slug" element={<LayoutRoute><MarcaDetalhe /></LayoutRoute>} />
+                <Route path="/marca/:slug/colecoes" element={<LayoutRoute><MarcaColecoes /></LayoutRoute>} />
                 <Route path="/marca/:slug/produtos" element={<LayoutRoute><ProdutoDetalhe /></LayoutRoute>} />
                 <Route path="/checkout" element={<LayoutRoute><Checkout /></LayoutRoute>} />
                 <Route path="/vendedor-antigo" element={<LayoutRoute><Vendedor /></LayoutRoute>} />
