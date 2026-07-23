@@ -1,82 +1,27 @@
 ## Objetivo
-Permitir que o lojista defina **markup/margem** e visualize o **preço de venda (sell-out)** de forma discreta nos cards e detalhada no modal, com hierarquia global → marca → produto. Também **remover a seção "Oportunidades"** da página `/marca/:slug/produtos`.
+Redesenhar `/marca/:slug/colecoes` usando como referência a **tela de pastas (boards) do Pinterest** — grid de cards com cover principal grande + 2 thumbs laterais, tipografia limpa, hover discreto, foco no visual das peças.
 
-## 1. Remover "Oportunidades" da página da marca
-- Em `src/pages/MarcaDetalhe.tsx`, remover o uso de `OpportunitiesSection` (import + render) apenas nessa página. O componente segue existindo para outras telas.
+## Referência (Pinterest boards)
+- Card = 1 cover grande à esquerda ocupando ~66% + coluna de 2 mini-thumbs empilhadas à direita (proporção 2:1).
+- Cantos bem arredondados (rounded-2xl), sem bordas visíveis; só sombra leve no hover.
+- Fundo do card = imagem, sem overlay pesado. Título e metadata **abaixo** da imagem, tipografia sóbria (nome em semibold, "N pins · atualizado há Xd" em muted).
+- Grid responsivo denso: 2 col mobile, 3 tablet, 4-5 desktop (Pinterest usa masonry, mas com cover fixa por coleção o grid uniforme funciona melhor aqui).
+- Header minimalista com nome da marca, contador ("5 coleções") e busca/filtro leve. Sem banner grande.
 
-## 2. Onde ele imputa a precificação
-
-### A) Painel global — "Minha precificação"
-- Nova página `src/pages/PrecificacaoConfig.tsx` (rota `/precificacao`), com link no menu do usuário (AppTopbar/Perfil).
-- Conteúdo:
-  - **Padrão global**: toggle Markup (`x`) ou Margem (`%`) + valor.
-  - **Por marca**: lista das marcas com input próprio + botão "usar padrão".
-  - **Arredondamento** opcional: nenhum / `,90` / `,99` / inteiro.
-- Persistência em `localStorage` (novo `src/lib/precificacao.ts`), emitindo evento `precificacao:updated`.
-
-### B) Ajuste rápido na página da marca
-- Barra fina discreta acima do grid: `Sua precificação p/ Brandili: 2,5x` com um botão pequeno de editar (popover inline). Sem poluir; uma linha só.
-
-### C) Ajuste por produto
-- Dentro do `ProductDetailModal`, seção "Preço de venda" com input individual + "voltar ao padrão da marca".
-
-## 3. Onde ele visualiza (regra anti-poluição no card)
-
-### Card do produto
-- **Uma única linha adicional, discreta**, abaixo do preço de atacado:
-  ```
-  R$ 79,90                              (preço atacado, atual)
-  Venda R$ 199,90 · 2,5x                (12px, cor muted, sem ícone, sem badge)
-  ```
-- Sem badge colorido, sem caixa, sem borda — só texto secundário.
-- Se o lojista desativar o markup (valor = 0 ou toggle off no config), some completamente. Toggle "Mostrar preço de venda" fica no painel de precificação (default: ligado).
-- Respeita gating: sem PJ conectado não mostra nem atacado nem venda (mantém "Conecte-se…").
-
-### `ProductDetailModal` (aqui pode detalhar mais)
-- Bloco de preço com: atacado, venda, **lucro por peça** e **margem efetiva**.
-- Input inline para simular markup/margem só daquele produto.
-- Total do pedido também mostra **venda projetada** e **lucro projetado**.
-
-## 4. Modelo de dados
-
-```ts
-// src/lib/precificacao.ts
-type Modo = "markup" | "margem";
-interface RegraPreco {
-  modo: Modo;
-  valor: number;             // 2.5 (markup) ou 60 (margem %)
-  arredondamento?: "none" | "90" | "99" | "inteiro";
-}
-interface PrecificacaoState {
-  mostrarNoCard: boolean;                    // default true
-  global: RegraPreco;
-  porMarca: Record<string, RegraPreco>;
-  porProduto: Record<string, RegraPreco>;
-}
-```
-Helpers: `getRegra(slug, id)` (resolve hierarquia), `calcularVenda(custo, regra)`, `set/reset` por escopo.
-
-Fórmulas:
-- Markup → `venda = custo * markup`
-- Margem → `venda = custo / (1 - margem/100)`
-- Lucro `= venda - custo`; margem efetiva `= (venda - custo)/venda`.
-
-## 5. Arquivos
-
-**Criar**
-- `src/lib/precificacao.ts`
-- `src/hooks/usePrecoVenda.ts` → `{ precoVenda, regra, origem, lucro, margemEfetiva }`
-- `src/pages/PrecificacaoConfig.tsx`
-- `src/components/PrecoVendaBar.tsx` (barra discreta na página da marca)
-
-**Editar**
-- `src/pages/MarcaDetalhe.tsx` — remover `OpportunitiesSection`; adicionar `PrecoVendaBar`; passar preço de venda ao card.
-- Card de produto usado nessa página — acrescentar a linha "Venda R$ … · Nx" (texto muted).
-- `src/components/ProductDetailModal.tsx` — bloco expandido com input, lucro, totais projetados.
-- `src/App.tsx` — rota `/precificacao`.
-- Menu/AppTopbar — link "Minha precificação".
+## Mudanças em `src/pages/MarcaColecoes.tsx`
+1. **Header enxuto** estilo Pinterest: logo + nome da marca à esquerda, "5 coleções" em muted, campo de busca fino à direita (desktop) e botão "Ver todos os produtos" secundário.
+2. **Card no formato Pinterest board**:
+   - Layout: `grid grid-cols-3 gap-1` interno — coluna 1 span 2 (cover), coluna 2 com 2 thumbs empilhados.
+   - Aspect ratio total ~ `aspect-[3/2]`.
+   - Cantos `rounded-2xl` no wrapper, imagens `overflow-hidden`.
+   - Hover: leve `scale-[1.01]` + `shadow-md`; sem borda colorida.
+3. **Metadata abaixo da imagem**: nome da coleção (semibold, texto foreground), linha muted com "N peças · tag" (ex.: "128 peças · Nova coleção"). Remover badge sobreposto na imagem.
+4. **Card "Ver todos os produtos"** também no formato board: cover neutro (bg muted com ícone `LayoutGrid` centralizado grande) + 2 thumbs de produtos reais nas laterais, título "Todos os produtos" e "Catálogo completo".
+5. **Grid**: `grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5`.
+6. Manter animação de entrada suave (fade+y) já usada.
+7. Manter navegação: clique no card → `/marca/:slug/produtos?colecao={slug}`; "Ver todos" → `/marca/:slug/produtos`.
 
 ## Fora de escopo
-- Regras por categoria/gênero.
-- Impostos por NCM.
-- Persistência em backend.
+- Criar/editar/reordenar coleções (Pinterest permite; aqui é só visualização).
+- Masonry real com alturas variáveis.
+- Alterar rota ou dados mock de coleções.
