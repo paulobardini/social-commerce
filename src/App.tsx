@@ -14,6 +14,7 @@ import Explorar from "./pages/Explorar";
 import Perfil from "./pages/Perfil";
 import Marcas from "./pages/Marcas";
 import MarcaDetalhe from "./pages/MarcaDetalhe";
+import MarcaColecoes from "./pages/MarcaColecoes";
 import ProdutoDetalhe from "./pages/ProdutoDetalhe";
 import PrecificacaoConfig from "./pages/PrecificacaoConfig";
 import Checkout from "./pages/Checkout";
