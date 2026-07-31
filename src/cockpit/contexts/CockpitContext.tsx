@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, useCallback, t
 import { buildSeed, type Seed } from "../data/seed";
 import { resolveRange, previousOf, type DateRange, type PeriodKey } from "../lib/range";
 import type { AprovacaoLog, MetaLog } from "../lib/decisoes";
+import { seedAprovacoesLog } from "../data/seedAuditoria";
 import type { Escopo } from "../lib/escopo";
 import { escopoPermitido } from "../lib/escopo";
 import { useVendedorPerfilCtx } from "@/hooks/useVendedorPerfil";
@@ -119,7 +120,7 @@ export function CockpitProvider({ children }: { children: ReactNode }) {
   const [diasPerdido, setDiasPerdidoState] = useState(stored.diasPerdido ?? 180);
   const [repId, setRepId] = useState<string | "todos">(seed.representantes[0]?.id ?? "todos");
   const [escopoState, setEscopoState] = useState<Escopo>(perfil.perfil === "gestor_regional" && perfil.regiao ? perfil.regiao : "nacional");
-  const [aprovacoesLog, setAprovacoesLog] = useState<AprovacaoLog[]>(stored.aprovacoesLog ?? []);
+  const [aprovacoesLog, setAprovacoesLog] = useState<AprovacaoLog[]>(stored.aprovacoesLog?.length ? stored.aprovacoesLog : seedAprovacoesLog());
   const [metasLog, setMetasLog] = useState<MetaLog[]>(stored.metasLog ?? []);
   const [metasPublicadas, setMetasPublicadas] = useState<Record<string, number>>(stored.metasPublicadas ?? {});
   const [campanhasPush, setCampanhasPush] = useState<Record<string, { criadaEm: string; texto: string }>>(stored.campanhasPush ?? {});
