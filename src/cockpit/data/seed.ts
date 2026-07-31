@@ -218,7 +218,6 @@ export function buildSeed(): Seed {
     const d = new Date(hoje.getFullYear(), hoje.getMonth() - m, 1);
     const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const fim = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-    const diasNoMes = fim.getDate();
     const ehMesAtual = m === 0;
     // a meta é calibrada pelo realizado do próprio período (no mês corrente,
     // pelo acumulado até hoje) para que o atingimento exibido fique plausível
