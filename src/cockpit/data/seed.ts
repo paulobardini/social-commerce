@@ -205,22 +205,62 @@ export function buildSeed(): Seed {
     }
   });
 
+  // METAS — derivadas do realizado para gerar atingimentos PLAUSÍVEIS.
+  // Espalhamento alvo por rep: alguns acima de 100 (105/110), a maioria entre
+  // 75 e 100, e alguns bem abaixo (50/65). Nada de 300%.
   const metas: Meta[] = [];
   const tipos: TipoMeta[] = ["faturamento", "positivacao", "cobertura", "novos", "reativacao"];
+  // fator = realizado / meta desejado (ex.: 1.10 => 110% de atingimento)
+  const FATORES = [1.1, 1.05, 0.97, 0.88, 0.75, 1.02, 0.65, 0.5, 0.92, 0.8];
+  const round = (v: number, step: number) => Math.max(step, Math.round(v / step) * step);
+
   for (let m = 5; m >= 0; m--) {
     const d = new Date(hoje.getFullYear(), hoje.getMonth() - m, 1);
     const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    for (const r of REPS) {
+    const fim = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    const ehMesAtual = m === 0;
+    // a meta é calibrada pelo realizado do próprio período (no mês corrente,
+    // pelo acumulado até hoje) para que o atingimento exibido fique plausível
+    const projetar = (v: number) => v;
+
+    let totalFatMes = 0;
+    let totalPosMes = 0;
+
+    REPS.forEach((r, i) => {
+      const pedidosMes = pedidos.filter(
+        p => p.repId === r.id && p.data >= d && p.data <= (ehMesAtual ? hoje : fim)
+      );
+      const realFat = projetar(pedidosMes.reduce((s, p) => s + p.valor, 0));
+      const realPos = projetar(new Set(pedidosMes.map(p => p.contaId)).size);
+      const carteira = contas.filter(c => c.repId === r.id).length || 1;
+
+      // fator distinto por rep e levemente variável por mês
+      const fator = FATORES[(i + m) % FATORES.length];
+      totalFatMes += realFat;
+      totalPosMes += realPos;
+
       for (const t of tipos) {
-        const base = t === "faturamento" ? rand(80000, 180000) : t === "positivacao" ? rand(10, 25) : t === "cobertura" ? rand(40, 80) : rand(3, 10);
-        metas.push({ repId: r.id, tipo: t, valor: base, mes });
+        let valor: number;
+        if (t === "faturamento") valor = round(realFat / fator, 1000);
+        else if (t === "positivacao") valor = Math.max(3, Math.round(realPos / fator));
+        else if (t === "cobertura") valor = Math.min(95, Math.max(25, Math.round(((realPos / carteira) * 100) / fator)));
+        else valor = Math.max(2, Math.round(rand(4, 9) / fator));
+        metas.push({ repId: r.id, tipo: t, valor, mes });
       }
-    }
+    });
+
+    // consolidada: atingimento ~ 96% (levemente abaixo do alvo)
+    const fatorGeral = 0.96;
     for (const t of tipos) {
-      const base = t === "faturamento" ? rand(600000, 1100000) : t === "positivacao" ? rand(50, 90) : t === "cobertura" ? rand(60, 90) : rand(20, 60);
-      metas.push({ repId: "consolidada", tipo: t, valor: base, mes });
+      const valor =
+        t === "faturamento" ? round(totalFatMes / fatorGeral, 5000)
+        : t === "positivacao" ? Math.max(10, Math.round(totalPosMes / fatorGeral))
+        : t === "cobertura" ? rand(60, 80)
+        : Math.max(6, Math.round(rand(20, 45) / fatorGeral));
+      metas.push({ repId: "consolidada", tipo: t, valor, mes });
     }
   }
+
 
   // ORÇAMENTOS PENDENTES DE APROVAÇÃO — cobrindo os 3 motivos (fila realista ~50)
   const orcamentosPendentes: OrcamentoPendente[] = [
