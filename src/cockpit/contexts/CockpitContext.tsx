@@ -87,7 +87,8 @@ interface CockpitContextValue {
 
 const Ctx = createContext<CockpitContextValue | null>(null);
 
-const STORAGE = "cockpit:cfg:v3";
+const STORAGE = "cockpit:cfg:v4";
+const LEGACY_STORAGE = "cockpit:cfg:v3";
 interface StoredCfg {
   diasAtivo?: number;
   diasPerdido?: number;
@@ -99,7 +100,22 @@ interface StoredCfg {
 }
 
 function loadCfg(): StoredCfg {
-  try { return JSON.parse(localStorage.getItem(STORAGE) ?? "{}"); } catch { return {}; }
+  try {
+    const atual = localStorage.getItem(STORAGE);
+    if (atual) return JSON.parse(atual);
+
+    // v4 recalibra as metas mockadas. Preserva preferências e históricos da
+    // versão anterior, mas descarta metas antigas que geravam 300%–1.200%.
+    const legado = JSON.parse(localStorage.getItem(LEGACY_STORAGE) ?? "{}") as StoredCfg;
+    const migrado: StoredCfg = {
+      diasAtivo: legado.diasAtivo,
+      diasPerdido: legado.diasPerdido,
+      aprovacoesLog: legado.aprovacoesLog,
+      campanhasPush: legado.campanhasPush,
+    };
+    localStorage.setItem(STORAGE, JSON.stringify(migrado));
+    return migrado;
+  } catch { return {}; }
 }
 function saveCfg(cfg: StoredCfg) {
   try { localStorage.setItem(STORAGE, JSON.stringify(cfg)); } catch { /* noop */ }
