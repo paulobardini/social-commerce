@@ -220,9 +220,9 @@ export function buildSeed(): Seed {
     const fim = new Date(d.getFullYear(), d.getMonth() + 1, 0);
     const diasNoMes = fim.getDate();
     const ehMesAtual = m === 0;
-    const diasDecorridos = ehMesAtual ? Math.max(1, hoje.getDate()) : diasNoMes;
-    // no mês corrente projeta-se o ritmo para o mês cheio antes de definir a meta
-    const projetar = (v: number) => (v / diasDecorridos) * diasNoMes;
+    // a meta é calibrada pelo realizado do próprio período (no mês corrente,
+    // pelo acumulado até hoje) para que o atingimento exibido fique plausível
+    const projetar = (v: number) => v;
 
     let totalFatMes = 0;
     let totalPosMes = 0;
