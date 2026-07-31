@@ -5,8 +5,9 @@ import {
   type Compromisso, type PlanoRecuperacao, type PlanoTipo,
 } from "@/lib/planos";
 import { useTarefas } from "@/contexts/TarefasContext";
+import { seedPlanos } from "@/data/mockPlanos";
 
-const STORAGE = "planos:v1";
+const STORAGE = "planos:v2";
 
 interface Ctx {
   planos: PlanoRecuperacao[];
@@ -29,7 +30,12 @@ interface Ctx {
 const PlanosCtx = createContext<Ctx | null>(null);
 
 function load(): PlanoRecuperacao[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE) ?? "[]"); } catch { return []; }
+  try {
+    const raw = localStorage.getItem(STORAGE);
+    if (!raw) return seedPlanos();
+    const parsed = JSON.parse(raw) as PlanoRecuperacao[];
+    return Array.isArray(parsed) && parsed.length ? parsed : seedPlanos();
+  } catch { return seedPlanos(); }
 }
 function save(p: PlanoRecuperacao[]) {
   try { localStorage.setItem(STORAGE, JSON.stringify(p)); } catch { /* noop */ }
