@@ -173,3 +173,41 @@ export function trackingOfertas(lista: OfertaProduto[]): TrackingOfertas {
     porCanal,
   };
 }
+
+// ---- Agregação por marca: quais marcas são mais oferecidas ----
+export interface OfertaMarca {
+  marcaId: string;
+  marcaNome: string;
+  produtos: number;
+  envios: number;
+  aberturas: number;
+  pedidos: number;
+  receita: number;
+  taxaAbertura: number;
+  conversao: number;
+  shareEnvios: number; // % dos envios totais
+}
+
+export function ofertasPorMarca(lista: OfertaProduto[]): OfertaMarca[] {
+  const map = new Map<string, OfertaMarca>();
+  lista.forEach(o => {
+    const cur = map.get(o.marcaId) ?? {
+      marcaId: o.marcaId, marcaNome: o.marcaNome,
+      produtos: 0, envios: 0, aberturas: 0, pedidos: 0, receita: 0,
+      taxaAbertura: 0, conversao: 0, shareEnvios: 0,
+    };
+    cur.produtos += 1;
+    cur.envios += o.envios;
+    cur.aberturas += o.aberturas;
+    cur.pedidos += o.pedidos;
+    cur.receita += o.receita;
+    map.set(o.marcaId, cur);
+  });
+  const total = lista.reduce((s, o) => s + o.envios, 0);
+  return [...map.values()].map(m => ({
+    ...m,
+    taxaAbertura: m.envios ? (m.aberturas / m.envios) * 100 : 0,
+    conversao: m.envios ? (m.pedidos / m.envios) * 100 : 0,
+    shareEnvios: total ? (m.envios / total) * 100 : 0,
+  })).sort((a, b) => b.envios - a.envios);
+}
