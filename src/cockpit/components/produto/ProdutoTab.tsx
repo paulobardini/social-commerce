@@ -284,16 +284,41 @@ export function ProdutoTab() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Marca × Nicho" subtitle="Onde cada marca vende mais — receita por combinação (escala por linha)">
-        <MarcaNichoHeatmap
-          rows={heatMarcaNicho}
-          nichos={NICHOS_ORD}
-          onCellClick={(marcaId, nicho) => {
+      <SectionCard
+        title="Marca × perfil do cliente"
+        subtitle={cruz === "curva"
+          ? "Receita de cada marca por curva de cliente (A/B/C) — mostra se a marca depende dos grandes ou penetra na cauda"
+          : "Receita de cada marca por UF do cliente — onde a marca performa geograficamente"}
+        action={
+          <div className="flex gap-1">
+            {([["curva", "Curva A/B/C"], ["uf", "Região/UF"]] as const).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setCruz(k)}
+                className={`px-2 py-1 rounded text-[10px] border transition ${
+                  cruz === k ? "bg-[#2D3A8C] text-white border-[#2D3A8C]" : "bg-white nx-muted border-[#E7E9EE] hover:border-[#2D3A8C]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        }
+      >
+        <MarcaCruzamentoHeatmap
+          rows={cruz === "curva" ? heatMarcaCurva : heatMarcaUf}
+          colunas={cruz === "curva" ? COLS_CURVA : colsUf}
+          legenda={cruz === "curva"
+            ? "Curva pela receita total do cliente no período (A = 80% da receita, B = até 95%, C = cauda). Cor mais escura = onde a marca concentra receita naquela linha."
+            : "Top 7 UFs por receita; demais agrupadas em “Outras”. Escala por linha: cor mais escura = UF onde a marca mais vende."}
+          onCellClick={(marcaId, coluna) => {
             const marca = seed.marcas.find(m => m.id === marcaId)?.nome ?? marcaId;
-            toast.info(`${marca} · ${nicho} — abrir lista de clientes (em breve).`);
+            toast.info(`${marca} · ${coluna} — abrir lista de clientes (em breve).`);
           }}
         />
       </SectionCard>
+
 
       <div id="concentracao-produto">
         <SectionCard title="Concentração de receita por produto" subtitle="Poucos produtos concentram a maior parte do faturamento — a linha mostra o acumulado (%)">
