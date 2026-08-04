@@ -103,7 +103,7 @@ function isPathActive(path: string, currentPath: string): boolean {
   if (path === "/vendedor/representantes") return currentPath.startsWith("/vendedor/representantes");
   if (path === "/vendedor/whatsapp") return currentPath.startsWith("/vendedor/whatsapp");
   if (path === "/vendedor/relatorios") return currentPath.startsWith("/vendedor/relatorios");
-  if (path === "/gestor/painel") return currentPath.startsWith("/gestor/painel") || currentPath.startsWith("/vendedor/dashboard-gerencial");
+  if (path.startsWith("/gestor/painel/")) return currentPath === path;
   if (path === "/gestor/aprovacoes") return currentPath.startsWith("/gestor/aprovacoes");
   return currentPath === path || currentPath.startsWith(path + "/");
 }
