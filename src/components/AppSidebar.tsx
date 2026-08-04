@@ -56,7 +56,9 @@ const sections: MenuSection[] = [
     title: "Gestão",
     collapsible: true,
     items: [
-      { icon: BarChart3, label: "Painel Gestor", path: "/gestor/painel" },
+      { icon: BarChart3, label: "Dashboard Carteira", path: "/gestor/painel/carteira" },
+      { icon: BarChart3, label: "Dashboard Atendimento", path: "/gestor/painel/atendimento" },
+      { icon: BarChart3, label: "Dashboard Produto", path: "/gestor/painel/produto" },
       { icon: ShieldCheck, label: "Aprovações", path: "/gestor/aprovacoes", badgeKey: "aprovacoes" },
       { icon: UserCog, label: "Representantes", path: "/vendedor/representantes", badgeKey: "planos_escalados" },
       { icon: ShoppingCart, label: "Pedidos (Empresa)", path: "/vendedor/360/pedidos?escopo=empresa" },
@@ -101,7 +103,7 @@ function isPathActive(path: string, currentPath: string): boolean {
   if (path === "/vendedor/representantes") return currentPath.startsWith("/vendedor/representantes");
   if (path === "/vendedor/whatsapp") return currentPath.startsWith("/vendedor/whatsapp");
   if (path === "/vendedor/relatorios") return currentPath.startsWith("/vendedor/relatorios");
-  if (path === "/gestor/painel") return currentPath.startsWith("/gestor/painel") || currentPath.startsWith("/vendedor/dashboard-gerencial");
+  if (path.startsWith("/gestor/painel/")) return currentPath === path;
   if (path === "/gestor/aprovacoes") return currentPath.startsWith("/gestor/aprovacoes");
   return currentPath === path || currentPath.startsWith(path + "/");
 }

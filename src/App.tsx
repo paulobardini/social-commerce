@@ -220,8 +220,10 @@ const App = () => (
                 <Route path="/vendedor/representantes" element={<LayoutRoute><RepresentantesPage /></LayoutRoute>} />
                 <Route path="/vendedor/representantes/:id" element={<LayoutRoute><RepresentanteDetalhePage /></LayoutRoute>} />
                 <Route path="/vendedor/segmentacoes" element={<LayoutRoute><SegmentacoesPage /></LayoutRoute>} />
-                <Route path="/vendedor/dashboard-gerencial" element={<Navigate to="/gestor/painel" replace />} />
-                <Route path="/gestor/painel" element={<LayoutRoute><DashboardGerencial /></LayoutRoute>} />
+                <Route path="/vendedor/dashboard-gerencial" element={<Navigate to="/gestor/painel/carteira" replace />} />
+                <Route path="/gestor/painel" element={<Navigate to="/gestor/painel/carteira" replace />} />
+                <Route path="/gestor/painel/:tab" element={<LayoutRoute><DashboardGerencial /></LayoutRoute>} />
+
                 <Route path="/gestor/aprovacoes" element={<LayoutRoute><GestorAprovacoes /></LayoutRoute>} />
                 <Route path="/vendedor/relatorios" element={<LayoutRoute><RelatoriosCentral /></LayoutRoute>} />
                 <Route path="/vendedor/relatorios/novo" element={<LayoutRoute><ReportBuilder /></LayoutRoute>} />
