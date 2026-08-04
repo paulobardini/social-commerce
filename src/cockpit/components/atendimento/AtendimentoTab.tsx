@@ -149,6 +149,9 @@ export function AtendimentoTab() {
         </div>
       )}
       {sub === "ofertas" && <OfertasTracking lista={ofertas} resumo={resumoOferta} tracking={tracking} />}
+      {sub === "funil" && <FunilTempoBloco />}
+      {sub === "devolucoes" && <DevolucoesBloco />}
+
 
       {sub === "geral" && <>
       <PainelExecutivoAtendimento kpiA={kpiA} wpp={wpp} />
