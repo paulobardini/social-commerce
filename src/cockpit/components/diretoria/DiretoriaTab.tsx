@@ -349,7 +349,7 @@ export function DiretoriaTab() {
         <PilarCard
           icon={UserCheck}
           titulo="Equipe"
-          resumo={`${fmtNum(eq.time)} representantes · ${fmtNum(eq.acimaDaMeta)} acima da meta`}
+          resumo={`${fmtNum(eq.time)} representantes · ${fmtNum(eq.acimaDaMeta)} acima da meta · líder ${topRep?.nome ?? "—"}`}
           onOpen={() => navigate("/gestor/painel/equipe")}
           linhas={[
             { label: "Atingimento da meta", valor: fmtPct(eq.atingimento, 0) },
