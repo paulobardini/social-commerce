@@ -174,6 +174,12 @@ export function CarteiraTab() {
         </SectionCard>
       </div>
 
+      <div id="positivacao">
+        <PositivacaoCliente />
+      </div>
+
+
+
       <div id="movimentacao" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="Movimentação da carteira" subtitle="Novos + recuperados − sem comprar há muito">
           <Waterfall data={waterfall} />
