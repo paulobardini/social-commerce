@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCockpit } from "../contexts/CockpitContext";
 import { periodLabel, type PeriodKey } from "../lib/range";
 import { EscopoSelector } from "./EscopoSelector";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 const PERIODOS: PeriodKey[] = ["hoje", "7d", "30d", "90d", "trimestre", "semestre", "ano"];
 
@@ -18,14 +19,26 @@ interface Props {
   showPeriod?: boolean;
   showEscopo?: boolean;
   showRep?: boolean;
+  backTo?: string;
 }
 
-export function CockpitTopbar({ title, showPeriod = true, showEscopo = true, showRep = false }: Props) {
+export function CockpitTopbar({ title, showPeriod = true, showEscopo = true, showRep = false, backTo }: Props) {
+  const navigate = useNavigate();
   const { period, setPeriod, comparar, setComparar, customRange, setCustomRange, repId, setRepId, seed } = useCockpit();
 
   return (
     <div className="nx-card border-x-0 border-t-0 rounded-none sticky top-0 z-20 px-4 md:px-6 py-3">
       <div className="flex items-center justify-between flex-wrap gap-3">
+        {backTo && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 -ml-2 gap-1.5 text-xs nx-muted hover:nx-text"
+            onClick={() => navigate(backTo)}
+          >
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </Button>
+        )}
         {title && <h1 className="text-base font-semibold nx-text">{title}</h1>}
         <div className="flex items-center gap-2 flex-wrap ml-auto">
           {showRep && (

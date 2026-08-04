@@ -24,7 +24,7 @@ export default function DashboardGerencial() {
 
   return (
     <div className="nx-shell min-h-screen">
-      <CockpitTopbar title={TITLES[key]} showPeriod showEscopo />
+      <CockpitTopbar title={TITLES[key]} showPeriod showEscopo backTo={key === "diretoria" ? undefined : "/gestor/painel/diretoria"} />
       <div className="px-4 md:px-6 py-4 space-y-4">
         {key === "diretoria" && <DiretoriaTab />}
         {key === "carteira" && <CarteiraTab />}
