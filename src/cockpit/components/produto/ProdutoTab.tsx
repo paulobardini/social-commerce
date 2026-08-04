@@ -140,19 +140,57 @@ export function ProdutoTab() {
     }).sort((a, b) => b.pct - a.pct);
   }, [seed, repIds]);
 
-  const NICHOS_ORD: Nicho[] = ["Infantil", "Adulto", "Fitness", "Moda Praia", "Casual", "Multimarcas"];
-  const heatMarcaNicho = useMemo(() => {
+  // --- Cruzamento MARCA × dimensão do cliente ---------------------------
+  // Curva do cliente (A/B/C) pela receita total da conta no escopo
+  const classeDaConta = useMemo(() => {
+    const porConta = new Map<string, number>();
+    noEscopoPedidos.forEach(p => porConta.set(p.contaId, (porConta.get(p.contaId) ?? 0) + p.valor));
+    const curva = curvaAbc([...porConta.entries()].map(([id, valor]) => ({ item: { id }, valor })));
+    const map = new Map<string, "A" | "B" | "C">();
+    curva.forEach(r => map.set(r.item.id, r.classe));
+    return map;
+  }, [noEscopoPedidos]);
+
+  const COLS_CURVA = ["A", "B", "C"];
+  const heatMarcaCurva = useMemo(() => {
     return seed.marcas.map(m => {
-      const cells = NICHOS_ORD.map(n => {
-        const contasNicho = new Set(seed.contas.filter(c => c.nicho === n && repIds.has(c.repId)).map(c => c.id));
-        const valor = seed.pedidos.filter(p => p.marcaId === m.id && contasNicho.has(p.contaId)).reduce((s, p) => s + p.valor, 0);
-        const clientes = new Set(seed.pedidos.filter(p => p.marcaId === m.id && contasNicho.has(p.contaId)).map(p => p.contaId)).size;
-        return { nicho: n, valor, clientes };
+      const cells = COLS_CURVA.map(cl => {
+        const rel = noEscopoPedidos.filter(p => p.marcaId === m.id && classeDaConta.get(p.contaId) === cl);
+        return { coluna: cl, valor: rel.reduce((s, p) => s + p.valor, 0), clientes: new Set(rel.map(p => p.contaId)).size };
       });
       const total = cells.reduce((s, c) => s + c.valor, 0);
       return { marcaId: m.id, marcaNome: m.nome, cells, total };
     }).sort((a, b) => b.total - a.total);
-  }, [seed, repIds]);
+  }, [seed, noEscopoPedidos, classeDaConta]);
+
+  // Região/UF do cliente — top 7 UFs por receita + "Outras"
+  const ufDaConta = useMemo(() => new Map(seed.contas.map(c => [c.id, c.uf])), [seed]);
+  const colsUf = useMemo(() => {
+    const porUf = new Map<string, number>();
+    noEscopoPedidos.forEach(p => {
+      const uf = ufDaConta.get(p.contaId) ?? "—";
+      porUf.set(uf, (porUf.get(uf) ?? 0) + p.valor);
+    });
+    const ord = [...porUf.entries()].sort((a, b) => b[1] - a[1]).map(([uf]) => uf);
+    return ord.length > 7 ? [...ord.slice(0, 7), "Outras"] : ord;
+  }, [noEscopoPedidos, ufDaConta]);
+
+  const heatMarcaUf = useMemo(() => {
+    const principais = new Set(colsUf.filter(c => c !== "Outras"));
+    const bucket = (contaId: string) => {
+      const uf = ufDaConta.get(contaId) ?? "—";
+      return principais.has(uf) ? uf : "Outras";
+    };
+    return seed.marcas.map(m => {
+      const cells = colsUf.map(col => {
+        const rel = noEscopoPedidos.filter(p => p.marcaId === m.id && bucket(p.contaId) === col);
+        return { coluna: col, valor: rel.reduce((s, p) => s + p.valor, 0), clientes: new Set(rel.map(p => p.contaId)).size };
+      });
+      const total = cells.reduce((s, c) => s + c.valor, 0);
+      return { marcaId: m.id, marcaNome: m.nome, cells, total };
+    }).sort((a, b) => b.total - a.total);
+  }, [seed, noEscopoPedidos, colsUf, ufDaConta]);
+
 
   const abcProduto = useMemo(() => {
     const map = new Map<string, number>();
