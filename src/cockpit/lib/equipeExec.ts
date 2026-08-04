@@ -65,7 +65,13 @@ export function performanceEquipe(
       const classificadas = classificarTudo(contas, pedidos, range, diasAtivo, diasPerdido, seed.hoje);
       const clientesCompraram = new Set(noPeriodo.map(p => p.contaId)).size;
 
+      // a meta é mensal: comparamos sempre o realizado do mês corrente (até hoje)
+      const inicioMes = new Date(seed.hoje.getFullYear(), seed.hoje.getMonth(), 1);
+      const receitaMes = pedidos
+        .filter(p => p.data >= inicioMes && p.data <= seed.hoje)
+        .reduce((s, p) => s + p.valor, 0);
       const meta = seed.metas.find(m => m.repId === r.id && m.tipo === "faturamento" && m.mes === mes)?.valor ?? 0;
+
       const fechadas = seed.oportunidades.filter(o => o.repId === r.id && (o.etapa === "ganha" || o.etapa === "perdida"));
       const ganhas = fechadas.filter(o => o.etapa === "ganha").length;
       const propostas = seed.oportunidades.filter(o => o.repId === r.id).length;
