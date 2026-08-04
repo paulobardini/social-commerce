@@ -73,7 +73,14 @@ export function DiretoriaTab() {
     const pedidos = seed.pedidos.filter(p => ids.has(p.repId));
     const classificadas = classificarTudo(contas, pedidos, range, diasAtivo, diasPerdido, seed.hoje);
     const pedidosPeriodo = pedidos.filter(p => p.data >= range.from && p.data <= range.to);
+    const pedidosPrev = pedidos.filter(p => p.data >= previousRange.from && p.data <= previousRange.to);
+    const classificadasPrev = classificarTudo(contas, pedidos, previousRange, diasAtivo, diasPerdido, previousRange.to);
     return {
+      classificadasPrev,
+      concPrev: concentracao(classificadasPrev),
+      wppPrev: analyticsWhatsApp(seed, previousRange, ids),
+      ofertasPrev: resumoOfertas(ofertasPorProduto(seed, pedidosPrev)),
+      riscoPrev: riscoReceita(classificadasPrev, diasAtivo),
       resumo: resumoExecutivo(pedidos, range, previousRange),
       ponte: ponteReceita(pedidos, range, previousRange),
       conc: concentracao(classificadas),
@@ -97,7 +104,14 @@ export function DiretoriaTab() {
     [seed, range, previousRange, diasAtivo, diasPerdido],
   );
 
-  const { resumo, ponte, conc, risco, serie, regioes, classificadas, baseTotal, wpp, ofertas } = d;
+  const {
+    resumo, ponte, conc, risco, serie, regioes, classificadas, baseTotal, wpp, ofertas,
+    classificadasPrev, concPrev, wppPrev, ofertasPrev, riscoPrev,
+  } = d;
+
+  // variação relativa (%) entre dois valores; 0 quando não há base de comparação
+  const varPct = (atual: number, anterior: number) =>
+    anterior === 0 ? 0 : ((atual - anterior) / anterior) * 100;
 
   const cobertura = baseTotal ? (resumo.clientesCompraram / baseTotal) * 100 : 0;
   const deltaClientes = resumo.clientesCompraramPrev
@@ -109,6 +123,30 @@ export function DiretoriaTab() {
   const ativos = classificadas.filter(c => c.status === "ativo").length;
   const inativos = classificadas.filter(c => c.status === "inativo").length;
   const novos = classificadas.filter(c => c.novoNoPeriodo).length;
+
+  const ativosPrev = classificadasPrev.filter(c => c.status === "ativo").length;
+  const inativosPrev = classificadasPrev.filter(c => c.status === "inativo").length;
+  const novosPrev = classificadasPrev.filter(c => c.novoNoPeriodo).length;
+
+  const coberturaPrev = baseTotal ? (resumo.clientesCompraramPrev / baseTotal) * 100 : 0;
+  const ticketClientePrev = resumo.clientesCompraramPrev
+    ? resumo.receitaAnterior / resumo.clientesCompraramPrev
+    : 0;
+
+  const deltaCobertura = varPct(cobertura, coberturaPrev);
+  const deltaTicketCliente = varPct(ticketCliente, ticketClientePrev);
+  const deltaConcentracao = varPct(conc.top10Share, concPrev.top10Share);
+  const deltaConversaWpp = varPct(wpp.conversao, wppPrev.conversao);
+  const deltaEnvios = varPct(ofertas.totalEnvios, ofertasPrev.totalEnvios);
+  const deltaConversaoOfertas = varPct(ofertas.conversaoMedia, ofertasPrev.conversaoMedia);
+  const deltaItensPedido = varPct(kpiP.itensPorPedido.atual, kpiP.itensPorPedido.anterior);
+  const deltaPrimeiraResposta = varPct(wpp.primeiraRespostaMin, wppPrev.primeiraRespostaMin);
+  const deltaCiclo = varPct(kpiA.ciclo.atual, kpiA.ciclo.anterior);
+  const deltaAtivos = varPct(ativos, ativosPrev);
+  const deltaInativos = varPct(inativos, inativosPrev);
+  const deltaNovos = varPct(novos, novosPrev);
+  const deltaRisco = varPct(risco.emRisco, riscoPrev.emRisco);
+  const deltaCrossSell = varPct(kpiP.crossSell.atual, kpiP.crossSell.anterior);
 
   const maiorEfeito = ponte
     .filter(p => p.tipo !== "total")
@@ -176,23 +214,28 @@ export function DiretoriaTab() {
             <ExecTile
               label="Clientes que compraram"
               value={fmtNum(resumo.clientesCompraram)}
-              sub={`${deltaArrow(deltaClientes)} ${fmtPct(Math.abs(deltaClientes), 0)} vs período anterior · base de ${fmtNum(baseTotal)} clientes`}
+              delta={deltaClientes}
+              sub={`vs ${fmtNum(resumo.clientesCompraramPrev)} no período anterior · base de ${fmtNum(baseTotal)} clientes`}
               tone={deltaClientes >= 0 ? "good" : "risk"}
             />
             <ExecTile
               label="Cobertura da carteira"
               value={fmtPct(cobertura, 0)}
+              delta={deltaCobertura}
               sub={`${fmtNum(ativos)} ativos · ${fmtNum(inativos)} parados · ${fmtNum(novos)} novos no período`}
               tone={cobertura < 40 ? "risk" : "neutral"}
             />
             <ExecTile
               label="Ticket médio por cliente"
               value={fmtBRLc(ticketCliente)}
+              delta={deltaTicketCliente}
               sub={`${pedidosPorCliente.toFixed(1)} pedidos por cliente · ticket pedido ${fmtBRLc(resumo.ticketPedido)}`}
             />
             <ExecTile
               label="Concentração"
               value={fmtPct(conc.top10Share, 0)}
+              delta={deltaConcentracao}
+              invert
               sub={`nos 10 maiores · ${fmtNum(conc.clientesMetadeReceita)} clientes = metade da receita`}
               tone={conc.top10Share > 40 ? "risk" : "neutral"}
             />
@@ -237,10 +280,10 @@ export function DiretoriaTab() {
           resumo={`${fmtNum(baseTotal)} clientes no escopo`}
           onOpen={() => navigate("/gestor/painel/carteira")}
           linhas={[
-            { label: "Clientes ativos", valor: fmtNum(ativos) },
-            { label: "Clientes parados", valor: fmtNum(inativos) },
-            { label: "Novos no período", valor: fmtNum(novos) },
-            { label: "Receita em clientes parados", valor: fmtBRLc(risco.emRisco) },
+            { label: "Clientes ativos", valor: fmtNum(ativos), delta: deltaAtivos },
+            { label: "Clientes parados", valor: fmtNum(inativos), delta: deltaInativos, invert: true },
+            { label: "Novos no período", valor: fmtNum(novos), delta: deltaNovos },
+            { label: "Receita em clientes parados", valor: fmtBRLc(risco.emRisco), delta: deltaRisco, invert: true },
           ]}
         />
 
@@ -250,10 +293,10 @@ export function DiretoriaTab() {
           resumo={`${fmtNum(wpp.conversas)} conversas · ${fmtNum(kpiA.opsAbertas.atual)} propostas abertas`}
           onOpen={() => navigate("/gestor/painel/atendimento")}
           linhas={[
-            { label: "Receita em negociação", valor: fmtBRLc(kpiA.pipelineRS.atual) },
-            { label: "1ª resposta", valor: fmtMin(wpp.primeiraRespostaMin) },
-            { label: "Aproveitamento de propostas", valor: fmtPct(kpiA.winRate.atual, 0) },
-            { label: "Fila acima de 2h", valor: fmtNum(foraSLA) },
+            { label: "Receita em negociação", valor: fmtBRLc(kpiA.pipelineRS.atual), delta: kpiA.pipelineRS.delta },
+            { label: "1ª resposta", valor: fmtMin(wpp.primeiraRespostaMin), delta: deltaPrimeiraResposta, invert: true },
+            { label: "Aproveitamento de propostas", valor: fmtPct(kpiA.winRate.atual, 0), delta: kpiA.winRate.delta },
+            { label: "Fila acima de 2h", valor: fmtNum(foraSLA), delta: varPct(foraSLA, wppPrev.filaSLA.slice(2).reduce((s2, f) => s2 + f.qtd, 0)), invert: true },
           ]}
         />
 
@@ -265,8 +308,8 @@ export function DiretoriaTab() {
           linhas={[
             { label: "Faturamento", valor: fmtBRLc(kpiP.faturamento.atual), delta: kpiP.faturamento.delta },
             { label: "Concentração na líder", valor: fmtPct(kpiP.concentracaoTop.atual, 0), invert: true, delta: kpiP.concentracaoTop.delta },
-            { label: "Marcas por cliente", valor: kpiP.crossSell.atual.toFixed(1) },
-            { label: "Conversão das ofertas", valor: fmtPct(ofertas.conversaoMedia, 1) },
+            { label: "Marcas por cliente", valor: kpiP.crossSell.atual.toFixed(1), delta: deltaCrossSell },
+            { label: "Conversão das ofertas", valor: fmtPct(ofertas.conversaoMedia, 1), delta: deltaConversaoOfertas },
           ]}
         />
       </div>
@@ -277,21 +320,26 @@ export function DiretoriaTab() {
           <ExecTile
             label="Conversas em pedido"
             value={fmtPct(wpp.conversao, 0)}
+            delta={deltaConversaWpp}
             sub={`${fmtNum(wpp.conversas)} conversas no período · ${fmtPct(wpp.respondidasNoSLA, 0)} respondidas dentro do SLA`}
           />
           <ExecTile
             label="Ciclo até fechar"
             value={fmtDias(kpiA.ciclo.atual)}
+            delta={deltaCiclo}
+            invert
             sub={`ticket médio por proposta ${fmtBRLc(kpiA.ticketOportunidade.atual)}`}
           />
           <ExecTile
             label="Ofertas enviadas"
             value={fmtNum(ofertas.totalEnvios)}
+            delta={deltaEnvios}
             sub={`${fmtPct(ofertas.taxaAbertura, 0)} de abertura · ${fmtNum(ofertas.produtosOfertados)} produtos ofertados`}
           />
           <ExecTile
             label="Itens por pedido"
             value={kpiP.itensPorPedido.atual.toFixed(1)}
+            delta={deltaItensPedido}
             sub={`vs ${kpiP.itensPorPedido.anterior.toFixed(1)} no período anterior`}
           />
         </div>
