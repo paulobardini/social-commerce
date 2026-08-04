@@ -125,10 +125,42 @@ export function DiretoriaTab() {
     { id: "produto", label: "Produto", icon: Package, path: "/gestor/painel/produto", cor: "#5A3E8C" },
   ];
 
+  const atalhos = [
+    { rota: "/gestor/painel/carteira", titulo: "Carteira", hint: "Clientes, receita e cobertura", icon: Users, cor: NX.primary },
+    { rota: "/gestor/painel/atendimento", titulo: "Atendimento", hint: "WhatsApp, SLA e pipeline", icon: MessageSquare, cor: "#0EA5E9" },
+    { rota: "/gestor/painel/produto", titulo: "Produto", hint: "Marcas, ofertas e mix", icon: Package, cor: "#7C3AED" },
+  ];
+
+
+
   return (
     <div className="space-y-4">
+      {/* Atalhos para os pilares */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        {atalhos.map(a => (
+          <button
+            key={a.rota}
+            onClick={() => navigate(a.rota)}
+            className="group nx-card px-3.5 py-3 flex items-center gap-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <span
+              className="w-9 h-9 rounded-lg grid place-items-center shrink-0 transition-colors"
+              style={{ background: `${a.cor}14`, color: a.cor }}
+            >
+              <a.icon className="w-4 h-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13px] font-semibold nx-text leading-tight">{a.titulo}</span>
+              <span className="block text-[11px] nx-muted truncate">{a.hint}</span>
+            </span>
+            <ArrowRight className="w-4 h-4 nx-muted transition-transform group-hover:translate-x-0.5" />
+          </button>
+        ))}
+      </div>
+
       {/* Faixa executiva consolidada */}
       <div className="nx-card p-4">
+
         <div className="flex flex-col lg:flex-row lg:items-stretch gap-4">
           <div className="lg:w-[280px] shrink-0">
             <ExecHero
