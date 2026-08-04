@@ -23,49 +23,58 @@
 
 **Não existe em lugar nenhum (dado nem tela)**
 
-- Devoluções: valores, quantidade e **motivo** da devolução.
-- Margem de contribuição do mês com decomposição do que puxou para cima/baixo (a margem existe só por produto na Inteligência de Mercado, não consolidada no período nem por cliente/vendedora).
-- Lucro bruto e lucro líquido consolidados.
+- Margem de contribuição do período com decomposição do que puxou para cima/baixo (a margem existe só por produto na Inteligência de Mercado, não consolidada por período, cliente ou vendedora).
 - Preço médio por peça e **preço médio por quilo** (não há peso no cadastro).
-- Condição comercial: % de venda em cartão vs boleto, prazo médio de pagamento.
 - Origem do cliente: inbound vs outbound e "por que o cliente escolheu a Apolo".
 - Motivos de inativação de cliente (só existe motivo de perda de oportunidade).
 - Produtos que não venderam nada no período (lista de encalhe comercial).
 - Tempo em cada etapa do funil (existe o funil, não o tempo por etapa).
 - Padronização de tags de CRM e uso de mensagens prontas por vendas (existe o dado de templates, falta o relatório).
 - Análise de carteira por categoria e por estação.
+- Visão consolidada de devoluções (o dado nasce nos tickets de SAC, mas não é agregado em nenhum dashboard).
 
-## 2. O problema estrutural
+## 2. Decisões já tomadas
 
-Hoje há três mundos separados que não conversam: o painel do gestor (`cockpit`), a Inteligência de Mercado (custo/margem/estoque) e o Marketing (verba/ROI). O gestor precisa abrir três lugares para responder uma pergunta. Além disso, a base de pedidos do painel não guarda custo, devolução, forma de pagamento, peso nem canal — por isso metade da lista acima é impossível de calcular sem enriquecer o dado.
+- **Forma de pagamento e prazo:** já existem no cadastro do pedido — só precisam ser lidos e agregados.
+- **Custo do produto:** passa a ser campo do cadastro de produto, e a margem é derivada dele.
+- **Devolução:** nasce do SAC (ticket com motivo de devolução), não como entidade separada.
+- **Financeiro (lucro líquido, DRE):** fora do escopo — não temos esse dado. Ficamos em margem de contribuição / lucro bruto comercial.
 
 ## 3. Proposta de execução
 
-**Fase 1 — Enriquecer a base de dados (pré-requisito de tudo)**
-Adicionar ao pedido e ao cliente: custo do item (para margem), devolução (valor, peças, motivo), forma de pagamento (cartão/boleto/pix) e prazo, peso em kg, canal de origem (inbound/outbound) e motivo de escolha, e motivo de inativação do cliente. Popular com dados simulados coerentes com o histórico atual.
+**Fase 1 — Custo no cadastro de produto**
+Adicionar campo de custo ao produto e usá-lo como fonte única de margem. Onde não houver custo informado, o produto aparece como "sem custo cadastrado" em vez de margem zero. Popular os mocks existentes com custos coerentes.
 
-**Fase 2 — Novo Dashboard Financeiro/Margem** (`/gestor/painel/financeiro`)
-Margem de contribuição do mês, lucro bruto e líquido, ponte de margem (o que puxou para cima/baixo: mix de marca, desconto, devolução, frete), margem por marca/cliente/vendedora, preço médio por peça e por quilo, % cartão vs boleto e prazo médio.
+**Fase 2 — Margem dentro dos dashboards atuais**
+Sem tela nova de financeiro. A margem entra como camada nos painéis que já existem:
+- **Produto:** margem por marca e por produto, ranking de maior e menor rentabilidade, ponte de margem (mix, desconto, marca).
+- **Carteira:** margem por cliente e ticket médio com margem.
+- **Diretoria:** tile de margem de contribuição do período com a seta de variação.
 
-**Fase 3 — Devoluções e SAC ampliados**
-Bloco de devoluções (valor, % sobre faturamento, ranking de motivos, por marca/cliente/vendedora) dentro do dashboard Financeiro, e ampliação do SAC com "principais reclamações × principais acertos" e motivos de inativação de cliente.
+**Fase 3 — Condições comerciais e preço médio**
+Bloco no Dashboard Carteira usando os dados de pagamento que já existem: % cartão vs boleto vs pix por mês, prazo médio de pagamento, preço médio por peça e preço médio por quilo (requer peso no cadastro de produto, adicionado junto com o custo na Fase 1).
 
-**Fase 4 — Completar Produto e Carteira**
-Produto: lista de itens sem venda no período, produtos por rentabilidade (maior/menor) e por velocidade de venda, trazendo a margem da Inteligência de Mercado para dentro do painel. Carteira: segmentação por categoria e por estação, e visão inbound vs outbound.
+**Fase 4 — Devoluções a partir do SAC**
+Marcar tickets como devolução com motivo estruturado e criar o bloco "Devoluções" dentro do Dashboard Atendimento: valor devolvido, % sobre faturamento, ranking de motivos, por marca, cliente e vendedora.
 
-**Fase 5 — Completar Atendimento**
-Tempo médio em cada etapa do funil, análise de descartes por motivo, uso de mensagens prontas por vendedora e auditoria de padronização de tags do CRM.
+**Fase 5 — Completar Produto e Carteira**
+Produto: lista de itens sem venda no período e produtos por velocidade de venda. Carteira: segmentação por categoria e por estação, origem inbound vs outbound e motivos de inativação de cliente.
 
-**Fase 6 — Diretoria como capa do B.I.**
-Puxar para a tela de Diretoria os números novos (margem, lucro, devoluções, ROI de verba) e ligar os atalhos para Inteligência de Mercado e Marketing, para que tudo da lista seja acessível de um ponto só.
+**Fase 6 — Completar Atendimento**
+Tempo médio em cada etapa do funil, análise de descartes por motivo, uso de mensagens prontas por vendedora e auditoria de padronização das tags do CRM.
+
+**Fase 7 — Diretoria como capa do B.I.**
+Trazer para a Diretoria os números novos (margem, devoluções, ROI de verba do marketing) e ligar atalhos para Inteligência de Mercado e Marketing, para que a lista inteira seja acessível de um ponto só.
 
 ## 4. Notas técnicas
 
-- Base de dados: estender `src/cockpit/data/seed.ts` (`Pedido`, `Conta`, `Marca`) com custo, devolução, pagamento, peso e canal; criar `seedDevolucoes` e `seedInativacoes`. Bumpar a versão do cache no `CockpitContext`.
+- Custo e peso entram no tipo de produto do cadastro (`mockProducts.ts` / `StartProduto` conforme o módulo) e são resolvidos por `produtoId` nos pedidos do `seed.ts`.
 - Cálculos novos em `src/cockpit/lib/`: `margem.ts`, `devolucoes.ts`, `condicoesComerciais.ts`, `funilTempo.ts`, `semVenda.ts`.
-- Nova rota `/gestor/painel/financeiro` em `App.tsx` + `DashboardGerencial.tsx`, com item no `AppSidebar` sob Dashboard, reaproveitando `ExecTiles`, `SectionCard` e `Waterfall`.
-- Consolidação: reaproveitar `mockInteligencia.ts` como fonte de custo/margem por SKU quando o produto do pedido tiver correspondência, evitando duplicar dados.
+- Devoluções derivam de `src/data/mockAtendimento.ts` (novo campo de tipo/motivo no ticket), consumidas pelo `TicketsAnalytics` e por um novo bloco de devoluções.
+- Origem (inbound/outbound), motivo de escolha e motivo de inativação entram em `Conta` no `seed.ts`; bumpar a versão do cache no `CockpitContext`.
+- Nenhuma rota nova: tudo é adicionado dentro de Carteira, Atendimento, Produto e Diretoria, reaproveitando `ExecTiles`, `SectionCard` e `Waterfall`.
 
-## 5. Antes de começar
+## 5. Ordem sugerida
 
-Sugiro executar em ordem de valor: **Fase 1 + 2 + 3** (margem, lucro e devoluções) primeiro, que é o que hoje simplesmente não existe e é o coração do pedido; depois as fases 4 a 6, que são complementos sobre dados que já temos.
+Fases 1 a 4 primeiro (custo → margem → condições comerciais → devoluções), que é o núcleo do que hoje não existe; depois 5 a 7, que são complementos sobre dados que já temos.
+
