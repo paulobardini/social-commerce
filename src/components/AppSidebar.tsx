@@ -5,6 +5,7 @@ import {
   Settings, Lightbulb, Tag, ChevronLeft, ChevronRight,
   FileText, ChevronDown, Sparkles, ShoppingCart, Radar, Brain, GitCompare, Truck, Layers, Headphones, Inbox,
   ShieldCheck,
+  Wallet, Package,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
