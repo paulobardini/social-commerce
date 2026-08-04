@@ -9,12 +9,11 @@ import { repIdsNoEscopo } from "../../lib/escopo";
 import { SectionCard } from "../SectionCard";
 import { KpiCard } from "../KpiCard";
 import { AbcCurve } from "../AbcCurve";
-import { MarcaNichoHeatmap } from "./MarcaNichoHeatmap";
+import { MarcaCruzamentoHeatmap } from "./MarcaCruzamentoHeatmap";
 import { OfertasProdutoTable, OfertasDestaques } from "./OfertasProdutoTable";
 import { ofertasPorProduto, resumoOfertas } from "../../lib/ofertas";
 import { InsightsStrip } from "../InsightsStrip";
 import { insightsProduto } from "../../lib/insights";
-import type { Nicho } from "../../data/seed";
 
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell,
@@ -140,19 +139,57 @@ export function ProdutoTab() {
     }).sort((a, b) => b.pct - a.pct);
   }, [seed, repIds]);
 
-  const NICHOS_ORD: Nicho[] = ["Infantil", "Adulto", "Fitness", "Moda Praia", "Casual", "Multimarcas"];
-  const heatMarcaNicho = useMemo(() => {
+  // --- Cruzamento MARCA × dimensão do cliente ---------------------------
+  // Curva do cliente (A/B/C) pela receita total da conta no escopo
+  const classeDaConta = useMemo(() => {
+    const porConta = new Map<string, number>();
+    noEscopoPedidos.forEach(p => porConta.set(p.contaId, (porConta.get(p.contaId) ?? 0) + p.valor));
+    const curva = curvaAbc([...porConta.entries()].map(([id, valor]) => ({ item: { id }, valor })));
+    const map = new Map<string, "A" | "B" | "C">();
+    curva.forEach(r => map.set(r.item.id, r.classe));
+    return map;
+  }, [noEscopoPedidos]);
+
+  const COLS_CURVA = ["A", "B", "C"];
+  const heatMarcaCurva = useMemo(() => {
     return seed.marcas.map(m => {
-      const cells = NICHOS_ORD.map(n => {
-        const contasNicho = new Set(seed.contas.filter(c => c.nicho === n && repIds.has(c.repId)).map(c => c.id));
-        const valor = seed.pedidos.filter(p => p.marcaId === m.id && contasNicho.has(p.contaId)).reduce((s, p) => s + p.valor, 0);
-        const clientes = new Set(seed.pedidos.filter(p => p.marcaId === m.id && contasNicho.has(p.contaId)).map(p => p.contaId)).size;
-        return { nicho: n, valor, clientes };
+      const cells = COLS_CURVA.map(cl => {
+        const rel = noEscopoPedidos.filter(p => p.marcaId === m.id && classeDaConta.get(p.contaId) === cl);
+        return { coluna: cl, valor: rel.reduce((s, p) => s + p.valor, 0), clientes: new Set(rel.map(p => p.contaId)).size };
       });
       const total = cells.reduce((s, c) => s + c.valor, 0);
       return { marcaId: m.id, marcaNome: m.nome, cells, total };
     }).sort((a, b) => b.total - a.total);
-  }, [seed, repIds]);
+  }, [seed, noEscopoPedidos, classeDaConta]);
+
+  // Região/UF do cliente — top 7 UFs por receita + "Outras"
+  const ufDaConta = useMemo(() => new Map(seed.contas.map(c => [c.id, c.uf])), [seed]);
+  const colsUf = useMemo(() => {
+    const porUf = new Map<string, number>();
+    noEscopoPedidos.forEach(p => {
+      const uf = ufDaConta.get(p.contaId) ?? "—";
+      porUf.set(uf, (porUf.get(uf) ?? 0) + p.valor);
+    });
+    const ord = [...porUf.entries()].sort((a, b) => b[1] - a[1]).map(([uf]) => uf);
+    return ord.length > 7 ? [...ord.slice(0, 7), "Outras"] : ord;
+  }, [noEscopoPedidos, ufDaConta]);
+
+  const heatMarcaUf = useMemo(() => {
+    const principais = new Set(colsUf.filter(c => c !== "Outras"));
+    const bucket = (contaId: string) => {
+      const uf = ufDaConta.get(contaId) ?? "—";
+      return principais.has(uf) ? uf : "Outras";
+    };
+    return seed.marcas.map(m => {
+      const cells = colsUf.map(col => {
+        const rel = noEscopoPedidos.filter(p => p.marcaId === m.id && bucket(p.contaId) === col);
+        return { coluna: col, valor: rel.reduce((s, p) => s + p.valor, 0), clientes: new Set(rel.map(p => p.contaId)).size };
+      });
+      const total = cells.reduce((s, c) => s + c.valor, 0);
+      return { marcaId: m.id, marcaNome: m.nome, cells, total };
+    }).sort((a, b) => b.total - a.total);
+  }, [seed, noEscopoPedidos, colsUf, ufDaConta]);
+
 
   const abcProduto = useMemo(() => {
     const map = new Map<string, number>();
@@ -203,6 +240,7 @@ export function ProdutoTab() {
     }).filter(Boolean).slice(0, 8) as { cliente: any; marcaAtual: string; candidatas: any[] }[];
   }, [classificadas, seed]);
 
+  const [cruz, setCruz] = useState<"curva" | "uf">("curva");
   const [pushModalMarca, setPushModalMarca] = useState<string | null>(null);
   const [pushReps, setPushReps] = useState<{ repId: string; repNome: string; clientesSugeridos: { id: string; razao: string }[] }[]>([]);
   const [novaOpOpen, setNovaOpOpen] = useState(false);
@@ -246,16 +284,41 @@ export function ProdutoTab() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Marca × Nicho" subtitle="Onde cada marca vende mais — receita por combinação (escala por linha)">
-        <MarcaNichoHeatmap
-          rows={heatMarcaNicho}
-          nichos={NICHOS_ORD}
-          onCellClick={(marcaId, nicho) => {
+      <SectionCard
+        title="Marca × perfil do cliente"
+        subtitle={cruz === "curva"
+          ? "Receita de cada marca por curva de cliente (A/B/C) — mostra se a marca depende dos grandes ou penetra na cauda"
+          : "Receita de cada marca por UF do cliente — onde a marca performa geograficamente"}
+        action={
+          <div className="flex gap-1">
+            {([["curva", "Curva A/B/C"], ["uf", "Região/UF"]] as const).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setCruz(k)}
+                className={`px-2 py-1 rounded text-[10px] border transition ${
+                  cruz === k ? "bg-[#2D3A8C] text-white border-[#2D3A8C]" : "bg-white nx-muted border-[#E7E9EE] hover:border-[#2D3A8C]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        }
+      >
+        <MarcaCruzamentoHeatmap
+          rows={cruz === "curva" ? heatMarcaCurva : heatMarcaUf}
+          colunas={cruz === "curva" ? COLS_CURVA : colsUf}
+          legenda={cruz === "curva"
+            ? "Curva pela receita total do cliente no período (A = 80% da receita, B = até 95%, C = cauda). Cor mais escura = onde a marca concentra receita naquela linha."
+            : "Top 7 UFs por receita; demais agrupadas em “Outras”. Escala por linha: cor mais escura = UF onde a marca mais vende."}
+          onCellClick={(marcaId, coluna) => {
             const marca = seed.marcas.find(m => m.id === marcaId)?.nome ?? marcaId;
-            toast.info(`${marca} · ${nicho} — abrir lista de clientes (em breve).`);
+            toast.info(`${marca} · ${coluna} — abrir lista de clientes (em breve).`);
           }}
         />
       </SectionCard>
+
 
       <div id="concentracao-produto">
         <SectionCard title="Concentração de receita por produto" subtitle="Poucos produtos concentram a maior parte do faturamento — a linha mostra o acumulado (%)">
