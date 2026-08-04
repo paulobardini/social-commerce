@@ -1,6 +1,9 @@
 import { useMemo } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Trophy } from "lucide-react";
 import { useCockpit } from "../contexts/CockpitContext";
-import { classificarTudo } from "../lib/classificar";
+import { classificarTudo, recordesCarteira } from "../lib/classificar";
 import { STATUS_COLORS, fmtNum, fmtPct, deltaArrow, deltaColor } from "../styles/tokens";
 
 export function SaudeCarteiraBar({ filtroRepId }: { filtroRepId?: string }) {
@@ -19,16 +22,23 @@ export function SaudeCarteiraBar({ filtroRepId }: { filtroRepId?: string }) {
     };
   }, [seed, range, previousRange, diasAtivo, diasPerdido, filtroRepId]);
 
+  const recordes = useMemo(() => {
+    const contas = filtroRepId ? seed.contas.filter(c => c.repId === filtroRepId) : seed.contas;
+    const pedidos = filtroRepId ? seed.pedidos.filter(p => p.repId === filtroRepId) : seed.pedidos;
+    return recordesCarteira(contas, pedidos, diasAtivo, diasPerdido, seed.hoje);
+  }, [seed, diasAtivo, diasPerdido, filtroRepId]);
+
   const { ativos, inativos, perdidos, total, ativosPrev, inativosPrev, perdidosPrev } = calc;
   const tot = total || 1;
 
   const delta = (a: number, b: number) => b === 0 ? 0 : ((a - b) / Math.abs(b)) * 100;
 
   const segs = [
-    { key: "ativo", label: "Ativos", n: ativos, color: STATUS_COLORS.ativo, d: delta(ativos, ativosPrev), invert: false },
-    { key: "inativo", label: "Inativos", n: inativos, color: STATUS_COLORS.inativo, d: delta(inativos, inativosPrev), invert: true },
-    { key: "perdido", label: "Perdidos", n: perdidos, color: STATUS_COLORS.perdido, d: delta(perdidos, perdidosPrev), invert: true },
+    { key: "ativo", label: "Ativos", n: ativos, color: STATUS_COLORS.ativo, d: delta(ativos, ativosPrev), invert: false, rec: recordes?.ativo },
+    { key: "inativo", label: "Inativos", n: inativos, color: STATUS_COLORS.inativo, d: delta(inativos, inativosPrev), invert: true, rec: recordes?.inativo },
+    { key: "perdido", label: "Perdidos", n: perdidos, color: STATUS_COLORS.perdido, d: delta(perdidos, perdidosPrev), invert: true, rec: recordes?.perdido },
   ];
+
 
   return (
     <div className="nx-card p-4">
