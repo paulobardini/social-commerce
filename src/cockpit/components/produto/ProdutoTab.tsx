@@ -167,6 +167,11 @@ export function ProdutoTab() {
     return { top: arr.slice(0, 10), bottom: arr.slice(-10).reverse() };
   }, [noEscopoPedidos]);
 
+  // Oferta & tracking de links (produtos enviados → abertos → convertidos)
+  const ofertas = useMemo(() => ofertasPorProduto(seed, noEscopoPedidos), [seed, noEscopoPedidos]);
+  const resumoOferta = useMemo(() => resumoOfertas(ofertas), [ofertas]);
+
+
   // Marcas sem giro por rep + clientes candidatos
   const semGiro = useMemo(() => {
     const reps = seed.representantes.filter(r => repIds.has(r.id));
