@@ -345,7 +345,34 @@ export function DiretoriaTab() {
             { label: "Conversão das ofertas", valor: fmtPct(ofertas.conversaoMedia, 1), delta: deltaConversaoOfertas },
           ]}
         />
+
+        <PilarCard
+          icon={UserCheck}
+          titulo="Equipe"
+          resumo={`${fmtNum(eq.time)} representantes · ${fmtNum(eq.acimaDaMeta)} acima da meta`}
+          onOpen={() => navigate("/gestor/painel/equipe")}
+          linhas={[
+            { label: "Atingimento da meta", valor: fmtPct(eq.atingimento, 0) },
+            { label: "Abaixo de 70% da meta", valor: fmtNum(eq.abaixoDe70), invert: true },
+            { label: "Cobertura média da carteira", valor: fmtPct(eq.coberturaMedia, 0) },
+            { label: "Margem gerada", valor: fmtBRLc(eq.margem) },
+          ]}
+        />
+
+        <PilarCard
+          icon={Megaphone}
+          titulo="Marketing"
+          resumo={`${fmtNum(mkt.leads)} leads · ${fmtNum(mkt.leadsGanhos)} convertidos em cliente`}
+          onOpen={() => navigate("/gestor/painel/marketing")}
+          linhas={[
+            { label: "Investimento em mídia", valor: fmtBRLc(mkt.investimento), delta: varPct(mkt.investimento, mkt.investimentoPrev), invert: true },
+            { label: "Custo por lead", valor: fmtBRLc(mkt.cpl), delta: varPct(mkt.cpl, mkt.cplPrev), invert: true },
+            { label: "ROAS confirmado no CRM", valor: `${mkt.roas.toFixed(1)}x`, delta: varPct(mkt.roas, mkt.roasPrev) },
+            { label: "Custo por cliente novo", valor: fmtBRLc(mkt.cac) },
+          ]}
+        />
       </div>
+
 
       {/* Ciclo e eficiência do período */}
       <SectionCard title="Eficiência comercial no período" subtitle="Leitura rápida da máquina de vendas">
