@@ -12,6 +12,8 @@ import { AbcCurve } from "../AbcCurve";
 import { MarcaCruzamentoHeatmap } from "./MarcaCruzamentoHeatmap";
 import { OfertasProdutoTable, OfertasDestaques } from "./OfertasProdutoTable";
 import { PainelExecutivoProduto } from "./PainelExecutivoProduto";
+import { VendasProdutoCliente } from "./VendasProdutoCliente";
+
 import { ofertasPorProduto, resumoOfertas } from "../../lib/ofertas";
 import { InsightsStrip } from "../InsightsStrip";
 import { insightsProduto } from "../../lib/insights";
