@@ -119,8 +119,41 @@ export function DiretoriaTab() {
   const maxRegiao = Math.max(1, ...regioes.map(r => r.atual));
   const foraSLA = wpp.filaSLA.slice(2).reduce((s, f) => s + f.qtd, 0);
 
+  const pilares = [
+    { id: "carteira", label: "Carteira", icon: Users, path: "/gestor/painel/carteira", cor: "#2D3A8C" },
+    { id: "atendimento", label: "Atendimento", icon: MessageSquare, path: "/gestor/painel/atendimento", cor: "#00A8B5" },
+    { id: "produto", label: "Produto", icon: Package, path: "/gestor/painel/produto", cor: "#5A3E8C" },
+  ];
+
   return (
     <div className="space-y-4">
+      {/* Botões de acesso rápido aos dashboards de pilar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {pilares.map((p) => {
+          const Icon = p.icon;
+          return (
+            <button
+              key={p.id}
+              onClick={() => navigate(p.path)}
+              className="group nx-card p-4 text-left hover:shadow-md transition-all duration-200 border-l-4"
+              style={{ borderLeftColor: p.cor }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div
+                  className="h-10 w-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: `${p.cor}15` }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: p.cor }} />
+                </div>
+                <ArrowRight className="w-4 h-4 nx-muted group-hover:translate-x-1 transition-transform" />
+              </div>
+              <p className="text-sm font-semibold nx-text">{p.label}</p>
+              <p className="text-xs nx-muted mt-0.5">Abrir dashboard de {p.label.toLowerCase()}</p>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Faixa executiva consolidada */}
       <div className="nx-card p-4">
         <div className="flex flex-col lg:flex-row lg:items-stretch gap-4">
