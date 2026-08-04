@@ -198,36 +198,57 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     const active = isPathActive(item.path, location.pathname);
+                    const childActive = item.children?.some((c) => isPathActive(c.path, location.pathname));
                     const badgeVal = item.badgeKey ? badges[item.badgeKey] : 0;
                     return (
-                      <button
-                        key={item.path + item.label}
-                        onClick={() => navigate(item.path)}
-                        title={collapsed ? item.label : undefined}
-                        className={cn(
-                          "relative flex items-center rounded-lg text-[13px] font-medium transition-all duration-150",
-                          collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
-                          active
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                            : item.highlight
-                            ? "text-[hsl(var(--tertiary))] hover:bg-sidebar-accent/20"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
-                        )}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
-                        {badgeVal > 0 && (
-                          collapsed ? (
-                            <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center leading-none">
-                              {badgeVal > 9 ? "9+" : badgeVal}
-                            </span>
-                          ) : (
-                            <span className="h-4 min-w-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center leading-none">
-                              {badgeVal}
-                            </span>
-                          )
-                        )}
-                      </button>
+                      <div key={item.path + item.label} className="flex flex-col gap-0.5">
+                        <button
+                          onClick={() => navigate(item.path)}
+                          title={collapsed ? item.label : undefined}
+                          className={cn(
+                            "relative flex items-center rounded-lg text-[13px] font-medium transition-all duration-150",
+                            collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2",
+                            active || childActive
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                              : item.highlight
+                              ? "text-[hsl(var(--tertiary))] hover:bg-sidebar-accent/20"
+                              : "text-sidebar-foreground hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
+                          )}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" />
+                          {!collapsed && <span className="truncate flex-1 text-left">{item.label}</span>}
+                          {badgeVal > 0 && (
+                            collapsed ? (
+                              <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                                {badgeVal > 9 ? "9+" : badgeVal}
+                              </span>
+                            ) : (
+                              <span className="h-4 min-w-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                                {badgeVal}
+                              </span>
+                            )
+                          )}
+                        </button>
+                        {!collapsed && item.children?.map((child) => {
+                          const CIcon = child.icon;
+                          const cActive = isPathActive(child.path, location.pathname);
+                          return (
+                            <button
+                              key={child.path + child.label}
+                              onClick={() => navigate(child.path)}
+                              className={cn(
+                                "flex items-center gap-2 rounded-md text-[12px] font-medium transition-all duration-150 pl-10 pr-3 py-1.5",
+                                cActive
+                                  ? "bg-sidebar-accent/60 text-sidebar-accent-foreground"
+                                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/20 hover:text-sidebar-primary"
+                              )}
+                            >
+                              <CIcon className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate flex-1 text-left">{child.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     );
                   })}
                 </div>
