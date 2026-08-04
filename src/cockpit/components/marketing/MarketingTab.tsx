@@ -4,6 +4,7 @@ import { resumoMarketing, funilMarketing, porCanal, porCampanha, serieMarketing 
 import { fmtBRL, fmtBRLc, fmtNum, fmtPct } from "../../styles/tokens";
 import { SectionCard } from "../SectionCard";
 import { ExecTile, ExecHero } from "../ExecTiles";
+import { LeadsBloco } from "./LeadsBloco";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
