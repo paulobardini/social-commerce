@@ -21,8 +21,8 @@ const toneClass = (tone: ExecTone) =>
       : "bg-[#F6F7F9] border-[#E7E9EE]";
 
 export function ExecTile({
-  label, value, sub, tone = "neutral",
-}: { label: string; value: string; sub?: ReactNode; tone?: ExecTone }) {
+  label, value, sub, tone = "neutral", delta, invert,
+}: { label: string; value: string; sub?: ReactNode; tone?: ExecTone; delta?: number; invert?: boolean }) {
   return (
     <TooltipProvider delayDuration={100}>
       <Tooltip>
@@ -32,7 +32,14 @@ export function ExecTile({
               <p className="text-[10px] uppercase tracking-wide nx-muted leading-tight">{label}</p>
               {sub && <Info className="w-3.5 h-3.5 nx-muted shrink-0 mt-0.5 opacity-70 hover:opacity-100 transition-opacity" />}
             </div>
-            <p className="text-3xl font-semibold nx-num nx-text leading-none mt-auto">{value}</p>
+            <div className="flex items-end gap-1.5 mt-auto">
+              <p className="text-3xl font-semibold nx-num nx-text leading-none">{value}</p>
+              {delta !== undefined && (
+                <span className={cn("text-xs font-medium nx-num pb-0.5", deltaColor(delta, invert))}>
+                  {deltaArrow(delta)} {fmtPct(Math.abs(delta), 0)}
+                </span>
+              )}
+            </div>
           </div>
         </TooltipTrigger>
         {sub && (
