@@ -12,7 +12,9 @@ export interface LinhaEquipe {
   receitaPrev: number;
   delta: number;
   meta: number;
+  receitaMes: number;
   atingimento: number;
+
   pace: number;
   margem: number;
   margemPct: number;
@@ -88,7 +90,9 @@ export function performanceEquipe(
         receitaPrev,
         delta: receitaPrev ? ((receita - receitaPrev) / receitaPrev) * 100 : 0,
         meta,
+        receitaMes,
         atingimento: meta ? (receitaMes / meta) * 100 : 0,
+
 
         pace: r.pace,
         margem,
@@ -112,6 +116,7 @@ export function performanceEquipe(
 export function resumoEquipe(linhas: LinhaEquipe[]) {
   const receita = linhas.reduce((s, l) => s + l.receita, 0);
   const receitaPrev = linhas.reduce((s, l) => s + l.receitaPrev, 0);
+  const receitaMes = linhas.reduce((s, l) => s + l.receitaMes, 0);
   const meta = linhas.reduce((s, l) => s + l.meta, 0);
   const acimaDaMeta = linhas.filter(l => l.atingimento >= 100).length;
   const abaixoDe70 = linhas.filter(l => l.meta > 0 && l.atingimento < 70).length;
@@ -120,7 +125,9 @@ export function resumoEquipe(linhas: LinhaEquipe[]) {
     receitaPrev,
     delta: receitaPrev ? ((receita - receitaPrev) / receitaPrev) * 100 : 0,
     meta,
-    atingimento: meta ? (receita / meta) * 100 : 0,
+    receitaMes,
+    atingimento: meta ? (receitaMes / meta) * 100 : 0,
+
     acimaDaMeta,
     abaixoDe70,
     time: linhas.length,
