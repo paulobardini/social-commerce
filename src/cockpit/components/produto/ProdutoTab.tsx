@@ -13,6 +13,9 @@ import { MarcaCruzamentoHeatmap } from "./MarcaCruzamentoHeatmap";
 import { OfertasProdutoTable, OfertasDestaques } from "./OfertasProdutoTable";
 import { PainelExecutivoProduto } from "./PainelExecutivoProduto";
 import { VendasProdutoCliente } from "./VendasProdutoCliente";
+import { MargemBloco } from "./MargemBloco";
+import { EncalheBloco } from "./EncalheBloco";
+
 
 import { ofertasPorProduto, resumoOfertas } from "../../lib/ofertas";
 import { InsightsStrip } from "../InsightsStrip";
@@ -477,6 +480,18 @@ export function ProdutoTab() {
           </table>
         </div>
       </SectionCard></div>
+
+      <div id="margem">
+        <h3 className="text-sm font-semibold nx-text mb-2">Margem de contribuição</h3>
+        <MargemBloco />
+      </div>
+
+      <div id="encalhe">
+        <h3 className="text-sm font-semibold nx-text mb-2">Giro e encalhe</h3>
+        <EncalheBloco />
+      </div>
+
+
 
       {pushModalMarca && (
         <CampanhaPushModal
