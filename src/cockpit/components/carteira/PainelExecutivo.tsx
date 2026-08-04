@@ -92,19 +92,33 @@ export function PainelExecutivo() {
     <div className="space-y-4">
       <div className="nx-card p-4">
         <div className="flex flex-col lg:flex-row lg:items-stretch gap-4">
-          <div className="lg:w-[300px] shrink-0">
-            <p className="text-[10px] uppercase tracking-wide nx-muted">Receita no período</p>
-            <div className="flex items-end gap-2 mt-1">
-              <p className="text-3xl font-semibold nx-num nx-text leading-none">{fmtBRLc(resumo.receitaAtual)}</p>
-              <span className={cn("text-xs font-medium nx-num pb-0.5", deltaColor(resumo.deltaReceita))}>
-                {deltaArrow(resumo.deltaReceita)} {fmtPct(Math.abs(resumo.deltaReceita))}
-              </span>
-            </div>
-            <p className="text-[11px] nx-muted mt-1">
-              vs {fmtBRLc(resumo.receitaAnterior)} no período anterior · {fmtNum(resumo.pedidos)} pedidos · ticket {fmtBRLc(resumo.ticketPedido)}
-            </p>
-            <p className="text-[11px] nx-text mt-3 leading-snug">{narrativa}</p>
+          <div className="lg:w-[260px] shrink-0">
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="rounded-lg px-3 py-3 border bg-[#F6F7F9] border-[#E7E9EE] cursor-help h-full flex flex-col">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <p className="text-[10px] uppercase tracking-wide nx-muted leading-tight">Receita no período</p>
+                      <Info className="w-3.5 h-3.5 nx-muted shrink-0 mt-0.5 opacity-70 hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="flex items-end gap-2 mt-auto">
+                      <p className="text-4xl font-semibold nx-num nx-text leading-none">{fmtBRLc(resumo.receitaAtual)}</p>
+                      <span className={cn("text-sm font-medium nx-num pb-0.5", deltaColor(resumo.deltaReceita))}>
+                        {deltaArrow(resumo.deltaReceita)} {fmtPct(Math.abs(resumo.deltaReceita))}
+                      </span>
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="start" className="max-w-[260px] bg-white border border-[#E7E9EE] shadow-md">
+                  <p className="text-xs nx-text leading-snug">
+                    vs {fmtBRLc(resumo.receitaAnterior)} no período anterior · {fmtNum(resumo.pedidos)} pedidos · ticket {fmtBRLc(resumo.ticketPedido)}
+                  </p>
+                  <p className="text-xs nx-muted leading-snug mt-1.5">{narrativa}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
+
 
           <div className="flex-1 grid grid-cols-2 xl:grid-cols-4 gap-2.5">
             <Tile label="Clientes que compraram" value={fmtNum(resumo.clientesCompraram)}
