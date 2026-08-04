@@ -52,29 +52,37 @@ Sem tela nova de financeiro. A margem entra como camada nos painéis que já exi
 - **Diretoria:** tile de margem de contribuição do período com a seta de variação.
 
 **Fase 3 — Condições comerciais e preço médio**
-Bloco no Dashboard Carteira usando os dados de pagamento que já existem: % cartão vs boleto vs pix por mês, prazo médio de pagamento, preço médio por peça e preço médio por quilo (requer peso no cadastro de produto, adicionado junto com o custo na Fase 1).
+Bloco no Dashboard Carteira usando os dados de pagamento que já existem: % cartão vs boleto vs pix por mês, prazo médio de pagamento, preço médio por peça e preço médio por quilo (requer peso no cadastro de produto, adicionado junto com o custo na Fase 1). Os mesmos números sobem para a **Diretoria** como tiles: mix de pagamento do período e prazo médio de pagamento, ambos com seta de variação e um mini gráfico comparativo mês a mês.
 
 **Fase 4 — Devoluções a partir do SAC**
 Marcar tickets como devolução com motivo estruturado e criar o bloco "Devoluções" dentro do Dashboard Atendimento: valor devolvido, % sobre faturamento, ranking de motivos, por marca, cliente e vendedora.
 
-**Fase 5 — Completar Produto e Carteira**
+**Fase 5 — Novo Dashboard Equipe** (`/gestor/painel/equipe`)
+Hoje existe uma aba interna "Time e Metas" pouco visível. Vira dashboard próprio no menu, no mesmo padrão executivo dos outros: meta vs realizado por vendedora, ritmo (pace) e projeção de fechamento, cobertura da carteira, taxa de conversão por vendedora, atendimentos e tempo de resposta, ranking de atingimento e de evolução, margem gerada por vendedora e devoluções por vendedora. Todos os KPIs com seta de variação contra o período anterior.
+
+**Fase 6 — Novo Dashboard Marketing** (`/gestor/painel/marketing`)
+Leitura gerencial do que hoje está isolado em `/marketing`: verba investida, leads gerados, custo por lead, taxa de conversão de lead em cliente, ROAS e receita atribuída confirmada no CRM, funil de marketing (lead → oportunidade → pedido), desempenho por campanha e por canal, e inbound vs outbound. Consome os mocks de marketing já existentes, sem duplicar dados.
+
+**Fase 7 — Completar Produto e Carteira**
 Produto: lista de itens sem venda no período e produtos por velocidade de venda. Carteira: segmentação por categoria e por estação, origem inbound vs outbound e motivos de inativação de cliente.
 
-**Fase 6 — Completar Atendimento**
+**Fase 8 — Completar Atendimento**
 Tempo médio em cada etapa do funil, análise de descartes por motivo, uso de mensagens prontas por vendedora e auditoria de padronização das tags do CRM.
 
-**Fase 7 — Diretoria como capa do B.I.**
-Trazer para a Diretoria os números novos (margem, devoluções, ROI de verba do marketing) e ligar atalhos para Inteligência de Mercado e Marketing, para que a lista inteira seja acessível de um ponto só.
+**Fase 9 — Diretoria como capa do B.I.**
+Consolidar na Diretoria os números novos (margem, mix e prazo de pagamento, devoluções, ROI de verba, atingimento da equipe) e adicionar Equipe e Marketing aos cards de pilar e à barra de atalhos, ao lado de Carteira, Atendimento e Produto.
 
 ## 4. Notas técnicas
 
 - Custo e peso entram no tipo de produto do cadastro (`mockProducts.ts` / `StartProduto` conforme o módulo) e são resolvidos por `produtoId` nos pedidos do `seed.ts`.
-- Cálculos novos em `src/cockpit/lib/`: `margem.ts`, `devolucoes.ts`, `condicoesComerciais.ts`, `funilTempo.ts`, `semVenda.ts`.
+- Cálculos novos em `src/cockpit/lib/`: `margem.ts`, `devolucoes.ts`, `condicoesComerciais.ts`, `funilTempo.ts`, `semVenda.ts`, `marketingExec.ts`.
 - Devoluções derivam de `src/data/mockAtendimento.ts` (novo campo de tipo/motivo no ticket), consumidas pelo `TicketsAnalytics` e por um novo bloco de devoluções.
 - Origem (inbound/outbound), motivo de escolha e motivo de inativação entram em `Conta` no `seed.ts`; bumpar a versão do cache no `CockpitContext`.
-- Nenhuma rota nova: tudo é adicionado dentro de Carteira, Atendimento, Produto e Diretoria, reaproveitando `ExecTiles`, `SectionCard` e `Waterfall`.
+- Duas rotas novas em `App.tsx` / `DashboardGerencial.tsx`: `/gestor/painel/equipe` e `/gestor/painel/marketing`, com itens no `AppSidebar` sob Dashboard e botão Voltar como nas demais. Equipe reaproveita `TimeMetasTab`; Marketing consome `src/marketing/data/*` via um adaptador em `src/cockpit/lib/marketingExec.ts`.
+- Todo o resto é adicionado dentro de Carteira, Atendimento, Produto e Diretoria, reaproveitando `ExecTiles`, `SectionCard` e `Waterfall`.
 
 ## 5. Ordem sugerida
 
-Fases 1 a 4 primeiro (custo → margem → condições comerciais → devoluções), que é o núcleo do que hoje não existe; depois 5 a 7, que são complementos sobre dados que já temos.
+Fases 1 a 4 primeiro (custo → margem → condições comerciais e prazo → devoluções), que é o núcleo do que hoje não existe; em seguida 5 e 6 (Equipe e Marketing como dashboards próprios); por último 7 a 9, complementos sobre dados que já temos.
+
 
