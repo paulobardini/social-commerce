@@ -19,6 +19,8 @@ import { TopClientesRank } from "./TopClientesRank";
 import { FluxoCarteira } from "./FluxoCarteira";
 import { ClientesRiscoDrawer } from "./ClientesRiscoDrawer";
 import { PainelExecutivo } from "./PainelExecutivo";
+import { PositivacaoCliente } from "./PositivacaoCliente";
+
 
 import { InsightsStrip } from "../InsightsStrip";
 import { insightsCarteira } from "../../lib/insights";
