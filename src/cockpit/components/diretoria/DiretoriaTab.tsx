@@ -125,6 +125,14 @@ export function DiretoriaTab() {
     { id: "produto", label: "Produto", icon: Package, path: "/gestor/painel/produto", cor: "#5A3E8C" },
   ];
 
+  const atalhos = [
+    { rota: "/gestor/painel/carteira", titulo: "Carteira", hint: "Clientes, receita e cobertura", icon: Users, cor: NX.primary },
+    { rota: "/gestor/painel/atendimento", titulo: "Atendimento", hint: "WhatsApp, SLA e pipeline", icon: MessageSquare, cor: "#0EA5E9" },
+    { rota: "/gestor/painel/produto", titulo: "Produto", hint: "Marcas, ofertas e mix", icon: Package, cor: "#7C3AED" },
+  ];
+
+
+
   return (
     <div className="space-y-4">
       {/* Atalhos para os pilares */}
