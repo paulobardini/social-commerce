@@ -17,6 +17,15 @@ export type Etapa = "novo_lead" | "em_negociacao" | "proposta_enviada" | "orcame
 export type TipoAtendimento = "visita" | "ligacao" | "whatsapp";
 export type TipoMeta = "faturamento" | "positivacao" | "cobertura" | "novos" | "reativacao";
 export type MotivoAprovacao = "fora_da_politica" | "credito_cliente_novo" | "aguardando_estoque";
+export type FormaPagamento = "boleto" | "cartao" | "pix" | "faturado";
+export type Estacao = "Verão" | "Inverno" | "Meia-estação" | "Contínuo";
+export type OrigemCliente = "inbound" | "outbound";
+export type MotivoDevolucao =
+  | "Defeito de fabricação" | "Grade errada" | "Produto divergente"
+  | "Atraso na entrega" | "Arrependimento do lojista" | "Avaria no transporte";
+export type MotivoInativacao =
+  | "Preço/margem" | "Trocou de fornecedor" | "Loja fechou" | "Crédito bloqueado"
+  | "Mix não atende" | "Falta de contato do rep" | "Problema de entrega";
 
 export interface Representante {
   id: string; nome: string; email: string; regiao: string;
@@ -28,10 +37,44 @@ export interface Representante {
   historicoMedio12m: number;// faturamento médio mensal 12m (R$)
 }
 export interface Marca { id: string; nome: string; categorias: string[]; }
-export interface Conta { id: string; razao: string; nicho: Nicho; cidade: string; uf: string; repId: string; criadoEm: Date; }
-export interface Pedido { id: string; contaId: string; repId: string; data: Date; valor: number; itens: number; marcaId: string; categoria: string; colecao: string; produtoId: string; }
+/** Cadastro de produto — fonte única de custo, peso e classificação comercial. */
+export interface Produto {
+  id: string;
+  nome: string;
+  marcaId: string;
+  categoria: string;
+  estacao: Estacao;
+  precoTabela: number;   // R$ por peça
+  custo: number;         // R$ por peça (custo de aquisição) — 0 = sem custo cadastrado
+  pesoKg: number;        // peso por peça
+}
+export interface Conta {
+  id: string; razao: string; nicho: Nicho; cidade: string; uf: string; repId: string; criadoEm: Date;
+  origem: OrigemCliente;
+  motivoEscolha: string;
+  motivoInativacao?: MotivoInativacao;
+}
+export interface Pedido {
+  id: string; contaId: string; repId: string; data: Date; valor: number; itens: number;
+  marcaId: string; categoria: string; colecao: string; produtoId: string;
+  custo: number;                 // custo total do pedido (peças × custo unitário)
+  pesoKg: number;                // peso total do pedido
+  desconto: number;              // % de desconto concedido
+  formaPagamento: FormaPagamento;
+  prazoDias: number;             // prazo médio de pagamento em dias
+  estacao: Estacao;
+}
 export interface Atendimento { id: string; contaId: string; repId: string; data: Date; tipo: TipoAtendimento; resultado: "convertido" | "follow_up" | "sem_interesse"; leadOuCliente: "lead" | "cliente"; }
-export interface Oportunidade { id: string; contaId: string; repId: string; etapa: Etapa; valor: number; abertaEm: Date; ultimaMov: Date; motivoPerda?: string; }
+export interface Oportunidade {
+  id: string; contaId: string; repId: string; etapa: Etapa; valor: number; abertaEm: Date; ultimaMov: Date;
+  motivoPerda?: string;
+  /** dias parados em cada etapa já percorrida (só etapas concluídas + a atual) */
+  temposEtapa: { etapa: Etapa; dias: number }[];
+}
+export interface Devolucao {
+  id: string; ticketId: string; contaId: string; repId: string; marcaId: string;
+  data: Date; valor: number; pecas: number; motivo: MotivoDevolucao;
+}
 export interface Meta { repId: string | "consolidada"; tipo: TipoMeta; valor: number; mes: string; }
 export interface OrcamentoPendente {
   id: string;
@@ -48,14 +91,17 @@ export interface OrcamentoPendente {
 export interface Seed {
   representantes: Representante[];
   marcas: Marca[];
+  produtos: Produto[];
   contas: Conta[];
   pedidos: Pedido[];
   atendimentos: Atendimento[];
   oportunidades: Oportunidade[];
+  devolucoes: Devolucao[];
   metas: Meta[];
   orcamentosPendentes: OrcamentoPendente[];
   hoje: Date;
 }
+
 
 const REPS: Representante[] = [
   { id: "r1", nome: "André Lima",      email: "andre@nextil.com.br",     regiao: "Sudeste",     pace: 112, cobertura: 78, coberturaDelta:  4, ultimoAcessoDias: 0, historicoMedio12m: 138000 },
@@ -107,6 +153,25 @@ const SOBRENOMES = [
   "Família", "Luxo", "Fina", "Moderna", "Clássica",
 ];
 const MOTIVOS_PERDA = ["Preço", "Prazo de entrega", "Mix incompleto", "Concorrente", "Sem retorno"];
+const ESTACOES: Estacao[] = ["Verão", "Inverno", "Meia-estação", "Contínuo"];
+const MOTIVOS_ESCOLHA = [
+  "Indicação de outro lojista", "Prazo de entrega", "Preço e condição de pagamento",
+  "Exclusividade da marca na região", "Mix completo em um só pedido", "Relacionamento com o representante",
+];
+const MOTIVOS_INATIVACAO: MotivoInativacao[] = [
+  "Preço/margem", "Trocou de fornecedor", "Loja fechou", "Crédito bloqueado",
+  "Mix não atende", "Falta de contato do rep", "Problema de entrega",
+];
+const MOTIVOS_DEVOLUCAO: MotivoDevolucao[] = [
+  "Defeito de fabricação", "Grade errada", "Produto divergente",
+  "Atraso na entrega", "Arrependimento do lojista", "Avaria no transporte",
+];
+const FORMAS: FormaPagamento[] = ["boleto", "cartao", "pix", "faturado"];
+// peso relativo de cada forma de pagamento no mix (soma 1)
+const MIX_PAGAMENTO: [FormaPagamento, number][] = [["boleto", 0.46], ["faturado", 0.24], ["cartao", 0.21], ["pix", 0.09]];
+const PRAZO_POR_FORMA: Record<FormaPagamento, [number, number]> = {
+  pix: [0, 0], cartao: [28, 32], boleto: [28, 60], faturado: [45, 90],
+};
 
 let _cache: Seed | null = null;
 
@@ -117,6 +182,39 @@ export function buildSeed(): Seed {
   const pick = <T,>(arr: T[]) => arr[Math.floor(rng() * arr.length)];
   const rand = (min: number, max: number) => Math.floor(rng() * (max - min + 1)) + min;
   const daysAgo = (n: number) => { const d = new Date(hoje); d.setDate(d.getDate() - n); return d; };
+
+  // ---------------------------------------------------------------
+  // CADASTRO DE PRODUTOS — fonte única de custo, peso e estação.
+  // 3% dos itens ficam propositalmente SEM custo cadastrado (custo = 0)
+  // para o dashboard mostrar cobertura de custo em vez de margem falsa.
+  // ---------------------------------------------------------------
+  const produtos: Produto[] = [];
+  const PRODUTOS_POR_MARCA = 8;
+  MARCAS.forEach((m, mi) => {
+    for (let i = 0; i < PRODUTOS_POR_MARCA; i++) {
+      const categoria = m.categorias[i % m.categorias.length];
+      const estacao = ESTACOES[(mi + i) % ESTACOES.length];
+      const precoTabela = rand(38, 320);
+      const margemAlvo = 0.24 + rng() * 0.30;         // 24% a 54% de margem bruta
+      const semCusto = rng() < 0.03;
+      produtos.push({
+        id: `prod${mi * PRODUTOS_POR_MARCA + i + 1}`,
+        nome: `${m.nome} ${categoria} ${String(i + 1).padStart(2, "0")}`,
+        marcaId: m.id,
+        categoria,
+        estacao,
+        precoTabela,
+        custo: semCusto ? 0 : Math.round(precoTabela * (1 - margemAlvo) * 100) / 100,
+        pesoKg: Math.round((0.12 + rng() * 0.55) * 1000) / 1000,
+      });
+    }
+  });
+  const produtosPorMarca = new Map<string, Produto[]>();
+  produtos.forEach(p => {
+    const arr = produtosPorMarca.get(p.marcaId) ?? [];
+    arr.push(p);
+    produtosPorMarca.set(p.marcaId, arr);
+  });
 
   const contas: Conta[] = [];
   const NUM = 900;
@@ -131,6 +229,9 @@ export function buildSeed(): Seed {
       cidade: cidade[0], uf: cidade[1],
       repId: REPS[i % REPS.length].id,
       criadoEm: daysAgo(rand(30, 700)),
+      // ~38% da base entrou por inbound (marketing/indicação), o resto por prospecção
+      origem: rng() < 0.38 ? "inbound" : "outbound",
+      motivoEscolha: pick(MOTIVOS_ESCOLHA),
     });
   }
 
@@ -142,6 +243,12 @@ export function buildSeed(): Seed {
     { count: Math.floor(NUM * 0.30), min: 61,  max: 180 },
     { count: Math.floor(NUM * 0.15), min: 181, max: 365 },
   ];
+  const sortearForma = (): FormaPagamento => {
+    const r = rng();
+    let acc = 0;
+    for (const [f, w] of MIX_PAGAMENTO) { acc += w; if (r <= acc) return f; }
+    return "boleto";
+  };
   let cursor = 0;
   for (const b of buckets) {
     for (let i = 0; i < b.count; i++) {
@@ -155,21 +262,48 @@ export function buildSeed(): Seed {
         // 70% dos pedidos vêm de uma marca cujo nicho forte bate com o nicho do cliente.
         const marcasCompativeis = MARCAS.filter(mm => (MARCA_NICHO_FORTE[mm.id] ?? []).includes(conta.nicho));
         const marca = (rng() < 0.7 && marcasCompativeis.length > 0) ? pick(marcasCompativeis) : pick(MARCAS);
+        const produto = pick(produtosPorMarca.get(marca.id) ?? produtos);
+        const itens = rand(5, 80);
+        const desconto = rng() < 0.55 ? 0 : Math.round(rng() * 22);
+        const valor = Math.max(
+          400,
+          Math.round(itens * produto.precoTabela * (1 - desconto / 100) * (0.85 + rng() * 0.4)),
+        );
+        const forma = sortearForma();
+        const [pmin, pmax] = PRAZO_POR_FORMA[forma];
         pedidos.push({
           id: `p${++pidx}`,
           contaId: conta.id,
           repId: conta.repId,
           data: daysAgo(dias),
-          valor: rand(800, 25000),
-          itens: rand(5, 80),
+          valor,
+          itens,
           marcaId: marca.id,
-          categoria: pick(marca.categorias),
+          categoria: produto.categoria,
           colecao: pick(COLECOES),
-          produtoId: `prod${rand(1, 60)}`,
+          produtoId: produto.id,
+          custo: Math.round(itens * produto.custo),
+          pesoKg: Math.round(itens * produto.pesoKg * 100) / 100,
+          desconto,
+          formaPagamento: forma,
+          prazoDias: pmin === pmax ? pmin : rand(pmin, pmax),
+          estacao: produto.estacao,
         });
       }
     }
   }
+
+  // Motivo de inativação — só faz sentido para quem parou de comprar.
+  const ultimaCompra = new Map<string, number>();
+  pedidos.forEach(p => {
+    const dias = Math.floor((hoje.getTime() - p.data.getTime()) / 86400000);
+    const atual = ultimaCompra.get(p.contaId);
+    if (atual === undefined || dias < atual) ultimaCompra.set(p.contaId, dias);
+  });
+  contas.forEach(c => {
+    const rec = ultimaCompra.get(c.id);
+    if (rec !== undefined && rec > 120) c.motivoInativacao = pick(MOTIVOS_INATIVACAO);
+  });
 
   const atendimentos: Atendimento[] = [];
   for (let i = 0; i < 1600; i++) {
@@ -188,6 +322,14 @@ export function buildSeed(): Seed {
 
   const oportunidades: Oportunidade[] = [];
   const etapas: Etapa[] = ["novo_lead", "em_negociacao", "proposta_enviada", "orcamento_aprovado", "ganha", "perdida"];
+  const ORDEM_FUNIL: Etapa[] = ["novo_lead", "em_negociacao", "proposta_enviada", "orcamento_aprovado"];
+  // faixa de dias típica em cada etapa (mín/máx) — gera o gráfico de gargalo
+  const DIAS_ETAPA: Record<string, [number, number]> = {
+    novo_lead: [1, 6],
+    em_negociacao: [3, 18],
+    proposta_enviada: [4, 26],
+    orcamento_aprovado: [1, 9],
+  };
   const distEtapas = [48, 42, 34, 26, 30, 24];
   let oid = 0;
   etapas.forEach((etapa, idx) => {
@@ -195,15 +337,45 @@ export function buildSeed(): Seed {
       const conta = contas[rand(0, NUM - 1)];
       const aberta = daysAgo(rand(2, 120));
       const mov = etapa === "ganha" || etapa === "perdida" ? daysAgo(rand(0, 20)) : daysAgo(rand(0, 40));
+      const fechada = etapa === "ganha" || etapa === "perdida";
+      const ate = fechada ? ORDEM_FUNIL.length : ORDEM_FUNIL.indexOf(etapa) + 1;
+      const temposEtapa = ORDEM_FUNIL.slice(0, Math.max(1, ate)).map(e => {
+        const [a, b] = DIAS_ETAPA[e];
+        return { etapa: e, dias: rand(a, b) };
+      });
       oportunidades.push({
         id: `op${++oid}`,
         contaId: conta.id, repId: conta.repId,
         etapa, valor: rand(3000, 80000),
         abertaEm: aberta, ultimaMov: mov,
         motivoPerda: etapa === "perdida" ? pick(MOTIVOS_PERDA) : undefined,
+        temposEtapa,
       });
     }
   });
+
+  // ---------------------------------------------------------------
+  // DEVOLUÇÕES — nascem no SAC (ticket de devolução/troca) e apontam
+  // para o pedido de origem. ~1,4% dos pedidos geram devolução.
+  // ---------------------------------------------------------------
+  const devolucoes: Devolucao[] = [];
+  let did = 0;
+  pedidos.forEach(p => {
+    if (rng() > 0.014) return;
+    const parcial = 0.15 + rng() * 0.6;    // devolve parte do pedido
+    devolucoes.push({
+      id: `dev${++did}`,
+      ticketId: `sac-dev-${String(did).padStart(4, "0")}`,
+      contaId: p.contaId,
+      repId: p.repId,
+      marcaId: p.marcaId,
+      data: new Date(Math.min(hoje.getTime(), p.data.getTime() + rand(4, 30) * 86400000)),
+      valor: Math.round(p.valor * parcial),
+      pecas: Math.max(1, Math.round(p.itens * parcial)),
+      motivo: pick(MOTIVOS_DEVOLUCAO),
+    });
+  });
+
 
   // METAS — derivadas do realizado para gerar atingimentos PLAUSÍVEIS.
   // Espalhamento alvo por rep: alguns acima de 100 (105/110), a maioria entre
@@ -321,6 +493,6 @@ export function buildSeed(): Seed {
   }
 
 
-  _cache = { representantes: REPS, marcas: MARCAS, contas, pedidos, atendimentos, oportunidades, metas, orcamentosPendentes, hoje };
+  _cache = { representantes: REPS, marcas: MARCAS, produtos, contas, pedidos, atendimentos, oportunidades, devolucoes, metas, orcamentosPendentes, hoje };
   return _cache;
 }

@@ -66,6 +66,9 @@ const sections: MenuSection[] = [
           { icon: Wallet, label: "Carteira", path: "/gestor/painel/carteira" },
           { icon: Headphones, label: "Atendimento", path: "/gestor/painel/atendimento" },
           { icon: Package, label: "Produto", path: "/gestor/painel/produto" },
+          { icon: UserCog, label: "Equipe", path: "/gestor/painel/equipe" },
+          { icon: Radar, label: "Marketing", path: "/gestor/painel/marketing" },
+
         ],
       },
       { icon: ShieldCheck, label: "Aprovações", path: "/gestor/aprovacoes", badgeKey: "aprovacoes" },

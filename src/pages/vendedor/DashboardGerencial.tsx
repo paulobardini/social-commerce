@@ -6,14 +6,18 @@ import { CarteiraTab } from "@/cockpit/components/carteira/CarteiraTab";
 import { AtendimentoTab } from "@/cockpit/components/atendimento/AtendimentoTab";
 import { ProdutoTab } from "@/cockpit/components/produto/ProdutoTab";
 import { DiretoriaTab } from "@/cockpit/components/diretoria/DiretoriaTab";
+import { EquipeTab } from "@/cockpit/components/equipe/EquipeTab";
+import { MarketingTab } from "@/cockpit/components/marketing/MarketingTab";
 
-type TabKey = "diretoria" | "carteira" | "atendimento" | "produto";
+type TabKey = "diretoria" | "carteira" | "atendimento" | "produto" | "equipe" | "marketing";
 
 const TITLES: Record<TabKey, string> = {
   diretoria: "Dashboard Diretoria",
   carteira: "Dashboard Carteira",
   atendimento: "Dashboard Atendimento",
   produto: "Dashboard Produto",
+  equipe: "Dashboard Equipe",
+  marketing: "Dashboard Marketing",
 };
 
 export default function DashboardGerencial() {
@@ -30,7 +34,10 @@ export default function DashboardGerencial() {
         {key === "carteira" && <CarteiraTab />}
         {key === "atendimento" && <AtendimentoTab />}
         {key === "produto" && <ProdutoTab />}
+        {key === "equipe" && <EquipeTab />}
+        {key === "marketing" && <MarketingTab />}
       </div>
     </div>
   );
 }
+

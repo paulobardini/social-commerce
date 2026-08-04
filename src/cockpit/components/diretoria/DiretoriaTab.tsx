@@ -18,6 +18,10 @@ import { ofertasPorProduto, resumoOfertas } from "../../lib/ofertas";
 import { NX, fmtBRLc, fmtNum, fmtPct, fmtDias, deltaArrow, deltaColor } from "../../styles/tokens";
 import { SectionCard } from "../SectionCard";
 import { ExecTile, ExecHero, ExecBarRow } from "../ExecTiles";
+import { resumoMargem } from "../../lib/margem";
+import { condicoesComerciais } from "../../lib/condicoesComerciais";
+import { resumoDevolucoes } from "../../lib/devolucoes";
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -103,6 +107,19 @@ export function DiretoriaTab() {
     () => kpisProduto(seed, range, previousRange, { diasAtivo, diasPerdido, repId: "todos" }),
     [seed, range, previousRange, diasAtivo, diasPerdido],
   );
+
+  const pedidosEscopo = useMemo(() => {
+    const ids = repIdsNoEscopo(seed, escopo);
+    return seed.pedidos.filter(p => ids.has(p.repId));
+  }, [seed, escopo]);
+  const margem = useMemo(() => resumoMargem(pedidosEscopo, range), [pedidosEscopo, range]);
+  const margemPrev = useMemo(() => resumoMargem(pedidosEscopo, previousRange), [pedidosEscopo, previousRange]);
+  const cond = useMemo(() => condicoesComerciais(pedidosEscopo, range, previousRange), [pedidosEscopo, range, previousRange]);
+  const dev = useMemo(() => {
+    const ids = repIdsNoEscopo(seed, escopo);
+    return resumoDevolucoes(seed, seed.devolucoes.filter(x => ids.has(x.repId)), pedidosEscopo, range, previousRange);
+  }, [seed, escopo, pedidosEscopo, range, previousRange]);
+
 
   const {
     resumo, ponte, conc, risco, serie, regioes, classificadas, baseTotal, wpp, ofertas,
@@ -344,6 +361,46 @@ export function DiretoriaTab() {
           />
         </div>
       </SectionCard>
+
+      {/* Rentabilidade e condições comerciais */}
+      <SectionCard title="Rentabilidade e condições" subtitle="Margem de contribuição comercial, devoluções e como o cliente paga">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5">
+          <ExecTile
+            label="Margem de contribuição"
+            value={fmtBRLc(margem.margem)}
+            delta={margemPrev.margem ? ((margem.margem - margemPrev.margem) / margemPrev.margem) * 100 : 0}
+            sub={`Receita menos custo da mercadoria. ${fmtPct(margem.coberturaCusto, 0)} da receita tem custo cadastrado.`}
+          />
+          <ExecTile
+            label="Margem %"
+            value={fmtPct(margem.margemPct)}
+            delta={margem.margemPct - margemPrev.margemPct}
+            sub="Percentual da receita que sobra depois do custo do produto."
+          />
+          <ExecTile
+            label="Devoluções"
+            value={fmtPct(dev.pctReceita)}
+            delta={dev.pctReceita - dev.pctReceitaPrev}
+            invert
+            tone={dev.pctReceita > 3 ? "risk" : "neutral"}
+            sub={`${fmtBRLc(dev.valor)} devolvidos em ${fmtNum(dev.qtd)} ocorrências. Principal motivo: ${dev.porMotivo[0]?.motivo ?? "—"}.`}
+          />
+          <ExecTile
+            label="Prazo médio"
+            value={fmtDias(cond.prazoMedio)}
+            delta={cond.prazoMedioPrev ? ((cond.prazoMedio - cond.prazoMedioPrev) / cond.prazoMedioPrev) * 100 : 0}
+            invert
+            sub={`Forma dominante: ${cond.mix[0]?.label ?? "—"} com ${fmtPct(cond.mix[0]?.share ?? 0, 0)} da receita.`}
+          />
+          <ExecTile
+            label="Preço médio por peça"
+            value={fmtBRLc(cond.precoPeca)}
+            delta={cond.precoPecaPrev ? ((cond.precoPeca - cond.precoPecaPrev) / cond.precoPecaPrev) * 100 : 0}
+            sub={`${fmtNum(cond.pecas)} peças faturadas · desconto médio de ${fmtPct(cond.descontoMedio)}.`}
+          />
+        </div>
+      </SectionCard>
     </div>
+
   );
 }

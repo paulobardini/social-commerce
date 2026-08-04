@@ -20,6 +20,8 @@ import { FluxoCarteira } from "./FluxoCarteira";
 import { ClientesRiscoDrawer } from "./ClientesRiscoDrawer";
 import { PainelExecutivo } from "./PainelExecutivo";
 import { PositivacaoCliente } from "./PositivacaoCliente";
+import { CondicoesComerciaisBloco } from "./CondicoesComerciaisBloco";
+
 
 
 import { InsightsStrip } from "../InsightsStrip";
@@ -179,6 +181,13 @@ export function CarteiraTab() {
       <div id="positivacao">
         <PositivacaoCliente />
       </div>
+
+      <div id="condicoes-comerciais">
+        <h3 className="text-sm font-semibold nx-text mb-2">Condições comerciais</h3>
+        <CondicoesComerciaisBloco />
+      </div>
+
+
 
 
 
