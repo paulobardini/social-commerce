@@ -85,4 +85,15 @@ Consolidar na Diretoria os números novos (margem, mix e prazo de pagamento, dev
 
 Fases 1 a 4 primeiro (custo → margem → condições comerciais e prazo → devoluções), que é o núcleo do que hoje não existe; em seguida 5 e 6 (Equipe e Marketing como dashboards próprios); por último 7 a 9, complementos sobre dados que já temos.
 
+## 6. Entrega final: relatório de dados necessários
+
+Ao terminar a execução, entrego um relatório (arquivo baixável) com:
+
+- **O que ficou pronto:** cada dashboard, os blocos novos e onde encontrá-los na navegação.
+- **Mapa de dados por indicador:** para cada KPI/gráfico, qual campo alimenta, de onde vem hoje (mock) e qual seria a origem real.
+- **Campos novos a criar no sistema real**, agrupados por entidade — por exemplo: produto (custo, peso, categoria, estação), pedido (forma de pagamento, prazo, desconto aplicado), cliente (origem inbound/outbound, motivo de escolha, motivo de inativação), ticket de SAC (tipo devolução, motivo, valor devolvido), oportunidade (timestamp de entrada em cada etapa), marketing (verba por campanha, canal, id de atribuição).
+- **Dados hoje simulados:** lista explícita do que está mockado e precisa de integração real para o dashboard virar produção.
+- **Lacunas assumidas:** o que segue fora do escopo (financeiro/DRE) e o impacto disso na leitura dos números.
+
+
 
