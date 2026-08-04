@@ -18,6 +18,10 @@ import { ofertasPorProduto, resumoOfertas } from "../../lib/ofertas";
 import { NX, fmtBRLc, fmtNum, fmtPct, fmtDias, deltaArrow, deltaColor } from "../../styles/tokens";
 import { SectionCard } from "../SectionCard";
 import { ExecTile, ExecHero, ExecBarRow } from "../ExecTiles";
+import { resumoMargem } from "../../lib/margem";
+import { condicoesComerciais } from "../../lib/condicoesComerciais";
+import { resumoDevolucoes } from "../../lib/devolucoes";
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
