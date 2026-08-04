@@ -20,6 +20,7 @@ interface MenuItem {
   path: string;
   highlight?: boolean;
   badgeKey?: "aprovacoes" | "planos_escalados";
+  children?: MenuItem[];
 }
 
 interface MenuSection {
