@@ -42,25 +42,15 @@ export function SaudeCarteiraBar({ filtroRepId }: { filtroRepId?: string }) {
 
   return (
     <div className="nx-card p-4">
-      <div className="flex items-end justify-between mb-2">
+      <div className="flex items-end justify-between mb-1">
         <div>
           <h2 className="text-sm font-semibold nx-text">Saúde da carteira</h2>
-          <p className="text-[11px] nx-muted">{fmtNum(total)} clientes ativos na base · classificação por recência</p>
+          <p className="text-[11px] nx-muted">Classificação por recência</p>
         </div>
-        <div className="text-[11px] nx-muted hidden md:flex gap-3">
-          {segs.map(s => (
-            <span key={s.key} className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-sm" style={{ background: s.color }} />
-              {s.label}: <span className="nx-num font-semibold nx-text">{fmtNum(s.n)}</span> ({fmtPct((s.n / tot) * 100, 0)})
-            </span>
-          ))}
+        <div className="text-right">
+          <p className="text-[10px] uppercase tracking-wide nx-muted leading-none mb-0.5">Total de clientes na base</p>
+          <p className="text-xl font-semibold nx-num nx-text leading-tight">{fmtNum(total)}</p>
         </div>
-      </div>
-
-      <div className="flex h-3 w-full rounded-full overflow-hidden bg-[#E7E9EE]">
-        {segs.map(s => (
-          <div key={s.key} style={{ width: `${(s.n / tot) * 100}%`, background: s.color }} title={`${s.label}: ${s.n}`} />
-        ))}
       </div>
 
       <div className="grid grid-cols-3 gap-3 mt-3">
@@ -71,9 +61,13 @@ export function SaudeCarteiraBar({ filtroRepId }: { filtroRepId?: string }) {
                 <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: s.color }} />
                 <div>
                   <p className="text-[10px] uppercase tracking-wide nx-muted leading-none mb-0.5">{s.label}</p>
-                  <p className="text-base font-semibold nx-num nx-text leading-tight">{fmtNum(s.n)}</p>
+                  <p className="text-base font-semibold nx-num nx-text leading-tight">
+                    {fmtNum(s.n)}
+                    <span className="text-[11px] font-medium nx-muted ml-1.5">{fmtPct((s.n / tot) * 100, 0)} da base</span>
+                  </p>
                 </div>
               </div>
+
               {comparar && (
                 <span className={`text-[11px] font-medium nx-num ${deltaColor(s.d, s.invert)}`}>
                   {deltaArrow(s.d)} {fmtPct(Math.abs(s.d), 0)}
