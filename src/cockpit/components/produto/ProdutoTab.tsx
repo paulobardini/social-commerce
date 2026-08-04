@@ -241,6 +241,7 @@ export function ProdutoTab() {
     }).filter(Boolean).slice(0, 8) as { cliente: any; marcaAtual: string; candidatas: any[] }[];
   }, [classificadas, seed]);
 
+  const [cruz, setCruz] = useState<"curva" | "uf">("curva");
   const [pushModalMarca, setPushModalMarca] = useState<string | null>(null);
   const [pushReps, setPushReps] = useState<{ repId: string; repNome: string; clientesSugeridos: { id: string; razao: string }[] }[]>([]);
   const [novaOpOpen, setNovaOpOpen] = useState(false);
