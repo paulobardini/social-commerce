@@ -123,6 +123,16 @@ export function DiretoriaTab() {
     return resumoDevolucoes(seed, seed.devolucoes.filter(x => ids.has(x.repId)), pedidosEscopo, range, previousRange);
   }, [seed, escopo, pedidosEscopo, range, previousRange]);
 
+  const linhasEquipe = useMemo(
+    () => performanceEquipe(seed, repIdsNoEscopo(seed, escopo), range, previousRange, diasAtivo, diasPerdido),
+    [seed, escopo, range, previousRange, diasAtivo, diasPerdido],
+  );
+  const eq = useMemo(() => resumoEquipe(linhasEquipe), [linhasEquipe]);
+  const topRep = linhasEquipe[0];
+  const mkt = useMemo(() => resumoMarketing(), []);
+
+
+
 
   const {
     resumo, ponte, conc, risco, serie, regioes, classificadas, baseTotal, wpp, ofertas,
