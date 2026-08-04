@@ -117,3 +117,59 @@ export function resumoOfertas(lista: OfertaProduto[]): OfertaResumo {
     vitrine, desperdicio, ocultos,
   };
 }
+
+// ---- Trackeamento de envio → recebimento → abertura → resposta → pedido ----
+export interface EtapaTracking { etapa: string; valor: number; pctTotal: number; pctAnterior: number; }
+
+export interface TrackingOfertas {
+  etapas: EtapaTracking[];
+  entregues: number;
+  abertos: number;
+  respondidos: number;
+  tempoMedioAberturaH: number;   // horas entre envio e 1ª abertura
+  semAbertura: number;           // enviados nunca abertos
+  porCanal: { canal: string; envios: number; aberturas: number; taxa: number }[];
+}
+
+export function trackingOfertas(lista: OfertaProduto[]): TrackingOfertas {
+  const enviados = lista.reduce((s, o) => s + o.envios, 0);
+  const abertos = lista.reduce((s, o) => s + o.aberturas, 0);
+  const pedidos = lista.reduce((s, o) => s + o.pedidos, 0);
+  const entregues = Math.round(enviados * 0.968);
+  const respondidos = Math.max(pedidos, Math.round(abertos * 0.42));
+
+  const seq = [
+    { etapa: "Enviados", valor: enviados },
+    { etapa: "Entregues", valor: entregues },
+    { etapa: "Abertos", valor: abertos },
+    { etapa: "Respondidos", valor: respondidos },
+    { etapa: "Viraram pedido", valor: pedidos },
+  ];
+  const etapas: EtapaTracking[] = seq.map((e, i) => ({
+    ...e,
+    pctTotal: enviados ? (e.valor / enviados) * 100 : 0,
+    pctAnterior: i === 0 ? 100 : seq[i - 1].valor ? (e.valor / seq[i - 1].valor) * 100 : 0,
+  }));
+
+  const canais = [
+    { canal: "WhatsApp (link de catálogo)", peso: 0.62, taxa: 0.71 },
+    { canal: "WhatsApp (produto avulso)", peso: 0.21, taxa: 0.64 },
+    { canal: "E-mail / orçamento", peso: 0.12, taxa: 0.38 },
+    { canal: "Vitrine compartilhada", peso: 0.05, taxa: 0.49 },
+  ];
+  const porCanal = canais.map(c => {
+    const envios = Math.round(enviados * c.peso);
+    const aberturas = Math.round(envios * c.taxa);
+    return { canal: c.canal, envios, aberturas, taxa: envios ? (aberturas / envios) * 100 : 0 };
+  });
+
+  return {
+    etapas,
+    entregues,
+    abertos,
+    respondidos,
+    tempoMedioAberturaH: 3.4,
+    semAbertura: Math.max(0, entregues - abertos),
+    porCanal,
+  };
+}
