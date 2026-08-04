@@ -142,7 +142,10 @@ export function AppSidebar({ collapsed, onToggle }: { collapsed: boolean; onTogg
 
   // Auto-open section if active route is inside it
   const isSectionActive = (section: MenuSection) =>
-    section.items.some((item) => isPathActive(item.path, location.pathname));
+    section.items.some((item) =>
+      isPathActive(item.path, location.pathname) ||
+      item.children?.some((child) => isPathActive(child.path, location.pathname))
+    );
 
   return (
     <aside
