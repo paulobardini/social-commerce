@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import {
   AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip,
 } from "recharts";
-import { ArrowRight, Users, MessageSquare, Package } from "lucide-react";
+import { ArrowRight, Users, MessageSquare, Package, UserCheck, Megaphone } from "lucide-react";
 import { useCockpit } from "../../contexts/CockpitContext";
 import { repIdsNoEscopo } from "../../lib/escopo";
 import { classificarTudo } from "../../lib/classificar";
@@ -21,6 +21,9 @@ import { ExecTile, ExecHero, ExecBarRow } from "../ExecTiles";
 import { resumoMargem } from "../../lib/margem";
 import { condicoesComerciais } from "../../lib/condicoesComerciais";
 import { resumoDevolucoes } from "../../lib/devolucoes";
+import { performanceEquipe, resumoEquipe } from "../../lib/equipeExec";
+import { resumoMarketing } from "../../lib/marketingExec";
+
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -120,6 +123,16 @@ export function DiretoriaTab() {
     return resumoDevolucoes(seed, seed.devolucoes.filter(x => ids.has(x.repId)), pedidosEscopo, range, previousRange);
   }, [seed, escopo, pedidosEscopo, range, previousRange]);
 
+  const linhasEquipe = useMemo(
+    () => performanceEquipe(seed, repIdsNoEscopo(seed, escopo), range, previousRange, diasAtivo, diasPerdido),
+    [seed, escopo, range, previousRange, diasAtivo, diasPerdido],
+  );
+  const eq = useMemo(() => resumoEquipe(linhasEquipe), [linhasEquipe]);
+  const topRep = linhasEquipe[0];
+  const mkt = useMemo(() => resumoMarketing(), []);
+
+
+
 
   const {
     resumo, ponte, conc, risco, serie, regioes, classificadas, baseTotal, wpp, ofertas,
@@ -184,6 +197,8 @@ export function DiretoriaTab() {
     { rota: "/gestor/painel/carteira", titulo: "Carteira", hint: "Clientes, receita e cobertura", icon: Users, cor: NX.primary },
     { rota: "/gestor/painel/atendimento", titulo: "Atendimento", hint: "WhatsApp, SLA e pipeline", icon: MessageSquare, cor: "#0EA5E9" },
     { rota: "/gestor/painel/produto", titulo: "Produto", hint: "Marcas, ofertas e mix", icon: Package, cor: "#7C3AED" },
+    { rota: "/gestor/painel/equipe", titulo: "Equipe", hint: "Metas, margem e cobertura", icon: UserCheck, cor: "#0F9D8C" },
+    { rota: "/gestor/painel/marketing", titulo: "Marketing", hint: "Investimento, CPL e ROAS", icon: Megaphone, cor: "#E0642F" },
   ];
 
 
@@ -191,7 +206,8 @@ export function DiretoriaTab() {
   return (
     <div className="space-y-4">
       {/* Atalhos para os pilares */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+
         {atalhos.map(a => (
           <button
             key={a.rota}
@@ -329,7 +345,34 @@ export function DiretoriaTab() {
             { label: "Conversão das ofertas", valor: fmtPct(ofertas.conversaoMedia, 1), delta: deltaConversaoOfertas },
           ]}
         />
+
+        <PilarCard
+          icon={UserCheck}
+          titulo="Equipe"
+          resumo={`${fmtNum(eq.time)} representantes · ${fmtNum(eq.acimaDaMeta)} acima da meta · líder ${topRep?.nome ?? "—"}`}
+          onOpen={() => navigate("/gestor/painel/equipe")}
+          linhas={[
+            { label: "Atingimento da meta", valor: fmtPct(eq.atingimento, 0) },
+            { label: "Abaixo de 70% da meta", valor: fmtNum(eq.abaixoDe70), invert: true },
+            { label: "Cobertura média da carteira", valor: fmtPct(eq.coberturaMedia, 0) },
+            { label: "Margem gerada", valor: fmtBRLc(eq.margem) },
+          ]}
+        />
+
+        <PilarCard
+          icon={Megaphone}
+          titulo="Marketing"
+          resumo={`${fmtNum(mkt.leads)} leads · ${fmtNum(mkt.leadsGanhos)} convertidos em cliente`}
+          onOpen={() => navigate("/gestor/painel/marketing")}
+          linhas={[
+            { label: "Investimento em mídia", valor: fmtBRLc(mkt.investimento), delta: varPct(mkt.investimento, mkt.investimentoPrev), invert: true },
+            { label: "Custo por lead", valor: fmtBRLc(mkt.cpl), delta: varPct(mkt.cpl, mkt.cplPrev), invert: true },
+            { label: "ROAS confirmado no CRM", valor: `${mkt.roas.toFixed(1)}x`, delta: varPct(mkt.roas, mkt.roasPrev) },
+            { label: "Custo por cliente novo", valor: fmtBRLc(mkt.cac) },
+          ]}
+        />
       </div>
+
 
       {/* Ciclo e eficiência do período */}
       <SectionCard title="Eficiência comercial no período" subtitle="Leitura rápida da máquina de vendas">
