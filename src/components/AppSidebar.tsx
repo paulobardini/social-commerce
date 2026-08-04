@@ -56,6 +56,7 @@ const sections: MenuSection[] = [
     title: "Gestão",
     collapsible: true,
     items: [
+      { icon: BarChart3, label: "Dashboard Diretoria", path: "/gestor/painel/diretoria" },
       { icon: BarChart3, label: "Dashboard Carteira", path: "/gestor/painel/carteira" },
       { icon: BarChart3, label: "Dashboard Atendimento", path: "/gestor/painel/atendimento" },
       { icon: BarChart3, label: "Dashboard Produto", path: "/gestor/painel/produto" },
