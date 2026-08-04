@@ -90,6 +90,8 @@ export function CarteiraTab() {
 
   return (
     <div className="space-y-4">
+      <PainelExecutivo />
+
       <SaudeCarteiraBar />
 
       <InsightsStrip
@@ -98,34 +100,37 @@ export function CarteiraTab() {
         onOpenDrawer={(k) => { if (k === "clientes_risco") setRiscoOpen(true); }}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
-        <KpiCard label="Total de clientes" value={fmtNum(kpiC.totalClientes.atual)}
-          delta={showDelta(kpiC.totalClientes.delta) ? { pct: kpiC.totalClientes.delta } : undefined}
-          icon={<Users className="h-3.5 w-3.5" />}
-          tooltip="Todos os clientes cadastrados no escopo selecionado." />
-        <KpiCard label="Comprando" value={fmtNum(kpiC.ativos.atual)}
-          delta={showDelta(kpiC.ativos.delta) ? { pct: kpiC.ativos.delta } : undefined}
-          tooltip={`Clientes com pedido nos últimos ${diasAtivo} dias.`} />
-        <KpiCard label="Parados" value={fmtNum(kpiC.inativos.atual)}
-          delta={showDelta(kpiC.inativos.delta) ? { pct: kpiC.inativos.delta, invert: true } : undefined}
-          tooltip={`Clientes sem pedido entre ${diasAtivo} e ${diasPerdido} dias — ainda dá para recuperar.`} />
-        <KpiCard label="Sem comprar há muito" value={fmtNum(kpiC.perdidos.atual)}
-          delta={showDelta(kpiC.perdidos.delta) ? { pct: kpiC.perdidos.delta, invert: true } : undefined}
-          tooltip={`Clientes sem pedido há mais de ${diasPerdido} dias. Neste mercado ninguém cancela — simplesmente para de recomprar.`} />
-        <KpiCard label="Recuperados" value={fmtNum(kpiC.reativados.atual)}
-          delta={showDelta(kpiC.reativados.delta) ? { pct: kpiC.reativados.delta } : undefined}
-          icon={<RefreshCw className="h-3.5 w-3.5" />}
-          tooltip="Clientes que estavam parados/sem comprar e voltaram a fazer pedido no período." />
-        <KpiCard label="Em média, sem comprar há" value={fmtDias(kpiC.recenciaMedia.atual)}
-          delta={showDelta(kpiC.recenciaMedia.delta) ? { pct: kpiC.recenciaMedia.delta, invert: true } : undefined}
-          tooltip="Média de dias desde a última compra, considerando toda a carteira." />
-        <KpiCard label="Ticket médio por cliente" value={fmtBRLc(kpiC.ticketMedio.atual)}
-          delta={showDelta(kpiC.ticketMedio.delta) ? { pct: kpiC.ticketMedio.delta } : undefined}
-          tooltip="Valor médio comprado por cliente no período." />
-        <KpiCard label="Deixaram de comprar" value={fmtPct(kpiC.churn.atual)}
-          delta={showDelta(kpiC.churn.delta) ? { pct: kpiC.churn.delta, invert: true } : undefined}
-          tooltip={`% da carteira sem pedido há mais de ${diasPerdido} dias. Neste mercado não há cancelamento — o cliente simplesmente para de recomprar.`} />
-      </div>
+      <SectionCard title="Indicadores operacionais da carteira" subtitle="Base de clientes, recência e recuperação">
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+          <KpiCard label="Total de clientes" value={fmtNum(kpiC.totalClientes.atual)}
+            delta={showDelta(kpiC.totalClientes.delta) ? { pct: kpiC.totalClientes.delta } : undefined}
+            icon={<Users className="h-3.5 w-3.5" />}
+            tooltip="Todos os clientes cadastrados no escopo selecionado." />
+          <KpiCard label="Comprando" value={fmtNum(kpiC.ativos.atual)}
+            delta={showDelta(kpiC.ativos.delta) ? { pct: kpiC.ativos.delta } : undefined}
+            tooltip={`Clientes com pedido nos últimos ${diasAtivo} dias.`} />
+          <KpiCard label="Parados" value={fmtNum(kpiC.inativos.atual)}
+            delta={showDelta(kpiC.inativos.delta) ? { pct: kpiC.inativos.delta, invert: true } : undefined}
+            tooltip={`Clientes sem pedido entre ${diasAtivo} e ${diasPerdido} dias — ainda dá para recuperar.`} />
+          <KpiCard label="Sem comprar há muito" value={fmtNum(kpiC.perdidos.atual)}
+            delta={showDelta(kpiC.perdidos.delta) ? { pct: kpiC.perdidos.delta, invert: true } : undefined}
+            tooltip={`Clientes sem pedido há mais de ${diasPerdido} dias. Neste mercado ninguém cancela — simplesmente para de recomprar.`} />
+          <KpiCard label="Recuperados" value={fmtNum(kpiC.reativados.atual)}
+            delta={showDelta(kpiC.reativados.delta) ? { pct: kpiC.reativados.delta } : undefined}
+            icon={<RefreshCw className="h-3.5 w-3.5" />}
+            tooltip="Clientes que estavam parados/sem comprar e voltaram a fazer pedido no período." />
+          <KpiCard label="Em média, sem comprar há" value={fmtDias(kpiC.recenciaMedia.atual)}
+            delta={showDelta(kpiC.recenciaMedia.delta) ? { pct: kpiC.recenciaMedia.delta, invert: true } : undefined}
+            tooltip="Média de dias desde a última compra, considerando toda a carteira." />
+          <KpiCard label="Ticket médio por cliente" value={fmtBRLc(kpiC.ticketMedio.atual)}
+            delta={showDelta(kpiC.ticketMedio.delta) ? { pct: kpiC.ticketMedio.delta } : undefined}
+            tooltip="Valor médio comprado por cliente no período." />
+          <KpiCard label="Deixaram de comprar" value={fmtPct(kpiC.churn.atual)}
+            delta={showDelta(kpiC.churn.delta) ? { pct: kpiC.churn.delta, invert: true } : undefined}
+            tooltip={`% da carteira sem pedido há mais de ${diasPerdido} dias. Neste mercado não há cancelamento — o cliente simplesmente para de recomprar.`} />
+        </div>
+      </SectionCard>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="Tempo desde a última compra" subtitle="Clique numa faixa para listar os clientes">
