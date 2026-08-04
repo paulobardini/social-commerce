@@ -56,7 +56,9 @@ const sections: MenuSection[] = [
     title: "Gestão",
     collapsible: true,
     items: [
-      { icon: BarChart3, label: "Painel Gestor", path: "/gestor/painel" },
+      { icon: BarChart3, label: "Dashboard Carteira", path: "/gestor/painel/carteira" },
+      { icon: BarChart3, label: "Dashboard Atendimento", path: "/gestor/painel/atendimento" },
+      { icon: BarChart3, label: "Dashboard Produto", path: "/gestor/painel/produto" },
       { icon: ShieldCheck, label: "Aprovações", path: "/gestor/aprovacoes", badgeKey: "aprovacoes" },
       { icon: UserCog, label: "Representantes", path: "/vendedor/representantes", badgeKey: "planos_escalados" },
       { icon: ShoppingCart, label: "Pedidos (Empresa)", path: "/vendedor/360/pedidos?escopo=empresa" },
