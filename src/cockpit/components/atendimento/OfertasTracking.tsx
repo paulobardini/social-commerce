@@ -3,7 +3,8 @@
 import { SectionCard } from "../SectionCard";
 import { KpiCard } from "../KpiCard";
 import { fmtBRLc, fmtNum, fmtPct, NX, CHART_PALETTE } from "../../styles/tokens";
-import type { OfertaProduto, OfertaResumo } from "../../lib/ofertas";
+import { useMemo } from "react";
+import { ofertasPorMarca, type OfertaProduto, type OfertaResumo } from "../../lib/ofertas";
 import type { TrackingOfertas } from "../../lib/ofertas";
 import { Send, MailOpen, ShoppingBag, EyeOff } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
@@ -24,6 +25,9 @@ export function OfertasTracking({ lista, resumo, tracking }: Props) {
     .map(o => ({ nome: o.produtoNome, taxa: o.taxaAbertura, marca: o.marcaNome }));
 
   const maxEtapa = tracking.etapas[0]?.valor || 1;
+  const marcas = useMemo(() => ofertasPorMarca(lista), [lista]);
+  const topMarcas = marcas.slice(0, 10);
+  const maxEnviosMarca = Math.max(1, ...topMarcas.map(m => m.envios));
 
   return (
     <div className="space-y-4">
@@ -114,6 +118,53 @@ export function OfertasTracking({ lista, resumo, tracking }: Props) {
           </div>
         </SectionCard>
       </div>
+
+      <SectionCard title="Marcas mais oferecidas" subtitle="Volume de envios por marca, engajamento e retorno em pedido">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <ResponsiveContainer width="100%" height={Math.max(200, topMarcas.length * 26)}>
+            <BarChart data={topMarcas.map(m => ({ nome: m.marcaNome, envios: m.envios }))} layout="vertical" margin={{ left: 6, right: 16 }}>
+              <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+              <YAxis type="category" dataKey="nome" tick={{ fontSize: 10 }} width={100} />
+              <Tooltip formatter={(v: number) => `${fmtNum(v)} envios`} contentStyle={tt} />
+              <Bar dataKey="envios" radius={[0, 4, 4, 0]}>
+                {topMarcas.map((m, i) => <Cell key={m.marcaId} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px]">
+              <thead>
+                <tr className="text-left nx-muted border-b border-[#E7E9EE]">
+                  <th className="py-2 pr-3 font-medium">Marca</th>
+                  <th className="py-2 px-2 font-medium text-right">Envios</th>
+                  <th className="py-2 px-2 font-medium text-right">Share</th>
+                  <th className="py-2 px-2 font-medium text-right">Abertura</th>
+                  <th className="py-2 px-2 font-medium text-right">Conversão</th>
+                  <th className="py-2 pl-2 font-medium text-right">Receita</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topMarcas.map(m => (
+                  <tr key={m.marcaId} className="border-b border-[#F1F3F7] last:border-0">
+                    <td className="py-2 pr-3">
+                      <p className="font-semibold nx-text">{m.marcaNome}</p>
+                      <div className="h-1 mt-1 rounded-full bg-[#EEF0F4] w-24 overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${(m.envios / maxEnviosMarca) * 100}%`, background: NX.primary }} />
+                      </div>
+                    </td>
+                    <td className="py-2 px-2 text-right nx-num">{fmtNum(m.envios)}</td>
+                    <td className="py-2 px-2 text-right nx-num nx-muted">{fmtPct(m.shareEnvios, 0)}</td>
+                    <td className="py-2 px-2 text-right nx-num">{fmtPct(m.taxaAbertura, 0)}</td>
+                    <td className="py-2 px-2 text-right nx-num font-semibold">{fmtPct(m.conversao, 0)}</td>
+                    <td className="py-2 pl-2 text-right nx-num">{fmtBRLc(m.receita)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </SectionCard>
     </div>
   );
 }
