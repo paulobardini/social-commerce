@@ -12,6 +12,8 @@ import { AbcCurve } from "../AbcCurve";
 import { MarcaCruzamentoHeatmap } from "./MarcaCruzamentoHeatmap";
 import { OfertasProdutoTable, OfertasDestaques } from "./OfertasProdutoTable";
 import { PainelExecutivoProduto } from "./PainelExecutivoProduto";
+import { VendasProdutoCliente } from "./VendasProdutoCliente";
+
 import { ofertasPorProduto, resumoOfertas } from "../../lib/ofertas";
 import { InsightsStrip } from "../InsightsStrip";
 import { insightsProduto } from "../../lib/insights";
@@ -328,6 +330,10 @@ export function ProdutoTab() {
           <AbcCurve data={abcProduto} labelKey={(t: { id: string }) => t.id.toUpperCase()} />
         </SectionCard>
       </div>
+
+      <VendasProdutoCliente />
+
+
 
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
