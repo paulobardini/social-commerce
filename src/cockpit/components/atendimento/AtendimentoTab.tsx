@@ -23,6 +23,7 @@ import { ofertasPorProduto, resumoOfertas, trackingOfertas } from "../../lib/ofe
 import { WhatsAppAnalytics } from "./WhatsAppAnalytics";
 import { OfertasTracking } from "./OfertasTracking";
 import { PainelExecutivoAtendimento } from "./PainelExecutivoAtendimento";
+import { TicketsAnalytics } from "./TicketsAnalytics";
 
 type SubAba = "geral" | "whatsapp" | "ofertas";
 const SUB_ABAS: { key: SubAba; label: string }[] = [
@@ -220,6 +221,9 @@ export function AtendimentoTab() {
           ))}
         </div>
       </SectionCard>
+
+      <p className="text-[10px] uppercase tracking-wide nx-muted pt-1">Dashboards de tickets (pós-venda)</p>
+      <TicketsAnalytics />
 
       </>}
 
