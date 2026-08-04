@@ -87,15 +87,18 @@ export function PainelExecutivo() {
           </div>
 
           <div className="flex-1 grid grid-cols-2 xl:grid-cols-4 gap-2.5">
-            <Tile label="Receita retida" value={fmtPct(resumo.retencaoReceita, 0)}
-              sub="do que a base comprava, mantido ou ampliado" tone={resumo.retencaoReceita >= 100 ? "good" : "neutral"} />
-            <Tile label="Receita em risco" value={fmtBRLc(risco.emRisco)}
-              sub={`${fmtNum(risco.clientesRisco)} clientes parados · recuperáveis`} tone="risk" />
-            <Tile label="Receita já perdida" value={fmtBRLc(risco.jaPerdida)}
-              sub={`${fmtPct(risco.sharePerdida, 0)} da receita anual da base`} tone="risk" />
+            <Tile label="Clientes que compraram" value={fmtNum(resumo.clientesCompraram)}
+              sub={`${deltaArrow(deltaClientes)} ${fmtPct(Math.abs(deltaClientes), 0)} vs período anterior`}
+              tone={deltaClientes >= 0 ? "good" : "risk"} />
+            <Tile label="Cobertura da carteira" value={fmtPct(cobertura, 0)}
+              sub={`da base de ${fmtNum(baseTotal)} clientes comprou no período`}
+              tone={cobertura < 40 ? "risk" : "neutral"} />
+            <Tile label="Ticket por cliente" value={fmtBRLc(ticketCliente)}
+              sub={`${pedidosPorCliente.toFixed(1)} pedidos por cliente · ticket pedido ${fmtBRLc(resumo.ticketPedido)}`} />
             <Tile label="Concentração" value={fmtPct(conc.top10Share, 0)}
               sub={`nos 10 maiores · ${fmtNum(conc.clientesMetadeReceita)} clientes = metade da receita`}
               tone={conc.top10Share > 40 ? "risk" : "neutral"} />
+
           </div>
         </div>
       </div>
