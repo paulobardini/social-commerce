@@ -10,9 +10,12 @@ import { SectionCard } from "../SectionCard";
 import { KpiCard } from "../KpiCard";
 import { AbcCurve } from "../AbcCurve";
 import { MarcaNichoHeatmap } from "./MarcaNichoHeatmap";
+import { OfertasProdutoTable, OfertasDestaques } from "./OfertasProdutoTable";
+import { ofertasPorProduto, resumoOfertas } from "../../lib/ofertas";
 import { InsightsStrip } from "../InsightsStrip";
 import { insightsProduto } from "../../lib/insights";
 import type { Nicho } from "../../data/seed";
+
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell,
 } from "recharts";
@@ -164,6 +167,11 @@ export function ProdutoTab() {
     return { top: arr.slice(0, 10), bottom: arr.slice(-10).reverse() };
   }, [noEscopoPedidos]);
 
+  // Oferta & tracking de links (produtos enviados → abertos → convertidos)
+  const ofertas = useMemo(() => ofertasPorProduto(seed, noEscopoPedidos), [seed, noEscopoPedidos]);
+  const resumoOferta = useMemo(() => resumoOfertas(ofertas), [ofertas]);
+
+
   // Marcas sem giro por rep + clientes candidatos
   const semGiro = useMemo(() => {
     const reps = seed.representantes.filter(r => repIds.has(r.id));
@@ -278,6 +286,28 @@ export function ProdutoTab() {
           </ResponsiveContainer>
         </SectionCard>
       </div>
+
+      <div id="produtos-oferecidos" className="space-y-4">
+        <SectionCard
+          title="Produtos mais oferecidos"
+          subtitle="Envio de produtos por link/catálogo e trackeamento até o pedido — mostra o que o time realmente coloca na frente do cliente"
+        >
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+            <KpiCard label="Produtos ofertados" value={fmtNum(resumoOferta.produtosOfertados)} tooltip="Produtos distintos enviados em links/catálogos no período." />
+            <KpiCard label="Envios de produto" value={fmtNum(resumoOferta.totalEnvios)} icon={<Send className="h-3.5 w-3.5" />} tooltip="Total de vezes que produtos foram enviados a clientes." />
+            <KpiCard label="Links abertos" value={fmtNum(resumoOferta.totalAberturas)} tooltip="Envios cujo link foi aberto pelo cliente." />
+            <KpiCard label="Taxa de abertura" value={fmtPct(resumoOferta.taxaAbertura, 1)} tooltip="Links abertos ÷ envios." />
+            <KpiCard label="Conversão oferta→pedido" value={fmtPct(resumoOferta.conversaoMedia, 1)} icon={<Sparkles className="h-3.5 w-3.5" />} tooltip="Pedidos gerados ÷ envios de produto." />
+          </div>
+          <OfertasProdutoTable lista={ofertas} resumo={resumoOferta} />
+        </SectionCard>
+
+        <SectionCard title="Leitura da oferta" subtitle="Cruzamento entre volume de envio e conversão">
+          <OfertasDestaques resumo={resumoOferta} />
+        </SectionCard>
+      </div>
+
+
 
       <div id="marcas-sem-giro"><SectionCard title="Marcas sem giro por representante" subtitle="Criar campanha de push envia ações sugeridas idempotentes para a fila dos reps">
         <div className="overflow-x-auto">
