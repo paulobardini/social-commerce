@@ -24,13 +24,19 @@ import { WhatsAppAnalytics } from "./WhatsAppAnalytics";
 import { OfertasTracking } from "./OfertasTracking";
 import { PainelExecutivoAtendimento } from "./PainelExecutivoAtendimento";
 import { TicketsAnalytics } from "./TicketsAnalytics";
+import { FunilTempoBloco } from "./FunilTempoBloco";
+import { DevolucoesBloco } from "./DevolucoesBloco";
 
-type SubAba = "geral" | "whatsapp" | "ofertas";
+
+type SubAba = "geral" | "whatsapp" | "ofertas" | "funil" | "devolucoes";
 const SUB_ABAS: { key: SubAba; label: string }[] = [
   { key: "geral", label: "Visão geral" },
+  { key: "funil", label: "Funil e descartes" },
   { key: "whatsapp", label: "WhatsApp" },
   { key: "ofertas", label: "Ofertas de produto" },
+  { key: "devolucoes", label: "Devoluções" },
 ];
+
 
 function parseTicketDate(s: string): Date {
   const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
