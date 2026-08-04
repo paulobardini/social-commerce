@@ -17,6 +17,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { mockTickets, setorLabels, type Setor } from "@/data/mockAtendimento";
+import { analyticsWhatsApp } from "../../lib/whatsapp";
+import { ofertasPorProduto, resumoOfertas, trackingOfertas } from "../../lib/ofertas";
+import { WhatsAppAnalytics } from "./WhatsAppAnalytics";
+import { OfertasTracking } from "./OfertasTracking";
+
+type SubAba = "geral" | "whatsapp" | "ofertas";
+const SUB_ABAS: { key: SubAba; label: string }[] = [
+  { key: "geral", label: "Visão geral" },
+  { key: "whatsapp", label: "WhatsApp" },
+  { key: "ofertas", label: "Ofertas de produto" },
+];
 
 function parseTicketDate(s: string): Date {
   const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
@@ -31,6 +42,7 @@ export function AtendimentoTab() {
   const { seed, escopo, range, previousRange, comparar } = useCockpit();
   const navigate = useNavigate();
   const [negociosOpen, setNegociosOpen] = useState(false);
+  const [sub, setSub] = useState<SubAba>("geral");
 
   const insights = useMemo(() => insightsAtendimento(seed, escopo, range), [seed, escopo, range]);
 
@@ -63,6 +75,16 @@ export function AtendimentoTab() {
     return { setor: s, total: tks.length, urgentes, estourados };
   });
 
+  const wpp = useMemo(() => analyticsWhatsApp(seed, range, repIds), [seed, range, repIds]);
+
+  const pedidosEscopo = useMemo(
+    () => seed.pedidos.filter(p => repIds.has(p.repId) && p.data >= range.from && p.data <= range.to),
+    [seed, repIds, range],
+  );
+  const ofertas = useMemo(() => ofertasPorProduto(seed, pedidosEscopo), [seed, pedidosEscopo]);
+  const resumoOferta = useMemo(() => resumoOfertas(ofertas), [ofertas]);
+  const tracking = useMemo(() => trackingOfertas(ofertas), [ofertas]);
+
   const showDelta = (v: number) => comparar && v !== 0;
 
   return (
@@ -73,6 +95,25 @@ export function AtendimentoTab() {
         onOpenDrawer={(k) => { if (k === "negocios_parados") setNegociosOpen(true); }}
       />
 
+      <div className="flex items-center gap-1 p-1 rounded-lg bg-white border border-[#E7E9EE] w-fit">
+        {SUB_ABAS.map(a => (
+          <button
+            key={a.key}
+            type="button"
+            onClick={() => setSub(a.key)}
+            className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition ${
+              sub === a.key ? "bg-[#2D3A8C] text-white" : "nx-muted hover:bg-[#F1F3F7]"
+            }`}
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
+
+      {sub === "whatsapp" && <WhatsAppAnalytics wpp={wpp} />}
+      {sub === "ofertas" && <OfertasTracking lista={ofertas} resumo={resumoOferta} tracking={tracking} />}
+
+      {sub === "geral" && <>
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
         <KpiCard label="Cobertura" value={fmtPct(kpiA.cobertura.atual)} delta={showDelta(kpiA.cobertura.delta) ? { pct: kpiA.cobertura.delta } : undefined} icon={<Activity className="h-3.5 w-3.5" />} tooltip="% da carteira que recebeu ao menos 1 atendimento no período." />
         <KpiCard label="Atendimentos" value={fmtNum(kpiA.nAtendimentos.atual)} delta={showDelta(kpiA.nAtendimentos.delta) ? { pct: kpiA.nAtendimentos.delta } : undefined} tooltip="Visitas, ligações e conversas de WhatsApp registradas no período." />
@@ -146,6 +187,8 @@ export function AtendimentoTab() {
           ))}
         </div>
       </SectionCard>
+
+      </>}
 
       <NegociosParadosDrawer open={negociosOpen} onOpenChange={setNegociosOpen} />
     </div>
