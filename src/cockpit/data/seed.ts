@@ -493,6 +493,6 @@ export function buildSeed(): Seed {
   }
 
 
-  _cache = { representantes: REPS, marcas: MARCAS, contas, pedidos, atendimentos, oportunidades, metas, orcamentosPendentes, hoje };
+  _cache = { representantes: REPS, marcas: MARCAS, produtos, contas, pedidos, atendimentos, oportunidades, devolucoes, metas, orcamentosPendentes, hoje };
   return _cache;
 }
