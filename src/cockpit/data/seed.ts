@@ -17,6 +17,15 @@ export type Etapa = "novo_lead" | "em_negociacao" | "proposta_enviada" | "orcame
 export type TipoAtendimento = "visita" | "ligacao" | "whatsapp";
 export type TipoMeta = "faturamento" | "positivacao" | "cobertura" | "novos" | "reativacao";
 export type MotivoAprovacao = "fora_da_politica" | "credito_cliente_novo" | "aguardando_estoque";
+export type FormaPagamento = "boleto" | "cartao" | "pix" | "faturado";
+export type Estacao = "Verão" | "Inverno" | "Meia-estação" | "Contínuo";
+export type OrigemCliente = "inbound" | "outbound";
+export type MotivoDevolucao =
+  | "Defeito de fabricação" | "Grade errada" | "Produto divergente"
+  | "Atraso na entrega" | "Arrependimento do lojista" | "Avaria no transporte";
+export type MotivoInativacao =
+  | "Preço/margem" | "Trocou de fornecedor" | "Loja fechou" | "Crédito bloqueado"
+  | "Mix não atende" | "Falta de contato do rep" | "Problema de entrega";
 
 export interface Representante {
   id: string; nome: string; email: string; regiao: string;
@@ -28,10 +37,44 @@ export interface Representante {
   historicoMedio12m: number;// faturamento médio mensal 12m (R$)
 }
 export interface Marca { id: string; nome: string; categorias: string[]; }
-export interface Conta { id: string; razao: string; nicho: Nicho; cidade: string; uf: string; repId: string; criadoEm: Date; }
-export interface Pedido { id: string; contaId: string; repId: string; data: Date; valor: number; itens: number; marcaId: string; categoria: string; colecao: string; produtoId: string; }
+/** Cadastro de produto — fonte única de custo, peso e classificação comercial. */
+export interface Produto {
+  id: string;
+  nome: string;
+  marcaId: string;
+  categoria: string;
+  estacao: Estacao;
+  precoTabela: number;   // R$ por peça
+  custo: number;         // R$ por peça (custo de aquisição) — 0 = sem custo cadastrado
+  pesoKg: number;        // peso por peça
+}
+export interface Conta {
+  id: string; razao: string; nicho: Nicho; cidade: string; uf: string; repId: string; criadoEm: Date;
+  origem: OrigemCliente;
+  motivoEscolha: string;
+  motivoInativacao?: MotivoInativacao;
+}
+export interface Pedido {
+  id: string; contaId: string; repId: string; data: Date; valor: number; itens: number;
+  marcaId: string; categoria: string; colecao: string; produtoId: string;
+  custo: number;                 // custo total do pedido (peças × custo unitário)
+  pesoKg: number;                // peso total do pedido
+  desconto: number;              // % de desconto concedido
+  formaPagamento: FormaPagamento;
+  prazoDias: number;             // prazo médio de pagamento em dias
+  estacao: Estacao;
+}
 export interface Atendimento { id: string; contaId: string; repId: string; data: Date; tipo: TipoAtendimento; resultado: "convertido" | "follow_up" | "sem_interesse"; leadOuCliente: "lead" | "cliente"; }
-export interface Oportunidade { id: string; contaId: string; repId: string; etapa: Etapa; valor: number; abertaEm: Date; ultimaMov: Date; motivoPerda?: string; }
+export interface Oportunidade {
+  id: string; contaId: string; repId: string; etapa: Etapa; valor: number; abertaEm: Date; ultimaMov: Date;
+  motivoPerda?: string;
+  /** dias parados em cada etapa já percorrida (só etapas concluídas + a atual) */
+  temposEtapa: { etapa: Etapa; dias: number }[];
+}
+export interface Devolucao {
+  id: string; ticketId: string; contaId: string; repId: string; marcaId: string;
+  data: Date; valor: number; pecas: number; motivo: MotivoDevolucao;
+}
 export interface Meta { repId: string | "consolidada"; tipo: TipoMeta; valor: number; mes: string; }
 export interface OrcamentoPendente {
   id: string;
@@ -48,14 +91,17 @@ export interface OrcamentoPendente {
 export interface Seed {
   representantes: Representante[];
   marcas: Marca[];
+  produtos: Produto[];
   contas: Conta[];
   pedidos: Pedido[];
   atendimentos: Atendimento[];
   oportunidades: Oportunidade[];
+  devolucoes: Devolucao[];
   metas: Meta[];
   orcamentosPendentes: OrcamentoPendente[];
   hoje: Date;
 }
+
 
 const REPS: Representante[] = [
   { id: "r1", nome: "André Lima",      email: "andre@nextil.com.br",     regiao: "Sudeste",     pace: 112, cobertura: 78, coberturaDelta:  4, ultimoAcessoDias: 0, historicoMedio12m: 138000 },
