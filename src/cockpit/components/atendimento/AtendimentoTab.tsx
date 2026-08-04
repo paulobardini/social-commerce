@@ -15,6 +15,7 @@ import { Activity, Target, DollarSign, AlertCircle } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { mockTickets, setorLabels, type Setor } from "@/data/mockAtendimento";
 import { analyticsWhatsApp } from "../../lib/whatsapp";
@@ -43,6 +44,7 @@ export function AtendimentoTab() {
   const navigate = useNavigate();
   const [negociosOpen, setNegociosOpen] = useState(false);
   const [sub, setSub] = useState<SubAba>("geral");
+  const [wppRep, setWppRep] = useState<string>("todos");
 
   const insights = useMemo(() => insightsAtendimento(seed, escopo, range), [seed, escopo, range]);
 
@@ -75,7 +77,11 @@ export function AtendimentoTab() {
     return { setor: s, total: tks.length, urgentes, estourados };
   });
 
-  const wpp = useMemo(() => analyticsWhatsApp(seed, range, repIds), [seed, range, repIds]);
+  const wppRepIds = useMemo(
+    () => (wppRep === "todos" ? repIds : new Set([wppRep].filter(id => repIds.has(id)))),
+    [repIds, wppRep],
+  );
+  const wpp = useMemo(() => analyticsWhatsApp(seed, range, wppRepIds), [seed, range, wppRepIds]);
 
   const pedidosEscopo = useMemo(
     () => seed.pedidos.filter(p => repIds.has(p.repId) && p.data >= range.from && p.data <= range.to),
@@ -110,7 +116,30 @@ export function AtendimentoTab() {
         ))}
       </div>
 
-      {sub === "whatsapp" && <WhatsAppAnalytics wpp={wpp} />}
+      {sub === "whatsapp" && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] nx-muted">Representante</span>
+            <Select value={wppRep} onValueChange={setWppRep}>
+              <SelectTrigger className="h-8 w-[220px] text-xs bg-white">
+                <SelectValue placeholder="Todos os representantes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os representantes</SelectItem>
+                {reps.map(r => (
+                  <SelectItem key={r.id} value={r.id}>{r.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {wppRep !== "todos" && (
+              <Button size="sm" variant="ghost" className="h-8 text-[11px]" onClick={() => setWppRep("todos")}>
+                Limpar filtro
+              </Button>
+            )}
+          </div>
+          <WhatsAppAnalytics wpp={wpp} />
+        </div>
+      )}
       {sub === "ofertas" && <OfertasTracking lista={ofertas} resumo={resumoOferta} tracking={tracking} />}
 
       {sub === "geral" && <>
