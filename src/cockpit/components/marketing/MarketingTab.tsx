@@ -109,6 +109,10 @@ export function MarketingTab() {
         </SectionCard>
       </div>
 
+      <LeadsBloco />
+
+
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="Desempenho por canal" subtitle="Onde o lead nasceu">
           <table className="w-full text-xs">
