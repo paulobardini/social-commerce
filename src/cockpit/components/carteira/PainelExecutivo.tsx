@@ -41,10 +41,19 @@ export function PainelExecutivo() {
       risco: riscoReceita(classificadas, diasAtivo),
       serie: serieReceitaMensal(pedidos, seed.hoje),
       regioes: receitaPorRegiao(seed, pedidos, range, previousRange),
+      baseTotal: classificadas.length,
     };
   }, [seed, escopo, range, previousRange, diasAtivo, diasPerdido]);
 
-  const { resumo, ponte, conc, risco, serie, regioes } = d;
+  const { resumo, ponte, conc, risco, serie, regioes, baseTotal } = d;
+
+  const cobertura = baseTotal ? (resumo.clientesCompraram / baseTotal) * 100 : 0;
+  const deltaClientes = resumo.clientesCompraramPrev
+    ? ((resumo.clientesCompraram - resumo.clientesCompraramPrev) / resumo.clientesCompraramPrev) * 100
+    : 0;
+  const ticketCliente = resumo.clientesCompraram ? resumo.receitaAtual / resumo.clientesCompraram : 0;
+  const pedidosPorCliente = resumo.clientesCompraram ? resumo.pedidos / resumo.clientesCompraram : 0;
+
 
   const bars = ponte.map((pt, i) => {
     if (pt.tipo === "total") return { ...pt, base: 0, top: pt.acumulado, mostrado: pt.acumulado };
