@@ -104,6 +104,19 @@ export function DiretoriaTab() {
     [seed, range, previousRange, diasAtivo, diasPerdido],
   );
 
+  const pedidosEscopo = useMemo(() => {
+    const ids = repIdsNoEscopo(seed, escopo);
+    return seed.pedidos.filter(p => ids.has(p.repId));
+  }, [seed, escopo]);
+  const margem = useMemo(() => resumoMargem(pedidosEscopo, range), [pedidosEscopo, range]);
+  const margemPrev = useMemo(() => resumoMargem(pedidosEscopo, previousRange), [pedidosEscopo, previousRange]);
+  const cond = useMemo(() => condicoesComerciais(pedidosEscopo, range, previousRange), [pedidosEscopo, range, previousRange]);
+  const dev = useMemo(() => {
+    const ids = repIdsNoEscopo(seed, escopo);
+    return resumoDevolucoes(seed, seed.devolucoes.filter(x => ids.has(x.repId)), pedidosEscopo, range, previousRange);
+  }, [seed, escopo, pedidosEscopo, range, previousRange]);
+
+
   const {
     resumo, ponte, conc, risco, serie, regioes, classificadas, baseTotal, wpp, ofertas,
     classificadasPrev, concPrev, wppPrev, ofertasPrev, riscoPrev,
