@@ -4,6 +4,7 @@ import { resumoMarketing, funilMarketing, porCanal, porCampanha, serieMarketing 
 import { fmtBRL, fmtBRLc, fmtNum, fmtPct } from "../../styles/tokens";
 import { SectionCard } from "../SectionCard";
 import { ExecTile, ExecHero } from "../ExecTiles";
+import { LeadsBloco } from "./LeadsBloco";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
@@ -108,6 +109,10 @@ export function MarketingTab() {
           </ResponsiveContainer>
         </SectionCard>
       </div>
+
+      <LeadsBloco />
+
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="Desempenho por canal" subtitle="Onde o lead nasceu">
