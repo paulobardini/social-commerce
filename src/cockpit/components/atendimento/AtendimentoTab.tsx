@@ -22,6 +22,7 @@ import { analyticsWhatsApp } from "../../lib/whatsapp";
 import { ofertasPorProduto, resumoOfertas, trackingOfertas } from "../../lib/ofertas";
 import { WhatsAppAnalytics } from "./WhatsAppAnalytics";
 import { OfertasTracking } from "./OfertasTracking";
+import { PainelExecutivoAtendimento } from "./PainelExecutivoAtendimento";
 
 type SubAba = "geral" | "whatsapp" | "ofertas";
 const SUB_ABAS: { key: SubAba; label: string }[] = [
