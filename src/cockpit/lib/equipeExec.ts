@@ -88,7 +88,8 @@ export function performanceEquipe(
         receitaPrev,
         delta: receitaPrev ? ((receita - receitaPrev) / receitaPrev) * 100 : 0,
         meta,
-        atingimento: meta ? (receita / meta) * 100 : 0,
+        atingimento: meta ? (receitaMes / meta) * 100 : 0,
+
         pace: r.pace,
         margem,
         margemPct: recCusto ? (margem / recCusto) * 100 : 0,
