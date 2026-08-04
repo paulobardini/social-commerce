@@ -2,6 +2,8 @@
 // Não é resultado financeiro/DRE: é receita − custo da mercadoria vendida.
 import type { Pedido, Seed } from "../data/seed";
 import type { DateRange } from "./range";
+import type { WaterfallPonto } from "./movimento";
+
 
 export interface ResumoMargem {
   receita: number;
@@ -154,9 +156,20 @@ export function ponteMargem(seed: Seed, pedidos: Pedido[], range: DateRange, pre
     .sort((x, y) => Math.abs(y.valor) - Math.abs(x.valor))
     .slice(0, 6);
   const atual = [...a.values()].reduce((s, v) => s + (v.receita - v.custo), 0);
+  let acc = base;
+  const meio: WaterfallPonto[] = linhas.map(l => {
+    acc += l.valor;
+    return {
+      label: l.label,
+      valor: l.valor,
+      tipo: l.valor >= 0 ? ("positivo" as const) : ("negativo" as const),
+      acumulado: acc,
+    };
+  });
   return [
-    { label: "Período anterior", valor: base, tipo: "total" as const },
-    ...linhas.map(l => ({ ...l, tipo: (l.valor >= 0 ? "up" : "down") as "up" | "down" })),
-    { label: "Período atual", valor: atual, tipo: "total" as const },
-  ];
+    { label: "Período anterior", valor: base, tipo: "total" as const, acumulado: base },
+    ...meio,
+    { label: "Período atual", valor: atual, tipo: "total" as const, acumulado: atual },
+  ] satisfies WaterfallPonto[];
 }
+
