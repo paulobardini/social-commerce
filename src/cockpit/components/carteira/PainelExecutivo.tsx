@@ -1,7 +1,8 @@
 // Faixa executiva da Carteira — leitura de diretoria (receita, risco, concentração).
 import { useMemo } from "react";
+import { Info } from "lucide-react";
 import {
-  AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, BarChart, Bar, Cell, ReferenceLine,
+  AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, Cell, ReferenceLine,
 } from "recharts";
 import { useCockpit } from "../../contexts/CockpitContext";
 import { repIdsNoEscopo } from "../../lib/escopo";
@@ -12,17 +13,36 @@ import {
 import { NX, fmtBRLc, fmtNum, fmtPct, deltaArrow, deltaColor } from "../../styles/tokens";
 import { SectionCard } from "../SectionCard";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function Tile({ label, value, sub, tone = "neutral" }: { label: string; value: string; sub?: string; tone?: "neutral" | "risk" | "good" }) {
   return (
-    <div className={cn(
-      "rounded-lg px-3 py-2.5 border",
-      tone === "risk" ? "bg-rose-50/70 border-rose-100" : tone === "good" ? "bg-emerald-50/70 border-emerald-100" : "bg-[#F6F7F9] border-[#E7E9EE]",
-    )}>
-      <p className="text-[10px] uppercase tracking-wide nx-muted leading-none mb-1">{label}</p>
-      <p className="text-lg font-semibold nx-num nx-text leading-tight">{value}</p>
-      {sub && <p className="text-[10px] nx-muted mt-0.5 leading-snug">{sub}</p>}
-    </div>
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className={cn(
+            "rounded-lg px-3 py-3 border cursor-help h-full flex flex-col",
+            tone === "risk" ? "bg-rose-50/70 border-rose-100" : tone === "good" ? "bg-emerald-50/70 border-emerald-100" : "bg-[#F6F7F9] border-[#E7E9EE]",
+          )}>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <p className="text-[10px] uppercase tracking-wide nx-muted leading-tight">{label}</p>
+              {sub && <Info className="w-3.5 h-3.5 nx-muted shrink-0 mt-0.5 opacity-70 hover:opacity-100 transition-opacity" />}
+            </div>
+            <p className="text-3xl font-semibold nx-num nx-text leading-none mt-auto">{value}</p>
+          </div>
+        </TooltipTrigger>
+        {sub && (
+          <TooltipContent side="bottom" align="start" className="max-w-[220px] bg-white border border-[#E7E9EE] shadow-md">
+            <p className="text-xs nx-text leading-snug">{sub}</p>
+          </TooltipContent>
+        )}
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -93,7 +113,7 @@ export function PainelExecutivo() {
             <Tile label="Cobertura da carteira" value={fmtPct(cobertura, 0)}
               sub={`da base de ${fmtNum(baseTotal)} clientes comprou no período`}
               tone={cobertura < 40 ? "risk" : "neutral"} />
-            <Tile label="Ticket por cliente" value={fmtBRLc(ticketCliente)}
+            <Tile label="Ticket médio por cliente" value={fmtBRLc(ticketCliente)}
               sub={`${pedidosPorCliente.toFixed(1)} pedidos por cliente · ticket pedido ${fmtBRLc(resumo.ticketPedido)}`} />
             <Tile label="Concentração" value={fmtPct(conc.top10Share, 0)}
               sub={`nos 10 maiores · ${fmtNum(conc.clientesMetadeReceita)} clientes = metade da receita`}
@@ -110,9 +130,9 @@ export function PainelExecutivo() {
             <BarChart data={bars} margin={{ top: 8, right: 8, left: 0, bottom: 4 }} stackOffset="sign">
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: NX.muted }} interval={0} />
               <YAxis tick={{ fontSize: 10, fill: NX.muted }} tickFormatter={(v) => fmtBRLc(v)} width={58} />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }}
-                formatter={(_v: number, _n, p) => [fmtBRLc(p.payload.mostrado), p.payload.label]}
+                formatter={(_v: number, _n: any, p: any) => [fmtBRLc(p.payload.mostrado), p.payload.label]}
               />
               <Bar dataKey="base" stackId="a" fill="transparent" />
               <Bar dataKey="top" stackId="a" radius={[3, 3, 0, 0]}>
@@ -136,7 +156,7 @@ export function PainelExecutivo() {
               </defs>
               <XAxis dataKey="mes" tick={{ fontSize: 9, fill: NX.muted }} interval={1} />
               <YAxis hide />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{ background: "#fff", border: "1px solid #E7E9EE", borderRadius: 8, fontSize: 12 }}
                 formatter={(v: number) => [fmtBRLc(v), "Receita"]}
               />
