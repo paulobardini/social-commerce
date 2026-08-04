@@ -22,6 +22,7 @@ import { analyticsWhatsApp } from "../../lib/whatsapp";
 import { ofertasPorProduto, resumoOfertas, trackingOfertas } from "../../lib/ofertas";
 import { WhatsAppAnalytics } from "./WhatsAppAnalytics";
 import { OfertasTracking } from "./OfertasTracking";
+import { PainelExecutivoAtendimento } from "./PainelExecutivoAtendimento";
 
 type SubAba = "geral" | "whatsapp" | "ofertas";
 const SUB_ABAS: { key: SubAba; label: string }[] = [
@@ -143,6 +144,9 @@ export function AtendimentoTab() {
       {sub === "ofertas" && <OfertasTracking lista={ofertas} resumo={resumoOferta} tracking={tracking} />}
 
       {sub === "geral" && <>
+      <PainelExecutivoAtendimento kpiA={kpiA} wpp={wpp} />
+
+      <p className="text-[10px] uppercase tracking-wide nx-muted pt-1">Indicadores operacionais</p>
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
         <KpiCard label="Cobertura" value={fmtPct(kpiA.cobertura.atual)} delta={showDelta(kpiA.cobertura.delta) ? { pct: kpiA.cobertura.delta } : undefined} icon={<Activity className="h-3.5 w-3.5" />} tooltip="% da carteira que recebeu ao menos 1 atendimento no período." />
         <KpiCard label="Atendimentos" value={fmtNum(kpiA.nAtendimentos.atual)} delta={showDelta(kpiA.nAtendimentos.delta) ? { pct: kpiA.nAtendimentos.delta } : undefined} tooltip="Visitas, ligações e conversas de WhatsApp registradas no período." />

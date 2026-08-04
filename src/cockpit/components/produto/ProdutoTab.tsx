@@ -11,6 +11,7 @@ import { KpiCard } from "../KpiCard";
 import { AbcCurve } from "../AbcCurve";
 import { MarcaCruzamentoHeatmap } from "./MarcaCruzamentoHeatmap";
 import { OfertasProdutoTable, OfertasDestaques } from "./OfertasProdutoTable";
+import { PainelExecutivoProduto } from "./PainelExecutivoProduto";
 import { ofertasPorProduto, resumoOfertas } from "../../lib/ofertas";
 import { InsightsStrip } from "../InsightsStrip";
 import { insightsProduto } from "../../lib/insights";
@@ -252,6 +253,8 @@ export function ProdutoTab() {
   return (
     <div className="space-y-4">
       <InsightsStrip pilar="Produto" insights={insights} />
+
+      <PainelExecutivoProduto kpiP={kpiP} resumoOferta={resumoOferta} />
 
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-3">
         <KpiCard label="Faturamento" value={fmtBRLc(kpiP.faturamento.atual)} delta={showDelta(kpiP.faturamento.delta) ? { pct: kpiP.faturamento.delta } : undefined} icon={<DollarSign className="h-3.5 w-3.5" />} tooltip="Soma dos pedidos fechados no período." />
