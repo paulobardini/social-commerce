@@ -221,7 +221,7 @@ const App = () => (
                 <Route path="/vendedor/representantes/:id" element={<LayoutRoute><RepresentanteDetalhePage /></LayoutRoute>} />
                 <Route path="/vendedor/segmentacoes" element={<LayoutRoute><SegmentacoesPage /></LayoutRoute>} />
                 <Route path="/vendedor/dashboard-gerencial" element={<Navigate to="/gestor/painel/carteira" replace />} />
-                <Route path="/gestor/painel" element={<Navigate to="/gestor/painel/carteira" replace />} />
+                <Route path="/gestor/painel" element={<Navigate to="/gestor/painel/diretoria" replace />} />
                 <Route path="/gestor/painel/:tab" element={<LayoutRoute><DashboardGerencial /></LayoutRoute>} />
 
                 <Route path="/gestor/aprovacoes" element={<LayoutRoute><GestorAprovacoes /></LayoutRoute>} />
