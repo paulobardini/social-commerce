@@ -65,20 +65,33 @@ export function SaudeCarteiraBar({ filtroRepId }: { filtroRepId?: string }) {
 
       <div className="grid grid-cols-3 gap-3 mt-3">
         {segs.map(s => (
-          <div key={s.key} className="flex items-center justify-between bg-[#F6F7F9] rounded-lg px-3 py-2">
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: s.color }} />
-              <div>
-                <p className="text-[10px] uppercase tracking-wide nx-muted leading-none mb-0.5">{s.label}</p>
-                <p className="text-base font-semibold nx-num nx-text leading-tight">{fmtNum(s.n)}</p>
+          <div key={s.key} className="bg-[#F6F7F9] rounded-lg px-3 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: s.color }} />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide nx-muted leading-none mb-0.5">{s.label}</p>
+                  <p className="text-base font-semibold nx-num nx-text leading-tight">{fmtNum(s.n)}</p>
+                </div>
               </div>
+              {comparar && (
+                <span className={`text-[11px] font-medium nx-num ${deltaColor(s.d, s.invert)}`}>
+                  {deltaArrow(s.d)} {fmtPct(Math.abs(s.d), 0)}
+                </span>
+              )}
             </div>
-            {comparar && (
-              <span className={`text-[11px] font-medium nx-num ${deltaColor(s.d, s.invert)}`}>
-                {deltaArrow(s.d)} {fmtPct(Math.abs(s.d), 0)}
-              </span>
+            {s.rec && (
+              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-[#E7E9EE]">
+                <Trophy className="h-3 w-3 shrink-0" style={{ color: s.color }} />
+                <span className="text-[10px] nx-muted">
+                  Recorde: <span className="nx-num font-semibold nx-text">{fmtNum(s.rec.n)}</span>
+                  {" · "}{format(s.rec.data, "MMM/yy", { locale: ptBR })}
+                  {s.n >= s.rec.n && <span className="ml-1 font-semibold" style={{ color: s.color }}>(atual)</span>}
+                </span>
+              </div>
             )}
           </div>
+
         ))}
       </div>
     </div>
