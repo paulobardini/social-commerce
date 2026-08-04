@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import {
   AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip,
 } from "recharts";
-import { ArrowRight, Users, MessageSquare, Package } from "lucide-react";
+import { ArrowRight, Users, MessageSquare, Package, UserCheck, Megaphone } from "lucide-react";
 import { useCockpit } from "../../contexts/CockpitContext";
 import { repIdsNoEscopo } from "../../lib/escopo";
 import { classificarTudo } from "../../lib/classificar";
@@ -21,6 +21,9 @@ import { ExecTile, ExecHero, ExecBarRow } from "../ExecTiles";
 import { resumoMargem } from "../../lib/margem";
 import { condicoesComerciais } from "../../lib/condicoesComerciais";
 import { resumoDevolucoes } from "../../lib/devolucoes";
+import { performanceEquipe, resumoEquipe } from "../../lib/equipeExec";
+import { resumoMarketing } from "../../lib/marketingExec";
+
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -184,6 +187,8 @@ export function DiretoriaTab() {
     { rota: "/gestor/painel/carteira", titulo: "Carteira", hint: "Clientes, receita e cobertura", icon: Users, cor: NX.primary },
     { rota: "/gestor/painel/atendimento", titulo: "Atendimento", hint: "WhatsApp, SLA e pipeline", icon: MessageSquare, cor: "#0EA5E9" },
     { rota: "/gestor/painel/produto", titulo: "Produto", hint: "Marcas, ofertas e mix", icon: Package, cor: "#7C3AED" },
+    { rota: "/gestor/painel/equipe", titulo: "Equipe", hint: "Metas, margem e cobertura", icon: UserCheck, cor: "#0F9D8C" },
+    { rota: "/gestor/painel/marketing", titulo: "Marketing", hint: "Investimento, CPL e ROAS", icon: Megaphone, cor: "#E0642F" },
   ];
 
 
@@ -191,7 +196,8 @@ export function DiretoriaTab() {
   return (
     <div className="space-y-4">
       {/* Atalhos para os pilares */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+
         {atalhos.map(a => (
           <button
             key={a.rota}
