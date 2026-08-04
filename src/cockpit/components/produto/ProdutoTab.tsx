@@ -329,6 +329,10 @@ export function ProdutoTab() {
         </SectionCard>
       </div>
 
+      <VendasProdutoCliente />
+
+
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="Top 10 produtos">
